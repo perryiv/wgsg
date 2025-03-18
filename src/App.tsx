@@ -48,11 +48,36 @@ export function App()
 	//
 	useEffect ( () =>
 	{
-		console.log ( "WebGPU device:", device );
+		// console.log ( "WebGPU device:", device );
+
+		if ( !device.current )
+		{
+			return;
+		}
+
+		if ( !canvas.current )
+		{
+			throw new Error ( "Invalid canvas element" );
+		}
+
+		const context = canvas.current.getContext ( "webgpu" );
+
+		if ( !context )
+		{
+			throw new Error ( "Invalid rendering context" );
+		}
+
+		const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
+		context.configure ( {
+			device: device.current,
+			format: presentationFormat,
+		} );
+
+		console.log ( "Rendering context:", context );
 	},
 	[ token ] );
 
-	console.log ( "Rendering app" );
+	// console.log ( "Rendering app" );
 
 	//
 	// Render the components.
