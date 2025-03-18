@@ -910,6 +910,11 @@
     "@types/babel__core" "^7.20.5"
     react-refresh "^0.14.2"
 
+"@webgpu/types@^0.1.56":
+  version "0.1.56"
+  resolved "https://registry.yarnpkg.com/@webgpu/types/-/types-0.1.56.tgz#37e001bb7a0baf6d8a877fa6fcd163125a921126"
+  integrity sha512-JkT4ngqwk4gKAFoWtXCcC1+TGhSStVtauS9z27slOGSFYr+QqjS0CoawiAxP7Gq9xkT4Pw9uouvWPT44HwbUiw==
+
 acorn-jsx@^5.3.2:
   version "5.3.2"
   resolved "https://registry.yarnpkg.com/acorn-jsx/-/acorn-jsx-5.3.2.tgz#7ed5bb55908b3b2f1bc55c6af1653bada7f07937"
