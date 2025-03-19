@@ -21,9 +21,11 @@ interface GPUData
 
 
 ///////////////////////////////////////////////////////////////////////////////
-//
-//	Return the WebGPU adapter and device.
-//
+/**
+ * Return the WebGPU adapter and device.
+ * @param {GPURequestAdapterOptions} options - Adapter options.
+ * @returns {Promise<GPUData>} GPU adapter and device.
+ */
 ///////////////////////////////////////////////////////////////////////////////
 
 export const getData = async ( options?: GPURequestAdapterOptions ) : Promise < GPUData > =>
@@ -61,25 +63,30 @@ export const getData = async ( options?: GPURequestAdapterOptions ) : Promise < 
 
 
 ///////////////////////////////////////////////////////////////////////////////
-//
-//	Return the WebGPU device.
-//
+/**
+ * Return the WebGPU device.
+ * @param {GPURequestAdapterOptions} options - GPU adapter options.
+ * @returns {Promise<GPUDevice>} GPU device.
+ */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const getDevice = async () : Promise < GPUDevice > =>
+export const getDevice = async ( options?: GPURequestAdapterOptions ) : Promise < GPUDevice > =>
 {
-	const { device } = await getData();
+	const { device } = await getData ( options );
 	return device;
 };
 
 
 ///////////////////////////////////////////////////////////////////////////////
-//
-//	Return the WebGPU rendering context for the canvas.
-//
+/**
+ * Return the WebGPU rendering context for the canvas.
+ * @param {GPUDevice} device - GPU device.
+ * @param {HTMLCanvasElement} canvas - HTML canvas element.
+ * @returns {GPUCanvasContext} Configured GPU canvas context.
+ */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const getRenderingContext = ( device: GPUDevice, canvas: HTMLCanvasElement ) =>
+export const getRenderingContext = ( device: GPUDevice, canvas: HTMLCanvasElement ) : GPUCanvasContext =>
 {
 	// Check input.
 	if ( !device )
