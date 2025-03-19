@@ -26,8 +26,8 @@ import { getDevice, getRenderingContext } from "./WebGPU";
 export function App()
 {
 	// Get state.
-	const [ token, setToken ] = useState < number > ( 0 );
-	const device = useRef < GPUDevice | null > ( null );
+	// const [ token, setToken ] = useState < number > ( 0 );
+	const [ device, setDevice ] = useState < GPUDevice | null > ( null );
 	const canvas = useRef < HTMLCanvasElement | null > ( null );
 
 	//
@@ -37,8 +37,8 @@ export function App()
 	{
 		void ( async () =>
 		{
-			device.current = await getDevice();
-			setToken ( ( current ) => { return ( current + 1 ) } );
+			setDevice ( await getDevice() );
+			// setToken ( ( current ) => { return ( current + 1 ) } );
 		} ) ();
 	},
 	[] );
@@ -48,13 +48,13 @@ export function App()
 	//
 	useEffect ( () =>
 	{
-		if ( device.current && canvas.current )
+		if ( device && canvas.current )
 		{
-			const context = getRenderingContext ( device.current, canvas.current );
+			const context = getRenderingContext ( device, canvas.current );
 			console.log ( "Rendering context:", context );
 		}
 	},
-	[ token ] );
+	[ device ] );
 
 	// console.log ( "Rendering app" );
 
