@@ -68,6 +68,55 @@ export const getData = async ( options?: GPURequestAdapterOptions ) : Promise < 
 
 export const getDevice = async () : Promise < GPUDevice > =>
 {
-  const { device } = await getData();
-  return device;
+	const { device } = await getData();
+	return device;
 };
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Return the WebGPU rendering context for the canvas.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export const getRenderingContext = ( device: GPUDevice, canvas: HTMLCanvasElement ) =>
+{
+	// Check input.
+	if ( !device )
+	{
+		throw new Error ( "Invalid WebGPU device when getting rendering context" );
+	}
+
+	// Check input.
+	if ( !canvas )
+	{
+		throw new Error ( "Invalid WebGPU canvas element when getting rendering context" );
+	}
+
+	// Get the context from the canvas.
+	const context = canvas.getContext ( "webgpu" );
+
+	// Handle invalid context.
+	if ( !context )
+	{
+		throw new Error ( "Invalid WebGPU rendering context" );
+	}
+
+	// Shortcut.
+	const { gpu } = navigator;
+
+	// Get the default canvas format.
+	const format = gpu.getPreferredCanvasFormat();
+
+	// Handle invalid format.
+	if ( !format )
+	{
+		throw new Error ( "Invalid preferred canvas format" );
+	}
+
+	// Configure the context.
+	context.configure ( { device, format } );
+
+	// Return the context.
+	return context;
+}

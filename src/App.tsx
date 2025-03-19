@@ -14,7 +14,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { useEffect, useRef, useState } from "react";
-import { getDevice } from "./WebGPU";
+import { getDevice, getRenderingContext } from "./WebGPU";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -48,32 +48,11 @@ export function App()
 	//
 	useEffect ( () =>
 	{
-		// console.log ( "WebGPU device:", device );
-
-		if ( !device.current )
+		if ( device.current && canvas.current )
 		{
-			return;
+			const context = getRenderingContext ( device.current, canvas.current );
+			console.log ( "Rendering context:", context );
 		}
-
-		if ( !canvas.current )
-		{
-			throw new Error ( "Invalid canvas element" );
-		}
-
-		const context = canvas.current.getContext ( "webgpu" );
-
-		if ( !context )
-		{
-			throw new Error ( "Invalid rendering context" );
-		}
-
-		const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
-		context.configure ( {
-			device: device.current,
-			format: presentationFormat,
-		} );
-
-		console.log ( "Rendering context:", context );
 	},
 	[ token ] );
 
