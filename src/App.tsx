@@ -44,7 +44,7 @@ export function App()
 	[] );
 
 	//
-	// Called when the token changes.
+	// Called when the device changes.
 	//
 	useEffect ( () =>
 	{
