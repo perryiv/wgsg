@@ -9,7 +9,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  A pair of shaders.
+//	A pair of shaders.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -28,6 +28,7 @@ export class Shaders
 
 	/**
 	 * Construct the class.
+	 * @constructor
 	 * @param {string} vertex - Vertex shader string.
 	 * @param {string} fragment - Fragment shader string.
 	 */

@@ -29,6 +29,7 @@ export class State
 
 	/**
 	 * Construct the class.
+	 * @constructor
 	 * @param {Shaders | null} shaders - Vertex and fragment shaders.
 	 */
 	constructor ( shaders?: ( Shaders | null ) )
