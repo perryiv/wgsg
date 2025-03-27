@@ -15,11 +15,11 @@ export default tseslint.config(
 		files: ["**/*.{ts,tsx}"],
 		languageOptions: {
 			ecmaVersion: 2020,
-			globals: globals.browser,
+			globals: { ...globals.browser, ...globals.mocha },
 			parserOptions: {
 				project: [
-					"./tsconfig.node.json",
-					"./tsconfig.app.json"
+					"./config/tsconfig.node.json",
+					"./config/tsconfig.app.json"
 				],
 				tsconfigRootDir: import.meta.dirname,
 			},
