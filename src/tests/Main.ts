@@ -15,7 +15,7 @@
 
 import "mocha"; // Make eslint happy.
 import { expect } from "chai";
-import { getData, getDevice, getRenderingContext } from "../lib/tools/WebGPU";
+import { getData, getDevice, getRenderingContext } from "../lib/Tools/WebGPU";
 
 
 ///////////////////////////////////////////////////////////////////////////////

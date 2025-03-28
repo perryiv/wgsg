@@ -9,49 +9,49 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Class that contains the state of a shape.
+//	Base class for all shapes.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Shaders } from "./Shaders";
+import { State } from "../State/State";
 
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Class that contains the state of a shape.
- * @class
+ * Shape class.
+ * @abstract
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class State
+export class Shape
 {
-	#shaders: ( Shaders | null ) = null;
+	#state: ( State | null ) = null;
 
 	/**
 	 * Construct the class.
 	 * @constructor
-	 * @param {Shaders | null} shaders - Vertex and fragment shaders.
+	 * @param {State | null} state - State for this shape.
 	 */
-	constructor ( shaders?: ( Shaders | null ) )
+	constructor ( state?: ( State | null ) )
 	{
-		this.#shaders = ( shaders ?? null );
+		this.#state = ( state ?? null );
 	}
 
 	/**
-	 * Get the shaders.
-	 * @return {Shaders | null} Vertex and fragment shaders.
+	 * Get the state.
+	 * @return {State | null} State for this shape.
 	 */
-	public get shaders() : ( Shaders | null )
+	public get state() : ( State | null )
 	{
-		return this.#shaders;
+		return this.#state;
 	}
 
 	/**
-	 * Set the shaders.
-	 * @param {Shaders | null} shaders - Vertex and fragment shaders.
+	 * Set the state.
+	 * @param {State | null} state - State for this shape.
 	 */
-	public set shaders ( shaders: ( Shaders | null ) )
+	public set state ( state: ( State | null ) )
 	{
-		this.#shaders = ( shaders ?? null );
+		this.#state = ( state ?? null );
 	}
 }

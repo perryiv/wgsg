@@ -11,7 +11,7 @@
     "compile": "tsc --build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "mocha src/tests/main.ts"
+    "test": "mocha src/tests/Main.ts"
   },
   "mocha": {
     "node-option": [ "import=tsx" ]

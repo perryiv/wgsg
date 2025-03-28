@@ -21,7 +21,7 @@
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Shaders
+export class ShaderPair
 {
 	#vertex: string;
 	#fragment: string;
