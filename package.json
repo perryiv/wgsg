@@ -6,15 +6,19 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "clear": "clear",
     "dev": "vite",
     "build": "yarn run compile && vite build",
     "compile": "tsc --build",
-    "lint": "eslint .",
+    "lint": "eslint src/lib src/app",
     "preview": "vite preview",
-    "test": "mocha src/tests/Main.ts"
+    "test": "mocha src/tests/Main.ts",
+    "watch": "watch \"yarn run clear && yarn run compile && yarn run lint && echo watching ...\" src/lib src/app"
   },
   "mocha": {
-    "node-option": [ "import=tsx" ]
+    "node-option": [
+      "import=tsx"
+    ]
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -37,6 +41,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "@webgpu/types": "^0.1.56",
     "chai": "^5.2.0",
+    "clear-cli": "^2.0.0",
     "eslint": "^9.19.0",
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.0.0",
@@ -46,6 +51,7 @@
     "tsx": "^4.19.3",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.22.0",
-    "vite": "^6.1.0"
+    "vite": "^6.1.0",
+    "watch": "^1.0.2"
   }
 }
