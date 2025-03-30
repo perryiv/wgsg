@@ -13,9 +13,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { ShaderPair } from "./ShaderPair";
-
-
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * Class that contains the state of a shape.
@@ -25,33 +22,56 @@ import { ShaderPair } from "./ShaderPair";
 
 export class State
 {
-	#shaders: ( ShaderPair | null ) = null;
+	#v: ( string | null ) = null;
+	#f: ( string | null ) = null;
 
 	/**
 	 * Construct the class.
 	 * @constructor
-	 * @param {ShaderPair | null} shaders - Vertex and fragment shaders.
+	 * @param {string | null} [vertex] - Vertex shader string.
+	 * @param {string | null} [fragment] - Fragment shader string.
 	 */
-	constructor ( shaders?: ( ShaderPair | null ) )
+	constructor ( vertex?: ( string | null ), fragment?: ( string | null ) )
 	{
-		this.#shaders = ( shaders ?? null );
+		this.#v = ( vertex ?? null );
+		this.#f = ( fragment ?? null );
 	}
 
 	/**
-	 * Get the shaders.
-	 * @return {ShaderPair | null} Vertex and fragment shaders.
+	 * Get the vertex shader.
+	 * @return {string | null} Vertex shader string, or null.
 	 */
-	public get shaders() : ( ShaderPair | null )
+	public get vertexShader() : ( string | null )
 	{
-		return this.#shaders;
+		return this.#v;
 	}
 
 	/**
-	 * Set the shaders.
-	 * @param {ShaderPair | null} shaders - Vertex and fragment shaders.
+	 * Set the vertex shader.
+	 *
+	 * @param {string | null} v - Vertex shader string, or null.
 	 */
-	public set shaders ( shaders: ( ShaderPair | null ) )
+	public set vertexShader ( v: ( string | null ) )
 	{
-		this.#shaders = ( shaders ?? null );
+		this.#v = v;
+	}
+
+	/**
+	 * Get the fragment shader.
+	 * @return {string | null} Fragment shader string, or null.
+	 */
+	public get fragmentShader() : ( string | null )
+	{
+		return this.#f;
+	}
+
+	/**
+	 * Set the fragment shader.
+	 *
+	 * @param {string | null} f - Fragment shader string, or null.
+	 */
+	public set fragmentShader ( f: ( string | null ) )
+	{
+		this.#f = f;
 	}
 }
