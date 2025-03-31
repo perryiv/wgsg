@@ -1,0 +1,39 @@
+<!--
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Copyright (c) 2025, Perry L Miller IV
+//	All rights reserved.
+//	MIT License: https://opensource.org/licenses/mit-license.html
+//
+///////////////////////////////////////////////////////////////////////////////
+-->
+
+<!--
+///////////////////////////////////////////////////////////////////////////////
+//
+//  Run the tests in a browser.
+//  https://stackoverflow.com/questions/42857778/how-do-you-run-mocha-tests-in-the-browser
+//
+///////////////////////////////////////////////////////////////////////////////
+-->
+
+<html>
+  <head>
+    <title>Tests</title>
+    <link rel="stylesheet" href="../../node_modules/mocha/mocha.css">
+  </head>
+  <body>
+    <div id="mocha"></div>
+    <script src="../../node_modules/mocha/mocha.js"></script>
+    <script src="../../node_modules/chai/chai.js"></script>
+    <script> mocha.setup ( "bdd" ); </script>
+
+    <!-- Load code you want to test here. -->
+    <script type="module" crossorigin src="../../dist/assets/index-dLb-hOw6.js"></script>
+
+    <!-- Load your test files here. -->
+    <!-- <script type="module" crossorigin src="./index.js"></script> -->
+
+    <!-- <script> mocha.run(); </script> -->
+  </body>
+</html>
