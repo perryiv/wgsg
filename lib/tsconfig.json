@@ -17,15 +17,15 @@
 	"compilerOptions": {
 
 		// Set the JavaScript language version for emitted JavaScript and include
-    // compatible library declarations.
+		// compatible library declarations.
 		"target": "es2016",
 
 		// Specify what module code is generated.
 		"module": "ESNext",
 
 		// Emit additional JavaScript to ease support for importing CommonJS
-    // modules. This enables 'allowSyntheticDefaultImports' for type
-    // compatibility.
+		// modules. This enables 'allowSyntheticDefaultImports' for type
+		// compatibility.
 		"esModuleInterop": true,
 
 		// Ensure that casing is correct in imports.
@@ -40,13 +40,13 @@
 		// WebGPU-specific types
 		"types": [ "@webgpu/types" ],
 
-    // Specify the folder for .tsbuildinfo incremental compilation files.
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+		// Specify the folder for .tsbuildinfo incremental compilation files.
+		"tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
 
-    // No output files because we generate one with vite.
-    "noEmit": true
-  },
+		// No output files because we generate one with vite.
+		"noEmit": true
+	},
 
-  // The files and folders to be compiled into JavaScript.
-  "include": [ "./src" ]
+	// The files and folders to be compiled into JavaScript.
+	"include": [ "./src" ]
 }
