@@ -6,8 +6,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build": "yarn run compile && vite build",
-    "clear": "clear",
+    "build-lib": "cd lib && yarn run build",
+    "clear": "clear"
+  },
+  "save": {
     "compile": "tsc --build",
     "dev": "vite",
     "http": "http-server -c-1 --cors",
