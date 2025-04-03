@@ -22,3 +22,4 @@ dist-ssr
 *.sw?
 
 notes.md
+yarn.lock
