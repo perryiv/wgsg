@@ -16,7 +16,7 @@
     "build": "tsc --build && vite build",
     "lint": "eslint --ext .ts ./src",
     "prepublishOnly": "yarn run build",
-    "watch": "watch \"yarn run clear && yarn run build && yarn run lint && echo watching ...\" src"
+    "watch": "watch \"yarn run clear && yarn run lint && yarn run build && echo watching ...\" src"
   },
   "dependencies": {
     "gl-matrix": "^3.4.3"
