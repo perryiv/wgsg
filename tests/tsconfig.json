@@ -1,4 +1,3 @@
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (c) 2025, Perry L Miller IV
@@ -18,7 +17,7 @@
 
 		// Set the JavaScript language version for emitted JavaScript and include
 		// compatible library declarations.
-		"target": "es2016",
+		"target": "ES2016",
 
 		// Specify what module code is generated.
 		"module": "ESNext",
@@ -37,11 +36,11 @@
 		// Skip type checking all .d.ts files.
 		"skipLibCheck": true,
 
-		// WebGPU-specific types
+		// Add the extra types we need.
 		"types": [ "@webgpu/types", "@types/mocha" ],
 
 		// Specify the folder for .tsbuildinfo incremental compilation files.
-		"tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+		"tsBuildInfoFile": "./node_modules/.tmp/tsconfig.tsbuildinfo",
 
 		// No output files because we generate one with vite.
 		"noEmit": true,

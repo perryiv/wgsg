@@ -8,8 +8,8 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "clear": "clear",
     "build": "tsc --build",
+    "clear": "clear",
     "lint": "eslint --ext .ts ./src",
     "watch": "watch \"yarn run clear && yarn run build && yarn run lint && echo watching ...\" src"
   },
