@@ -4,11 +4,20 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "build-lib": "cd lib && yarn run build",
-    "clear": "clear"
+    "clean-app": "del-cli app/node_modules",
+    "clean-lib": "del-cli lib/node_modules",
+    "clean-tests": "del-cli tests/node_modules",
+    "clean": "yarn run clean-app && yarn run clean-lib && yarn run clean-tests",
+    "clear": "clear",
+    "install-all": "yarn run install-lib && yarn run install-tests && yarn run install-app",
+    "install-app": "cd app && yarn install && yarn link wgsg-lib",
+    "install-lib": "cd lib && yarn install && yarn link",
+    "install-tests": "cd tests && yarn install && yarn link wgsg-lib",
+    "reinstall-all": "yarn run clean && yarn run install-all"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
+    "clear-cli": "^2.0.0",
+    "del-cli": "^6.0.0"
   }
 }
