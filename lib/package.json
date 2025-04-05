@@ -6,17 +6,12 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "main": "src/index.js",
   "scripts": {
     "clear": "clear",
-    "build": "tsc --build && vite build",
+    "build": "tsc --build",
     "lint": "eslint --ext .ts ./src",
-    "prepublishOnly": "yarn run build",
-    "watch": "watch \"yarn run clear && yarn run lint && yarn run build && echo watching ...\" src"
+    "watch": "watch \"yarn run clear && yarn run build && yarn run lint && echo watching ...\" src"
   },
   "dependencies": {
     "gl-matrix": "^3.4.3"
@@ -27,11 +22,8 @@
     "clear-cli": "^2.0.0",
     "eslint": "^9.19.0",
     "globals": "^15.14.0",
-    "http-server": "^14.1.1",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.29.0",
-    "vite": "^6.2.4",
-    "vite-plugin-dts": "^4.5.3",
     "watch": "^1.0.2"
   }
 }
