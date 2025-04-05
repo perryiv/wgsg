@@ -16,6 +16,7 @@ void ( async () =>
 {
 	mocha.setup ( "bdd" );
 	mocha.checkLeaks();
-	await import ( "./Tools/index" );
+	await import ( "./Tools/index" ); // This has to be first.
+	await import ( "./Scene/index" );
 	mocha.run();
 } ) ();
