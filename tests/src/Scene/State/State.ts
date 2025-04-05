@@ -22,12 +22,15 @@ import { State } from "wgsg-lib";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-describe ( "State", function ()
+export function test ()
 {
-	it ( "Should be able to make a state", function ()
+	describe ( "State Class", function ()
 	{
-		const state = new State();
-		expect ( state ).to.exist;
-		expect ( state instanceof State ).to.be.true;
+		it ( "Should be able to make a state", function ()
+		{
+			const state = new State();
+			expect ( state ).to.exist;
+			expect ( state instanceof State ).to.be.true;
+		} );
 	} );
-} );
+};

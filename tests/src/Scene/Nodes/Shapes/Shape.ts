@@ -22,12 +22,15 @@ import { Shape } from "wgsg-lib";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-describe ( "Shape", function ()
+export function test ()
 {
-	it ( "Should be able to make a shape", function ()
+	describe ( "Shape Class", function ()
 	{
-		const shape = new Shape();
-		expect ( shape ).to.exist;
-		expect ( shape instanceof Shape ).to.be.true;
+		it ( "Should be able to make a shape", function ()
+		{
+			const shape = new Shape();
+			expect ( shape ).to.exist;
+			expect ( shape instanceof Shape ).to.be.true;
+		} );
 	} );
-} );
+};
