@@ -16,6 +16,6 @@ void ( async () =>
 {
 	mocha.setup ( "bdd" );
 	mocha.checkLeaks();
-	await import ( "./WebGPU" );
+	await import ( "./Tools/index" );
 	mocha.run();
 } ) ();
