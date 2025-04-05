@@ -1,1 +1,1 @@
-export * from "./Shapes/index";
+import "./Shapes";

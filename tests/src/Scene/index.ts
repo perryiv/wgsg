@@ -1,3 +1,3 @@
-export * from "./Nodes/index";
-export * from "./Shaders/index";
-export * from "./State/index";
+import "./Nodes";
+import "./Shaders";
+import "./State";

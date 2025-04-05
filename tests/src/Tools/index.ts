@@ -1,1 +1,1 @@
-export * from "./WebGPU";
+import "./WebGPU";
