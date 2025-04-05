@@ -1,0 +1,58 @@
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Copyright (c) 2025, Perry L Miller IV
+//	All rights reserved.
+//	MIT License: https://opensource.org/licenses/mit-license.html
+//
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Configure TypeScript.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+{
+	"compilerOptions": {
+
+		// Set the JavaScript language version for emitted JavaScript and include
+		// compatible library declarations.
+		"target": "es2016",
+
+		// Specify what module code is generated.
+		"module": "ESNext",
+
+		// Emit additional JavaScript to ease support for importing CommonJS
+		// modules. This enables 'allowSyntheticDefaultImports' for type
+		// compatibility.
+		"esModuleInterop": true,
+
+		// Ensure that casing is correct in imports.
+		"forceConsistentCasingInFileNames": true,
+
+		// Enable all strict type-checking options.
+		"strict": true,
+
+		// Skip type checking all .d.ts files.
+		"skipLibCheck": true,
+
+		// WebGPU-specific types
+		"types": [ "@webgpu/types", "@types/mocha" ],
+
+		// Specify the folder for .tsbuildinfo incremental compilation files.
+		"tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+
+		// No output files because we generate one with vite.
+		"noEmit": true,
+
+		// Map imports to locations.
+		"paths": {
+			"wgsg-lib": [ "./node_modules/wgsg-lib/src/index.js" ],
+			"wgsg-lib/*": [ "./node_modules/wgsg-lib/src/*" ] // TODO: Not working.
+		}
+	},
+
+	// The files and folders to be compiled into JavaScript.
+	"include": [ "./src" ]
+}
