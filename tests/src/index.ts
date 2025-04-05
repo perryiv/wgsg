@@ -12,11 +12,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-// import mocha from "mocha";
-
 void ( async () =>
 {
 	mocha.setup ( "bdd" );
+	mocha.checkLeaks();
 	await import ( "./WebGPU" );
 	mocha.run();
 } ) ();

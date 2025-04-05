@@ -24,50 +24,16 @@
 		<link rel="stylesheet" href="./node_modules/mocha/mocha.css">
 	</head>
 	<body>
+
+		<!-- This is important for the display of the test results. -->
 		<div id="mocha"></div>
 
+		<!-- This has to be loaded here and not in the code to avoid an error. -->
 		<script src="./node_modules/mocha/mocha.js"></script>
-		<!-- <script src="./node_modules/chai/chai.js"></script> -->
 
-		<!-- Get mocha ready to use. -->
-		<!-- <script class="mocha-init">
-			mocha.setup ( {
-				ui: "tdd",
-				reporter: "html",
-			} );
-			mocha.checkLeaks();
-		</script> -->
-
-		<!-- Load the tests. -->
+		<!-- This contains the mocha setup code, the tests themselves, -->
+		<!-- and the mocha run command. -->
 		<script type="module" crossorigin src="./src/index.ts"></script>
 
-		<!-- We want to know about all errors. -->
-		<!-- <script class="mocha-errors">
-			window.onerror = function ( message, source, lineno, colno, error )
-			{
-				console.error ( "Error: " + message );
-				console.error ( "Source: " + source );
-				console.error ( "Line: " + lineno );
-				console.error ( "Column: " + colno );
-				console.error ( error );
-			};
-			window.addEventListener ( "error", function ( event )
-			{
-				console.error ( "Error: " + event.message );
-				console.error ( "Source: " + event.filename );
-				console.error ( "Line: " + event.lineno );
-				console.error ( "Column: " + event.colno );
-				console.error ( event.error );
-			}, true );
-			window.addEventListener ( "unhandledrejection", function ( event )
-			{
-				console.error ( "Unhandled rejection: " + event.reason );
-			}, true );
-		</script> -->
-
-		<!-- Now we can run the tests. -->
-		<!-- <script class="mocha-exec">
-			mocha.run();
-		</script> -->
 	</body>
 </html>
