@@ -44,7 +44,7 @@ export class Surface
 		}
 
 		// When we get to here it should be undefined or null.
-		else if ( input )
+		else if ( ( null !== input ) && ( "undefined" !== ( typeof input ) ) )
 		{
 			throw new Error ( "Invalid input type in render surface constructor: " + ( typeof input ) );
 		}

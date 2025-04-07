@@ -77,5 +77,19 @@ export function test ()
 			expect ( surface.context instanceof GPUCanvasContext ).to.be.true;
 			expect ( surface.context ).to.equal ( canvas.getContext ( "webgpu" ) );
 		} );
+
+		it ( "Should throw an error with invalid argument to constructor", function ()
+		{
+			expect ( () => { new Surface ( undefined ) } ).to.not.throw();
+			expect ( () => { new Surface ( null ) } ).to.not.throw();
+
+			const message = "Invalid input type in render surface constructor";
+			expect ( () => { new Surface ( {} ) } ).to.throw ( `${message}: object` );
+			expect ( () => { new Surface ( [] ) } ).to.throw ( `${message}: object` );
+			expect ( () => { new Surface ( 123 ) } ).to.throw ( `${message}: number` );
+			expect ( () => { new Surface ( "Some string" ) } ).to.throw ( `${message}: string` );
+			expect ( () => { new Surface ( true ) } ).to.throw ( `${message}: boolean` );
+			expect ( () => { new Surface ( false ) } ).to.throw ( `${message}: boolean` );
+		} );
 	} );
 };
