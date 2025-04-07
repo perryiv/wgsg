@@ -12,12 +12,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-void ( async () =>
+import { test as testSurface } from "./Surface";
+
+describe ( "Render", function ()
 {
-	mocha.setup ( "bdd" );
-	mocha.checkLeaks();
-	await import ( "./Tools/index" ); // This has to be first.
-	await import ( "./Scene/index" );
-	await import ( "./Render/index" );
-	mocha.run();
-} ) ();
+	testSurface();
+} );

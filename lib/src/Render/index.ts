@@ -8,16 +8,8 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Load and run the other tests.
+//	Export the modules in this directory.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-void ( async () =>
-{
-	mocha.setup ( "bdd" );
-	mocha.checkLeaks();
-	await import ( "./Tools/index" ); // This has to be first.
-	await import ( "./Scene/index" );
-	await import ( "./Render/index" );
-	mocha.run();
-} ) ();
+export * from "./Surface";
