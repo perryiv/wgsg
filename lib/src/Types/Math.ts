@@ -1,3 +1,4 @@
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (c) 2025, Perry L Miller IV
@@ -8,11 +9,19 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Export the modules in this directory.
+//	Types related to math.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export * from "./Render/index";
-export * from "./Scene/index";
-export * from "./Tools/index";
-export * from "./Types/index";
+export interface Viewport
+{
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+}
+export interface Size
+{
+	width: number;
+	height: number;
+}

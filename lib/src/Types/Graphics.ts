@@ -1,3 +1,4 @@
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (c) 2025, Perry L Miller IV
@@ -8,11 +9,12 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Export the modules in this directory.
+//	Types related to graphics.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export * from "./Render/index";
-export * from "./Scene/index";
-export * from "./Tools/index";
-export * from "./Types/index";
+export interface GPUData
+{
+	adapter: GPUAdapter,
+	device: GPUDevice,
+};

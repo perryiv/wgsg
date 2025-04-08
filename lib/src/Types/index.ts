@@ -12,7 +12,5 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export * from "./Render/index";
-export * from "./Scene/index";
-export * from "./Tools/index";
-export * from "./Types/index";
+export * from "./Graphics";
+export * from "./Math";

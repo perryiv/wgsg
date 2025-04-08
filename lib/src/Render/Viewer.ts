@@ -23,17 +23,58 @@ import { Surface } from "./Surface";
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Viewer extends Surface
+export class Viewer
 {
+	#canvas: ( HTMLCanvasElement | null ) = null;
+	#surface: ( Surface | null ) = null;
+
 	/**
 	 * Construct the class.
 	 * @constructor
-	 * @param {HTMLCanvasElement | GPUCanvasContext | null} [input] -
-	 * Input can be a canvas, rendering context, null, or undefined.
-	 * If it is anything else, an error will be thrown.
+	 * @param {HTMLCanvasElement | null} [input] -
+	 * Input can be a canvas, null, or undefined.
 	 */
-	constructor ( input?: ( HTMLCanvasElement | GPUCanvasContext | null ) )
+	constructor ( canvas?: ( HTMLCanvasElement | null ) )
 	{
-		super ( input );
+		this.canvas = ( canvas ?? null );
+	}
+
+	/**
+	 * Get the surface.
+	 * @returns {Surface | null} The surface, or null.
+	 */
+	public get surface () : ( Surface | null )
+	{
+		return this.#surface;
+	}
+
+	/**
+	 * Get the canvas.
+	 * @returns {HTMLCanvasElement | null} The HTML canvas element, or null.
+	 */
+	public get canvas () : ( HTMLCanvasElement | null )
+	{
+		return this.#canvas;
+	}
+
+	/**
+	 * Set the canvas.
+	 * @param {HTMLCanvasElement | null} canvas - The HTML canvas element, or null.
+	 */
+	public set canvas ( canvas: ( HTMLCanvasElement | null ) )
+	{
+		// Set the canvas, which may be null.
+		this.#canvas = ( canvas ?? null );
+
+		// If we have a valid canvas then make a new surface.
+		if ( canvas )
+		{
+			this.#surface = new Surface ( canvas.getContext ( "webgpu" ) );
+		}
+		// Otherwise, destroy the surface.
+		else
+		{
+			this.#surface = null;
+		}
 	}
 }

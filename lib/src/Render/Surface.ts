@@ -13,6 +13,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Size, Viewport } from "../Types/Math";
+
+
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * A surface to render on.
@@ -23,33 +26,17 @@
 export class Surface
 {
 	#context: ( GPUCanvasContext | null ) = null;
+	#viewport: Viewport = { x: 0, y: 0, width: 0, height: 0 };
 
 	/**
 	 * Construct the class.
 	 * @constructor
-	 * @param {HTMLCanvasElement | GPUCanvasContext | null} [input] -
-	 * Input can be a canvas, rendering context, null, or undefined.
-	 * If it is anything else, an error will be thrown.
+	 * @param {GPUCanvasContext | null} [input] -
+	 * Input can be a rendering context, null, or undefined.
 	 */
-	constructor ( input?: ( HTMLCanvasElement | GPUCanvasContext | null ) )
+	constructor ( context?: ( GPUCanvasContext | null ) )
 	{
-		// Is the input a canvas?
-		if ( input instanceof HTMLCanvasElement )
-		{
-			this.canvas = input;
-		}
-
-		// Is the input a rendering context?
-		else if ( input instanceof GPUCanvasContext )
-		{
-			this.#context = input;
-		}
-
-		// When we get to here it should be undefined or null.
-		else if ( ( null !== input ) && ( "undefined" !== ( typeof input ) ) )
-		{
-			throw new Error ( "Invalid input type in render surface constructor: " + ( typeof input ) );
-		}
+		this.#context = ( context ?? null );
 	}
 
 	/**
@@ -72,12 +59,58 @@ export class Surface
 	}
 
 	/**
-	 * Set the rendering context from the given canvas.
-	 *
-	 * @param {HTMLCanvasElement | null} canvas - The HTML canvas element, or null.
+	 * Get the surface size.
+	 * @return {Size} The size of the surface.
 	 */
-	public set canvas ( canvas: ( HTMLCanvasElement | null ) )
+	public get size() : Size
 	{
-		this.#context = ( canvas ? canvas.getContext ( "webgpu" ) : null );
+		const { width, height } = this.viewport;
+		return { width, height };
+	}
+
+	/**
+	 * Set the surface size.
+	 * @param {Size} size - The new size of the surface.
+	 */
+	public set size ( size: Size )
+	{
+		const { x, y } = this.viewport;
+		const { width, height } = size;
+		this.viewport = { x, y, width, height };
+	}
+
+	/**
+	 * Get the surface viewport.
+	 * @return {Viewport} The viewport of the surface.
+	 */
+	public get viewport() : Viewport
+	{
+		return this.#viewport;
+	}
+
+	/**
+	 * Set the surface viewport.
+	 * @param {Viewport} viewport - The new viewport of the surface.
+	 */
+	public set viewport ( viewport: Viewport )
+	{
+		const { x, y, width, height } = viewport;
+		if ( width < 0 )
+		{
+			throw new Error ( "Viewport width must be >= zero." );
+		}
+		if ( height < 0 )
+		{
+			throw new Error ( "Viewport height must be >= zero." );
+		}
+		if ( x < 0 )
+		{
+			throw new Error ( "Viewport x must be >= zero." );
+		}
+		if ( y < 0 )
+		{
+			throw new Error ( "Viewport y must be >= zero." );
+		}
+		this.#viewport = { x, y, width, height };
 	}
 }

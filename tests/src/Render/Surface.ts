@@ -49,17 +49,6 @@ export function test ()
 			expect ( surface.context ).to.equal ( context );
 		} );
 
-		it ( "Should be able to set the context from a canvas", function ()
-		{
-			const canvas = document.createElement ( "canvas" );
-			const surface = new Surface();
-			surface.canvas = canvas;
-			expect ( surface.context ).to.exist;
-			expect ( surface.context instanceof GPUCanvasContext ).to.be.true;
-			expect ( surface.context ).to.equal ( canvas.getContext ( "webgpu" ) );
-			expect ( surface.canvas ).to.be.undefined; // This is only a setter.
-		} );
-
 		it ( "Should be able to construct with a context", function ()
 		{
 			const context = document.createElement ( "canvas" ).getContext ( "webgpu" );
@@ -69,27 +58,10 @@ export function test ()
 			expect ( surface.context ).to.equal ( context );
 		} );
 
-		it ( "Should be able to construct with a canvas", function ()
-		{
-			const canvas = document.createElement ( "canvas" );
-			const surface = new Surface ( canvas );
-			expect ( surface.context ).to.exist;
-			expect ( surface.context instanceof GPUCanvasContext ).to.be.true;
-			expect ( surface.context ).to.equal ( canvas.getContext ( "webgpu" ) );
-		} );
-
-		it ( "Should throw an error with invalid argument to constructor", function ()
+		it ( "Should be able to construct with null or undefined", function ()
 		{
 			expect ( () => { new Surface ( undefined ) } ).to.not.throw();
 			expect ( () => { new Surface ( null ) } ).to.not.throw();
-
-			const message = "Invalid input type in render surface constructor";
-			expect ( () => { new Surface ( {} ) } ).to.throw ( `${message}: object` );
-			expect ( () => { new Surface ( [] ) } ).to.throw ( `${message}: object` );
-			expect ( () => { new Surface ( 123 ) } ).to.throw ( `${message}: number` );
-			expect ( () => { new Surface ( "Some string" ) } ).to.throw ( `${message}: string` );
-			expect ( () => { new Surface ( true ) } ).to.throw ( `${message}: boolean` );
-			expect ( () => { new Surface ( false ) } ).to.throw ( `${message}: boolean` );
 		} );
 	} );
 };
