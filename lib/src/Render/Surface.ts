@@ -27,7 +27,9 @@ export class Surface
 	/**
 	 * Construct the class.
 	 * @constructor
-	 * @param {HTMLCanvasElement | null} [canvas] - HTML canvas element.
+	 * @param {HTMLCanvasElement | GPUCanvasContext | null} [input] -
+	 * Input can be a canvas, rendering context, null, or undefined.
+	 * If it is anything else, an error will be thrown.
 	 */
 	constructor ( input?: ( HTMLCanvasElement | GPUCanvasContext | null ) )
 	{
