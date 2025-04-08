@@ -13,8 +13,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { test as testSurface } from "./Surface";
+import { test as testViewer } from "./Viewer";
 
 describe ( "Render", function ()
 {
 	testSurface();
+	testViewer();
 } );
