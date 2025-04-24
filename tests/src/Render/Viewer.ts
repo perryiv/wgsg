@@ -39,10 +39,10 @@ export function test ()
 			expect ( viewer.canvas ).to.be.null;
 		} );
 
-		it ( "Default viewer should have null surface", function ()
+		it ( "Default viewer should have null context", function ()
 		{
 			const viewer = new Viewer();
-			expect ( viewer.surface ).to.be.null;
+			expect ( viewer.context ).to.be.null;
 		} );
 
 		it ( "Should be able to set the canvas", function ()
@@ -51,7 +51,7 @@ export function test ()
 			const viewer = new Viewer();
 
 			expect ( viewer.canvas ).to.be.null;
-			expect ( viewer.surface ).to.be.null;
+			expect ( viewer.context ).to.be.null;
 
 			viewer.canvas = canvas;
 
@@ -59,8 +59,8 @@ export function test ()
 			expect ( viewer.canvas instanceof HTMLCanvasElement ).to.be.true;
 			expect ( viewer.canvas ).to.equal ( canvas );
 
-			expect ( viewer.surface ).to.exist;
-			expect ( viewer.surface instanceof Surface ).to.be.true;
+			expect ( viewer.context ).to.exist;
+			expect ( viewer.context instanceof GPUCanvasContext ).to.be.true;
 		} );
 
 		it ( "Should be able to construct with a canvas", function ()
@@ -72,8 +72,8 @@ export function test ()
 			expect ( viewer.canvas instanceof HTMLCanvasElement ).to.be.true;
 			expect ( viewer.canvas ).to.equal ( canvas );
 
-			expect ( viewer.surface ).to.exist;
-			expect ( viewer.surface instanceof Surface ).to.be.true;
+			expect ( viewer.context ).to.exist;
+			expect ( viewer.context instanceof GPUCanvasContext ).to.be.true;
 		} );
 
 		it ( "Should be able to construct with null or undefined", function ()
