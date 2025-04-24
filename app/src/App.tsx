@@ -79,8 +79,7 @@ export function App()
 			const { inlineSize: width, blockSize: height } = item.contentBoxSize[0];
 			const { maxTextureDimension2D: maxDimension } = device.limits;
 
-			// Set the canvas size.
-			// The canvas size must be in the range [1, maxTextureDimension2D].
+			// Set the canvas size and make sure it's within the device's range.
 			const canvas = ( item.target as HTMLCanvasElement );
 			canvas.width  = Math.max ( 1, Math.min ( width,  maxDimension ) );
 			canvas.height = Math.max ( 1, Math.min ( height, maxDimension ) );

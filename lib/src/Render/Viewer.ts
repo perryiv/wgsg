@@ -23,10 +23,9 @@ import { Surface } from "./Surface";
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Viewer
+export class Viewer extends Surface
 {
 	#canvas: ( HTMLCanvasElement | null ) = null;
-	#surface: ( Surface | null ) = null;
 
 	/**
 	 * Construct the class.
@@ -36,16 +35,8 @@ export class Viewer
 	 */
 	constructor ( canvas?: ( HTMLCanvasElement | null ) )
 	{
+		super(); // The next line will set the inherited context.
 		this.canvas = ( canvas ?? null );
-	}
-
-	/**
-	 * Get the surface.
-	 * @returns {Surface | null} The surface, or null.
-	 */
-	public get surface () : ( Surface | null )
-	{
-		return this.#surface;
 	}
 
 	/**
@@ -63,18 +54,25 @@ export class Viewer
 	 */
 	public set canvas ( canvas: ( HTMLCanvasElement | null ) )
 	{
+		// Do nothing if it's the same.
+		if ( this.#canvas === canvas )
+		{
+			return;
+		}
+
 		// Set the canvas, which may be null.
 		this.#canvas = ( canvas ?? null );
 
-		// If we have a valid canvas then make a new surface.
+		// If we have a valid canvas then make a new context.
 		if ( canvas )
 		{
-			this.#surface = new Surface ( canvas.getContext ( "webgpu" ) );
+			this.context = canvas.getContext ( "webgpu" );
 		}
-		// Otherwise, destroy the surface.
+
+		// Otherwise, destroy the context.
 		else
 		{
-			this.#surface = null;
+			this.context = null;
 		}
 	}
 }

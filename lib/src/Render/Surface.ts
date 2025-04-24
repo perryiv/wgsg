@@ -85,7 +85,7 @@ export class Surface
 	 */
 	public get viewport() : Viewport
 	{
-		return this.#viewport;
+		return { ...this.#viewport };
 	}
 
 	/**
