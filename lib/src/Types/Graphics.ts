@@ -13,8 +13,19 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export interface GPUData
+export interface IDeviceOptions
 {
-	adapter: GPUAdapter,
-	device: GPUDevice,
-};
+	rao?: GPURequestAdapterOptions;
+	dd?: GPUDeviceDescriptor;
+}
+
+export interface IDeviceData
+{
+	device: GPUDevice;
+}
+
+export interface IRenderingContextInput
+{
+	device: GPUDevice;
+	canvas: ( HTMLCanvasElement | OffscreenCanvas );
+}

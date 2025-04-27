@@ -13,7 +13,28 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Size, Viewport } from "../Types/Math";
+import { getRenderingContext } from "../Tools/WebGPU";
+import { ISize, IViewport } from "../Types/Math";
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * The input for the constructor.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export interface ISurfaceConstructor
+{
+	// These two are needed.
+	canvas: HTMLCanvasElement;
+	device: GPUDevice;
+
+	// The user can configure this if desired.
+	context?: ( GPUCanvasContext | null );
+
+	// This is also optional.
+	name?: ( string | null );
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -25,44 +46,130 @@ import { Size, Viewport } from "../Types/Math";
 
 export class Surface
 {
-	#context: ( GPUCanvasContext | null ) = null;
-	#viewport: Viewport = { x: 0, y: 0, width: 0, height: 0 };
+	#name: ( string | null ) = null;
+	#canvas: HTMLCanvasElement;
+	#context: GPUCanvasContext;
+	#device: GPUDevice;
+	#viewport: IViewport = { x: 0, y: 0, width: 0, height: 0 };
 
 	/**
 	 * Construct the class.
 	 * @constructor
-	 * @param {GPUCanvasContext | null} [input] -
-	 * Input can be a rendering context, null, or undefined.
 	 */
-	constructor ( context?: ( GPUCanvasContext | null ) )
+	constructor ( { name, canvas, device, context } : ISurfaceConstructor )
 	{
-		this.#context = ( context ?? null );
+		// This should be valid.
+		if ( !canvas )
+		{
+			throw new Error ( "Invalid canvas when constructing a surface" );
+		}
+
+		// This should be valid.
+		if ( !device )
+		{
+			throw new Error ( "Invalid device when constructing a surface" );
+		}
+
+		// This one is optional. Make it if we have to.
+		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+		if ( !context )
+		{
+			context = getRenderingContext ( { device, canvas } );
+		}
+
+		// This should be valid when we get to here.
+		if ( !context )
+		{
+			throw new Error ( "Failed to get rendering context for canvas when constructing a surface" );
+		}
+
+		// Set our members.
+		this.#name = ( name ?? null );
+		this.#canvas = canvas;
+		this.#context = context;
+		this.#device = device;
+	}
+
+	/**
+	 * Get the name.
+	 * @returns {string | null} The name of the surface.
+	 */
+	public get name () : ( string | null )
+	{
+		return this.#name;
+	}
+
+	/**
+	 * Set the name.
+	 * @param {string | null} name - The name of the surface.
+	 */
+	public set name ( name: ( string | null ) )
+	{
+		this.#name = name;
+	}
+
+	/**
+	 * Get the device.
+	 * @returns {GPUDevice} The GPU device.
+	 */
+	public get device () : GPUDevice
+	{
+		// Get a shortcut to the device.
+		const device = this.#device;
+
+		// Given how we construct the class, this is probably unnecessary.
+		if ( !device )
+		{
+			throw new Error ( "Invalid GPU device in surface class" );
+		}
+
+		// Return the device.
+		return device;
+	}
+
+	/**
+	 * Get the canvas.
+	 * @returns {HTMLCanvasElement} The HTML canvas element.
+	 */
+	public get canvas () : HTMLCanvasElement
+	{
+		// Get a shortcut to the canvas.
+		const canvas = this.#canvas;
+
+		// Given how we construct the class, this is probably unnecessary.
+		if ( !canvas )
+		{
+			throw new Error ( "Invalid canvas element in surface class" );
+		}
+
+		// Return the canvas.
+		return canvas;
 	}
 
 	/**
 	 * Get the rendering context.
-	 * @return {GPUCanvasContext | null} The rendering context, or null.
+	 * @return {GPUCanvasContext} The rendering context.
 	 */
-	public get context() : ( GPUCanvasContext | null )
+	public get context() : GPUCanvasContext
 	{
-		return this.#context;
-	}
+		// Get a shortcut to the canvas.
+		const context = this.#context;
 
-	/**
-	 * Set the rendering context.
-	 *
-	 * @param {GPUCanvasContext | null} context - The rendering context, or null.
-	 */
-	public set context ( context: ( GPUCanvasContext | null ) )
-	{
-		this.#context = context;
+		// Make sure it is valid.
+		if ( !context )
+		{
+			throw new Error ( "Invalid rendering context in surface class" );
+		}
+
+		// Return the context.
+		return context;
 	}
 
 	/**
 	 * Get the surface size.
-	 * @return {Size} The size of the surface.
+	 * @return {ISize} The size of the surface.
 	 */
-	public get size() : Size
+	public get size() : ISize
 	{
 		const { width, height } = this.viewport;
 		return { width, height };
@@ -70,9 +177,9 @@ export class Surface
 
 	/**
 	 * Set the surface size.
-	 * @param {Size} size - The new size of the surface.
+	 * @param {ISize} size - The new size of the surface.
 	 */
-	public set size ( size: Size )
+	public set size ( size: ISize )
 	{
 		const { x, y } = this.viewport;
 		const { width, height } = size;
@@ -81,18 +188,18 @@ export class Surface
 
 	/**
 	 * Get the surface viewport.
-	 * @return {Viewport} The viewport of the surface.
+	 * @return {IViewport} The viewport of the surface.
 	 */
-	public get viewport() : Viewport
+	public get viewport() : IViewport
 	{
 		return { ...this.#viewport };
 	}
 
 	/**
 	 * Set the surface viewport.
-	 * @param {Viewport} viewport - The new viewport of the surface.
+	 * @param {IViewport} viewport - The new viewport of the surface.
 	 */
-	public set viewport ( viewport: Viewport )
+	public set viewport ( viewport: IViewport )
 	{
 		const { x, y, width, height } = viewport;
 		if ( width < 0 )

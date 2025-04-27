@@ -8,12 +8,16 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Test the render surface.
+//	Test the viewer.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 import { expect } from "chai";
-import { Surface, Viewer } from "wgsg-lib";
+import {
+	getDeviceData,
+	getRenderingContext,
+	Viewer,
+} from "wgsg-lib";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -26,34 +30,20 @@ export function test ()
 {
 	describe ( "Viewer", function ()
 	{
-		it ( "Should be able to make a viewer", function ()
+		it ( "Should not be able to make a viewer with zero arguments", function ()
 		{
-			const viewer = new Viewer();
+			// @ts-expect-error Viewer does not have a default constructor.
+			expect ( () => { new Viewer() } ).to.throw();
+		} );
+
+		it ( "Should be able to make a viewer with canvas and device", async function ()
+		{
+			const canvas = document.createElement ( "canvas" );
+			const { device } = await getDeviceData();
+			const viewer = new Viewer ( { canvas, device } );
+
 			expect ( viewer ).to.exist;
 			expect ( viewer instanceof Viewer ).to.be.true;
-		} );
-
-		it ( "Default viewer should have null canvas", function ()
-		{
-			const viewer = new Viewer();
-			expect ( viewer.canvas ).to.be.null;
-		} );
-
-		it ( "Default viewer should have null context", function ()
-		{
-			const viewer = new Viewer();
-			expect ( viewer.context ).to.be.null;
-		} );
-
-		it ( "Should be able to set the canvas", function ()
-		{
-			const canvas = document.createElement ( "canvas" );
-			const viewer = new Viewer();
-
-			expect ( viewer.canvas ).to.be.null;
-			expect ( viewer.context ).to.be.null;
-
-			viewer.canvas = canvas;
 
 			expect ( viewer.canvas ).to.exist;
 			expect ( viewer.canvas instanceof HTMLCanvasElement ).to.be.true;
@@ -61,12 +51,25 @@ export function test ()
 
 			expect ( viewer.context ).to.exist;
 			expect ( viewer.context instanceof GPUCanvasContext ).to.be.true;
+			expect ( viewer.context ).to.equal ( canvas.getContext ( "webgpu" ) );
+
+			expect ( viewer.device ).to.exist;
+			expect ( viewer.device instanceof GPUDevice ).to.be.true;
+			expect ( viewer.device ).to.equal ( device );
+
+			expect ( viewer.name ).to.be.null;
 		} );
 
-		it ( "Should be able to construct with a canvas", function ()
+		it ( "Should be able to make a viewer with a name and context", async function ()
 		{
+			const name = "My Viewer";
 			const canvas = document.createElement ( "canvas" );
-			const viewer = new Viewer ( canvas );
+			const { device } = await getDeviceData();
+			const context = getRenderingContext ( { device, canvas } );
+			const viewer = new Viewer ( { name, canvas, device, context } );
+
+			expect ( viewer ).to.exist;
+			expect ( viewer instanceof Viewer ).to.be.true;
 
 			expect ( viewer.canvas ).to.exist;
 			expect ( viewer.canvas instanceof HTMLCanvasElement ).to.be.true;
@@ -74,12 +77,13 @@ export function test ()
 
 			expect ( viewer.context ).to.exist;
 			expect ( viewer.context instanceof GPUCanvasContext ).to.be.true;
-		} );
+			expect ( viewer.context ).to.equal ( context );
 
-		it ( "Should be able to construct with null or undefined", function ()
-		{
-			expect ( () => { new Viewer ( undefined ) } ).to.not.throw();
-			expect ( () => { new Viewer ( null ) } ).to.not.throw();
+			expect ( viewer.device ).to.exist;
+			expect ( viewer.device instanceof GPUDevice ).to.be.true;
+			expect ( viewer.device ).to.equal ( device );
+
+			expect ( viewer.name ).to.equal ( name );
 		} );
 	} );
 };

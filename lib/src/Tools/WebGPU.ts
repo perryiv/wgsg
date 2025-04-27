@@ -13,18 +13,23 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { GPUData } from "../Types/Graphics";
+import {
+	IDeviceData,
+	IDeviceOptions,
+	IRenderingContextInput,
+} from "../Types/Graphics";
 
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Return the WebGPU adapter and device.
- * @param {GPURequestAdapterOptions} options - Adapter options.
- * @returns {Promise<GPUData>} GPU adapter and device.
+ * Return the WebGPU device and (maybe) other related data.
+ * @param {IGetDeviceOptions} options - Options for requesting the adapter
+ * and describing the device.
+ * @returns {Promise<IDeviceData>} GPU device.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const getData = async ( options?: GPURequestAdapterOptions ) : Promise < GPUData > =>
+export const getDeviceData = async ( options?: IDeviceOptions ) : Promise < IDeviceData > =>
 {
 	// Shortcut.
 	const { gpu } = navigator;
@@ -36,7 +41,7 @@ export const getData = async ( options?: GPURequestAdapterOptions ) : Promise < 
 	}
 
 	// Get the adapter.
-	const adapter = await gpu.requestAdapter ( options );
+	const adapter = await gpu.requestAdapter ( options?.rao );
 
 	// Handle no adapter.
 	if ( !adapter )
@@ -44,8 +49,9 @@ export const getData = async ( options?: GPURequestAdapterOptions ) : Promise < 
 		throw new Error ( "Failed to get WebGPU adapter" );
 	}
 
-	// Get the device.
-	const device = await adapter.requestDevice();
+	// Get the device from the adapter. Can only do this once with this
+	// particular adapter, which is why we don't return it also.
+	const device = await adapter.requestDevice ( options?.dd );
 
 	// Handle no device.
 	if ( !device )
@@ -54,22 +60,7 @@ export const getData = async ( options?: GPURequestAdapterOptions ) : Promise < 
 	}
 
 	// If we get to here then return the data.
-	return { adapter, device };
-};
-
-
-///////////////////////////////////////////////////////////////////////////////
-/**
- * Return the WebGPU device.
- * @param {GPURequestAdapterOptions} options - GPU adapter options.
- * @returns {Promise<GPUDevice>} GPU device.
- */
-///////////////////////////////////////////////////////////////////////////////
-
-export const getDevice = async ( options?: GPURequestAdapterOptions ) : Promise < GPUDevice > =>
-{
-	const { device } = await getData ( options );
-	return device;
+	return { device };
 };
 
 
@@ -77,12 +68,12 @@ export const getDevice = async ( options?: GPURequestAdapterOptions ) : Promise 
 /**
  * Return the WebGPU rendering context for the canvas.
  * @param {GPUDevice} device - GPU device.
- * @param {HTMLCanvasElement} canvas - HTML canvas element.
+ * @param {HTMLCanvasElement | OffscreenCanvas} canvas - HTML or off-screen canvas element.
  * @returns {GPUCanvasContext} Configured GPU canvas context.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const getRenderingContext = ( device: GPUDevice, canvas: HTMLCanvasElement ) : GPUCanvasContext =>
+export const getRenderingContext = ( { device, canvas } : IRenderingContextInput ) : GPUCanvasContext =>
 {
 	// Check input.
 	if ( !device )

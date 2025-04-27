@@ -13,7 +13,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { expect } from "chai";
-import { Surface } from "wgsg-lib";
+import {
+	getDeviceData,
+	getRenderingContext,
+	Surface,
+} from "wgsg-lib";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -26,42 +30,60 @@ export function test ()
 {
 	describe ( "Surface", function ()
 	{
-		it ( "Should be able to make a surface", function ()
+		it ( "Should not be able to make a surface with zero arguments", function ()
 		{
-			const surface = new Surface();
+			// @ts-expect-error Surface does not have a default constructor.
+			expect ( () => { new Surface() } ).to.throw();
+		} );
+
+		it ( "Should be able to make a surface with canvas and device", async function ()
+		{
+			const canvas = document.createElement ( "canvas" );
+			const { device } = await getDeviceData();
+			const surface = new Surface ( { canvas, device } );
+
 			expect ( surface ).to.exist;
 			expect ( surface instanceof Surface ).to.be.true;
+
+			expect ( surface.canvas ).to.exist;
+			expect ( surface.canvas instanceof HTMLCanvasElement ).to.be.true;
+			expect ( surface.canvas ).to.equal ( canvas );
+
+			expect ( surface.context ).to.exist;
+			expect ( surface.context instanceof GPUCanvasContext ).to.be.true;
+			expect ( surface.context ).to.equal ( canvas.getContext ( "webgpu" ) );
+
+			expect ( surface.device ).to.exist;
+			expect ( surface.device instanceof GPUDevice ).to.be.true;
+			expect ( surface.device ).to.equal ( device );
+
+			expect ( surface.name ).to.be.null;
 		} );
 
-		it ( "Default surface should have null context", function ()
+		it ( "Should be able to make a surface with a name and context", async function ()
 		{
-			const surface = new Surface();
-			expect ( surface.context ).to.be.null;
-		} );
+			const name = "My Surface";
+			const canvas = document.createElement ( "canvas" );
+			const { device } = await getDeviceData();
+			const context = getRenderingContext ( { device, canvas } );
+			const surface = new Surface ( { name, canvas, device, context } );
 
-		it ( "Should be able to set the context", function ()
-		{
-			const context = document.createElement ( "canvas" ).getContext ( "webgpu" );
-			const surface = new Surface();
-			surface.context = context;
+			expect ( surface ).to.exist;
+			expect ( surface instanceof Surface ).to.be.true;
+
+			expect ( surface.canvas ).to.exist;
+			expect ( surface.canvas instanceof HTMLCanvasElement ).to.be.true;
+			expect ( surface.canvas ).to.equal ( canvas );
+
 			expect ( surface.context ).to.exist;
 			expect ( surface.context instanceof GPUCanvasContext ).to.be.true;
 			expect ( surface.context ).to.equal ( context );
-		} );
 
-		it ( "Should be able to construct with a context", function ()
-		{
-			const context = document.createElement ( "canvas" ).getContext ( "webgpu" );
-			const surface = new Surface ( context );
-			expect ( surface.context ).to.exist;
-			expect ( surface.context instanceof GPUCanvasContext ).to.be.true;
-			expect ( surface.context ).to.equal ( context );
-		} );
+			expect ( surface.device ).to.exist;
+			expect ( surface.device instanceof GPUDevice ).to.be.true;
+			expect ( surface.device ).to.equal ( device );
 
-		it ( "Should be able to construct with null or undefined", function ()
-		{
-			expect ( () => { new Surface ( undefined ) } ).to.not.throw();
-			expect ( () => { new Surface ( null ) } ).to.not.throw();
+			expect ( surface.name ).to.equal ( name );
 		} );
 	} );
 };

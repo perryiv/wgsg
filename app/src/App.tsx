@@ -15,8 +15,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-	getDevice,
+	getDeviceData,
 	getRenderingContext,
+	IDeviceData,
 	Viewer,
 } from "wgsg-lib";
 
@@ -41,7 +42,13 @@ export function App()
 	{
 		void ( async () =>
 		{
-			setDevice ( await getDevice() );
+			const { device } = await getDeviceData();
+			setDevice ( device );
+
+			void device.lost.then ( ( { reason }: GPUDeviceLostInfo ) =>
+			{
+				console.log ( "Context lost because: ", reason );
+			} );
 		} ) ();
 	},
 	[] );
@@ -53,8 +60,7 @@ export function App()
 	{
 		if ( device && canvas.current )
 		{
-			const context = getRenderingContext ( device, canvas.current );
-			setViewer ( new Viewer ( canvas.current ) );
+			setViewer ( new Viewer ( { device, canvas: canvas.current } ) );
 		}
 	},
 	[ device ] );

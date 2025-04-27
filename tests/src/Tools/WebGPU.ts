@@ -14,9 +14,9 @@
 
 import { expect } from "chai";
 import {
-	getData,
-	getDevice,
+	getDeviceData,
 	getRenderingContext,
+	IDeviceData,
 } from "wgsg-lib";
 
 
@@ -39,18 +39,9 @@ export function test ()
 			expect ( gpu instanceof GPU ).to.be.true;
 		} );
 
-		it ( "Use the getData function", async function ()
+		it ( "Use the getDeviceData function", async function ()
 		{
-			const { adapter, device } = await getData();
-			expect ( adapter ).to.exist;
-			expect ( device ).to.exist;
-			expect ( adapter instanceof GPUAdapter ).to.be.true;
-			expect ( device instanceof GPUDevice ).to.be.true;
-		} );
-
-		it ( "Use the getDevice function", async function ()
-		{
-			const device = await getDevice();
+			const { device }: IDeviceData = await getDeviceData();
 			expect ( device ).to.exist;
 			expect ( device instanceof GPUDevice ).to.be.true;
 		} );
@@ -60,8 +51,8 @@ export function test ()
 			const canvas = document.createElement ( "canvas" );
 			expect ( canvas ).to.exist;
 			expect ( canvas instanceof HTMLCanvasElement ).to.be.true;
-			const device = await getDevice();
-			const context = getRenderingContext ( device, canvas );
+			const { device } = await getDeviceData();
+			const context = getRenderingContext ( { device, canvas } );
 			expect ( context ).to.exist;
 			expect ( context instanceof GPUCanvasContext ).to.be.true;
 		} );
