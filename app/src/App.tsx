@@ -16,8 +16,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
 	getDeviceData,
-	getRenderingContext,
-	IDeviceData,
 	Viewer,
 } from "wgsg-lib";
 
@@ -31,71 +29,49 @@ import {
 export function App()
 {
 	// Get state.
-	const [ device, setDevice ] = useState < GPUDevice | null > ( null );
+	const [ , setDevice ] = useState < GPUDevice | null > ( null );
 	const canvas = useRef < HTMLCanvasElement | null > ( null );
-	const [ viewer, setViewer ] = useState < Viewer | null > ( null );
+	const [ , setViewer ] = useState < Viewer | null > ( null );
 
 	//
 	// Called when the component mounts.
 	//
 	useEffect ( () =>
 	{
+		console.log ( "App component mounted" );
+
 		void ( async () =>
 		{
+			if ( !canvas.current )
+			{
+				throw new Error ( "Invalid canvas element" );
+			}
+
 			const { device } = await getDeviceData();
+
+			if ( !device )
+			{
+				throw new Error ( "Invalid device" );
+			}
+
 			setDevice ( device );
 
 			void device.lost.then ( ( { reason }: GPUDeviceLostInfo ) =>
 			{
 				console.log ( "Context lost because: ", reason );
 			} );
+
+			setViewer ( new Viewer ( { device, canvas: canvas.current } ) );
+
+			console.log ( "Viewer created and configured" );
 		} ) ();
+
+		return ( () =>
+		{
+			console.log ( "App component unmounted" );
+		} );
 	},
 	[] );
-
-	//
-	// Called when the device changes.
-	//
-	useEffect ( () =>
-	{
-		if ( device && canvas.current )
-		{
-			setViewer ( new Viewer ( { device, canvas: canvas.current } ) );
-		}
-	},
-	[ device ] );
-
-	//
-	// Called when the viewer changes.
-	//
-	useEffect ( () =>
-	{
-		// Handle when these are invalid.
-		if ( ( !viewer ) || ( !canvas.current ) || ( !device ) )
-		{
-			return;
-		}
-
-		// Observe changes to the canvas size.
-		// https://webgpufundamentals.org/webgpu/lessons/webgpu-fundamentals.html#a-resizing
-		const observer = new ResizeObserver ( ( items ) =>
-		{
-			// There can be only one.
-			const item = items[0];
-			const { inlineSize: width, blockSize: height } = item.contentBoxSize[0];
-			const { maxTextureDimension2D: maxDimension } = device.limits;
-
-			// Set the canvas size and make sure it's within the device's range.
-			const canvas = ( item.target as HTMLCanvasElement );
-			canvas.width  = Math.max ( 1, Math.min ( width,  maxDimension ) );
-			canvas.height = Math.max ( 1, Math.min ( height, maxDimension ) );
-
-			// Set the viewer's size.
-			viewer.size = { width, height };
-		} );
-		observer.observe ( canvas.current );
-	},
-	[ device, viewer ] );
 
 	// console.log ( "Rendering app" );
 
