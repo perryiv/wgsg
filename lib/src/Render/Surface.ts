@@ -100,7 +100,7 @@ export class Surface
 			// Set the viewer's size.
 			this.size = { width, height };
 
-			console.log ( `New viewer size: ${width}, ${height}` );
+			// console.log ( `New surface size: ${width}, ${height}` );
 		} );
 		observer.observe ( canvas );
 
