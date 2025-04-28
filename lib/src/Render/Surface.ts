@@ -15,6 +15,7 @@
 
 import { getRenderingContext } from "../Tools/WebGPU";
 import { ISize, IViewport } from "../Types/Math";
+import { Node } from "../Scene/index";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -51,6 +52,7 @@ export class Surface
 	#context: GPUCanvasContext;
 	#device: GPUDevice;
 	#viewport: IViewport = { x: 0, y: 0, width: 0, height: 0 };
+	#scene: ( Node | null ) = null;
 
 	/**
 	 * Construct the class.
@@ -127,6 +129,24 @@ export class Surface
 	public set name ( name: ( string | null ) )
 	{
 		this.#name = name;
+	}
+
+	/**
+	 * Get the scene.
+	 * @returns {string | null} The scene that gets rendered on the surface.
+	 */
+	public get scene () : ( Node | null )
+	{
+		return this.#scene;
+	}
+
+	/**
+	 * Set the scene.
+	 * @param {Node | null} scene - The scene that gets rendered on the surface.
+	 */
+	public set scene ( scene: ( Node | null ) )
+	{
+		this.#scene = scene;
 	}
 
 	/**

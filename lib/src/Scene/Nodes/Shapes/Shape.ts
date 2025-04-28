@@ -13,6 +13,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Node } from "../Node";
 import { State } from "../../State/State";
 
 
@@ -23,7 +24,7 @@ import { State } from "../../State/State";
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Shape
+export class Shape extends Node
 {
 	#state: ( State | null ) = null;
 
@@ -34,6 +35,7 @@ export class Shape
 	 */
 	constructor ( state?: ( State | null ) )
 	{
+		super();
 		this.#state = ( state ?? null );
 	}
 
