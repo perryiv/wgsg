@@ -83,6 +83,27 @@ export class Surface
 			throw new Error ( "Failed to get rendering context for canvas when constructing a surface" );
 		}
 
+		// Observe changes to the canvas size.
+		// https://webgpufundamentals.org/webgpu/lessons/webgpu-fundamentals.html#a-resizing
+		const observer = new ResizeObserver ( ( items ) =>
+		{
+			// There can be only one.
+			const item = items[0];
+			const { inlineSize: width, blockSize: height } = item.contentBoxSize[0];
+			const { maxTextureDimension2D: maxDimension } = device.limits;
+
+			// Set the canvas size and make sure it's within the device's range.
+			const canvas = ( item.target as HTMLCanvasElement );
+			canvas.width  = Math.max ( 1, Math.min ( width,  maxDimension ) );
+			canvas.height = Math.max ( 1, Math.min ( height, maxDimension ) );
+
+			// Set the viewer's size.
+			this.size = { width, height };
+
+			console.log ( `New viewer size: ${width}, ${height}` );
+		} );
+		observer.observe ( canvas );
+
 		// Set our members.
 		this.#name = ( name ?? null );
 		this.#canvas = canvas;
