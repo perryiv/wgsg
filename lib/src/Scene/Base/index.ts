@@ -12,6 +12,4 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export * from "./Constants";
-export * from "./Functions";
-export * from "./WebGPU";
+export * from "./Object";

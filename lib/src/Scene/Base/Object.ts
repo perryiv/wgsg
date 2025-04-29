@@ -9,51 +9,39 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Base class for all nodes.
+//	Base class for most other classes.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Group } from "./Groups/Group";
+import { getNextId } from "../../Tools/Functions";
 
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Node class.
+ * Object class.
  * @abstract
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Node extends Object
+export class Object
 {
-	#parents: Set < Group > = new Set < Group > ();
+	#id: number = getNextId();
 
 	/**
 	 * Construct the class.
 	 * @constructor
 	 */
 	constructor()
+	// eslint-disable-next-line @typescript-eslint/no-empty-function
 	{
-		super();
 	}
 
-
 	/**
-	 * Add a parent. This is for the Group class. Do not use it directly.
-	 * @internal
-	 * @param {Group} group - A new parent group.
+	 * Return the id.
+	 * @param {number} id - The id.
 	 */
-	public addParent ( group: Group )
+	public get id ()
 	{
-		// Shortcut.
-		const parents = this.#parents;
-
-		// Make sure the parent is not already in the set.
-		if ( parents.has ( group ) )
-		{
-			throw new Error ( "Given group is already a parent of this node" );
-		}
-
-		// Add the group as a parent.
-		parents.add ( group );
+		return this.#id;
 	}
 }
