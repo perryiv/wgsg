@@ -15,7 +15,7 @@
 
 import { getRenderingContext } from "../Tools/WebGPU";
 import { ISize, IViewport } from "../Types/Math";
-import { Node } from "../Scene/index";
+import { Base, Node } from "../Scene/index";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -45,7 +45,7 @@ export interface ISurfaceConstructor
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Surface
+export class Surface extends Base
 {
 	#name: ( string | null ) = null;
 	#canvas: HTMLCanvasElement;
@@ -60,6 +60,9 @@ export class Surface
 	 */
 	constructor ( { name, canvas, device, context } : ISurfaceConstructor )
 	{
+		// Call this first.
+		super();
+
 		// This should be valid.
 		if ( !canvas )
 		{
