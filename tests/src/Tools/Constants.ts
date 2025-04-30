@@ -1,0 +1,41 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Copyright (c) 2025, Perry L Miller IV
+//	All rights reserved.
+//	MIT License: https://opensource.org/licenses/mit-license.html
+//
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Test code for constants.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+import { expect } from "chai";
+import { IDENTITY_MATRIX } from "wgsg-lib";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Test the code.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export function test ()
+{
+	describe ( "Constants", function ()
+	{
+		it ( "Check the identity matrix", function ()
+		{
+			expect ( IDENTITY_MATRIX instanceof Object.getPrototypeOf ( Float64Array ) ).to.be.true;
+			expect ( IDENTITY_MATRIX.length ).to.equal ( 16 );
+			expect ( IDENTITY_MATRIX ).to.deep.equal ( new Float64Array ( [
+				1, 0, 0, 0,
+				0, 1, 0, 0,
+				0, 0, 1, 0,
+				0, 0, 0, 1
+			] ) );
+		} );
+	} );
+};
