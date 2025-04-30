@@ -13,6 +13,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Base } from "../../Base/Base";
 import { Group } from "./Groups/Group";
 
 
@@ -23,7 +24,7 @@ import { Group } from "./Groups/Group";
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export abstract class Node extends Object
+export abstract class Node extends Base
 {
 	#parents: Set < Group > = new Set < Group > ();
 

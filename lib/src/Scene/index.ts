@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export * from "./Base/index";
+export * from "../Base/index";
 export * from "./Nodes/index";
 export * from "./Shaders/index";
 export * from "./State/index";
