@@ -47,7 +47,7 @@ export class Group extends Node
 
 	/**
 	 * Call the given function for each child node.
-	 * @return {State | null} State for this shape.
+	 * @param {IGroupCallback} cb - Callback function.
 	 */
 	public forEachChild ( cb: IGroupCallback )
 	{
