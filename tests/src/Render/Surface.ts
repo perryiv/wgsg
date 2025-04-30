@@ -15,6 +15,7 @@
 import { expect } from "chai";
 import {
 	getDeviceData,
+	getNextId,
 	getRenderingContext,
 	Surface,
 } from "wgsg-lib";
@@ -44,6 +45,10 @@ export function test ()
 
 			expect ( surface ).to.exist;
 			expect ( surface instanceof Surface ).to.be.true;
+
+			expect ( surface.id ).to.exist;
+			expect ( typeof surface.id ).to.be.equal ( "number" );
+			expect ( surface.id ).to.equal ( getNextId() - 1 );
 
 			expect ( surface.canvas ).to.exist;
 			expect ( surface.canvas instanceof HTMLCanvasElement ).to.be.true;

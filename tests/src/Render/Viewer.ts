@@ -15,6 +15,7 @@
 import { expect } from "chai";
 import {
 	getDeviceData,
+	getNextId,
 	getRenderingContext,
 	Viewer,
 } from "wgsg-lib";
@@ -44,6 +45,10 @@ export function test ()
 
 			expect ( viewer ).to.exist;
 			expect ( viewer instanceof Viewer ).to.be.true;
+
+			expect ( viewer.id ).to.exist;
+			expect ( typeof viewer.id ).to.be.equal ( "number" );
+			expect ( viewer.id ).to.equal ( getNextId() - 1 );
 
 			expect ( viewer.canvas ).to.exist;
 			expect ( viewer.canvas instanceof HTMLCanvasElement ).to.be.true;
