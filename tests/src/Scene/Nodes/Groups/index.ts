@@ -12,14 +12,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { test as testGroups } from "./Groups/index";
-import { test as testShapes } from "./Shapes/index";
+import { test as testGroup } from "./Group";
 
 export function test ()
 {
-	describe ( "Nodes", function ()
+	describe ( "Groups", function ()
 	{
-		testGroups();
-		testShapes();
+		testGroup();
 	} );
 };

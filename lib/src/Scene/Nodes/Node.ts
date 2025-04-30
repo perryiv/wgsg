@@ -37,24 +37,46 @@ export abstract class Node extends Base
 		super();
 	}
 
-
 	/**
 	 * Add a parent. This is for the Group class. Do not use it directly.
 	 * @internal
-	 * @param {Group} group - A new parent group.
+	 * @param {Group} parent - A new parent group.
 	 */
-	public addParent ( group: Group )
+	public addParent ( parent: Group )
 	{
 		// Shortcut.
 		const parents = this.#parents;
 
 		// Make sure the parent is not already in the set.
-		if ( parents.has ( group ) )
+		if ( parents.has ( parent ) )
 		{
 			throw new Error ( "Given group is already a parent of this node" );
 		}
 
-		// Add the group as a parent.
-		parents.add ( group );
+		// Add the parent.
+		parents.add ( parent );
+	}
+
+	/**
+	 * Remove a parent. This is for the Group class. Do not use it directly.
+	 * @internal
+	 * @param {Group} parent - The parent group to remove.
+	 * @return {boolean} True if it worked, otherwise false.
+	 */
+	public removeParent ( parent: Group )
+	{
+		// Remove the parent.
+		return this.#parents.delete ( parent );
+	}
+
+	/**
+	 * See if this node has the given parent.
+	 * @param {Group} parent - The parent to check.
+	 * @return {boolean} True if we have the given parent, otherwise false.
+	 */
+	public hasParent ( parent: Group )
+	{
+		// Do we have the parent?
+		return this.#parents.has ( parent );
 	}
 }

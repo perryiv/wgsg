@@ -46,6 +46,15 @@ export class Group extends Node
 	}
 
 	/**
+	 * Get the number of children.
+	 * @return {number} The number of child nodes.
+	 */
+	public get size() : number
+	{
+		return this.#children.length;
+	}
+
+	/**
 	 * Call the given function for each child node.
 	 * @param {IGroupCallback} cb - Callback function.
 	 */
@@ -76,5 +85,65 @@ export class Group extends Node
 		// Add the node to the array.
 		// If we get to here then we know it won't be a repeat.
 		this.#children.push ( node );
+	}
+
+	/**
+	 * Get the child node.
+	 * @param {number} index - The array index of the child.
+	 * @return {Node | null} The child node or null.
+	 */
+	public getChild ( index: number )
+	{
+		// Handle invalid indices.
+		if ( ( index < 0 ) || ( index > this.size ) )
+		{
+			return null;
+		}
+
+		// Get the child node at this position.
+		const child = this.#children[index];
+
+		// Do not return undefined.
+		return ( child ? child : null );
+	}
+
+	/**
+	 * Remove a child node.
+	 * @param {Node | null | undefined} node - The node to add to the group.
+	 * @return {boolean} True if it worked, otherwise false.
+	 */
+	public removeChild ( index: number )
+	{
+		// Get the child node at this position.
+		const child = this.getChild ( index );
+
+		// Handle invalid child node.
+		if ( !child )
+		{
+			return;
+		}
+
+		// Remove this group from the set of parents.
+		child.removeParent ( this );
+
+		// Remove the node from our array.
+		this.#children.splice ( index, 1 );
+	}
+
+	/**
+	 * Remove all of the child nodes.
+	 */
+	public clear ()
+	{
+		// Note: Could call removeChild() in a loop but this should be faster.
+
+		// Tell all the children that we are no longer a parent.
+		for ( const child of this.#children )
+		{
+			child.removeParent ( this );
+		}
+
+		// Reset the array of children.
+		this.#children = [];
 	}
 }
