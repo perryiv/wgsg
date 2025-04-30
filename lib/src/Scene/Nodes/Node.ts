@@ -23,7 +23,7 @@ import { Group } from "./Groups/Group";
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Node extends Object
+export abstract class Node extends Object
 {
 	#parents: Set < Group > = new Set < Group > ();
 

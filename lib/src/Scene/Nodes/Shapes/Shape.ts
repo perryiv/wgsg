@@ -24,7 +24,7 @@ import { State } from "../../State/State";
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Shape extends Node
+export abstract class Shape extends Node
 {
 	#state: ( State | null ) = null;
 

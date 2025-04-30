@@ -23,7 +23,7 @@ import { getNextId } from "../../Tools/Functions";
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Object
+export abstract class Object
 {
 	#id: number = getNextId();
 
