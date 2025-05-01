@@ -15,6 +15,7 @@
 
 import { Base } from "../../Base/Base";
 import { Group } from "./Groups/Group";
+import { Visitor } from "../../Visitors/Visitor";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -36,6 +37,12 @@ export abstract class Node extends Base
 	{
 		super();
 	}
+
+	/**
+	 * Apply the visitor.
+	 * @param {Visitor} visitor - The visitor object.
+	 */
+	public abstract apply ( _: Visitor ): void;
 
 	/**
 	 * Add a parent. This is for the Group class. Do not use it directly.

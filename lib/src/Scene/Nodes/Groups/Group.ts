@@ -15,6 +15,7 @@
 
 import { Node } from "../Node";
 import { reportError } from "../../../Tools/Errors";
+import { Visitor } from "../../../Visitors/Visitor";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -53,6 +54,15 @@ export class Group extends Node
 	public getClassName() : string
 	{
 		return "Group";
+	}
+
+	/**
+	 * Apply the visitor.
+	 * @param {Visitor} visitor - The visitor object.
+	 */
+	public apply ( visitor: Visitor ): void
+	{
+		visitor.visitGroup ( this );
 	}
 
 	/**

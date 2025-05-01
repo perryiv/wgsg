@@ -15,6 +15,7 @@
 
 import { Group } from "./Group";
 import { IDENTITY_MATRIX } from "../../../Tools/Constants";
+import { Visitor } from "../../../Visitors/Visitor";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -44,6 +45,15 @@ export class Transform extends Group
 	public getClassName() : string
 	{
 		return "Transform";
+	}
+
+	/**
+	 * Apply the visitor.
+	 * @param {Visitor} visitor - The visitor object.
+	 */
+	public apply ( visitor: Visitor ): void
+	{
+		visitor.visitTransform ( this );
 	}
 
 	/**
