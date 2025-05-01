@@ -117,6 +117,15 @@ export class Surface extends Base
 	}
 
 	/**
+	 * Return the class name.
+	 * @return {string} The class name.
+	 */
+	public getClassName() : string
+	{
+		return "Surface";
+	}
+
+	/**
 	 * Get the name.
 	 * @returns {string | null} The name of the surface.
 	 */

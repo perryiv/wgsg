@@ -42,4 +42,13 @@ export class Viewer extends Surface
 	{
 		super ( input );
 	}
+
+	/**
+	 * Return the class name.
+	 * @return {string} The class name.
+	 */
+	public getClassName() : string
+	{
+		return "Viewer";
+	}
 }

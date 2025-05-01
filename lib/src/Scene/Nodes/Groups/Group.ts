@@ -14,6 +14,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Node } from "../Node";
+import { reportError } from "../../../Tools/Errors";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -43,6 +44,15 @@ export class Group extends Node
 	constructor ()
 	{
 		super();
+	}
+
+	/**
+	 * Return the class name.
+	 * @return {string} The class name.
+	 */
+	public getClassName() : string
+	{
+		return "Group";
 	}
 
 	/**
@@ -112,7 +122,7 @@ export class Group extends Node
 	 * @param {Node | null | undefined} node - The node to add to the group.
 	 * @return {boolean} True if it worked, otherwise false.
 	 */
-	public removeChild ( index: number )
+	public removeChild ( index: number ) : boolean
 	{
 		// Get the child node at this position.
 		const child = this.getChild ( index );
@@ -120,14 +130,29 @@ export class Group extends Node
 		// Handle invalid child node.
 		if ( !child )
 		{
-			return;
+			return false;
 		}
 
 		// Remove this group from the set of parents.
-		child.removeParent ( this );
+		const result = child.removeParent ( this );
+
+		// Report the error if there is one.
+		if ( false == result )
+		{
+			reportError ( `${child.type} ${child.id} at index ${index} failed to remove parent ${this.type} ${this.id}` );
+		}
 
 		// Remove the node from our array.
-		this.#children.splice ( index, 1 );
+		const answer = this.#children.splice ( index, 1 );
+
+		// Report the error if there is one.
+		if ( 1 !== answer.length )
+		{
+			reportError ( `Failed to remove ${child.type} ${child.id} at index ${index} from ${this.type} ${this.id}` );
+		}
+
+		// If we get to here then it worked.
+		return true;
 	}
 
 	/**

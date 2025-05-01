@@ -13,5 +13,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 export * from "./Constants";
+export * from "./Errors";
 export * from "./Functions";
 export * from "./WebGPU";

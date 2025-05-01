@@ -38,6 +38,15 @@ export class Transform extends Group
 	}
 
 	/**
+	 * Return the class name.
+	 * @return {string} The class name.
+	 */
+	public getClassName() : string
+	{
+		return "Transform";
+	}
+
+	/**
 	 * Get the matrix.
 	 * @returns {Float64Array} The transformation matrix.
 	 */
