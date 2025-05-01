@@ -65,7 +65,7 @@ export function test ()
 			expect ( surface.name ).to.be.null;
 		} );
 
-		it ( "Should be able to make a surface with a name and context", async function ()
+		it ( "Should be able to make a surface with canvas, device, name, and context", async function ()
 		{
 			const name = "My Surface";
 			const canvas = document.createElement ( "canvas" );

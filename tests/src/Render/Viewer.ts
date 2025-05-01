@@ -65,7 +65,7 @@ export function test ()
 			expect ( viewer.name ).to.be.null;
 		} );
 
-		it ( "Should be able to make a viewer with a name and context", async function ()
+		it ( "Should be able to make a viewer with a canvas, device, name, and context", async function ()
 		{
 			const name = "My Viewer";
 			const canvas = document.createElement ( "canvas" );
