@@ -13,9 +13,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Base } from "../Base/Base";
 import { getRenderingContext } from "../Tools/WebGPU";
-import { ISize, IViewport } from "../Types/Math";
-import { Base, Node } from "../Scene/index";
+import { Node } from "../Scene/index";
+import type { ISize, IViewport } from "../Types/Math";
 
 
 ///////////////////////////////////////////////////////////////////////////////
