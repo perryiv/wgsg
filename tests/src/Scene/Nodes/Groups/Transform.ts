@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { expect } from "chai";
-import { Group, IDENTITY_MATRIX, Transform } from "wgsg-lib";
+import { Group, IDENTITY_MATRIX, Matrix44, Transform } from "wgsg-lib";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -136,7 +136,19 @@ export function test ()
 		it ( "Transform matrix should always be valid", function ()
 		{
 			const root = new Transform();
+			expect ( ( root.matrix as Matrix44 ).length ).to.equal ( 16 ); // TODO: Why is the "as" necessary?
 			expect ( root.matrix ).to.be.deep.equal ( IDENTITY_MATRIX );
+			expect ( root.valid ).to.be.true;
+
+			expect ( () => { root.matrix = [ 0, 1, 2, 3 ]; } ).to.throw (
+				"Invalid array length 4 for transformation matrix, should be 16"
+			);
+			expect ( root.valid ).to.be.true;
+
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+			root.matrix[0] = "0";
+			expect ( ( root.matrix as Matrix44 ).length ).to.equal ( 16 ); // TODO: Why is the "as" necessary?
+			expect ( root.valid ).to.be.false;
 		} );
 	} );
 };

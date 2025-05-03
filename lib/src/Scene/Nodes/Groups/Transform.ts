@@ -73,15 +73,50 @@ export class Transform extends Group
 	public set matrix ( matrix: Matrix44 )
 	{
 		// Do this to keep the TypeScript compiler happy.
-		const size: number = matrix.length;
+		const length: number = matrix.length;
 
-		// Check the size.
-		if ( 16 !== size )
+		// Check the length.
+		if ( 16 !== length )
 		{
-			throw new Error ( `Invalid array length ${size} for transformation matrix, should be 16` );
+			throw new Error ( `Invalid array length ${length} for transformation matrix, should be 16` );
 		}
 
 		// Make a copy.
 		this.#matrix = [ ... matrix ];
+	}
+
+	/**
+	 * See if the matrix is valid.
+	 * @returns {boolean} True if the matrix is valid, otherwise false.
+	 */
+	public get valid () : boolean
+	{
+		// Shortcut.
+		const m = this.#matrix;
+
+		// Get the array length.
+		const length: number = m.length;
+
+		// Check the length.
+		if ( 16 !== length )
+		{
+			return false;
+		}
+
+		// Check all the elements.
+		for ( let i = 0; i < 16; ++i )
+		{
+			if ( "number" !== ( typeof ( m[i] ) ) )
+			{
+				return false;
+			}
+			if ( false === isFinite ( m[i] ) )
+			{
+				return false;
+			}
+		}
+
+		// It worked.
+		return true;
 	}
 }
