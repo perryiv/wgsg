@@ -28,7 +28,7 @@ import { Visitor } from "../../../Visitors/Visitor";
 
 export class Transform extends Group
 {
-	#matrix: Matrix44 = { ...IDENTITY_MATRIX };
+	#matrix: Matrix44 = [ ...IDENTITY_MATRIX ];
 
 	/**
 	 * Construct the class.
@@ -82,6 +82,6 @@ export class Transform extends Group
 		}
 
 		// Make a copy.
-		this.#matrix = { ... matrix };
+		this.#matrix = [ ... matrix ];
 	}
 }

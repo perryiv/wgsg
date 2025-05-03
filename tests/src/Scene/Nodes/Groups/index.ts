@@ -13,11 +13,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { test as testGroup } from "./Group";
+import { test as testTransform } from "./Transform";
 
 export function test ()
 {
 	describe ( "Groups", function ()
 	{
 		testGroup();
+		testTransform();
 	} );
 };

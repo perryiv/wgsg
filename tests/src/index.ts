@@ -18,6 +18,6 @@ void ( async () =>
 	mocha.checkLeaks();
 	await import ( "./Tools/index" ); // This has to be first.
 	await import ( "./Scene/index" );
-	await import ( "./Render/index" );
+	await import ( "./Viewers/index" );
 	mocha.run();
 } ) ();

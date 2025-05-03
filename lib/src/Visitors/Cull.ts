@@ -28,7 +28,7 @@ import { Visitor } from "./Visitor";
 
 export abstract class Cull extends Visitor
 {
-	#matrix: Matrix44 = { ...IDENTITY_MATRIX };
+	#matrix: Matrix44 = [ ...IDENTITY_MATRIX ];
 
 	/**
 	 * Construct the class.
@@ -55,7 +55,7 @@ export abstract class Cull extends Visitor
 	public visitTransform ( transform: Transform ) : void
 	{
 		// Make a copy of the original matrix.
-		const original = { ...this.#matrix };
+		const original: Matrix44 = [ ...this.#matrix ];
 
 		// Multiply the original matrix by the given one and save it in our member.
 		mat4.multiply ( this.#matrix, original, transform.matrix );
