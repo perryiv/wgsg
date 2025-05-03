@@ -23,6 +23,9 @@
 		// Specify what module code is generated.
 		"module": "ESNext",
 
+		// Specify how TypeScript looks up packages.
+		"moduleResolution": "node",
+
 		// Emit additional JavaScript to ease support for importing CommonJS
 		// modules. This enables 'allowSyntheticDefaultImports' for type
 		// compatibility.
