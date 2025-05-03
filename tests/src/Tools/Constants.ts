@@ -28,14 +28,18 @@ export function test ()
 	{
 		it ( "Check the identity matrix", function ()
 		{
-			expect ( IDENTITY_MATRIX instanceof Object.getPrototypeOf ( Float64Array ) ).to.be.true;
+			expect ( IDENTITY_MATRIX instanceof Object ).to.be.true;
 			expect ( IDENTITY_MATRIX.length ).to.equal ( 16 );
-			expect ( IDENTITY_MATRIX ).to.deep.equal ( new Float64Array ( [
+			expect ( IDENTITY_MATRIX ).to.deep.equal ( [
 				1, 0, 0, 0,
 				0, 1, 0, 0,
 				0, 0, 1, 0,
 				0, 0, 0, 1
-			] ) );
+			] );
+			for ( let i = 0; i < 16; ++i )
+			{
+				expect ( typeof IDENTITY_MATRIX[i] ).to.equal ( "number" );
+			}
 		} );
 	} );
 };

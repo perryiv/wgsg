@@ -12,8 +12,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { mat4 } from "gl-matrix";
 import { Base } from "../Base/Base";
+import { Matrix44 } from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -37,7 +37,7 @@ export abstract class Projection extends Base
 
 	/**
 	 * Return the projection matrix.
-	 * @return {mat4} The projection matrix.
+	 * @return {Matrix44} The projection matrix.
 	 */
-	public abstract get matrix() : mat4;
+	public abstract get matrix() : Matrix44;
 }

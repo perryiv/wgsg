@@ -15,6 +15,7 @@
 
 import { Group } from "./Group";
 import { IDENTITY_MATRIX } from "../../../Tools/Constants";
+import { Matrix44 } from "../../../Types";
 import { Visitor } from "../../../Visitors/Visitor";
 
 
@@ -27,7 +28,7 @@ import { Visitor } from "../../../Visitors/Visitor";
 
 export class Transform extends Group
 {
-	#matrix: Float64Array = new Float64Array ( IDENTITY_MATRIX );
+	#matrix: Matrix44 = { ...IDENTITY_MATRIX };
 
 	/**
 	 * Construct the class.
@@ -58,26 +59,29 @@ export class Transform extends Group
 
 	/**
 	 * Get the matrix.
-	 * @returns {Float64Array} The transformation matrix.
+	 * @returns {Matrix44} The transformation matrix.
 	 */
-	public get matrix () : Float64Array
+	public get matrix () : Matrix44
 	{
 		return this.#matrix;
 	}
 
 	/**
 	 * Set the matrix.
-	 * @param {Float64Array} matrix - The transformation matrix.
+	 * @param {Matrix44} matrix - The transformation matrix.
 	 */
-	public set matrix ( matrix: Float64Array )
+	public set matrix ( matrix: Matrix44 )
 	{
+		// Do this to keep the TypeScript compiler happy.
+		const size: number = matrix.length;
+
 		// Check the size.
-		if ( 16 !== matrix.length )
+		if ( 16 !== size )
 		{
-			throw new Error ( `Invalid array length ${matrix.length} for transformation matrix, should be 16` );
+			throw new Error ( `Invalid array length ${size} for transformation matrix, should be 16` );
 		}
 
 		// Make a copy.
-		this.#matrix = new Float64Array ( matrix );
+		this.#matrix = { ... matrix };
 	}
 }
