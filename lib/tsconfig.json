@@ -18,7 +18,7 @@
 
 		// Set the JavaScript language version for emitted JavaScript and include
 		// compatible library declarations.
-		"target": "es2016",
+		"target": "ES2016",
 
 		// Specify what module code is generated.
 		"module": "ESNext",
@@ -44,7 +44,7 @@
 		"types": [ "@webgpu/types" ],
 
 		// Specify the folder for .tsbuildinfo incremental compilation files.
-		"tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+		"tsBuildInfoFile": "./node_modules/.tmp/tsconfig.tsbuildinfo",
 
 		// No output files because we generate one with vite.
 		"noEmit": true
