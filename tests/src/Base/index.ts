@@ -12,13 +12,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-void ( async () =>
+import { test as testBase } from "./Base";
+
+
+describe ( "Base", function ()
 {
-	mocha.setup ( "bdd" );
-	mocha.checkLeaks();
-	await import ( "./Tools/index" ); // This has to be first.
-	await import ( "./Base/index" );
-	await import ( "./Scene/index" );
-	await import ( "./Viewers/index" );
-	mocha.run();
-} ) ();
+	testBase();
+} );
