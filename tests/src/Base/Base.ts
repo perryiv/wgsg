@@ -22,11 +22,11 @@ import { Base } from "wgsg-lib";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-class MyClass extends Base
+class MyConcreteClass extends Base
 {
 	public getClassName() : string
 	{
-		return "MyClass";
+		return "MyConcreteClass";
 	}
 };
 
@@ -43,13 +43,13 @@ export function test ()
 	{
 		it ( "Should be able to inherit from the base class", function ()
 		{
-			const mine = new MyClass();
-			expect ( mine instanceof Base ).to.be.true;
-			expect ( mine.type ).to.be.equal ( mine.getClassName() );
-			expect ( mine.type ).to.be.equal ( "MyClass" );
-			expect ( mine.id ).to.exist;
-			expect ( typeof mine.id ).to.be.equal ( "number" );
-			expect ( mine.id ).to.be.greaterThan ( 0 );
+			const a = new MyConcreteClass();
+			expect ( a instanceof Base ).to.be.true;
+			expect ( a.type ).to.be.equal ( a.getClassName() );
+			expect ( a.type ).to.be.equal ( "MyConcreteClass" );
+			expect ( a.id ).to.exist;
+			expect ( typeof a.id ).to.be.equal ( "number" );
+			expect ( a.id ).to.be.greaterThan ( 0 );
 		} );
 	} );
 };
