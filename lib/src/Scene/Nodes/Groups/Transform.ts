@@ -32,11 +32,19 @@ export class Transform extends Group
 
 	/**
 	 * Construct the class.
+	 * @param {IMatrix44 | null | undefined} matrix - Optional matrix input.
 	 * @constructor
 	 */
-	constructor ()
+	constructor ( matrix?: ( IMatrix44 | null ) )
 	{
+		// Do this first.
 		super();
+
+		// Set our matrix if we were given a valid one.
+		if ( matrix )
+		{
+			this.matrix = matrix;
+		}
 	}
 
 	/**
