@@ -13,6 +13,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export type Vector2 = [ number, number ];
-export type Vector3 = [ number, number, number ];
-export type Vector4 = [ number, number, number, number ];
+export type IVector2 = [ number, number ];
+export type IVector3 = [ number, number, number ];
+export type IVector4 = [ number, number, number, number ];
