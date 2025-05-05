@@ -11,7 +11,9 @@
     "dev": "vite",
     "lint": "eslint --ext .ts ./src"
   },
-  "dependencies": {},
+  "dependencies": {
+    "gl-matrix": "^3.4.3"
+  },
   "devDependencies": {
     "@types/chai": "^5.2.1",
     "@types/mocha": "^10.0.10",
