@@ -12,8 +12,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export * from "./Viewers/index";
+export * from "./Base/index";
 export * from "./Scene/index";
 export * from "./Tools/index";
 export * from "./Types/index";
+export * from "./Viewers/index";
 export * from "./Visitors/index";
