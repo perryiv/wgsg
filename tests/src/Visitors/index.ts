@@ -12,20 +12,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-void ( async () =>
+import { test as testCull } from "./Cull";
+import { test as testMultiply } from "./Multiply";
+import { test as testVisitor } from "./Visitor";
+
+describe ( "Visitors", function ()
 {
-	mocha.setup ( "bdd" );
-	mocha.checkLeaks();
-
-	// This one should be first.
-	await import ( "./Tools/index" );
-
-	// These can be in any order.
-	await import ( "./Base/index" );
-	await import ( "./Scene/index" );
-	await import ( "./Types/index" );
-	await import ( "./Viewers/index" );
-	await import ( "./Visitors/index" );
-
-	mocha.run();
-} ) ();
+	testVisitor();
+	testMultiply();
+	testCull();
+} );
