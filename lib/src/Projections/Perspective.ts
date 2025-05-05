@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { IDENTITY_MATRIX } from "../Tools";
-import { Matrix44 } from "../Types";
+import { IMatrix44 } from "../Types";
 import { Projection } from "./Projection";
 
 
@@ -47,9 +47,9 @@ export class Perspective extends Projection
 
 	/**
 	 * Return the projection matrix.
-	 * @return {Matrix44} The projection matrix.
+	 * @return {IMatrix44} The projection matrix.
 	 */
-	public get matrix() : Matrix44
+	public get matrix() : IMatrix44
 	{
 		return IDENTITY_MATRIX;
 	}

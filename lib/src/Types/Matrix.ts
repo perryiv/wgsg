@@ -13,7 +13,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export type Matrix44 = [
+export type IMatrix44 = [
 	number, number, number, number,
 	number, number, number, number,
 	number, number, number, number,

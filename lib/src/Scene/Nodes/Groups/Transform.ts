@@ -15,7 +15,7 @@
 
 import { Group } from "./Group";
 import { IDENTITY_MATRIX } from "../../../Tools/Constants";
-import { Matrix44 } from "../../../Types";
+import { IMatrix44 } from "../../../Types";
 import { Visitor } from "../../../Visitors/Visitor";
 
 
@@ -28,7 +28,7 @@ import { Visitor } from "../../../Visitors/Visitor";
 
 export class Transform extends Group
 {
-	#matrix: Matrix44 = [ ...IDENTITY_MATRIX ];
+	#matrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
 
 	/**
 	 * Construct the class.
@@ -59,18 +59,18 @@ export class Transform extends Group
 
 	/**
 	 * Get the matrix.
-	 * @returns {Matrix44} The transformation matrix.
+	 * @returns {IMatrix44} The transformation matrix.
 	 */
-	public get matrix () : Matrix44
+	public get matrix () : IMatrix44
 	{
 		return this.#matrix;
 	}
 
 	/**
 	 * Set the matrix.
-	 * @param {Matrix44} matrix - The transformation matrix.
+	 * @param {IMatrix44} matrix - The transformation matrix.
 	 */
-	public set matrix ( matrix: Matrix44 )
+	public set matrix ( matrix: IMatrix44 )
 	{
 		// Do this to keep the TypeScript compiler happy.
 		const length: number = matrix.length;

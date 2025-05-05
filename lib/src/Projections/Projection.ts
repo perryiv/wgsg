@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base } from "../Base/Base";
-import { Matrix44 } from "../Types";
+import { IMatrix44 } from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -37,7 +37,7 @@ export abstract class Projection extends Base
 
 	/**
 	 * Return the projection matrix.
-	 * @return {Matrix44} The projection matrix.
+	 * @return {IMatrix44} The projection matrix.
 	 */
-	public abstract get matrix() : Matrix44;
+	public abstract get matrix() : IMatrix44;
 }

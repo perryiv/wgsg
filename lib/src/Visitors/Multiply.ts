@@ -15,7 +15,7 @@
 import { mat4 } from "gl-matrix";
 import { Group, Node, Shape, Transform } from "../Scene/index";
 import { IDENTITY_MATRIX } from "../Tools";
-import { Matrix44 } from "../Types";
+import { IMatrix44 } from "../Types";
 import { Visitor } from "./Visitor";
 
 
@@ -28,7 +28,7 @@ import { Visitor } from "./Visitor";
 
 export abstract class Multiply extends Visitor
 {
-	#matrix: Matrix44 = [ ...IDENTITY_MATRIX ];
+	#matrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
 
 	/**
 	 * Construct the class.
@@ -42,7 +42,7 @@ export abstract class Multiply extends Visitor
 
 	/**
 	 * Return the matrix.
-	 * @param {Matrix44} matrix - The matrix.
+	 * @param {IMatrix44} matrix - The matrix.
 	 */
 	public get matrix()
 	{
@@ -55,7 +55,7 @@ export abstract class Multiply extends Visitor
 	public visitTransform ( transform: Transform ) : void
 	{
 		// Make a copy of the original matrix.
-		const original: Matrix44 = [ ...this.#matrix ];
+		const original: IMatrix44 = [ ...this.#matrix ];
 
 		// Multiply the original matrix by the given one and save it in our member.
 		mat4.multiply ( this.#matrix, original, transform.matrix );
