@@ -61,7 +61,7 @@ export abstract class Multiply extends Visitor
 		mat4.multiply ( this.#matrix, original, transform.matrix );
 
 		// Now call the base class's function.
-		this.visitTransform ( transform );
+		super.visitTransform ( transform );
 
 		// Put things back where we found them.
 		mat4.copy ( this.#matrix, original );
