@@ -156,5 +156,21 @@ export function test ()
 			expect ( root.matrix.length ).to.equal ( 16 );
 			expect ( root.valid ).to.be.false;
 		} );
+
+		it ( "Can pass a matrix to the transform constructor", function ()
+		{
+			const root = new Transform ( [
+				1, 0, 0, 0,
+				0, 1, 0, 0,
+				0, 0, 1, 0,
+				0, 0, 0, 10
+			] );
+			expect ( root.matrix ).to.be.deep.equal ( [
+				1, 0, 0, 0,
+				0, 1, 0, 0,
+				0, 0, 1, 0,
+				0, 0, 0, 10
+			] );
+		} );
 	} );
 };
