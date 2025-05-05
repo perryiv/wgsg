@@ -49,10 +49,10 @@ export class Transform extends Group
 	}
 
 	/**
-	 * Apply the visitor.
+	 * Accept the visitor.
 	 * @param {Visitor} visitor - The visitor object.
 	 */
-	public apply ( visitor: Visitor ): void
+	public accept ( visitor: Visitor ): void
 	{
 		visitor.visitTransform ( this );
 	}

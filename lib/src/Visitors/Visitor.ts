@@ -42,7 +42,7 @@ export abstract class Visitor extends Base
 	{
 		group.forEachChild ( ( child: Node ) =>
 		{
-			child.apply ( this );
+			child.accept ( this );
 		} );
 	}
 

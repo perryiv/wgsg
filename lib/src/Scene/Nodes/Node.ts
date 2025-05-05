@@ -39,10 +39,10 @@ export abstract class Node extends Base
 	}
 
 	/**
-	 * Apply the visitor.
+	 * Accept the visitor.
 	 * @param {Visitor} visitor - The visitor object.
 	 */
-	public abstract apply ( _: Visitor ): void;
+	public abstract accept ( _: Visitor ): void;
 
 	/**
 	 * Add a parent. This is for the Group class. Do not use it directly.
