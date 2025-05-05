@@ -71,7 +71,7 @@ export class Transform extends Group
 	 */
 	public get matrix () : IMatrix44
 	{
-		return this.#matrix;
+		return [ ...this.#matrix ];
 	}
 
 	/**
