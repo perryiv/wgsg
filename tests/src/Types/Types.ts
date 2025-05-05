@@ -15,7 +15,11 @@
 import { expect } from "chai";
 import type {
 	IDeviceOptions,
+	IMatrix44,
 	ISize,
+	IVector2,
+	IVector3,
+	IVector4,
 	IViewport,
 } from "wgsg-lib";
 
@@ -28,7 +32,7 @@ import type {
 
 export function test ()
 {
-	// In most of these cases we're really checking for compile errors.
+	// In many of these cases we're really checking for compile errors.
 	describe ( "Types", function ()
 	{
 		it ( "IDeviceOptions", function ()
@@ -47,6 +51,43 @@ export function test ()
 		{
 			const a: ISize = { width: 1, height: 1 };
 			expect ( a ).to.exist;
+		} );
+
+		it ( "IVector2", function ()
+		{
+			const a: IVector2 = [ 1, 2 ];
+			expect ( a ).to.exist;
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+			expect ( a.length ).to.be.equal ( 2 );
+		} );
+
+		it ( "IVector3", function ()
+		{
+			const a: IVector3 = [ 1, 2, 3 ];
+			expect ( a ).to.exist;
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+			expect ( a.length ).to.be.equal ( 3 );
+		} );
+
+		it ( "IVector4", function ()
+		{
+			const a: IVector4 = [ 1, 2, 3, 4 ];
+			expect ( a ).to.exist;
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+			expect ( a.length ).to.be.equal ( 4 );
+		} );
+
+		it ( "IMatrix44", function ()
+		{
+			const a: IMatrix44 = [
+				1, 2, 3, 4,
+				1, 2, 3, 4,
+				1, 2, 3, 4,
+				1, 2, 3, 4
+			];
+			expect ( a ).to.exist;
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+			expect ( a.length ).to.be.equal ( 16 );
 		} );
 	} );
 };
