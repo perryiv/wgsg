@@ -141,18 +141,19 @@ export function test ()
 		it ( "Transform matrix should always be valid", function ()
 		{
 			const root = new Transform();
-			expect ( ( root.matrix as IMatrix44 ).length ).to.equal ( 16 ); // TODO: Why is the "as" necessary?
+			expect ( root.matrix.length ).to.equal ( 16 );
 			expect ( root.matrix ).to.be.deep.equal ( IDENTITY_MATRIX );
 			expect ( root.valid ).to.be.true;
 
+			// @ts-expect-error Matrix setter expects length 16.
 			expect ( () => { root.matrix = [ 0, 1, 2, 3 ]; } ).to.throw (
 				"Invalid array length 4 for transformation matrix, should be 16"
 			);
 			expect ( root.valid ).to.be.true;
 
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+			// @ts-expect-error TypeScript knows the matrix is all numbers.
 			root.matrix[0] = "0";
-			expect ( ( root.matrix as IMatrix44 ).length ).to.equal ( 16 ); // TODO: Why is the "as" necessary?
+			expect ( root.matrix.length ).to.equal ( 16 );
 			expect ( root.valid ).to.be.false;
 		} );
 	} );
