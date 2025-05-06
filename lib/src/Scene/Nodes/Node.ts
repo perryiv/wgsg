@@ -27,7 +27,7 @@ import { Visitor } from "../../Visitors/Visitor";
 
 export abstract class Node extends Base
 {
-	#parents: Set < Group > = new Set < Group > ();
+	#parents: Map < number, Group > = new Map < number,Group > ();
 
 	/**
 	 * Construct the class.
@@ -55,35 +55,35 @@ export abstract class Node extends Base
 		const parents = this.#parents;
 
 		// Make sure the parent is not already in the set.
-		if ( parents.has ( parent ) )
+		if ( parents.has ( parent.id ) )
 		{
 			throw new Error ( "Given group is already a parent of this node" );
 		}
 
 		// Add the parent.
-		parents.add ( parent );
+		parents.set ( parent.id, parent );
 	}
 
 	/**
 	 * Remove a parent. This is for the Group class. Do not use it directly.
 	 * @internal
-	 * @param {Group} parent - The parent group to remove.
+	 * @param {number} id - The id of the parent group node to remove.
 	 * @return {boolean} True if it worked, otherwise false.
 	 */
-	public removeParent ( parent: Group )
+	public removeParent ( id: number )
 	{
 		// Remove the parent.
-		return this.#parents.delete ( parent );
+		return this.#parents.delete ( id );
 	}
 
 	/**
 	 * See if this node has the given parent.
-	 * @param {Group} parent - The parent to check.
+	 * @param {number} id - The id of the parent to check.
 	 * @return {boolean} True if we have the given parent, otherwise false.
 	 */
-	public hasParent ( parent: Group )
+	public hasParent ( id: number )
 	{
 		// Do we have the parent?
-		return this.#parents.has ( parent );
+		return this.#parents.has ( id );
 	}
 }

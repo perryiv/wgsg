@@ -14,7 +14,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Node } from "../Node";
-import { reportError } from "../../../Tools/Errors";
 import { Visitor } from "../../../Visitors/Visitor";
 
 
@@ -144,12 +143,12 @@ export class Group extends Node
 		}
 
 		// Remove this group from the set of parents.
-		const result = child.removeParent ( this );
+		const result = child.removeParent ( this.id );
 
 		// Report the error if there is one.
 		if ( false == result )
 		{
-			reportError ( `${child.type} ${child.id} at index ${index} failed to remove parent ${this.type} ${this.id}` );
+			throw new Error ( `${child.type} ${child.id} at index ${index} failed to remove parent ${this.type} ${this.id}` );
 		}
 
 		// Remove the node from our array.
@@ -158,7 +157,7 @@ export class Group extends Node
 		// Report the error if there is one.
 		if ( 1 !== answer.length )
 		{
-			reportError ( `Failed to remove ${child.type} ${child.id} at index ${index} from ${this.type} ${this.id}` );
+			throw new Error ( `Failed to remove ${child.type} ${child.id} at index ${index} from ${this.type} ${this.id}` );
 		}
 
 		// If we get to here then it worked.
@@ -175,10 +174,11 @@ export class Group extends Node
 		// Tell all the children that we are no longer a parent.
 		for ( const child of this.#children )
 		{
-			child.removeParent ( this );
+			child.removeParent ( this.id );
 		}
 
 		// Reset the array of children.
-		this.#children = [];
+		// TODO: Would it be better to assign the array to []?
+		this.#children.length = 0;
 	}
 }

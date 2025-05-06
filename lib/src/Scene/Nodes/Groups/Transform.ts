@@ -16,6 +16,8 @@
 import { Group } from "./Group";
 import { IDENTITY_MATRIX } from "../../../Tools/Constants";
 import { IMatrix44 } from "../../../Types";
+import { isValidMatrix } from "../../../Tools";
+import { mat4 } from "gl-matrix";
 import { Visitor } from "../../../Visitors/Visitor";
 
 
@@ -71,7 +73,7 @@ export class Transform extends Group
 	 */
 	public get matrix () : IMatrix44
 	{
-		return [ ...this.#matrix ];
+		return this.#matrix;
 	}
 
 	/**
@@ -89,8 +91,8 @@ export class Transform extends Group
 			throw new Error ( `Invalid array length ${length} for transformation matrix, should be 16` );
 		}
 
-		// Make a copy.
-		this.#matrix = [ ... matrix ];
+		// Write over the values in our existing matrix.
+		mat4.copy ( this.#matrix, matrix );
 	}
 
 	/**
@@ -99,32 +101,6 @@ export class Transform extends Group
 	 */
 	public get valid () : boolean
 	{
-		// Shortcut.
-		const m = this.#matrix;
-
-		// Get the array length.
-		const length: number = m.length;
-
-		// Check the length.
-		if ( 16 !== length )
-		{
-			return false;
-		}
-
-		// Check all the elements.
-		for ( let i = 0; i < 16; ++i )
-		{
-			if ( "number" !== ( typeof ( m[i] ) ) )
-			{
-				return false;
-			}
-			if ( false === isFinite ( m[i] ) )
-			{
-				return false;
-			}
-		}
-
-		// It worked.
-		return true;
+		return isValidMatrix ( this.#matrix );
 	}
 }
