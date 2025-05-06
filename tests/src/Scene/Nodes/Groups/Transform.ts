@@ -17,7 +17,6 @@ import {
 	Group,
 	IDENTITY_MATRIX,
 	Transform,
-	type IMatrix44,
 } from "wgsg-lib";
 
 
@@ -58,11 +57,11 @@ export function test ()
 
 			root.addChild ( child0 );
 			expect ( root.size ).to.equal ( 1 );
-			expect ( child0.hasParent ( root ) ).to.be.true;
+			expect ( child0.hasParent ( root.id ) ).to.be.true;
 
 			root.addChild ( child1 );
 			expect ( root.size ).to.equal ( 2 );
-			expect ( child1.hasParent ( root ) ).to.be.true;
+			expect ( child1.hasParent ( root.id ) ).to.be.true;
 		} );
 
 		it ( "Should be able to remove child nodes", function ()
@@ -96,13 +95,13 @@ export function test ()
 			root.addChild ( child0 );
 			root.addChild ( child1 );
 			expect ( root.size ).to.equal ( 2 );
-			expect ( child0.hasParent ( root ) ).to.be.true;
-			expect ( child1.hasParent ( root ) ).to.be.true;
+			expect ( child0.hasParent ( root.id ) ).to.be.true;
+			expect ( child1.hasParent ( root.id ) ).to.be.true;
 
 			expect ( root.removeChild ( 1 ) ).to.be.true;
 			expect ( root.size ).to.equal ( 1 );
-			expect ( child0.hasParent ( root ) ).to.be.true;
-			expect ( child1.hasParent ( root ) ).to.be.false;
+			expect ( child0.hasParent ( root.id ) ).to.be.true;
+			expect ( child1.hasParent ( root.id ) ).to.be.false;
 		} );
 
 		it ( "Removing node at invalid index just returns false", function ()
