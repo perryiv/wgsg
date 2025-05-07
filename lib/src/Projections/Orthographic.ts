@@ -14,6 +14,7 @@
 
 import { IDENTITY_MATRIX, isPositiveFiniteNumber } from "../Tools";
 import { IMatrix44, IViewport } from "../Types";
+import { mat4 } from "gl-matrix";
 import { Projection } from "./Projection";
 
 
@@ -26,6 +27,13 @@ import { Projection } from "./Projection";
 
 export class Orthographic extends Projection
 {
+	#top    =  100;
+	#bottom = -100;
+	#left   = -100;
+	#right  =  100;
+	#near   = -1;
+	#far    =  1;
+
 	/**
 	 * Construct the class.
 	 * @constructor
@@ -51,7 +59,40 @@ export class Orthographic extends Projection
 	 */
 	public get matrix() : IMatrix44
 	{
-		return IDENTITY_MATRIX;
+		// Shortcuts.
+		const top = this.#top;
+		const bottom = this.#bottom;
+		const left = this.#left;
+		const right = this.#right;
+		const near = this.#near;
+		const far = this.#far;
+
+		// Make sure near is closer than far.
+		if ( near >= far )
+		{
+			throw new Error ( `Invalid distances when making perspective matrix, near: ${near}, far: ${far}` );
+		}
+
+		// Make sure top is above bottom.
+		if ( bottom >= top )
+		{
+			throw new Error ( `Invalid vertical bounds when making perspective matrix, top: ${top}, bottom: ${bottom}` );
+		}
+
+		// Make sure left is before right.
+		if ( left >= right )
+		{
+			throw new Error ( `Invalid horizontal bounds when making perspective matrix, left: ${left}, right: ${right}` );
+		}
+
+		// Initialize the answer.
+		const answer: IMatrix44 = [ ...IDENTITY_MATRIX ];
+
+		// Write the perspective matrix to the answer.
+		mat4.ortho ( answer, left, right, bottom, top, near, far );
+
+		// Return the new matrix.
+		return answer;
 	}
 
 	/**
