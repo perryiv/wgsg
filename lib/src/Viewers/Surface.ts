@@ -300,7 +300,10 @@ export class Surface extends Base
 	 */
 	public set viewport ( viewport: IViewport )
 	{
+		// Get the properties.
 		const { x, y, width, height } = viewport;
+
+		// Check for errors.
 		if ( width < 0 )
 		{
 			throw new Error ( "Viewport width must be >= zero." );
@@ -317,6 +320,11 @@ export class Surface extends Base
 		{
 			throw new Error ( "Viewport y must be >= zero." );
 		}
+
+		// Set our member from a copy.
 		this.#viewport = { x, y, width, height };
+
+		// Set the projection's viewport too.
+		this.projection.viewport = { x, y, width, height };
 	}
 }
