@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { mat4 } from "gl-matrix";
-import { Group, Node, Shape, Transform } from "../Scene/index";
+import { Group, Node, Shape, Transform } from "../Scene";
 import { IDENTITY_MATRIX } from "../Tools";
 import { IMatrix44 } from "../Types";
 import { Visitor } from "./Visitor";

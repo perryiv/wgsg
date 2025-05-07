@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Group, Node, Shape, Transform } from "../Scene/index";
+import { Group, Node, Shape, Transform } from "../Scene";
 import { Multiply } from "./Multiply";
 
 

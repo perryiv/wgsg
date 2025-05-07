@@ -18,15 +18,15 @@ void ( async () =>
 	mocha.checkLeaks();
 
 	// This one should be first.
-	await import ( "./Tools/index" );
+	await import ( "./Tools" );
 
 	// These can be in any order.
-	await import ( "./Base/index" );
-	await import ( "./Projections/index" );
-	await import ( "./Scene/index" );
-	await import ( "./Types/index" );
-	await import ( "./Viewers/index" );
-	await import ( "./Visitors/index" );
+	await import ( "./Base" );
+	await import ( "./Projections" );
+	await import ( "./Scene" );
+	await import ( "./Types" );
+	await import ( "./Viewers" );
+	await import ( "./Visitors" );
 
 	mocha.run();
 } ) ();

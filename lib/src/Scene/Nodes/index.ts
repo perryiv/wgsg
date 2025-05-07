@@ -12,6 +12,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export * from "./Groups/index";
+export * from "./Groups";
 export * from "./Node";
-export * from "./Shapes/index";
+export * from "./Shapes";

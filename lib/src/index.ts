@@ -12,10 +12,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export * from "./Base/index";
-export * from "./Projections/index";
-export * from "./Scene/index";
-export * from "./Tools/index";
-export * from "./Types/index";
-export * from "./Viewers/index";
-export * from "./Visitors/index";
+export * from "./Base";
+export * from "./Projections";
+export * from "./Scene";
+export * from "./Tools";
+export * from "./Types";
+export * from "./Viewers";
+export * from "./Visitors";

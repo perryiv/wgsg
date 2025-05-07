@@ -15,7 +15,7 @@
 
 import { Base } from "../Base/Base";
 import { getRenderingContext } from "../Tools/WebGPU";
-import { Node } from "../Scene/index";
+import { Node } from "../Scene";
 import type { ISize, IViewport } from "../Types/Math";
 
 

@@ -12,8 +12,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { test as testGroups } from "./Groups/index";
-import { test as testShapes } from "./Shapes/index";
+import { test as testGroups } from "./Groups";
+import { test as testShapes } from "./Shapes";
 
 export function test ()
 {
