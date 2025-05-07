@@ -16,6 +16,7 @@
 import { Base } from "../Base/Base";
 import { getRenderingContext } from "../Tools/WebGPU";
 import { Node } from "../Scene";
+import { Perspective, Projection } from "../Projections";
 import type { ISize, IViewport } from "../Types/Math";
 
 
@@ -50,6 +51,7 @@ export class Surface extends Base
 	#device: GPUDevice;
 	#viewport: IViewport = { x: 0, y: 0, width: 0, height: 0 };
 	#scene: ( Node | null ) = null;
+	#projection: Projection = new Perspective();
 
 	/**
 	 * Construct the class.
@@ -140,6 +142,34 @@ export class Surface extends Base
 	}
 
 	/**
+	 * Get the projection.
+	 * @returns {Projection} The projection object.
+	 */
+	public get projection () : Projection
+	{
+		return this.#projection;
+	}
+
+	/**
+	 * Set the projection.
+	 * @param {Projection | null} projection - The projection object, or null.
+	 * Setting to null will restore the default projection.
+	 */
+	public set projection ( projection: ( Projection | null ) )
+	{
+		// Make a new projection if we have to.
+		if ( !projection )
+		{
+			const pp = new Perspective();
+			pp.aspect = ( this.width / this.height );
+			projection = pp;
+		}
+
+		// Set our member.
+		this.#projection = projection;
+	}
+
+	/**
 	 * Get the device.
 	 * @returns {GPUDevice} The GPU device.
 	 */
@@ -202,7 +232,7 @@ export class Surface extends Base
 	 */
 	public get size() : ISize
 	{
-		const { width, height } = this.viewport;
+		const { width, height } = this.#viewport;
 		return { width, height };
 	}
 
@@ -212,8 +242,46 @@ export class Surface extends Base
 	 */
 	public set size ( size: ISize )
 	{
-		const { x, y } = this.viewport;
+		const { x, y } = this.#viewport;
 		const { width, height } = size;
+		this.viewport = { x, y, width, height };
+	}
+
+	/**
+	 * Get the surface width.
+	 * @return {number} The width of the surface.
+	 */
+	public get width() : number
+	{
+		return this.#viewport.width;
+	}
+
+	/**
+	 * Set the surface width.
+	 * @param {number} width - The width of the surface.
+	 */
+	public set width ( width: number )
+	{
+		const { x, y, height } = this.#viewport;
+		this.viewport = { x, y, width, height };
+	}
+
+	/**
+	 * Get the surface height.
+	 * @return {number} The height of the surface.
+	 */
+	public get height() : number
+	{
+		return this.#viewport.height;
+	}
+
+	/**
+	 * Set the surface height.
+	 * @param {number} height - The height of the surface.
+	 */
+	public set height ( height: number )
+	{
+		const { x, y, width } = this.#viewport;
 		this.viewport = { x, y, width, height };
 	}
 
