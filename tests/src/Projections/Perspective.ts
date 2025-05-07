@@ -78,7 +78,61 @@ export function test ()
 
 		it ( "Setting bad input should throw", function ()
 		{
-			expect ( false ).to.be.true;
+			const proj = new Perspective();
+
+			expect ( () => { proj.setFrom ( { fov:  0 } ) } ).to.throw ( "Invalid field-of-view: 0"  );
+			expect ( () => { proj.setFrom ( { fov: -1 } ) } ).to.throw ( "Invalid field-of-view: -1" );
+
+			expect ( () => { proj.setFrom ( { aspect:  0 } ) } ).to.throw ( "Invalid aspect ratio: 0"  );
+			expect ( () => { proj.setFrom ( { aspect: -1 } ) } ).to.throw ( "Invalid aspect ratio: -1" );
+
+			expect ( () => { proj.setFrom ( { near:  0 } ) } ).to.throw ( "Invalid near distance: 0"  );
+			expect ( () => { proj.setFrom ( { near: -1 } ) } ).to.throw ( "Invalid near distance: -1" );
+
+			expect ( () => { proj.setFrom ( { far:  0 } ) } ).to.throw ( "Invalid far distance: 0"  );
+			expect ( () => { proj.setFrom ( { far: -1 } ) } ).to.throw ( "Invalid far distance: -1" );
+		} );
+
+		it ( "Can use setter members", function ()
+		{
+			const proj = new Perspective();
+
+			expect ( proj.fov ).to.be.equal ( 45 );
+			expect ( proj.aspect ).to.be.equal ( 1 );
+			expect ( proj.near ).to.be.equal ( 1 );
+			expect ( proj.far ).to.be.equal ( 10000 );
+
+			proj.fov = 55;
+			proj.aspect = 1.5;
+			proj.near = 10;
+			proj.far = 100;
+
+			expect ( proj.fov ).to.be.equal ( 55 );
+			expect ( proj.aspect ).to.be.equal ( 1.5 );
+			expect ( proj.near ).to.be.equal ( 10 );
+			expect ( proj.far ).to.be.equal ( 100 );
+		} );
+
+		it ( "Passing bad walues to setter members will throw", function ()
+		{
+			const proj = new Perspective();
+
+			expect ( proj.fov ).to.be.equal ( 45 );
+			expect ( proj.aspect ).to.be.equal ( 1 );
+			expect ( proj.near ).to.be.equal ( 1 );
+			expect ( proj.far ).to.be.equal ( 10000 );
+
+			expect ( () => { proj.fov =  0; } ).to.throw ( "Given field-of-view '0' is not a positive finite number" );
+			expect ( () => { proj.fov = -1; } ).to.throw ( "Given field-of-view '-1' is not a positive finite number" );
+
+			expect ( () => { proj.aspect =  0; } ).to.throw ( "Given aspect ratio '0' is not a positive finite number" );
+			expect ( () => { proj.aspect = -1; } ).to.throw ( "Given aspect ratio '-1' is not a positive finite number" );
+
+			expect ( () => { proj.near =  0; } ).to.throw ( "Given near distance '0' is not a positive finite number" );
+			expect ( () => { proj.near = -1; } ).to.throw ( "Given near distance '-1' is not a positive finite number" );
+
+			expect ( () => { proj.far =  0; } ).to.throw ( "Given far distance '0' is not a positive finite number" );
+			expect ( () => { proj.far = -1; } ).to.throw ( "Given far distance '-1' is not a positive finite number" );
 		} );
 	} );
 };
