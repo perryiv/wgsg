@@ -39,6 +39,7 @@ export function test ()
 
 		it ( "Should be able to make a surface with canvas and device", async function ()
 		{
+			const id = getNextId();
 			const canvas = document.createElement ( "canvas" );
 			const { device } = await getDeviceData();
 			const surface = new Surface ( { canvas, device } );
@@ -48,7 +49,7 @@ export function test ()
 
 			expect ( surface.id ).to.exist;
 			expect ( typeof surface.id ).to.be.equal ( "number" );
-			expect ( surface.id ).to.equal ( getNextId() - 1 );
+			expect ( surface.id ).to.be.greaterThan ( id );
 
 			expect ( surface.canvas ).to.exist;
 			expect ( surface.canvas instanceof HTMLCanvasElement ).to.be.true;

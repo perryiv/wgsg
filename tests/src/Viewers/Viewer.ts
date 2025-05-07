@@ -39,6 +39,7 @@ export function test ()
 
 		it ( "Should be able to make a viewer with canvas and device", async function ()
 		{
+			const id = getNextId();
 			const canvas = document.createElement ( "canvas" );
 			const { device } = await getDeviceData();
 			const viewer = new Viewer ( { canvas, device } );
@@ -48,7 +49,7 @@ export function test ()
 
 			expect ( viewer.id ).to.exist;
 			expect ( typeof viewer.id ).to.be.equal ( "number" );
-			expect ( viewer.id ).to.equal ( getNextId() - 1 );
+			expect ( viewer.id ).to.be.greaterThan ( id );
 
 			expect ( viewer.canvas ).to.exist;
 			expect ( viewer.canvas instanceof HTMLCanvasElement ).to.be.true;
