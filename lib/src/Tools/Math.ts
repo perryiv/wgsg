@@ -48,3 +48,33 @@ export const isValidMatrix = ( m: IMatrix44 ) =>
 	// If we get to here then the matrix is valid.
 	return true;
 }
+
+
+/**
+ * See if the given value is a finite number.
+ * @parem {unknown} value - The value to check.
+ * @returns {boolean} True if the value is a number, otherwise false.
+ */
+export const isFiniteNumber = ( value: unknown ) =>
+{
+	return ( Number.isFinite ( value ) );
+}
+
+
+/**
+ * See if the given value is a positive finite number.
+ * @parem {unknown} value - The value to check.
+ * @returns {boolean} True if the value is a positive number, otherwise false.
+ */
+export const isPositiveFiniteNumber = ( value: unknown ) =>
+{
+	if ( false == isFiniteNumber ( value ) )
+	{
+		return false;
+	}
+	if ( ( value as number ) <= 0 )
+	{
+		return false;
+	}
+	return true;
+}
