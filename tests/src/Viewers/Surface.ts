@@ -61,17 +61,14 @@ export function test ()
 			expect ( surface.device ).to.exist;
 			expect ( surface.device instanceof GPUDevice ).to.be.true;
 			expect ( surface.device ).to.equal ( device );
-
-			expect ( surface.name ).to.be.null;
 		} );
 
-		it ( "Should be able to make a surface with canvas, device, name, and context", async function ()
+		it ( "Should be able to make a surface with canvas, device, and context", async function ()
 		{
-			const name = "My Surface";
 			const canvas = document.createElement ( "canvas" );
 			const { device } = await getDeviceData();
 			const context = getRenderingContext ( { device, canvas } );
-			const surface = new Surface ( { name, canvas, device, context } );
+			const surface = new Surface ( { canvas, device, context } );
 
 			expect ( surface ).to.exist;
 			expect ( surface instanceof Surface ).to.be.true;
@@ -87,8 +84,6 @@ export function test ()
 			expect ( surface.device ).to.exist;
 			expect ( surface.device instanceof GPUDevice ).to.be.true;
 			expect ( surface.device ).to.equal ( device );
-
-			expect ( surface.name ).to.equal ( name );
 		} );
 	} );
 };

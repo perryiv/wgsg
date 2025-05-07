@@ -61,17 +61,14 @@ export function test ()
 			expect ( viewer.device ).to.exist;
 			expect ( viewer.device instanceof GPUDevice ).to.be.true;
 			expect ( viewer.device ).to.equal ( device );
-
-			expect ( viewer.name ).to.be.null;
 		} );
 
 		it ( "Should be able to make a viewer with a canvas, device, name, and context", async function ()
 		{
-			const name = "My Viewer";
 			const canvas = document.createElement ( "canvas" );
 			const { device } = await getDeviceData();
 			const context = getRenderingContext ( { device, canvas } );
-			const viewer = new Viewer ( { name, canvas, device, context } );
+			const viewer = new Viewer ( { canvas, device, context } );
 
 			expect ( viewer ).to.exist;
 			expect ( viewer instanceof Viewer ).to.be.true;
@@ -87,8 +84,6 @@ export function test ()
 			expect ( viewer.device ).to.exist;
 			expect ( viewer.device instanceof GPUDevice ).to.be.true;
 			expect ( viewer.device ).to.equal ( device );
-
-			expect ( viewer.name ).to.equal ( name );
 		} );
 	} );
 };

@@ -33,9 +33,6 @@ export interface ISurfaceConstructor
 
 	// The user can configure this if desired.
 	context?: ( GPUCanvasContext | null );
-
-	// This is also optional.
-	name?: ( string | null );
 }
 
 
@@ -48,7 +45,6 @@ export interface ISurfaceConstructor
 
 export class Surface extends Base
 {
-	#name: ( string | null ) = null;
 	#canvas: HTMLCanvasElement;
 	#context: GPUCanvasContext;
 	#device: GPUDevice;
@@ -59,7 +55,7 @@ export class Surface extends Base
 	 * Construct the class.
 	 * @constructor
 	 */
-	constructor ( { name, canvas, device, context } : ISurfaceConstructor )
+	constructor ( { canvas, device, context } : ISurfaceConstructor )
 	{
 		// Call this first.
 		super();
@@ -111,7 +107,6 @@ export class Surface extends Base
 		observer.observe ( canvas );
 
 		// Set our members.
-		this.#name = ( name ?? null );
 		this.#canvas = canvas;
 		this.#context = context;
 		this.#device = device;
@@ -124,24 +119,6 @@ export class Surface extends Base
 	public getClassName() : string
 	{
 		return "Surface";
-	}
-
-	/**
-	 * Get the name.
-	 * @returns {string | null} The name of the surface.
-	 */
-	public get name () : ( string | null )
-	{
-		return this.#name;
-	}
-
-	/**
-	 * Set the name.
-	 * @param {string | null} name - The name of the surface.
-	 */
-	public set name ( name: ( string | null ) )
-	{
-		this.#name = name;
 	}
 
 	/**
