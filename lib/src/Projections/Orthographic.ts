@@ -12,8 +12,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IDENTITY_MATRIX } from "../Tools";
-import { IMatrix44 } from "../Types";
+import { IDENTITY_MATRIX, isPositiveFiniteNumber } from "../Tools";
+import { IMatrix44, IViewport } from "../Types";
 import { Projection } from "./Projection";
 
 
@@ -52,5 +52,26 @@ export class Orthographic extends Projection
 	public get matrix() : IMatrix44
 	{
 		return IDENTITY_MATRIX;
+	}
+
+	/**
+	 * Let the projection know about the new viewport.
+	 * @param {IViewport} vp - The new viewport.
+	 */
+	public set viewport ( vp: IViewport )
+	{
+		const { width, height } = vp;
+
+		if ( false === isPositiveFiniteNumber ( width ) )
+		{
+			throw new Error ( `Given viewport width '${width}' is not a positive finite number` );
+		}
+
+		if ( false === isPositiveFiniteNumber ( height ) )
+		{
+			throw new Error ( `Given viewport height '${height}' is not a positive finite number` );
+		}
+
+		console.warn ( "TODO: Orthographic projection is ignoring the updated viewport" );
 	}
 }

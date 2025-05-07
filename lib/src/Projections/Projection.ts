@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base } from "../Base/Base";
-import { IMatrix44 } from "../Types";
+import { IMatrix44, IViewport } from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -40,4 +40,10 @@ export abstract class Projection extends Base
 	 * @return {IMatrix44} The projection matrix.
 	 */
 	public abstract get matrix() : IMatrix44;
+
+	/**
+	 * Let the projection know about the new viewport.
+	 * @param {IViewport} vp - The new viewport.
+	 */
+	public abstract set viewport ( vp: IViewport );
 }

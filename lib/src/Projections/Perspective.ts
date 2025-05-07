@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { IDENTITY_MATRIX, isPositiveFiniteNumber } from "../Tools";
-import { IMatrix44 } from "../Types";
+import { IMatrix44, IViewport } from "../Types";
 import { mat4 } from "gl-matrix";
 import { Projection } from "./Projection";
 
@@ -264,5 +264,26 @@ export class Perspective extends Projection
 		}
 
 		this.#far = far;
+	}
+
+	/**
+	 * Let the projection know about the new viewport.
+	 * @param {IViewport} vp - The new viewport.
+	 */
+	public set viewport ( vp: IViewport )
+	{
+		const { width, height } = vp;
+
+		if ( false === isPositiveFiniteNumber ( width ) )
+		{
+			throw new Error ( `Given viewport width '${width}' is not a positive finite number` );
+		}
+
+		if ( false === isPositiveFiniteNumber ( height ) )
+		{
+			throw new Error ( `Given viewport height '${height}' is not a positive finite number` );
+		}
+
+		this.aspect = ( width / height );
 	}
 }
