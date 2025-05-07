@@ -12,11 +12,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IDENTITY_MATRIX } from "../Tools";
+import { IDENTITY_MATRIX, isPositiveFiniteNumber } from "../Tools";
 import { IMatrix44 } from "../Types";
 import { mat4 } from "gl-matrix";
 import { Projection } from "./Projection";
-
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -88,37 +87,59 @@ export class Perspective extends Projection
 		}
 
 		// Initialize the new values.
-		const fov    = ( ( "fov"    in input ) ? input.fov    : this.#fov    );
-		const aspect = ( ( "aspect" in input ) ? input.aspect : this.#aspect );
-		const near   = ( ( "near"   in input ) ? input.near   : this.#near   );
-		const far    = ( ( "far"    in input ) ? input.far    : this.#far    );
+		// If the property is undefined then we use the existing value.
+		const fov    = ( ( "undefined" !== typeof ( input.fov    ) ) ? input.fov    : this.#fov    );
+		const aspect = ( ( "undefined" !== typeof ( input.aspect ) ) ? input.aspect : this.#aspect );
+		const near   = ( ( "undefined" !== typeof ( input.near   ) ) ? input.near   : this.#near   );
+		const far    = ( ( "undefined" !== typeof ( input.far    ) ) ? input.far    : this.#far    );
 
-		// Now that they're all set either with new values or our existing ones,
-		// make sure they're valid.
-		if ( ( "number" !== ( typeof fov ) ) || ( fov <= 0 ) )
+		// When we get to here TypeScript thinks that all the values are numbers.
+		// Do the following run-time checks anyway because this function is
+		// supposed to be all-or-nothing. It sets them all, or none of them.
+		if ( "number" !== ( typeof ( fov ) ) )
 		{
 			throw new Error ( `Invalid field-of-view: ${fov}` );
 		}
-		if ( ( "number" !== ( typeof aspect ) ) || ( aspect <= 0 ) )
+		if ( "number" !== ( typeof ( aspect ) ) )
 		{
 			throw new Error ( `Invalid aspect ratio: ${aspect}` );
 		}
-		if ( ( "number" !== ( typeof near ) ) || ( near <= 0 ) )
+		if ( "number" !== ( typeof ( near ) ) )
 		{
 			throw new Error ( `Invalid near distance: ${near}` );
 		}
-		if ( ( "number" !== ( typeof far ) ) || ( far <= 0 ) )
+		if ( "number" !== ( typeof ( far ) ) )
+		{
+			throw new Error ( `Invalid far distance: ${far}` );
+		}
+
+		// When we get to here make sure the numbers are all positive.
+		if ( fov <= 0 )
+		{
+			throw new Error ( `Invalid field-of-view: ${fov}` );
+		}
+		if ( aspect <= 0 )
+		{
+			throw new Error ( `Invalid aspect ratio: ${aspect}` );
+		}
+		if ( near <= 0 )
+		{
+			throw new Error ( `Invalid near distance: ${near}` );
+		}
+		if ( far <= 0 )
 		{
 			throw new Error ( `Invalid far distance: ${far}` );
 		}
 
 		// Make sure near is closer than far.
-		if ( far <= near)
+		if ( far <= near )
 		{
 			throw new Error ( `Invalid distances when setting perspective members, near: ${near}, far: ${far}` );
 		}
 
 		// If we get to here then set all the values.
+		// We did so much checking above that we don't need to use the setter
+		// functions, which have even more error checking.
 		this.#fov = fov;
 		this.#aspect = aspect;
 		this.#near = near;
@@ -168,10 +189,12 @@ export class Perspective extends Projection
 	 */
 	public set fov ( fov: number )
 	{
-		if ( ( "number" === ( typeof fov ) ) && ( fov > 0 ) )
+		if ( false === isPositiveFiniteNumber ( fov ) )
 		{
-			this.fov = fov;
+			throw new Error ( `Given field-of-view '${fov}' is not a positive finite number` );
 		}
+
+		this.#fov = fov;
 	}
 
 	/**
@@ -189,10 +212,12 @@ export class Perspective extends Projection
 	 */
 	public set aspect ( aspect: number )
 	{
-		if ( ( "number" === ( typeof aspect ) ) && ( aspect > 0 ) )
+		if ( false === isPositiveFiniteNumber ( aspect ) )
 		{
-			this.aspect = aspect;
+			throw new Error ( `Given aspect ratio '${aspect}' is not a positive finite number` );
 		}
+
+		this.#aspect = aspect;
 	}
 
 	/**
@@ -210,10 +235,12 @@ export class Perspective extends Projection
 	 */
 	public set near ( near: number )
 	{
-		if ( ( "number" === ( typeof near ) ) && ( near > 0 ) )
+		if ( false === isPositiveFiniteNumber ( near ) )
 		{
-			this.near = near;
+			throw new Error ( `Given near distance '${near}' is not a positive finite number` );
 		}
+
+		this.#near = near;
 	}
 
 	/**
@@ -231,9 +258,11 @@ export class Perspective extends Projection
 	 */
 	public set far ( far: number )
 	{
-		if ( ( "number" === ( typeof far ) ) && ( far > 0 ) )
+		if ( false === isPositiveFiniteNumber ( far ) )
 		{
-			this.far = far;
+			throw new Error ( `Given far distance '${far}' is not a positive finite number` );
 		}
+
+		this.#far = far;
 	}
 }
