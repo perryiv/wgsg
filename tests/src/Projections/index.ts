@@ -12,21 +12,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-void ( async () =>
+import { test as testPerspective } from "./Perspective";
+
+describe ( "Projections", function ()
 {
-	mocha.setup ( "bdd" );
-	mocha.checkLeaks();
-
-	// This one should be first.
-	await import ( "./Tools/index" );
-
-	// These can be in any order.
-	await import ( "./Base/index" );
-	await import ( "./Projections/index" );
-	await import ( "./Scene/index" );
-	await import ( "./Types/index" );
-	await import ( "./Viewers/index" );
-	await import ( "./Visitors/index" );
-
-	mocha.run();
-} ) ();
+	testPerspective();
+} );

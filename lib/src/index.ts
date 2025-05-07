@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 export * from "./Base/index";
+export * from "./Projections/index";
 export * from "./Scene/index";
 export * from "./Tools/index";
 export * from "./Types/index";
