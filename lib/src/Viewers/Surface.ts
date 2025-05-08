@@ -79,7 +79,7 @@ export class Surface extends Base
 	#scene: ( Node | null ) = null;
 	#projection: Projection = new Perspective();
 	#handles: ITimeoutHandles = { render: 0 };
-	#frame: IFrameInfo = { time: 0, count: 0 };
+	#frame: IFrameInfo = { count: 0, start: 0 };
 
 	/**
 	 * Construct the class.
