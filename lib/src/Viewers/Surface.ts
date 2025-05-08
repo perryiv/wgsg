@@ -370,7 +370,8 @@ export class Surface extends Base
 	}
 
 	/**
-	 * Update the scene.
+	 * Update the scene if its dirty. This gets called when the scene is
+	 * rendered. It's public so that it can be called at other times, too.
 	 */
 	public update ()
 	{
@@ -379,6 +380,9 @@ export class Surface extends Base
 
 	/**
 	 * Cull the scene using the view frustum, generating the render-graph.
+	 * This gets called when the scene is rendered so it's not necessary
+	 * to explicitly call it. However, its public for unexpected use cases.
+	 * Use with caution.
 	 */
 	public cull ()
 	{
@@ -386,7 +390,10 @@ export class Surface extends Base
 	}
 
 	/**
-	 * Draw the render-graph.
+	 * Draw the render-graph, generating pixels that paint the canvas.
+	 * This gets called when the scene is rendered so it's not necessary
+	 * to explicitly call it. However, its public for unexpected use cases.
+	 * Use with caution.
 	 */
 	public draw ()
 	{
