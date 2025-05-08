@@ -370,6 +370,30 @@ export class Surface extends Base
 	}
 
 	/**
+	 * Update the scene.
+	 */
+	public update ()
+	{
+		console.log ( "Updating scene" );
+	}
+
+	/**
+	 * Cull the scene using the view frustum, generating the render-graph.
+	 */
+	public cull ()
+	{
+		console.log ( "Culling scene" );
+	}
+
+	/**
+	 * Draw the render-graph.
+	 */
+	public draw ()
+	{
+		console.log ( "Drawing render-graph" );
+	}
+
+	/**
 	 * Get the frame information.
 	 * @returns {IFrameInfo} The frame information.
 	 */
@@ -420,6 +444,15 @@ export class Surface extends Base
 			start: performance.now(),
 			count: ( this.#frame.count + 1 )
 		};
+
+		// Update the scene.
+		this.update();
+
+		// Cull the scene and make the render-graph.
+		this.cull();
+
+		// Draw the render-graph.
+		this.draw();
 
 		// Finish the frame.
 		this.#frame.end = performance.now();
