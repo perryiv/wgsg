@@ -93,18 +93,31 @@ export class Surface extends Base
 		{
 			// There can be only one.
 			const item = items[0];
-			const { inlineSize: width, blockSize: height } = item.contentBoxSize[0];
+			let { inlineSize: width, blockSize: height } = item.contentBoxSize[0];
 			const { maxTextureDimension2D: maxDimension } = device.limits;
 
-			// Set the canvas size and make sure it's within the device's range.
-			const canvas = ( item.target as HTMLCanvasElement );
-			canvas.width  = Math.max ( 1, Math.min ( width,  maxDimension ) );
-			canvas.height = Math.max ( 1, Math.min ( height, maxDimension ) );
+			// Ignore when one or both are zero.
+			if ( ( width <= 0 ) || ( height <= 0 ) )
+			{
+				return;
+			}
 
-			// Set the viewer's size.
-			this.size = { width, height };
+			// Make sure it's within the device's range.
+			width  = Math.max ( 1, Math.min ( width,  maxDimension ) );
+			height = Math.max ( 1, Math.min ( height, maxDimension ) );
 
 			// console.log ( `New surface size: ${width}, ${height}` );
+
+			// Set the canvas size.
+			const canvas = ( item.target as HTMLCanvasElement );
+			canvas.width  = width;
+			canvas.height = height;
+
+			// Set this surface's size, which sets our viewport.
+			this.size = { width, height };
+
+			// Set the projection's viewport.
+			this.projection.viewport = { ...this.#viewport };
 		} );
 		observer.observe ( canvas );
 
@@ -323,8 +336,5 @@ export class Surface extends Base
 
 		// Set our member from a copy.
 		this.#viewport = { x, y, width, height };
-
-		// Set the projection's viewport too.
-		this.projection.viewport = { x, y, width, height };
 	}
 }
