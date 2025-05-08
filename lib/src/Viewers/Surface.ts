@@ -39,6 +39,32 @@ export interface ISurfaceConstructor
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
+ * Timeout handles.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export interface ITimeoutHandles
+{
+	render: number;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Frame information.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export interface IFrameInfo
+{
+	count: number;
+	start: number;
+	end?: number;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
  * A surface to render on.
  * @class
  */
@@ -52,6 +78,8 @@ export class Surface extends Base
 	#viewport: IViewport = { x: 0, y: 0, width: 0, height: 0 };
 	#scene: ( Node | null ) = null;
 	#projection: Projection = new Perspective();
+	#handles: ITimeoutHandles = { render: 0 };
+	#frame: IFrameInfo = { time: 0, count: 0 };
 
 	/**
 	 * Construct the class.
@@ -118,6 +146,9 @@ export class Surface extends Base
 
 			// Set the projection's viewport.
 			this.projection.viewport = { ...this.#viewport };
+
+			// Request a render in the near future.
+			this.requestRender();
 		} );
 		observer.observe ( canvas );
 
@@ -336,5 +367,63 @@ export class Surface extends Base
 
 		// Set our member from a copy.
 		this.#viewport = { x, y, width, height };
+	}
+
+	/**
+	 * Get the frame information.
+	 * @returns {IFrameInfo} The frame information.
+	 */
+	public get frame () : IFrameInfo
+	{
+		return { ...this.#frame };
+	}
+
+	/**
+	 * Cancel any pending render.
+	 */
+	public cancelRender ()
+	{
+		const handle = this.#handles.render;
+		this.#handles.render = 0;
+
+		if ( handle > 0 )
+		{
+			cancelAnimationFrame ( handle );
+		}
+	}
+
+	/**
+	 * Request a render in the near future.
+	 */
+	public requestRender ()
+	{
+		// Cancel any pending renders that we might have.
+		this.cancelRender();
+
+		// Schedule another one.
+		const handle = requestAnimationFrame ( () =>
+		{
+			this.render();
+		} );
+
+		// Set our member.
+		this.#handles.render = handle;
+	}
+
+	/**
+	 * Render immediately.
+	 */
+	public render ()
+	{
+		// Initialize the frame information.
+		this.#frame = {
+			start: performance.now(),
+			count: ( this.#frame.count + 1 )
+		};
+
+		// Finish the frame.
+		this.#frame.end = performance.now();
+
+		console.log ( `Rendering frame ${this.#frame.count} took ${this.#frame.end - this.#frame.start} milliseconds` );
 	}
 }
