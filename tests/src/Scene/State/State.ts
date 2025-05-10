@@ -39,24 +39,24 @@ export function test ()
 		it ( "Default state should have null shaders", function ()
 		{
 			const state = new State();
-			expect ( state.vertexShader ).to.be.null;
-			expect ( state.fragmentShader ).to.be.null;
+			expect ( state.shaders.vertex ).to.be.null;
+			expect ( state.shaders.fragment ).to.be.null;
 		} );
 
 		it ( "Should be able to set the shaders", function ()
 		{
 			const state = new State();
-			state.vertexShader = vs;
-			state.fragmentShader = fs;
-			expect ( state.vertexShader ).to.equal ( vs );
-			expect ( state.fragmentShader ).to.equal ( fs );
+			state.shaders.vertex = vs;
+			state.shaders.fragment = fs;
+			expect ( state.shaders.vertex ).to.equal ( vs );
+			expect ( state.shaders.fragment ).to.equal ( fs );
 		} );
 
 		it ( "Should be able to construct with shaders", function ()
 		{
-			const state = new State ( vs, fs );
-			expect ( state.vertexShader ).to.equal ( vs );
-			expect ( state.fragmentShader ).to.equal ( fs );
+			const state = new State ( { shaders: { vertex: vs, fragment: fs } } );
+			expect ( state.shaders.vertex ).to.equal ( vs );
+			expect ( state.shaders.fragment ).to.equal ( fs );
 		} );
 	} );
 };

@@ -13,6 +13,28 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Shaders } from "./Shaders";
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * The input for the constructor.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export interface IShaders
+{
+	vertex: ( string | null );
+	fragment: ( string | null );
+}
+
+export interface IStateInput
+{
+	name?: ( string | null );
+	shaders?: ( IShaders | null );
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * Class that contains the state of a shape.
@@ -22,56 +44,57 @@
 
 export class State
 {
-	#v: ( string | null ) = null;
-	#f: ( string | null ) = null;
+	#name: ( string | null ) = null;
+	#shaders: Shaders = new Shaders();
 
 	/**
 	 * Construct the class.
 	 * @constructor
-	 * @param {string | null} [vertex] - Vertex shader string.
-	 * @param {string | null} [fragment] - Fragment shader string.
+	 * @param {IStateInput | null | undefined} input - The constructor input object.
 	 */
-	constructor ( vertex?: ( string | null ), fragment?: ( string | null ) )
+	constructor ( input?: IStateInput )
 	{
-		this.#v = ( vertex ?? null );
-		this.#f = ( fragment ?? null );
+		if ( !input )
+		{
+			return;
+		}
+
+		const { name, shaders } = input;
+
+		this.#name = ( name ?? null );
+
+		if ( shaders )
+		{
+			this.#shaders.vertex = shaders.vertex;
+			this.#shaders.fragment = shaders.fragment;
+		}
 	}
 
 	/**
-	 * Get the vertex shader.
-	 * @return {string | null} Vertex shader string, or null.
+	 * Get the shader pair.
+	 * @return {Shaders} Shader pair.
 	 */
-	public get vertexShader() : ( string | null )
+	public get shaders() : Shaders
 	{
-		return this.#v;
+		return this.#shaders;
 	}
 
 	/**
-	 * Set the vertex shader.
+	 * Get the name.
+	 * @return {string | null} Unique name of this state object, or null.
+	 */
+	public get name() : ( string | null )
+	{
+		return this.#name;
+	}
+
+	/**
+	 * Set the name.
 	 *
-	 * @param {string | null} v - Vertex shader string, or null.
+	 * @param {string | null} name - Unique name of this state object, or null.
 	 */
-	public set vertexShader ( v: ( string | null ) )
+	public set name ( name: ( string | null ) )
 	{
-		this.#v = v;
-	}
-
-	/**
-	 * Get the fragment shader.
-	 * @return {string | null} Fragment shader string, or null.
-	 */
-	public get fragmentShader() : ( string | null )
-	{
-		return this.#f;
-	}
-
-	/**
-	 * Set the fragment shader.
-	 *
-	 * @param {string | null} f - Fragment shader string, or null.
-	 */
-	public set fragmentShader ( f: ( string | null ) )
-	{
-		this.#f = f;
+		this.#name = name;
 	}
 }
