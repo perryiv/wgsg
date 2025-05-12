@@ -13,4 +13,5 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 export * from "./Group";
+export { Projection as ProjectionNode } from "./Projection";
 export * from "./Transform";

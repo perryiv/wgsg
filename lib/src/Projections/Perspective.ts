@@ -69,7 +69,7 @@ export class Perspective extends Projection
 	 */
 	public getClassName() : string
 	{
-		return "Perspective";
+		return "Projections.Perspective";
 	}
 
 	/**

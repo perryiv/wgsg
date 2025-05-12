@@ -35,7 +35,7 @@ export function test ()
 			const a = new CullVisitor();
 			expect ( a instanceof Visitor ).to.be.true;
 			expect ( a instanceof Multiply ).to.be.true;
-			expect ( a.type ).to.be.equal ( "Cull" );
+			expect ( a.type ).to.be.equal ( "Visitors.Cull" );
 		} );
 	} );
 };

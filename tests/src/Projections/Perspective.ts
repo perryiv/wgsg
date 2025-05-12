@@ -34,7 +34,7 @@ export function test ()
 		it ( "Default construction should have correct properties", function ()
 		{
 			const proj = new Perspective();
-			expect ( proj.type ).to.be.equal ( "Perspective" );
+			expect ( proj.type ).to.be.equal ( "Projections.Perspective" );
 			expect ( proj.fov ).to.be.equal ( 45 );
 			expect ( proj.aspect ).to.be.equal ( 1 );
 			expect ( proj.near ).to.be.equal ( 1 );

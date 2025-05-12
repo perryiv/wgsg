@@ -14,16 +14,17 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base } from "../Base/Base";
+import { Cull as CullVisitor } from "../Visitors";
 import { getRenderingContext } from "../Tools/WebGPU";
 import { Node } from "../Scene";
-import { Perspective, Projection } from "../Projections";
+import { Perspective, ProjectionBase as Projection } from "../Projections";
 import type { ISize, IViewport } from "../Types/Math";
 
 
 ///////////////////////////////////////////////////////////////////////////////
-/**
- * The input for the constructor.
- */
+//
+//	Interfaces used below.
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 export interface ISurfaceConstructor
@@ -36,30 +37,21 @@ export interface ISurfaceConstructor
 	context?: ( GPUCanvasContext | null );
 }
 
-
-///////////////////////////////////////////////////////////////////////////////
-/**
- * Timeout handles.
- */
-///////////////////////////////////////////////////////////////////////////////
-
 export interface ITimeoutHandles
 {
 	render: number;
 }
-
-
-///////////////////////////////////////////////////////////////////////////////
-/**
- * Frame information.
- */
-///////////////////////////////////////////////////////////////////////////////
 
 export interface IFrameInfo
 {
 	count: number;
 	start: number;
 	end?: number;
+}
+
+interface IVisitors
+{
+	cull: CullVisitor;
 }
 
 
@@ -80,6 +72,7 @@ export class Surface extends Base
 	#projection: Projection = new Perspective();
 	#handles: ITimeoutHandles = { render: 0 };
 	#frame: IFrameInfo = { count: 0, start: 0 };
+	#visitors: IVisitors = { cull: new CullVisitor() };
 
 	/**
 	 * Construct the class.
@@ -164,7 +157,7 @@ export class Surface extends Base
 	 */
 	public getClassName() : string
 	{
-		return "Surface";
+		return "Viewers.Surface";
 	}
 
 	/**
@@ -387,6 +380,22 @@ export class Surface extends Base
 	public cull ()
 	{
 		console.log ( "Culling scene" );
+
+		// Shortcuts.
+		const cv = this.#visitors.cull;
+		const scene = this.#scene;
+
+		// Is there a scene?
+		if ( !scene )
+		{
+			return;
+		}
+
+		// Tell the visitor that it should return to its initial state.
+		cv.reset();
+
+		// Have the scene accept the visitor.
+		scene.accept ( cv );
 	}
 
 	/**

@@ -14,4 +14,4 @@
 
 export * from "./Orthographic";
 export * from "./Perspective";
-export * from "./Projection";
+export { Projection as ProjectionBase } from "./Projection";

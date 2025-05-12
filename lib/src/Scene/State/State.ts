@@ -17,6 +17,15 @@ import { Shaders } from "./Shaders";
 
 
 ///////////////////////////////////////////////////////////////////////////////
+//
+//	Constants used below.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+const DEFAULT_STATE_NAME = "Default State";
+
+
+///////////////////////////////////////////////////////////////////////////////
 /**
  * The input for the constructor.
  */
@@ -44,7 +53,7 @@ export interface IStateInput
 
 export class State
 {
-	#name: ( string | null ) = null;
+	#name: string = DEFAULT_STATE_NAME;
 	#shaders: Shaders = new Shaders();
 
 	/**
@@ -61,7 +70,7 @@ export class State
 
 		const { name, shaders } = input;
 
-		this.#name = ( name ?? null );
+		this.#name = ( name ?? DEFAULT_STATE_NAME );
 
 		if ( shaders )
 		{
@@ -83,7 +92,7 @@ export class State
 	 * Get the name.
 	 * @return {string | null} Unique name of this state object, or null.
 	 */
-	public get name() : ( string | null )
+	public get name() : string
 	{
 		return this.#name;
 	}
@@ -95,6 +104,6 @@ export class State
 	 */
 	public set name ( name: ( string | null ) )
 	{
-		this.#name = name;
+		this.#name = ( name ?? DEFAULT_STATE_NAME );
 	}
 }

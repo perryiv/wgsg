@@ -12,8 +12,124 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Group, Node, Shape, Transform } from "../Scene";
+import { Shape, State } from "../Scene";
+import {IMatrix44 } from "../Types";
 import { Multiply } from "./Multiply";
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Interfaces used below.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+interface IShapeList
+{
+	matrix: IMatrix44;
+	shapes: Shape[];
+}
+type IShapesMap = Map < IMatrix44, IShapeList >;
+type IProjectionGroup = Map < IMatrix44, IShapesMap >;
+interface IStatePair
+{
+	state: State;
+	proj: IProjectionGroup
+}
+type IStateMap = Map < string, IStatePair >;
+interface IClipGroups
+{
+	clipped: IStateMap;
+	unclipped: IStateMap;
+}
+type ILayerMap = Map < number, IClipGroups >;
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Make the shapes list.
+ * @returns {IShapeList} The shapes list.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+const getShapeList = ( sm: IShapesMap, matrix: IMatrix44 ) : IShapeList =>
+{
+	let sl = sm.get ( matrix );
+	if ( !sl )
+	{
+		sl = {
+			matrix,
+			shapes: []
+		}
+		sm.set ( matrix, sl );
+	}
+	return sl;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Get the map of shapes. Make it if we have to.
+ * @returns {IStatePair} The map of shapes.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+const getShapesMap = ( proj: IProjectionGroup, matrix: IMatrix44 ) : IShapesMap =>
+{
+	let sm = proj.get ( matrix );
+	if ( !sm )
+	{
+		sm = new Map < IMatrix44, IShapeList > ();
+		proj.set ( matrix, sm );
+	}
+	return sm;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Get the state pair. Make it if we have to.
+ * @returns {IStatePair} The state pair.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+const getStatePair = ( stateMap: IStateMap, state: ( State | null ), defaultState: State ) : IStatePair =>
+{
+	state = state ?? defaultState;
+	const name = state.name;
+	let sp = stateMap.get ( name );
+	if ( !sp )
+	{
+		sp = {
+			state,
+			proj: new Map < IMatrix44, IShapesMap > ()
+		}
+		stateMap.set ( name, sp );
+	}
+	return sp;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Get the clip groups. Make it if we have to.
+ * @returns {IClipGroups} The clip groups.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+const getClipGroups = ( layers: ILayerMap, layer: number ) : IClipGroups =>
+{
+	let cg = layers.get ( layer );
+	if ( !cg )
+	{
+		cg = {
+			clipped:   new Map < string, IStatePair > (),
+			unclipped: new Map < string, IStatePair > ()
+		};
+		layers.set ( layer, cg );
+	}
+	return cg;
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -25,6 +141,9 @@ import { Multiply } from "./Multiply";
 
 export class Cull extends Multiply
 {
+	#layers: ILayerMap = new Map < number, IClipGroups > ();
+	#defaultState: State = new State();
+
 	/**
 	 * Construct the class.
 	 * @constructor
@@ -41,26 +160,37 @@ export class Cull extends Multiply
 	 */
 	public getClassName() : string
 	{
-		return "Cull";
+		return "Visitors.Cull";
 	}
 
 	/**
-	 * Visit these node types.
+	 * Visit the shape.
 	 */
-	public visitTransform ( tr: Transform ) : void
-	{
-		super.visitTransform ( tr );
-	}
-	public visitGroup ( group: Group ) : void
-	{
-		super.visitGroup ( group );
-	}
-	public visitNode ( node: Node ) : void
-	{
-		super.visitNode ( node );
-	}
 	public visitShape ( shape: Shape ) : void
 	{
-		super.visitShape ( shape );
+		// Shortcuts.
+		const layers = this.#layers;
+		const modelMatrix = this.modelMatrix;
+		const projMatrix = this.projMatrix;
+		const clipped = shape.clipped;
+		const layer = shape.layer;
+
+		// Get or make the containers we need.
+		const clipGroups: IClipGroups = getClipGroups ( layers, layer );
+		const stateMap: IStateMap = ( clipped ? clipGroups.clipped : clipGroups.unclipped );
+		const { proj }: IStatePair = getStatePair ( stateMap, shape.state, this.#defaultState );
+		const shapeMap: IShapesMap = getShapesMap ( proj, projMatrix );
+		const { shapes }: IShapeList = getShapeList ( shapeMap, modelMatrix );
+
+		// Add our shape.
+		shapes.push ( shape );
+	}
+
+	/**
+	 * Reset to the initial state.
+	 */
+	public reset() : void
+	{
+		this.#layers.clear();
 	}
 }

@@ -9,7 +9,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Transform group class.
+//	Projection group class.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -23,12 +23,12 @@ import { Visitor } from "../../../Visitors/Visitor";
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Transform group class.
+ * Projection group class.
  * @class
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Transform extends Group
+export class Projection extends Group
 {
 	#matrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
 
@@ -55,7 +55,7 @@ export class Transform extends Group
 	 */
 	public getClassName() : string
 	{
-		return "Scene.Nodes.Groups.Transform";
+		return "Scene.Nodes.Groups.Projection";
 	}
 
 	/**
@@ -64,12 +64,12 @@ export class Transform extends Group
 	 */
 	public accept ( visitor: Visitor ): void
 	{
-		visitor.visitTransform ( this );
+		visitor.visitProjection ( this );
 	}
 
 	/**
 	 * Get the matrix.
-	 * @returns {IMatrix44} The transformation matrix.
+	 * @returns {IMatrix44} The projection matrix.
 	 */
 	public get matrix () : IMatrix44
 	{
@@ -78,7 +78,7 @@ export class Transform extends Group
 
 	/**
 	 * Set the matrix.
-	 * @param {IMatrix44} matrix - The transformation matrix.
+	 * @param {IMatrix44} matrix - The projection matrix.
 	 */
 	public set matrix ( matrix: IMatrix44 )
 	{
@@ -88,7 +88,7 @@ export class Transform extends Group
 		// Check the length.
 		if ( 16 !== length )
 		{
-			throw new Error ( `Invalid array length ${length} for transformation matrix, should be 16` );
+			throw new Error ( `Invalid array length ${length} for projection matrix, should be 16` );
 		}
 
 		// Write over the values in our existing matrix.

@@ -13,7 +13,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base } from "../Base/Base";
-import { Group, Node, Shape, Transform } from "../Scene";
+import {
+	Group,
+	Node,
+	ProjectionNode as Projection,
+	Shape,
+	Transform,
+} from "../Scene";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -54,6 +60,14 @@ export abstract class Visitor extends Base
 		this.visitGroup ( transform );
 	}
 
+	/**
+	 * Visit the projection.
+	 */
+	public visitProjection ( projection: Projection ) : void
+	{
+		this.visitGroup ( projection );
+	}
+
 	/* eslint-disable @typescript-eslint/no-empty-function */
 	/* eslint-disable @typescript-eslint/no-unused-vars */
 
@@ -62,4 +76,9 @@ export abstract class Visitor extends Base
 	 */
 	public visitNode ( _: Node ) : void	{}
 	public visitShape ( _: Shape ) : void	{}
+
+	/**
+	 * Reset to the initial state.
+	 */
+	public abstract reset() : void
 }

@@ -12,10 +12,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { mat4 } from "gl-matrix";
-import { Group, Node, Shape, Transform } from "../Scene";
 import { IDENTITY_MATRIX } from "../Tools";
 import { IMatrix44 } from "../Types";
+import { mat4 } from "gl-matrix";
+import { ProjectionNode as Projection, Transform } from "../Scene";
 import { Visitor } from "./Visitor";
 
 
@@ -28,7 +28,8 @@ import { Visitor } from "./Visitor";
 
 export abstract class Multiply extends Visitor
 {
-	#matrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
+	#modelMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
+	#projMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
 
 	/**
 	 * Construct the class.
@@ -41,12 +42,21 @@ export abstract class Multiply extends Visitor
 	}
 
 	/**
-	 * Return the matrix.
-	 * @param {IMatrix44} matrix - The matrix.
+	 * Return the model matrix.
+	 * @return {IMatrix44} The model matrix.
 	 */
-	public get matrix()
+	public get modelMatrix()
 	{
-		return this.#matrix;
+		return this.#modelMatrix;
+	}
+
+	/**
+	 * Return the projection matrix.
+	 * @return {IMatrix44} The projection matrix.
+	 */
+	public get projMatrix()
+	{
+		return this.#projMatrix;
 	}
 
 	/**
@@ -55,31 +65,33 @@ export abstract class Multiply extends Visitor
 	public visitTransform ( transform: Transform ) : void
 	{
 		// Make a copy of the original matrix.
-		const original: IMatrix44 = [ ...this.#matrix ];
+		const original: IMatrix44 = [ ...this.#modelMatrix ];
 
 		// Multiply the original matrix by the given one and save it in our member.
-		mat4.multiply ( this.#matrix, original, transform.matrix );
+		mat4.multiply ( this.#modelMatrix, original, transform.matrix );
 
 		// Now call the base class's function.
 		super.visitTransform ( transform );
 
 		// Put things back where we found them.
-		mat4.copy ( this.#matrix, original );
+		mat4.copy ( this.#modelMatrix, original );
 	}
 
 	/**
-	 * Visit these node types.
+	 * Visit the projection.
 	 */
-	public visitGroup ( group: Group ) : void
+	public visitProjection ( proj: Projection ) : void
 	{
-		super.visitGroup ( group );
-	}
-	public visitNode ( node: Node ) : void
-	{
-		super.visitNode ( node );
-	}
-	public visitShape ( shape: Shape ) : void
-	{
-		super.visitShape ( shape );
+		// Make a copy of the original matrix.
+		const original: IMatrix44 = [ ...this.#projMatrix ];
+
+		// Set our member.
+		mat4.copy ( this.#projMatrix, proj.matrix );
+
+		// Now call the base class's function.
+		super.visitProjection ( proj );
+
+		// Put things back where we found them.
+		mat4.copy ( this.#projMatrix, original );
 	}
 }

@@ -50,7 +50,7 @@ export class Orthographic extends Projection
 	 */
 	public getClassName() : string
 	{
-		return "Orthographic";
+		return "Projections.Orthographic";
 	}
 
 	/**

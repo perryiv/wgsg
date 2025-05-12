@@ -46,7 +46,7 @@ export function test ()
 		it ( "Transform should report correct type", function ()
 		{
 			const tr = new Transform();
-			expect ( tr.type ).to.equal ( "Transform" );
+			expect ( tr.type ).to.equal ( "Scene.Nodes.Groups.Transform" );
 		} );
 
 		it ( "Should be able to add child nodes", function ()

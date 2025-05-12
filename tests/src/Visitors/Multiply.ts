@@ -39,7 +39,7 @@ class MyMultiplyVisitor extends Multiply
 	}
 	public visitGroup ( group: Group ): void
 	{
-		this.result.push ( [ ...this.matrix ] );
+		this.result.push ( [ ...this.modelMatrix ] );
 		super.visitGroup ( group );
 	}
 };

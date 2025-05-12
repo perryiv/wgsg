@@ -26,6 +26,8 @@ import { State } from "../../State/State";
 
 export abstract class Shape extends Node
 {
+	#layer = 0;
+	#clipped = true;
 	#state: ( State | null ) = null;
 
 	/**
@@ -55,5 +57,41 @@ export abstract class Shape extends Node
 	public set state ( state: ( State | null ) )
 	{
 		this.#state = ( state ?? null );
+	}
+
+	/**
+	 * Get the layer.
+	 * @return {number} layer for this shape.
+	 */
+	public get layer() : number
+	{
+		return this.#layer;
+	}
+
+	/**
+	 * Set the layer.
+	 * @param {number} layer - layer for this shape.
+	 */
+	public set layer ( layer: number )
+	{
+		this.#layer = layer;
+	}
+
+	/**
+	 * Get the clipped state.
+	 * @return {boolean} clipped state for this shape.
+	 */
+	public get clipped() : boolean
+	{
+		return this.#clipped;
+	}
+
+	/**
+	 * Set the clipped state.
+	 * @param {boolean} clipped - clipped state for this shape.
+	 */
+	public set clipped ( clipped: boolean )
+	{
+		this.#clipped = clipped;
 	}
 }

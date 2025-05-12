@@ -49,6 +49,6 @@ export class Viewer extends Surface
 	 */
 	public getClassName() : string
 	{
-		return "Viewer";
+		return "Viewers.Viewer";
 	}
 }
