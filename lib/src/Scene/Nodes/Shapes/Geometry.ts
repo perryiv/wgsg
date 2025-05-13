@@ -24,7 +24,7 @@ import { Shape } from "./Shape";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export type VertexArray    = Float32Array;
+export type PointArray     = Float32Array;
 export type NormalArray    = Float32Array;
 export type ColorArray     = Float32Array;
 export type TexCoordsArray = Float32Array;
@@ -39,7 +39,7 @@ export type TexCoordsArray = Float32Array;
 
 export class Geometry extends Shape
 {
-	#vertices:  ( VertexArray    | null ) = null;
+	#points:    ( PointArray     | null ) = null;
 	#normals:   ( NormalArray    | null ) = null;
 	#colors:    ( ColorArray     | null ) = null;
 	#texCoords: ( TexCoordsArray | null ) = null;
@@ -73,23 +73,23 @@ export class Geometry extends Shape
 	}
 
 	/**
-	 * Get the vertices.
-	 * @return {VertexArray | null} Vertices for this geometry.
+	 * Get the points.
+	 * @return {PointArray | null} Points for this geometry.
 	 */
-	public get vertices() : ( VertexArray | null )
+	public get points() : ( PointArray | null )
 	{
 		// Do not return a copy. These arrays can be shared.
-		return this.#vertices;
+		return this.#points;
 	}
 
 	/**
-	 * Set the vertices.
-	 * @param {VertexArray | null} vertices - Vertices for this geometry.
+	 * Set the points.
+	 * @param {PointArray | null} points - Points for this geometry.
 	 */
-	public set vertices ( vertices: ( VertexArray | null ) )
+	public set points ( points: ( PointArray | null ) )
 	{
 		// Do not make a copy. These arrays can be shared.
-		this.#vertices = vertices;
+		this.#points = points;
 	}
 
 	/**
@@ -104,7 +104,7 @@ export class Geometry extends Shape
 
 	/**
 	 * Set the normals.
-	 * @param {NormalArray | null} vertices - Normal vectors for this geometry.
+	 * @param {NormalArray | null} normals - Normal vectors for this geometry.
 	 */
 	public set normals ( normals: ( NormalArray | null ) )
 	{
