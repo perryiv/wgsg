@@ -26,12 +26,7 @@ import {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export interface IShapeList
-{
-	matrix: IMatrix44;
-	shapes: Shape[];
-}
-export type IShapesMap = Map < IMatrix44, IShapeList >;
+export type IShapesMap = Map < IMatrix44, Shape[] >;
 export type IProjectionGroup = Map < IMatrix44, IShapesMap >;
 export interface IStatePair
 {
@@ -50,19 +45,16 @@ export type ILayerMap = Map < number, IClipGroups >;
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * Make the shapes list.
- * @returns {IShapeList} The shapes list.
+ * @returns {Shape[]} The shapes list.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const getShapeList = ( sm: IShapesMap, matrix: IMatrix44 ) : IShapeList =>
+export const getShapeList = ( sm: IShapesMap, matrix: IMatrix44 ) : Shape[] =>
 {
 	let sl = sm.get ( matrix );
 	if ( !sl )
 	{
-		sl = {
-			matrix,
-			shapes: []
-		}
+		sl = [];
 		sm.set ( matrix, sl );
 	}
 	return sl;
@@ -81,7 +73,7 @@ export const getShapesMap = ( proj: IProjectionGroup, matrix: IMatrix44 ) : ISha
 	let sm = proj.get ( matrix );
 	if ( !sm )
 	{
-		sm = new Map < IMatrix44, IShapeList > ();
+		sm = new Map < IMatrix44, Shape[] > ();
 		proj.set ( matrix, sm );
 	}
 	return sm;

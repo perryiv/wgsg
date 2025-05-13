@@ -16,9 +16,16 @@
 import { Base } from "../Base/Base";
 import { Cull as CullVisitor } from "../Visitors";
 import { getRenderingContext } from "../Tools/WebGPU";
-import { Node } from "../Scene";
+import { Node, Shape, State } from "../Scene";
 import { Perspective, ProjectionBase as Projection } from "../Projections";
 import type { ISize, IViewport } from "../Types/Math";
+import type {
+	IClipGroups,
+	ILayerMap,
+	IProjectionGroup,
+	IShapesMap,
+	IStateMap,
+} from "../Render";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -73,6 +80,8 @@ export class Surface extends Base
 	#handles: ITimeoutHandles = { render: 0 };
 	#frame: IFrameInfo = { count: 0, start: 0 };
 	#visitors: IVisitors = { cull: new CullVisitor() };
+	#layers: ILayerMap = new Map < number, IClipGroups > ();
+	#defaultState: State = new State();
 
 	/**
 	 * Construct the class.
@@ -158,6 +167,29 @@ export class Surface extends Base
 	public getClassName() : string
 	{
 		return "Viewers.Surface";
+	}
+
+	/**
+	 * Get the default state or throw an exception.
+	 * @returns {State} The default state.
+	 */
+	public get defaultState () : State
+	{
+		const state = this.#defaultState;
+		if ( !state )
+		{
+			throw new Error ( "Invalid default state" );
+		}
+		return state;
+	}
+
+	/**
+	 * Set the default state.
+	 * @params {State} state - The default state.
+	 */
+	public set defaultState ( state: State )
+	{
+		this.#defaultState = state;
 	}
 
 	/**
@@ -379,23 +411,79 @@ export class Surface extends Base
 	 */
 	public cull ()
 	{
-		console.log ( "Culling scene" );
-
-		// Shortcuts.
-		const cv = this.#visitors.cull;
+		// Handle no scene.
 		const scene = this.#scene;
-
-		// Is there a scene?
 		if ( !scene )
 		{
 			return;
 		}
 
+		// Shortcuts.
+		const cv = this.#visitors.cull;
+
+		// Make sure the visitor has our layers and default state.
+		// Note: It probably already does.
+		cv.layers = this.#layers;
+		cv.defaultState = this.defaultState;
+
 		// Tell the visitor that it should return to its initial state.
+		// This will clear the layers.
 		cv.reset();
 
 		// Have the scene accept the visitor.
 		scene.accept ( cv );
+	}
+
+	/**
+	 * Draw the list of shapes.
+	 */
+	private _drawShapeList ( shapes: Shape[] )
+	{
+		// Loop through the list of shapes and draw them.
+		for ( const shape of shapes )
+		{
+			shape.draw();
+		}
+	}
+
+	/**
+	 * Draw the map of shapes.
+	 */
+	private _drawShapesMap ( state: State, sm: IShapesMap )
+	{
+		// Loop through the map of shapes.
+		for ( const [ matrix, shapes ] of sm )
+		{
+			state.modelMatrix = matrix;
+			this._drawShapeList ( shapes );
+		}
+	}
+
+	/**
+	 * Draw the projection group.
+	 */
+	private _drawProjectionGroup ( state: State, proj: IProjectionGroup )
+	{
+		// Loop through the projection group.
+		for ( const [ matrix, sm ] of proj )
+		{
+			state.projMatrix = matrix;
+			this._drawShapesMap ( state, sm );
+		}
+	}
+
+	/**
+	 * Draw the clip group.
+	 */
+	private _drawStateMap ( sm: IStateMap )
+	{
+		// Loop through the state map.
+		for ( const { state, proj } of sm.values() )
+		{
+			state.apply();
+			this._drawProjectionGroup ( state, proj );
+			state.reset();
+		}
 	}
 
 	/**
@@ -407,6 +495,26 @@ export class Surface extends Base
 	public draw ()
 	{
 		console.log ( "Drawing render-graph" );
+
+		// Make an array of layers.
+		const layers = Array.from ( this.#layers, ( [ layer, clipGroups ] ) =>
+		{
+			return { layer, clipGroups };
+		} );
+
+		// Sort the array using the key.
+		layers.sort ( ( a, b ) =>
+		{
+			return ( a.layer - b.layer );
+		} );
+
+		// Loop through the array of layers.
+		for ( const { clipGroups } of layers )
+		{
+			const { clipped, unclipped } = clipGroups;
+			this._drawStateMap ( clipped );
+			this._drawStateMap ( unclipped );
+		}
 	}
 
 	/**

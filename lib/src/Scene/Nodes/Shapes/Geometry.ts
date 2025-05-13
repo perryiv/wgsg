@@ -151,4 +151,12 @@ export class Geometry extends Shape
 		// Do not make a copy. These arrays can be shared.
 		this.#texCoords = texCoords;
 	}
+
+	/**
+	 * Draw the shape.
+	 */
+	public draw() : void
+	{
+		console.log ( `Drawing ${this.type} ${this.id}` );
+	}
 }

@@ -29,7 +29,6 @@ import {
 	getStatePair,
 	type IClipGroups,
 	type ILayerMap,
-	type IShapeList,
 	type IShapesMap,
 	type IStateMap,
 	type IStatePair
@@ -105,6 +104,14 @@ export class Cull extends Multiply
 		return layers;
 	}
 
+	/**
+	 * Set the layers.
+	 * @params {ILayerMap} layers - The map of layers.
+	 */
+	public set layers ( layers: ILayerMap )
+	{
+		this.#layers = layers;
+	}
 
 	/**
 	 * Get the default state or throw an exception.
@@ -118,6 +125,15 @@ export class Cull extends Multiply
 			throw new Error ( "Invalid default state" );
 		}
 		return state;
+	}
+
+	/**
+	 * Set the default state.
+	 * @params {State} state - The default state.
+	 */
+	public set defaultState ( state: State )
+	{
+		this.#defaultState = state;
 	}
 
 	/**
@@ -170,7 +186,7 @@ export class Cull extends Multiply
 		const stateMap: IStateMap = ( clipped ? clipGroups.clipped : clipGroups.unclipped );
 		const { proj }: IStatePair = getStatePair ( stateMap, state );
 		const shapeMap: IShapesMap = getShapesMap ( proj, projMatrix );
-		const { shapes }: IShapeList = getShapeList ( shapeMap, modelMatrix );
+		const shapes: Shape[] = getShapeList ( shapeMap, modelMatrix );
 
 		// Add our shape.
 		shapes.push ( shape );

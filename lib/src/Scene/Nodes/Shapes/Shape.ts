@@ -56,4 +56,9 @@ export abstract class Shape extends Node
 	{
 		this.#state = state;
 	}
+
+	/**
+	 * Draw the shape.
+	 */
+	public abstract draw() : void;
 }

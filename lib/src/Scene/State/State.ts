@@ -13,6 +13,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { IMatrix44 } from "../../Types";
 import { Shaders } from "./Shaders";
 
 
@@ -79,6 +80,40 @@ export class State
 			this.#shaders.vertex = shaders.vertex;
 			this.#shaders.fragment = shaders.fragment;
 		}
+	}
+
+	/**
+	 * Apply the state.
+	 */
+	public apply()
+	{
+		console.log ( `Applied state: ${this.name}` );
+	}
+
+	/**
+	 * Reset the state.
+	 */
+	public reset()
+	{
+		console.log ( `Reset state: ${this.name}` );
+	}
+
+	/**
+	 * Try to set the projection matrix. It will depend on the shaders.
+	 * @param {IMatrix44} matrix - The projection matrix.
+	 */
+	public set projMatrix ( matrix: IMatrix44 )
+	{
+		console.log ( "Setting projection matrix:", matrix );
+	}
+
+	/**
+	 * Try to set the model matrix. It will depend on the shaders.
+	 * @param {IMatrix44} matrix - The model matrix.
+	 */
+	public set modelMatrix ( matrix: IMatrix44 )
+	{
+		console.log ( "Setting model matrix:", matrix );
 	}
 
 	/**
