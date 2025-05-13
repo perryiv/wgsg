@@ -38,6 +38,20 @@ import {
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
+ * Input for the cull visitor constructor.
+ * @interface
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+interface ICullVisitorInput
+{
+	layers: ILayerMap,
+	defaultState: State
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
  * Cull visitor class.
  * @class
  */
@@ -45,17 +59,27 @@ import {
 
 export class Cull extends Multiply
 {
-	#layers: ILayerMap = new Map < number, IClipGroups > ();
-	#defaultState: State = new State();
+	#layers: ( ILayerMap | null ) = null;
+	#defaultState: ( State | null ) = null;
 
 	/**
 	 * Construct the class.
 	 * @constructor
 	 */
-	constructor()
+	constructor ( input?: ICullVisitorInput )
 	{
 		// Call this first.
 		super();
+
+		// Get the input or defaults.
+		const { layers, defaultState } = ( input ?? {
+			layers: new Map < number, IClipGroups > (),
+			defaultState: new State()
+		} );
+
+		// Set our members.
+		this.#layers = layers;
+		this.#defaultState = defaultState;
 	}
 
 	/**
@@ -65,6 +89,35 @@ export class Cull extends Multiply
 	public getClassName() : string
 	{
 		return "Visitors.Cull";
+	}
+
+	/**
+	 * Get the layers or throw an exception.
+	 * @returns {ILayerMap} The map of layers.
+	 */
+	public get layers () : ILayerMap
+	{
+		const layers = this.#layers;
+		if ( !layers )
+		{
+			throw new Error ( "Invalid map of layers" );
+		}
+		return layers;
+	}
+
+
+	/**
+	 * Get the default state or throw an exception.
+	 * @returns {State} The default state.
+	 */
+	public get defaultState () : State
+	{
+		const state = this.#defaultState;
+		if ( !state )
+		{
+			throw new Error ( "Invalid default state" );
+		}
+		return state;
 	}
 
 	/**
@@ -105,10 +158,10 @@ export class Cull extends Multiply
 	public visitShape ( shape: Shape ) : void
 	{
 		// Shortcuts.
-		const layers = this.#layers;
+		const layers = this.layers;
 		const modelMatrix = this.modelMatrix;
 		const projMatrix = this.projMatrix;
-		const state = shape.state ?? this.#defaultState;
+		const state = shape.state ?? this.defaultState;
 		const clipped = state.clipped;
 		const layer = state.layer;
 
@@ -139,6 +192,6 @@ export class Cull extends Multiply
 	 */
 	public reset() : void
 	{
-		this.#layers.clear();
+		this.layers.clear();
 	}
 }
