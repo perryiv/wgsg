@@ -12,9 +12,16 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Shape, State } from "../Scene";
-import {IMatrix44 } from "../Types";
+import type { IMatrix44 } from "../Types";
 import { Multiply } from "./Multiply";
+import {
+	Group,
+	Node,
+	ProjectionNode as Projection,
+	Shape,
+	State,
+	Transform,
+} from "../Scene";
 
 
 
@@ -164,6 +171,30 @@ export class Cull extends Multiply
 	}
 
 	/**
+	 * Visit the group.
+	 */
+	public visitGroup ( group: Group ) : void
+	{
+		super.visitGroup ( group );
+	}
+
+	/**
+	 * Visit the transform.
+	 */
+	public visitTransform ( transform: Transform ) : void
+	{
+		super.visitTransform ( transform );
+	}
+
+	/**
+	 * Visit the projection.
+	 */
+	public visitProjection ( projection: Projection ) : void
+	{
+		super.visitProjection ( projection );
+	}
+
+	/**
 	 * Visit the shape.
 	 */
 	public visitShape ( shape: Shape ) : void
@@ -184,6 +215,17 @@ export class Cull extends Multiply
 
 		// Add our shape.
 		shapes.push ( shape );
+
+		// Do this last.
+		super.visitShape ( shape );
+	}
+
+	/**
+	 * Visit the node.
+	 */
+	public visitNode ( node: Node ) : void
+	{
+		super.visitNode ( node );
 	}
 
 	/**
