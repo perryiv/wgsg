@@ -12,11 +12,4 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export * from "./Base";
-export * from "./Projections";
-export * from "./Render";
-export * from "./Scene";
-export * from "./Tools";
-export * from "./Types";
-export * from "./Viewers";
-export * from "./Visitors";
+export * from "./Graph";
