@@ -14,6 +14,7 @@
 
 import { Base } from "../Base/Base";
 import {
+	Geometry,
 	Group,
 	Node,
 	ProjectionNode as Projection,
@@ -74,8 +75,9 @@ export abstract class Visitor extends Base
 	/**
 	 * Overload as needed.
 	 */
-	public visitNode ( _: Node ) : void	{}
+	public visitGeometry ( _: Geometry ) : void	{}
 	public visitShape ( _: Shape ) : void	{}
+	public visitNode ( _: Node ) : void	{}
 
 	/**
 	 * Reset to the initial state.

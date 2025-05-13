@@ -15,6 +15,7 @@
 import type { IMatrix44 } from "../Types";
 import { Multiply } from "./Multiply";
 import {
+	Geometry,
 	Group,
 	Node,
 	ProjectionNode as Projection,
@@ -192,6 +193,14 @@ export class Cull extends Multiply
 	public visitProjection ( projection: Projection ) : void
 	{
 		super.visitProjection ( projection );
+	}
+
+	/**
+	 * Visit the geometry.
+	 */
+	public visitGeometry ( geom: Geometry ) : void
+	{
+		super.visitGeometry ( geom );
 	}
 
 	/**
