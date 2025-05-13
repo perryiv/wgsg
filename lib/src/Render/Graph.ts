@@ -95,9 +95,8 @@ export const getShapesMap = ( proj: IProjectionGroup, matrix: IMatrix44 ) : ISha
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const getStatePair = ( stateMap: IStateMap, state: ( State | null ), defaultState: State ) : IStatePair =>
+export const getStatePair = ( stateMap: IStateMap, state: State ) : IStatePair =>
 {
-	state = state ?? defaultState;
 	const name = state.name;
 	let sp = stateMap.get ( name );
 	if ( !sp )

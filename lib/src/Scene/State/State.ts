@@ -55,6 +55,8 @@ export class State
 {
 	#name: string = DEFAULT_STATE_NAME;
 	#shaders: Shaders = new Shaders();
+	#layer = 0;
+	#clipped = true;
 
 	/**
 	 * Construct the class.
@@ -105,5 +107,41 @@ export class State
 	public set name ( name: ( string | null ) )
 	{
 		this.#name = ( name ?? DEFAULT_STATE_NAME );
+	}
+
+	/**
+	 * Get the layer.
+	 * @return {number} layer for this shape.
+	 */
+	public get layer() : number
+	{
+		return this.#layer;
+	}
+
+	/**
+	 * Set the layer.
+	 * @param {number} layer - layer for this shape.
+	 */
+	public set layer ( layer: number )
+	{
+		this.#layer = layer;
+	}
+
+	/**
+	 * Get the clipped state.
+	 * @return {boolean} clipped state for this shape.
+	 */
+	public get clipped() : boolean
+	{
+		return this.#clipped;
+	}
+
+	/**
+	 * Set the clipped state.
+	 * @param {boolean} clipped - clipped state for this shape.
+	 */
+	public set clipped ( clipped: boolean )
+	{
+		this.#clipped = clipped;
 	}
 }

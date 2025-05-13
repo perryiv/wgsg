@@ -108,13 +108,14 @@ export class Cull extends Multiply
 		const layers = this.#layers;
 		const modelMatrix = this.modelMatrix;
 		const projMatrix = this.projMatrix;
-		const clipped = shape.clipped;
-		const layer = shape.layer;
+		const state = shape.state ?? this.#defaultState;
+		const clipped = state.clipped;
+		const layer = state.layer;
 
 		// Get or make the containers we need.
 		const clipGroups: IClipGroups = getClipGroups ( layers, layer );
 		const stateMap: IStateMap = ( clipped ? clipGroups.clipped : clipGroups.unclipped );
-		const { proj }: IStatePair = getStatePair ( stateMap, shape.state, this.#defaultState );
+		const { proj }: IStatePair = getStatePair ( stateMap, state );
 		const shapeMap: IShapesMap = getShapesMap ( proj, projMatrix );
 		const { shapes }: IShapeList = getShapeList ( shapeMap, modelMatrix );
 
