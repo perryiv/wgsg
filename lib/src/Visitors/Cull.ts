@@ -165,7 +165,8 @@ export class Cull extends Multiply
 	 */
 	public visitGeometry ( geom: Geometry ) : void
 	{
-		super.visitGeometry ( geom );
+		// Treat it like a shape.
+		this.visitShape ( geom );
 	}
 
 	/**
