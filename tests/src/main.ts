@@ -12,8 +12,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import puppeteer from "puppeteer-core";
-import { pathToFileURL } from "url";
+// import puppeteer from "puppeteer-core";
+// import { pathToFileURL } from "url";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -22,6 +22,7 @@ import { pathToFileURL } from "url";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+/*
 await ( async () =>
 {
 	const browser = await puppeteer.launch ( {
@@ -35,3 +36,4 @@ await ( async () =>
 	await browser.close();
 	console.log ( "Done" );
 } ) ();
+*/
