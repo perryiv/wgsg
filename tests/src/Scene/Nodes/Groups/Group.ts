@@ -42,7 +42,7 @@ export function test ()
 		it ( "Group should report correct type", function ()
 		{
 			const group = new Group();
-			expect ( group.type ).to.equal ( "Group" );
+			expect ( group.type ).to.equal ( "Scene.Nodes.Groups.Group" );
 		} );
 
 		it ( "Should be able to add child nodes", function ()
