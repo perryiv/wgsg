@@ -57,7 +57,6 @@ export function test ()
 		{
 			const a: IVector2 = [ 1, 2 ];
 			expect ( a ).to.exist;
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 			expect ( a.length ).to.be.equal ( 2 );
 		} );
 
@@ -65,7 +64,6 @@ export function test ()
 		{
 			const a: IVector3 = [ 1, 2, 3 ];
 			expect ( a ).to.exist;
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 			expect ( a.length ).to.be.equal ( 3 );
 		} );
 
@@ -73,7 +71,6 @@ export function test ()
 		{
 			const a: IVector4 = [ 1, 2, 3, 4 ];
 			expect ( a ).to.exist;
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 			expect ( a.length ).to.be.equal ( 4 );
 		} );
 
@@ -86,7 +83,6 @@ export function test ()
 				1, 2, 3, 4
 			];
 			expect ( a ).to.exist;
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 			expect ( a.length ).to.be.equal ( 16 );
 		} );
 	} );
