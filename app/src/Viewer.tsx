@@ -13,11 +13,48 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { mat4 } from "gl-matrix";
 import { useEffect, useRef, useState } from "react";
 import {
+	Geometry,
 	getDeviceData,
+	Group,
+	IDENTITY_MATRIX,
 	Viewer as InternalViewer,
+	Transform,
 } from "wgsg-lib";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Make a scene used for testing below.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+const root: Group = ( () =>
+{
+	const root = new Group();
+
+	{
+		const tr = new Transform();
+		mat4.translate ( tr.matrix, IDENTITY_MATRIX, [ 10, 0, 0 ] );
+		tr.addChild ( new Geometry() );
+		tr.addChild ( new Geometry() );
+		root.addChild ( tr );
+	}
+
+	{
+		const tr = new Transform();
+		mat4.translate ( tr.matrix, IDENTITY_MATRIX, [ 0, 10, 0 ] );
+		tr.addChild ( new Geometry() );
+		tr.addChild ( new Geometry() );
+		tr.addChild ( new Geometry() );
+		tr.addChild ( new Geometry() );
+		root.addChild ( tr );
+	}
+
+	return root;
+} ) ();
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -73,7 +110,9 @@ export function Viewer ( { style }: IViewerProps )
 				console.log ( "Context lost because: ", reason );
 			} );
 
-			setViewer ( new InternalViewer ( { device, canvas: canvas.current } ) );
+			const viewer = new InternalViewer ( { device, canvas: canvas.current } );
+			viewer.scene = root;
+			setViewer ( viewer );
 
 			console.log ( "Internal viewer created and configured" );
 		} ) ();
