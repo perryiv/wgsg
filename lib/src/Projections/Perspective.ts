@@ -49,9 +49,10 @@ export class Perspective extends Projection
 
 	/**
 	 * Construct the class.
-	 * @constructor
+	 * @class
+	 * @param {IPerspectiveData | undefined} input - Optional input.
 	 */
-	constructor ( input?: ( IPerspectiveData | null ) )
+	constructor ( input?: IPerspectiveData )
 	{
 		// Call this first.
 		super();
@@ -65,7 +66,7 @@ export class Perspective extends Projection
 
 	/**
 	 * Return the class name.
-	 * @return {string} The class name.
+	 * @returns {string} The class name.
 	 */
 	public getClassName() : string
 	{
@@ -74,7 +75,7 @@ export class Perspective extends Projection
 
 	/**
 	 * Set the members from the given data.
-	 * @param {IPerspectiveData} data - The perspective data. Any of the
+	 * @param {IPerspectiveData} input - The perspective data. Any of the
 	 * properties can be missing. However, if they are included then they have
 	 * to be valid. Otherwise, an exception is thrown.
 	 */
@@ -148,7 +149,7 @@ export class Perspective extends Projection
 
 	/**
 	 * Return the projection matrix.
-	 * @return {IMatrix44} The projection matrix.
+	 * @returns {IMatrix44} The projection matrix.
 	 */
 	public get matrix() : IMatrix44
 	{
@@ -176,7 +177,7 @@ export class Perspective extends Projection
 
 	/**
 	 * Get the field-of-view.
-	 * @return {number} The field-of-view.
+	 * @returns {number} The field-of-view.
 	 */
 	public get fov() : number
 	{
@@ -199,7 +200,7 @@ export class Perspective extends Projection
 
 	/**
 	 * Get the aspect ratio.
-	 * @return {number} The aspect ratio.
+	 * @returns {number} The aspect ratio.
 	 */
 	public get aspect() : number
 	{
@@ -222,7 +223,7 @@ export class Perspective extends Projection
 
 	/**
 	 * Get the near distance.
-	 * @return {number} The near distance.
+	 * @returns {number} The near distance.
 	 */
 	public get near() : number
 	{
@@ -245,7 +246,7 @@ export class Perspective extends Projection
 
 	/**
 	 * Get the far distance.
-	 * @return {number} The far distance.
+	 * @returns {number} The far distance.
 	 */
 	public get far() : number
 	{

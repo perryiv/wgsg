@@ -29,7 +29,7 @@ export abstract class Base
 
 	/**
 	 * Construct the class.
-	 * @constructor
+	 * @class
 	 */
 	constructor()
 	// eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -38,7 +38,7 @@ export abstract class Base
 
 	/**
 	 * Return the id.
-	 * @param {number} id - The id.
+	 * @returns {number} The id.
 	 */
 	public get id()
 	{
@@ -47,13 +47,13 @@ export abstract class Base
 
 	/**
 	 * Return the class name.
-	 * @return {string} The class name.
+	 * @returns {string} The class name.
 	 */
 	public abstract getClassName() : string;
 
 	/**
 	 * Return the type.
-	 * @param {string} type - The type.
+	 * @returns {string} The type.
 	 */
 	public get type()
 	{

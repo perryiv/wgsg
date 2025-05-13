@@ -36,7 +36,8 @@ export class Viewer extends Surface
 {
 	/**
 	 * Construct the class.
-	 * @constructor
+	 * @class
+	 * @param {IViewerConstructor} input - The input for the constructor.
 	 */
 	constructor ( input : IViewerConstructor )
 	{
@@ -45,7 +46,7 @@ export class Viewer extends Surface
 
 	/**
 	 * Return the class name.
-	 * @return {string} The class name.
+	 * @returns {string} The class name.
 	 */
 	public getClassName() : string
 	{

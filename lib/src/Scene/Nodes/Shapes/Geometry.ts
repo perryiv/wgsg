@@ -46,8 +46,8 @@ export class Geometry extends Shape
 
 	/**
 	 * Construct the class.
-	 * @constructor
-	 * @param {State | null} state - State for this geometry.
+	 * @class
+	 * @param {State | null} state - Optional state for this geometry.
 	 */
 	constructor ( state?: ( State | null ) )
 	{
@@ -56,7 +56,7 @@ export class Geometry extends Shape
 
 	/**
 	 * Return the class name.
-	 * @return {string} The class name.
+	 * @returns {string} The class name.
 	 */
 	public getClassName() : string
 	{
@@ -74,7 +74,7 @@ export class Geometry extends Shape
 
 	/**
 	 * Get the points.
-	 * @return {PointArray | null} Points for this geometry.
+	 * @returns {PointArray | null} Points for this geometry.
 	 */
 	public get points() : ( PointArray | null )
 	{
@@ -94,7 +94,7 @@ export class Geometry extends Shape
 
 	/**
 	 * Get the normal vectors.
-	 * @return {NormalArray | null} Normal vectors for this geometry.
+	 * @returns {NormalArray | null} Normal vectors for this geometry.
 	 */
 	public get normals() : ( NormalArray | null )
 	{
@@ -114,7 +114,7 @@ export class Geometry extends Shape
 
 	/**
 	 * Get the colors.
-	 * @return {ColorArray | null} Colors for this geometry.
+	 * @returns {ColorArray | null} Colors for this geometry.
 	 */
 	public get colors() : ( ColorArray | null )
 	{
@@ -134,7 +134,7 @@ export class Geometry extends Shape
 
 	/**
 	 * Get the texture coordinates.
-	 * @return {TexCoordsArray | null} Texture coordinates for this geometry.
+	 * @returns {TexCoordsArray | null} Texture coordinates for this geometry.
 	 */
 	public get texCoords() : ( TexCoordsArray | null )
 	{

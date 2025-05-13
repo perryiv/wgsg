@@ -23,7 +23,7 @@ import {
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * Return the WebGPU device and (maybe) other related data.
- * @param {IGetDeviceOptions} options - Options for requesting the adapter
+ * @param {IDeviceOptions} options - Options for requesting the adapter
  * and describing the device.
  * @returns {Promise<IDeviceData>} GPU device.
  */
@@ -67,8 +67,7 @@ export const getDeviceData = async ( options?: IDeviceOptions ) : Promise < IDev
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * Return the WebGPU rendering context for the canvas.
- * @param {GPUDevice} device - GPU device.
- * @param {HTMLCanvasElement | OffscreenCanvas} canvas - HTML or off-screen canvas element.
+ * @param {IRenderingContextInput} input - Input for getting rendering context.
  * @returns {GPUCanvasContext} Configured GPU canvas context.
  */
 ///////////////////////////////////////////////////////////////////////////////

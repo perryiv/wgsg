@@ -30,8 +30,8 @@ export abstract class Shape extends Node
 
 	/**
 	 * Construct the class.
-	 * @constructor
-	 * @param {State | null} state - State for this shape.
+	 * @class
+	 * @param {State | null} state - Optional state for this shape.
 	 */
 	constructor ( state?: ( State | null ) )
 	{
@@ -41,7 +41,7 @@ export abstract class Shape extends Node
 
 	/**
 	 * Get the state.
-	 * @return {State | null} State for this shape.
+	 * @returns {State | null} State for this shape.
 	 */
 	public get state() : ( State | null )
 	{

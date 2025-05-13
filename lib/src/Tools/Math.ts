@@ -52,7 +52,7 @@ export const isValidMatrix = ( m: IMatrix44 ) =>
 
 /**
  * See if the given value is a finite number.
- * @parem {unknown} value - The value to check.
+ * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a number, otherwise false.
  */
 export const isFiniteNumber = ( value: unknown ) =>
@@ -63,7 +63,7 @@ export const isFiniteNumber = ( value: unknown ) =>
 
 /**
  * See if the given value is a positive finite number.
- * @parem {unknown} value - The value to check.
+ * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a positive number, otherwise false.
  */
 export const isPositiveFiniteNumber = ( value: unknown ) =>

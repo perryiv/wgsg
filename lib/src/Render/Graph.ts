@@ -45,6 +45,8 @@ export type ILayerMap = Map < number, IClipGroups >;
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * Make the shapes list.
+ * @param {IShapesMap} sm - The map containing lists of shapes.
+ * @param {IMatrix44} matrix - The transformation matrix.
  * @returns {Shape[]} The shapes list.
  */
 ///////////////////////////////////////////////////////////////////////////////
@@ -64,6 +66,8 @@ export const getShapeList = ( sm: IShapesMap, matrix: IMatrix44 ) : Shape[] =>
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * Get the map of shapes. Make it if we have to.
+ * @param {IProjectionGroup} proj - The projection group.
+ * @param {IMatrix44} matrix - The transformation matrix.
  * @returns {IStatePair} The map of shapes.
  */
 ///////////////////////////////////////////////////////////////////////////////
@@ -83,6 +87,8 @@ export const getShapesMap = ( proj: IProjectionGroup, matrix: IMatrix44 ) : ISha
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * Get the state pair. Make it if we have to.
+ * @param {IStateMap} stateMap - The state map.
+ * @param {State} state - The state object.
  * @returns {IStatePair} The state pair.
  */
 ///////////////////////////////////////////////////////////////////////////////
@@ -106,6 +112,8 @@ export const getStatePair = ( stateMap: IStateMap, state: State ) : IStatePair =
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * Get the clip groups. Make it if we have to.
+ * @param {ILayerMap} layers - The map of layers.
+ * @param {number} layer - The layer number.
  * @returns {IClipGroups} The clip groups.
  */
 ///////////////////////////////////////////////////////////////////////////////

@@ -34,7 +34,7 @@ export abstract class Visitor extends Base
 {
 	/**
 	 * Construct the class.
-	 * @constructor
+	 * @class
 	 */
 	constructor()
 	{
@@ -44,6 +44,7 @@ export abstract class Visitor extends Base
 
 	/**
 	 * Visit the group.
+	 * @param {Group} group - The group to visit.
 	 */
 	public visitGroup ( group: Group ) : void
 	{
@@ -55,29 +56,42 @@ export abstract class Visitor extends Base
 
 	/**
 	 * Visit the transform.
+	 * @param {Transform} tr - The transform to visit.
 	 */
-	public visitTransform ( transform: Transform ) : void
+	public visitTransform ( tr: Transform ) : void
 	{
-		this.visitGroup ( transform );
+		this.visitGroup ( tr );
 	}
 
 	/**
 	 * Visit the projection.
+	 * @param {Projection} proj - The projection to visit.
 	 */
-	public visitProjection ( projection: Projection ) : void
+	public visitProjection ( proj: Projection ) : void
 	{
-		this.visitGroup ( projection );
+		this.visitGroup ( proj );
 	}
 
 	/* eslint-disable @typescript-eslint/no-empty-function */
 	/* eslint-disable @typescript-eslint/no-unused-vars */
 
 	/**
-	 * Overload as needed.
+	 * Visit the geometry.
+	 * @param {Geometry} geom - The geometry to visit.
 	 */
-	public visitGeometry ( _: Geometry ) : void	{}
-	public visitShape ( _: Shape ) : void	{}
-	public visitNode ( _: Node ) : void	{}
+	public visitGeometry ( geom: Geometry ) : void	{}
+
+	/**
+	 * Visit the shape.
+	 * @param {Shape} shape - The shape to visit.
+	 */
+	public visitShape ( shape: Shape ) : void	{}
+
+	/**
+	 * Visit the node.
+	 * @param {Node} node - The node to visit.
+	 */
+	public visitNode ( node: Node ) : void	{}
 
 	/**
 	 * Reset to the initial state.

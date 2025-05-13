@@ -31,7 +31,7 @@ export abstract class Node extends Base
 
 	/**
 	 * Construct the class.
-	 * @constructor
+	 * @class
 	 */
 	constructor()
 	{
@@ -68,7 +68,7 @@ export abstract class Node extends Base
 	 * Remove a parent. This is for the Group class. Do not use it directly.
 	 * @internal
 	 * @param {number} id - The id of the parent group node to remove.
-	 * @return {boolean} True if it worked, otherwise false.
+	 * @returns {boolean} True if it worked, otherwise false.
 	 */
 	public removeParent ( id: number )
 	{
@@ -79,7 +79,7 @@ export abstract class Node extends Base
 	/**
 	 * See if this node has the given parent.
 	 * @param {number} id - The id of the parent to check.
-	 * @return {boolean} True if we have the given parent, otherwise false.
+	 * @returns {boolean} True if we have the given parent, otherwise false.
 	 */
 	public hasParent ( id: number )
 	{

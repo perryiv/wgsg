@@ -36,7 +36,7 @@ export class Orthographic extends Projection
 
 	/**
 	 * Construct the class.
-	 * @constructor
+	 * @class
 	 */
 	constructor()
 	{
@@ -46,7 +46,7 @@ export class Orthographic extends Projection
 
 	/**
 	 * Return the class name.
-	 * @return {string} The class name.
+	 * @returns {string} The class name.
 	 */
 	public getClassName() : string
 	{
@@ -55,7 +55,7 @@ export class Orthographic extends Projection
 
 	/**
 	 * Return the projection matrix.
-	 * @return {IMatrix44} The projection matrix.
+	 * @returns {IMatrix44} The projection matrix.
 	 */
 	public get matrix() : IMatrix44
 	{

@@ -34,8 +34,8 @@ export class Transform extends Group
 
 	/**
 	 * Construct the class.
+	 * @class
 	 * @param {IMatrix44 | null | undefined} matrix - Optional matrix input.
-	 * @constructor
 	 */
 	constructor ( matrix?: ( IMatrix44 | null ) )
 	{
@@ -51,7 +51,7 @@ export class Transform extends Group
 
 	/**
 	 * Return the class name.
-	 * @return {string} The class name.
+	 * @returns {string} The class name.
 	 */
 	public getClassName() : string
 	{

@@ -63,7 +63,8 @@ export class Cull extends Multiply
 
 	/**
 	 * Construct the class.
-	 * @constructor
+	 * @class
+	 * @param {ICullVisitorInput | undefined} input - Optional constructor input.
 	 */
 	constructor ( input?: ICullVisitorInput )
 	{
@@ -83,7 +84,7 @@ export class Cull extends Multiply
 
 	/**
 	 * Return the class name.
-	 * @return {string} The class name.
+	 * @returns {string} The class name.
 	 */
 	public getClassName() : string
 	{
@@ -106,7 +107,7 @@ export class Cull extends Multiply
 
 	/**
 	 * Set the layers.
-	 * @params {ILayerMap} layers - The map of layers.
+	 * @param {ILayerMap} layers - The map of layers.
 	 */
 	public set layers ( layers: ILayerMap )
 	{
@@ -129,7 +130,7 @@ export class Cull extends Multiply
 
 	/**
 	 * Set the default state.
-	 * @params {State} state - The default state.
+	 * @param {State} state - The default state.
 	 */
 	public set defaultState ( state: State )
 	{
@@ -138,6 +139,7 @@ export class Cull extends Multiply
 
 	/**
 	 * Visit the group.
+	 * @param {Group} group - The group node.
 	 */
 	public visitGroup ( group: Group ) : void
 	{
@@ -146,22 +148,25 @@ export class Cull extends Multiply
 
 	/**
 	 * Visit the transform.
+	 * @param {Transform} tr - The transform node.
 	 */
-	public visitTransform ( transform: Transform ) : void
+	public visitTransform ( tr: Transform ) : void
 	{
-		super.visitTransform ( transform );
+		super.visitTransform ( tr );
 	}
 
 	/**
 	 * Visit the projection.
+	 * @param {Projection} proj - The projection node.
 	 */
-	public visitProjection ( projection: Projection ) : void
+	public visitProjection ( proj: Projection ) : void
 	{
-		super.visitProjection ( projection );
+		super.visitProjection ( proj );
 	}
 
 	/**
 	 * Visit the geometry.
+	 * @param {Geometry} geom - The geometry node.
 	 */
 	public visitGeometry ( geom: Geometry ) : void
 	{
@@ -171,6 +176,7 @@ export class Cull extends Multiply
 
 	/**
 	 * Visit the shape.
+	 * @param {Shape} shape - The shape node.
 	 */
 	public visitShape ( shape: Shape ) : void
 	{
@@ -198,6 +204,7 @@ export class Cull extends Multiply
 
 	/**
 	 * Visit the node.
+	 * @param {Node} node - The scene node.
 	 */
 	public visitNode ( node: Node ) : void
 	{

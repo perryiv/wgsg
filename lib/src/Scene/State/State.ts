@@ -61,7 +61,7 @@ export class State
 
 	/**
 	 * Construct the class.
-	 * @constructor
+	 * @class
 	 * @param {IStateInput | null | undefined} input - The constructor input object.
 	 */
 	constructor ( input?: IStateInput )
@@ -118,7 +118,7 @@ export class State
 
 	/**
 	 * Get the shader pair.
-	 * @return {Shaders} Shader pair.
+	 * @returns {Shaders} Shader pair.
 	 */
 	public get shaders() : Shaders
 	{
@@ -127,7 +127,7 @@ export class State
 
 	/**
 	 * Get the name.
-	 * @return {string | null} Unique name of this state object, or null.
+	 * @returns {string | null} The name of this state object, or null.
 	 */
 	public get name() : string
 	{
@@ -136,8 +136,7 @@ export class State
 
 	/**
 	 * Set the name.
-	 *
-	 * @param {string | null} name - Unique name of this state object, or null.
+	 * @param {string | null} name - The name of this state object, or null.
 	 */
 	public set name ( name: ( string | null ) )
 	{
@@ -146,7 +145,7 @@ export class State
 
 	/**
 	 * Get the layer.
-	 * @return {number} layer for this shape.
+	 * @returns {number} layer for this shape.
 	 */
 	public get layer() : number
 	{
@@ -164,7 +163,7 @@ export class State
 
 	/**
 	 * Get the clipped state.
-	 * @return {boolean} clipped state for this shape.
+	 * @returns {boolean} clipped state for this shape.
 	 */
 	public get clipped() : boolean
 	{

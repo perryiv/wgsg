@@ -85,7 +85,8 @@ export class Surface extends Base
 
 	/**
 	 * Construct the class.
-	 * @constructor
+	 * @class
+	 * @param {ISurfaceConstructor} input - The constructor input object.
 	 */
 	constructor ( { canvas, device, context } : ISurfaceConstructor )
 	{
@@ -162,7 +163,7 @@ export class Surface extends Base
 
 	/**
 	 * Return the class name.
-	 * @return {string} The class name.
+	 * @returns {string} The class name.
 	 */
 	public getClassName() : string
 	{
@@ -185,7 +186,7 @@ export class Surface extends Base
 
 	/**
 	 * Set the default state.
-	 * @params {State} state - The default state.
+	 * @param {State} state - The default state.
 	 */
 	public set defaultState ( state: State )
 	{
@@ -278,7 +279,7 @@ export class Surface extends Base
 
 	/**
 	 * Get the rendering context.
-	 * @return {GPUCanvasContext} The rendering context.
+	 * @returns {GPUCanvasContext} The rendering context.
 	 */
 	public get context() : GPUCanvasContext
 	{
@@ -297,7 +298,7 @@ export class Surface extends Base
 
 	/**
 	 * Get the surface size.
-	 * @return {ISize} The size of the surface.
+	 * @returns {ISize} The size of the surface.
 	 */
 	public get size() : ISize
 	{
@@ -318,7 +319,7 @@ export class Surface extends Base
 
 	/**
 	 * Get the surface width.
-	 * @return {number} The width of the surface.
+	 * @returns {number} The width of the surface.
 	 */
 	public get width() : number
 	{
@@ -337,7 +338,7 @@ export class Surface extends Base
 
 	/**
 	 * Get the surface height.
-	 * @return {number} The height of the surface.
+	 * @returns {number} The height of the surface.
 	 */
 	public get height() : number
 	{
@@ -356,7 +357,7 @@ export class Surface extends Base
 
 	/**
 	 * Get the surface viewport.
-	 * @return {IViewport} The viewport of the surface.
+	 * @returns {IViewport} The viewport of the surface.
 	 */
 	public get viewport() : IViewport
 	{
@@ -436,6 +437,7 @@ export class Surface extends Base
 
 	/**
 	 * Draw the list of shapes.
+	 * @param {Shape[]} shapes - The list of shapes to draw.
 	 */
 	private _drawShapeList ( shapes: Shape[] )
 	{
@@ -448,6 +450,8 @@ export class Surface extends Base
 
 	/**
 	 * Draw the map of shapes.
+	 * @param {State} state - The current state.
+	 * @param {IShapesMap} sm - The map of shapes to draw.
 	 */
 	private _drawShapesMap ( state: State, sm: IShapesMap )
 	{
@@ -461,6 +465,8 @@ export class Surface extends Base
 
 	/**
 	 * Draw the projection group.
+	 * @param {State} state - The current state.
+	 * @param {IProjectionGroup} proj - The projection group to draw.
 	 */
 	private _drawProjectionGroup ( state: State, proj: IProjectionGroup )
 	{
@@ -474,6 +480,7 @@ export class Surface extends Base
 
 	/**
 	 * Draw the clip group.
+	 * @param {IStateMap} sm - The state-map containing the projection groups to draw.
 	 */
 	private _drawStateMap ( sm: IStateMap )
 	{

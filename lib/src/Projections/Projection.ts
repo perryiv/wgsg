@@ -27,7 +27,7 @@ export abstract class Projection extends Base
 {
 	/**
 	 * Construct the class.
-	 * @constructor
+	 * @class
 	 */
 	constructor()
 	{
@@ -37,7 +37,7 @@ export abstract class Projection extends Base
 
 	/**
 	 * Return the projection matrix.
-	 * @return {IMatrix44} The projection matrix.
+	 * @returns {IMatrix44} The projection matrix.
 	 */
 	public abstract get matrix() : IMatrix44;
 

@@ -39,7 +39,7 @@ export class Group extends Node
 
 	/**
 	 * Construct the class.
-	 * @constructor
+	 * @class
 	 */
 	constructor ()
 	{
@@ -48,7 +48,7 @@ export class Group extends Node
 
 	/**
 	 * Return the class name.
-	 * @return {string} The class name.
+	 * @returns {string} The class name.
 	 */
 	public getClassName() : string
 	{
@@ -66,7 +66,7 @@ export class Group extends Node
 
 	/**
 	 * Get the number of children.
-	 * @return {number} The number of child nodes.
+	 * @returns {number} The number of child nodes.
 	 */
 	public get size() : number
 	{
@@ -109,7 +109,7 @@ export class Group extends Node
 	/**
 	 * Get the child node.
 	 * @param {number} index - The array index of the child.
-	 * @return {Node | null} The child node or null.
+	 * @returns {Node | null} The child node or null.
 	 */
 	public getChild ( index: number )
 	{
@@ -128,8 +128,8 @@ export class Group extends Node
 
 	/**
 	 * Remove a child node.
-	 * @param {Node | null | undefined} node - The node to add to the group.
-	 * @return {boolean} True if it worked, otherwise false.
+	 * @param {number} index - The index of the node to remove from the group.
+	 * @returns {boolean} True if it worked, otherwise false.
 	 */
 	public removeChild ( index: number ) : boolean
 	{

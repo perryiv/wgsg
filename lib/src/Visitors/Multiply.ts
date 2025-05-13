@@ -33,7 +33,7 @@ export abstract class Multiply extends Visitor
 
 	/**
 	 * Construct the class.
-	 * @constructor
+	 * @class
 	 */
 	constructor()
 	{
@@ -43,7 +43,7 @@ export abstract class Multiply extends Visitor
 
 	/**
 	 * Return the model matrix.
-	 * @return {IMatrix44} The model matrix.
+	 * @returns {IMatrix44} The model matrix.
 	 */
 	public get modelMatrix()
 	{
@@ -52,7 +52,7 @@ export abstract class Multiply extends Visitor
 
 	/**
 	 * Return the projection matrix.
-	 * @return {IMatrix44} The projection matrix.
+	 * @returns {IMatrix44} The projection matrix.
 	 */
 	public get projMatrix()
 	{
@@ -61,17 +61,18 @@ export abstract class Multiply extends Visitor
 
 	/**
 	 * Visit the transform.
+	 * @param {Transform} tr - The transform to visit.
 	 */
-	public visitTransform ( transform: Transform ) : void
+	public visitTransform ( tr: Transform ) : void
 	{
 		// Make a copy of the original matrix.
 		const original: IMatrix44 = [ ...this.#modelMatrix ];
 
 		// Multiply the original matrix by the given one and save it in our member.
-		mat4.multiply ( this.#modelMatrix, original, transform.matrix );
+		mat4.multiply ( this.#modelMatrix, original, tr.matrix );
 
 		// Now call the base class's function.
-		super.visitTransform ( transform );
+		super.visitTransform ( tr );
 
 		// Put things back where we found them.
 		mat4.copy ( this.#modelMatrix, original );
@@ -79,6 +80,7 @@ export abstract class Multiply extends Visitor
 
 	/**
 	 * Visit the projection.
+	 * @param {Projection} proj - The projection to visit.
 	 */
 	public visitProjection ( proj: Projection ) : void
 	{

@@ -27,7 +27,7 @@ export class Shaders
 
 	/**
 	 * Construct the class.
-	 * @constructor
+	 * @class
 	 * @param {string | null} [vertex] - Vertex shader string.
 	 * @param {string | null} [fragment] - Fragment shader string.
 	 */
@@ -39,7 +39,7 @@ export class Shaders
 
 	/**
 	 * Get the vertex shader.
-	 * @return {string | null} Vertex shader string, or null.
+	 * @returns {string | null} Vertex shader string, or null.
 	 */
 	public get vertex() : ( string | null )
 	{
@@ -48,7 +48,6 @@ export class Shaders
 
 	/**
 	 * Set the vertex shader.
-	 *
 	 * @param {string | null} v - Vertex shader string, or null.
 	 */
 	public set vertex ( v: ( string | null ) )
@@ -58,7 +57,7 @@ export class Shaders
 
 	/**
 	 * Get the fragment shader.
-	 * @return {string | null} Fragment shader string, or null.
+	 * @returns {string | null} Fragment shader string, or null.
 	 */
 	public get fragment() : ( string | null )
 	{
@@ -67,7 +66,6 @@ export class Shaders
 
 	/**
 	 * Set the fragment shader.
-	 *
 	 * @param {string | null} f - Fragment shader string, or null.
 	 */
 	public set fragment ( f: ( string | null ) )
