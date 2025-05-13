@@ -52,7 +52,7 @@ export class Group extends Node
 	 */
 	public getClassName() : string
 	{
-		return "Group";
+		return "Scene.Nodes.Groups.Group";
 	}
 
 	/**
