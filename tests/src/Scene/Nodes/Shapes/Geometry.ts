@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { expect } from "chai";
-import { Shape, State } from "wgsg-lib";
+import { Geometry, Node, Shape, State } from "wgsg-lib";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -24,36 +24,38 @@ import { Shape, State } from "wgsg-lib";
 
 export function test ()
 {
-	describe ( "Shape Class", function ()
+	describe ( "Geometry", function ()
 	{
 		it ( "Should be able to make a shape", function ()
 		{
-			const shape = new Shape();
+			const shape = new Geometry();
 			expect ( shape ).to.exist;
+			expect ( shape instanceof Geometry ).to.be.true;
 			expect ( shape instanceof Shape ).to.be.true;
+			expect ( shape instanceof Node ).to.be.true;
 		} );
 
 		it ( "Default shape should have null state", function ()
 		{
-			const shape = new Shape();
-			expect ( shape.state ).to.be.null;
+			const geom = new Geometry();
+			expect ( geom.state ).to.be.null;
 		} );
 
 		it ( "Should be able to set the state", function ()
 		{
-			const shape = new Shape();
-			shape.state = new State();
-			expect ( shape.state ).to.exist;
-			expect ( shape.state instanceof State ).to.be.true;
+			const geom = new Geometry();
+			geom.state = new State();
+			expect ( geom.state ).to.exist;
+			expect ( geom.state instanceof State ).to.be.true;
 		} );
 
 		it ( "Should be able to construct with state", function ()
 		{
 			const state = new State();
-			const shape = new Shape ( state );
-			expect ( shape.state ).to.exist;
-			expect ( shape.state instanceof State ).to.be.true;
-			expect ( shape.state ).to.equal ( state );
+			const geom = new Geometry ( state );
+			expect ( geom.state ).to.exist;
+			expect ( geom.state instanceof State ).to.be.true;
+			expect ( geom.state ).to.equal ( state );
 		} );
 	} );
 };

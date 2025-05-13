@@ -12,12 +12,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { test as testShape } from "./Shape";
+import { test as testGeometry } from "./Geometry";
 
 export function test ()
 {
 	describe ( "Shapes", function ()
 	{
-		testShape();
+		testGeometry();
 	} );
 };
