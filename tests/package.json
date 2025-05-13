@@ -9,7 +9,8 @@
     "build": "tsc --build",
     "clear": "clear",
     "dev": "vite",
-    "lint": "eslint --ext .ts ./src"
+    "lint": "eslint --ext .ts ./src",
+    "watch": "watch \"yarn run clear && yarn run build && yarn run lint && echo watching ...\" src"
   },
   "dependencies": {
     "gl-matrix": "^3.4.3"
@@ -25,6 +26,7 @@
     "mocha": "^11.1.0",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.29.0",
-    "vite": "^6.2.5"
+    "vite": "^6.2.5",
+    "watch": "^1.0.2"
   }
 }
