@@ -14,7 +14,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Node } from "../Node";
-import { State } from "../../State/State";
+import { State } from "../../State";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -56,7 +56,7 @@ export abstract class Shape extends Node
 	 */
 	public set state ( state: ( State | null ) )
 	{
-		this.#state = ( state ?? null );
+		this.#state = state;
 	}
 
 	/**
