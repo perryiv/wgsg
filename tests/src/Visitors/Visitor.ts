@@ -28,6 +28,8 @@ class MyConcreteVisitor extends Visitor
 	{
 		return "MyConcreteVisitor";
 	}
+	// eslint-disable-next-line @typescript-eslint/no-empty-function
+	public reset() {}
 };
 
 
