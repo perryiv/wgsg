@@ -14,6 +14,7 @@
 
 export * from "./Algorithms";
 export * from "./Base";
+export * from "./Math";
 export * from "./Projections";
 export * from "./Render";
 export * from "./Scene";
