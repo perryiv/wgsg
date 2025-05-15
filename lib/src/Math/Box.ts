@@ -159,14 +159,25 @@ export class Box
 
 	/**
 	 * Get the radius of the smallest sphere that contains the box.
-	 * @returns {number} The radius of the box.
+	 * @returns {number} The radius of the box, or 0 if the box is invalid.
 	 */
 	public get radius(): number
 	{
-		const dx = ( this.#max[0] - this.#min[0] );
-		const dy = ( this.#max[1] - this.#min[1] );
-		const dz = ( this.#max[2] - this.#min[2] );
+		// Get the size.
+		const [ dx, dy, dz ] = this.size;
+
+		// The user should first check if the box is valid.
+		// If this happens then the box is invalid.
+		if ( ( dx < 0 ) || ( dy < 0 ) || ( dz < 0 ) )
+		{
+			return 0;
+		}
+
+		// Calculate the diagonal distance, which is also the diameter of the
+		// sphere that contains the box.
 		const dist = Math.sqrt ( ( dx * dx ) + ( dy * dy ) + ( dz * dz ) );
+
+		// Return the radius of the sphere.
 		return ( 0.5 * dist );
 	}
 
