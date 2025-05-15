@@ -98,7 +98,7 @@ export class Group extends Node
 			}
 
 			// Grow the answer.
-			answer.grow ( child.bounds );
+			answer.growByBox ( child.bounds );
 		} );
 
 		// Save the answer for next time.
@@ -114,17 +114,10 @@ export class Group extends Node
 	 */
 	protected setBounds ( bounds: Box | null ): void
 	{
-		// If we were given null then make a new default box
-		if ( !bounds )
-		{
-			this.#bounds = new Box();
-		}
-
-		// Otherwise, clone the given box, even if it's not valid.
-		else
-		{
-			this.#bounds = bounds.clone();
-		}
+		// If we were given a box then clone it.
+		// Otherwise, make a new default box.
+		// Note: We can clone an invalid box, but not a null box.
+		this.#bounds = ( bounds ? bounds.clone() : new Box() );
 
 		// Let the parents know that their bounds are now invalid.
 		this.forEachParent ( ( parent: Node ) =>
