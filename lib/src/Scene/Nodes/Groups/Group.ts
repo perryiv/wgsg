@@ -13,8 +13,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Node } from "../Node";
+import { Flags, Node } from "../Node";
 import { Visitor } from "../../../Visitors/Visitor";
+import { Box } from "../../../Math";
+import { hasBits } from "../../../Tools";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -36,6 +38,7 @@ export type IGroupCallback = ( ( node: Node ) => void );
 export class Group extends Node
 {
 	#children: Node[] = [];
+	#bounds: Box = new Box();
 
 	/**
 	 * Construct the class.
@@ -62,6 +65,72 @@ export class Group extends Node
 	public accept ( visitor: Visitor ): void
 	{
 		visitor.visitGroup ( this );
+	}
+
+	/**
+	 * Get the bounds of this node.
+	 * @returns {Box} The bounds of this node.
+	 */
+	protected getBounds() : Box
+	{
+		// Return the bounding box if it is valid.
+		if ( true === this.#bounds.valid )
+		{
+			return this.#bounds;
+		}
+
+		// Make a new bounds.
+		const answer = new Box();
+
+		// Add each child's box to ours.
+		this.forEachChild ( ( child: Node ) =>
+		{
+			// Handle when the child node does not add to the bounds.
+			if ( false === hasBits ( child.flags, Flags.ADDS_TO_BOUNDS ) )
+			{
+				return;
+			}
+
+			// If the child has an invalid bounds then skip it.
+			if ( false === child.bounds.valid )
+			{
+				return;
+			}
+
+			// Grow the answer.
+			answer.grow ( child.bounds );
+		} );
+
+		// Save the answer for next time.
+		this.#bounds = answer;
+
+		// Return the answer.
+		return answer;
+	}
+
+	/**
+	 * Set the bounds of this node.
+	 * @param {Box | null} bounds - The new bounds of this node.
+	 */
+	protected setBounds ( bounds: Box | null ): void
+	{
+		// If we were given null then make a new default box
+		if ( !bounds )
+		{
+			this.#bounds = new Box();
+		}
+
+		// Otherwise, clone the given box, even if it's not valid.
+		else
+		{
+			this.#bounds = bounds.clone();
+		}
+
+		// Let the parents know that their bounds are now invalid.
+		this.forEachParent ( ( parent: Node ) =>
+		{
+			parent.bounds = null;
+		} );
 	}
 
 	/**

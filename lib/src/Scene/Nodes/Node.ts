@@ -17,6 +17,7 @@ import { Base } from "../../Base/Base";
 import { Group } from "./Groups/Group";
 import { Visitor } from "../../Visitors/Visitor";
 import { hasBits, setBits } from "../../Tools";
+import { Box } from "../../Math";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -37,6 +38,15 @@ export enum Flags
 	ADDS_TO_BOUNDS = ( 1 << 2 ),
 	DIRTY          = ( 1 << 3 ),
 };
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Callback type.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export type INodeParentCallback = ( ( node: Node ) => void );
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -206,9 +216,50 @@ export abstract class Node extends Base
 		}
 
 		// Tell all the parents, and their parents, all the way up.
-		this.#parents.forEach ( ( parent ) =>
+		this.forEachParent ( ( parent ) =>
 		{
 			parent.dirty = true;
 		} );
 	}
+
+	/**
+	 * Call the given function for each parent node.
+	 * @param {INodeParentCallback} cb - Callback function.
+	 */
+	public forEachParent ( cb: INodeParentCallback )
+	{
+		this.#parents.forEach ( cb );
+	}
+
+	/**
+	 * Get the bounds of this node.
+	 * @returns {Box} The bounds of this node.
+	 */
+	public get bounds() : Box
+	{
+		return this.getBounds();
+	}
+
+	/**
+	 * Set the bounds of this node.
+	 * @param {Box | null} bounds - The new bounds of this node.
+	 */
+	public set bounds ( bounds: Box | null )
+	{
+		this.setBounds ( bounds );
+	}
+
+	/**
+	 * Get the bounds of this node.
+	 * @abstract
+	 * @returns {Box} The bounds of this node.
+	 */
+	protected abstract getBounds() : Box;
+
+	/**
+	 * Set the bounds of this node.
+	 * @abstract
+	 * @param {Box | null} bounds - The new bounds of this node.
+	 */
+	protected abstract setBounds ( _: Box | null ): void;
 }
