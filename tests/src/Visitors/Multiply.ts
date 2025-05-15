@@ -55,7 +55,7 @@ class MyMultiplyVisitor extends Multiply
 
 export function test ()
 {
-	describe ( "Multiply Visitor Class", function ()
+	describe ( "Multiply", function ()
 	{
 		it ( "Can inherit from matrix-multiplying visitor class", function ()
 		{

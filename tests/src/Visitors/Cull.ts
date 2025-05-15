@@ -28,7 +28,7 @@ import {
 
 export function test ()
 {
-	describe ( "Cull Visitor Class", function ()
+	describe ( "Cull", function ()
 	{
 		it ( "Should be able to make a cull visitor", function ()
 		{

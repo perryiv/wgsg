@@ -24,7 +24,7 @@ import { Group } from "wgsg-lib";
 
 export function test ()
 {
-	describe ( "Group Class", function ()
+	describe ( "Group", function ()
 	{
 		it ( "Should be able to make a group", function ()
 		{

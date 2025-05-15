@@ -39,7 +39,7 @@ class MyConcreteClass extends Base
 
 export function test ()
 {
-	describe ( "Base Class", function ()
+	describe ( "Base", function ()
 	{
 		it ( "Should be able to inherit from the base class", function ()
 		{

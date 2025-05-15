@@ -24,7 +24,7 @@ import { State } from "wgsg-lib";
 
 export function test ()
 {
-	describe ( "State Class", function ()
+	describe ( "State", function ()
 	{
 		const vs = "I am the vertex shader";
 		const fs = "I am the fragment shader";

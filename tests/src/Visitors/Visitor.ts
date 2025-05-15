@@ -41,7 +41,7 @@ class MyConcreteVisitor extends Visitor
 
 export function test ()
 {
-	describe ( "Base Visitor Class", function ()
+	describe ( "Visitor", function ()
 	{
 		it ( "Can inherit from the base visitor class", function ()
 		{

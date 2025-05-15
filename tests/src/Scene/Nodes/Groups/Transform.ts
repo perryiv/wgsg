@@ -28,7 +28,7 @@ import {
 
 export function test ()
 {
-	describe ( "Transform Class", function ()
+	describe ( "Transform", function ()
 	{
 		it ( "Should be able to make a transform", function ()
 		{
