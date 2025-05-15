@@ -16,7 +16,7 @@
 import { Group } from "./Group";
 import { IDENTITY_MATRIX } from "../../../Tools/Constants";
 import { IMatrix44 } from "../../../Types";
-import { isValidMatrix } from "../../../Tools";
+import { isValidMatrix } from "../../../Math";
 import { mat4 } from "gl-matrix";
 import { Visitor } from "../../../Visitors/Visitor";
 

@@ -12,8 +12,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IDENTITY_MATRIX, isPositiveFiniteNumber } from "../Tools";
+import { IDENTITY_MATRIX } from "../Tools";
 import { IMatrix44, IViewport } from "../Types";
+import { isPositiveFiniteNumber } from "../Math";
 import { mat4 } from "gl-matrix";
 import { Projection } from "./Projection";
 
