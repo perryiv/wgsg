@@ -16,19 +16,17 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-type ReadonlyNumber = Readonly < number >;
-
 
 //////////////////////////////////////////////////////////////////////////
 /**
  * See if the "bits" are in "n".
- * @param {ReadonlyNumber} n - The number to check.
- * @param {ReadonlyNumber} bits - The bits to check for.
+ * @param {number} n - The number to check.
+ * @param {number} bits - The bits to check for.
  * @returns {boolean} True if the bits are present in the number.
  */
 //////////////////////////////////////////////////////////////////////////
 
-export function hasBits ( n: ReadonlyNumber, bits: ReadonlyNumber ) : boolean
+export function hasBits ( n: Readonly < number >, bits: Readonly < number > ) : boolean
 {
 	return ( ( n & bits ) === bits );
 }
@@ -36,13 +34,13 @@ export function hasBits ( n: ReadonlyNumber, bits: ReadonlyNumber ) : boolean
 //////////////////////////////////////////////////////////////////////////
 /**
  * Add the "bits" to "n".
- * @param {ReadonlyNumber} n - The number to modify.
- * @param {ReadonlyNumber} bits - The bits to add.
+ * @param {number} n - The number to modify.
+ * @param {number} bits - The bits to add.
  * @returns {number} The modified number with the bits added.
  */
 //////////////////////////////////////////////////////////////////////////
 
-export function addBits ( n: ReadonlyNumber, bits: ReadonlyNumber ) : number
+export function addBits ( n: Readonly < number >, bits: Readonly < number > ) : number
 {
 	return ( n | bits );
 }
@@ -50,13 +48,13 @@ export function addBits ( n: ReadonlyNumber, bits: ReadonlyNumber ) : number
 //////////////////////////////////////////////////////////////////////////
 /**
  * Remove the "bits" from "n".
- * @param {ReadonlyNumber} n - The number to modify.
- * @param {ReadonlyNumber} bits - The bits to remove.
+ * @param {number} n - The number to modify.
+ * @param {number} bits - The bits to remove.
  * @returns {number} The modified number with the bits removed.
  */
 //////////////////////////////////////////////////////////////////////////
 
-export function removeBits ( n: ReadonlyNumber, bits: ReadonlyNumber ) : number
+export function removeBits ( n: Readonly < number >, bits: Readonly < number > ) : number
 {
 	return ( ( n & bits ) ? ( n ^ bits ) : n );
 }
@@ -64,13 +62,13 @@ export function removeBits ( n: ReadonlyNumber, bits: ReadonlyNumber ) : number
 //////////////////////////////////////////////////////////////////////////
 /**
  * Toggle the "bits" in "n".
- * @param {ReadonlyNumber} n - The number to modify.
- * @param {ReadonlyNumber} bits - The bits to toggle.
+ * @param {number} n - The number to modify.
+ * @param {number} bits - The bits to toggle.
  * @returns {number} The modified number with the bits toggled.
  */
 //////////////////////////////////////////////////////////////////////////
 
-export function toggleBits ( n: ReadonlyNumber, bits: ReadonlyNumber ) : number
+export function toggleBits ( n: Readonly < number >, bits: Readonly < number > ) : number
 {
 	return ( n ^ bits );
 }
@@ -78,14 +76,14 @@ export function toggleBits ( n: ReadonlyNumber, bits: ReadonlyNumber ) : number
 //////////////////////////////////////////////////////////////////////////
 /**
  * Set the "bits" in "n".
- * @param {ReadonlyNumber} n - The number to modify.
- * @param {ReadonlyNumber} bits - The bits to set.
+ * @param {number} n - The number to modify.
+ * @param {number} bits - The bits to set.
  * @param {boolean} state - True to set the bits, false to clear them.
  * @returns {number} The modified number with the bits set or cleared.
  */
 //////////////////////////////////////////////////////////////////////////
 
-export function setBits ( n: ReadonlyNumber, bits: ReadonlyNumber, state: boolean ) : number
+export function setBits ( n: Readonly < number >, bits: Readonly < number >, state: boolean ) : number
 {
 	return ( state ? ( addBits ( n, bits ) ) : ( removeBits ( n, bits ) ) );
 }
