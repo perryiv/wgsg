@@ -27,8 +27,8 @@ import { IVector3 } from "../Types";
 
 interface IBoxInput
 {
-	min: IVector3;
-	max: IVector3;
+	min: Readonly < IVector3 >;
+	max: Readonly < IVector3 >;
 };
 
 
@@ -49,7 +49,7 @@ export class Box
 	 * @param {IBoxInput} [input] - The input object containing min and max vectors.
 	 * @class
 	 */
-	constructor ( input?: IBoxInput )
+	constructor ( input?: Readonly < IBoxInput > )
 	{
 		if ( input )
 		{
@@ -60,8 +60,7 @@ export class Box
 	}
 
 	/**
-	 * Clone the box.
-	 * @param {Box} [box] - The box to clone.
+	 * Clone our box, even if it is not valid.
 	 * @returns {Box} A new box that is a copy of this one.
 	 */
 	public clone (): Box
@@ -108,9 +107,9 @@ export class Box
 	 * Set the minimum corner of the box.
 	 * @param {IVector3} v - The new minimum corner of the box.
 	 */
-	public set min ( v: IVector3 )
+	public set min ( v: Readonly < IVector3 > )
 	{
-		this.#min = v;
+		vec3.copy ( this.#min, v );
 	}
 
 	/**
@@ -126,9 +125,9 @@ export class Box
 	 * Set the maximum corner of the box.
 	 * @param {IVector3} v - The new maximum corner of the box.
 	 */
-	public set max ( v: IVector3 )
+	public set max ( v: Readonly < IVector3 > )
 	{
-		this.#max = v;
+		vec3.copy ( this.#max, v );
 	}
 
 	/**
@@ -182,34 +181,56 @@ export class Box
 	}
 
 	/**
-	 * Grow the box by the given point or box.
-	 * @param {Box | IVector3} value - The point or box to grow our box by.
+	 * Grow this box so that it contains the given box.
+	 * @param {Box} box - The box to grow our box by.
 	 */
-	public grow ( value: ( Box | IVector3 ) ): void
+	public growByBox ( box: Readonly < Box > ): void
 	{
-		if ( value instanceof Box )
+		this.growByPoint ( box.min );
+		this.growByPoint ( box.max );
+	}
+
+	/**
+	 * Grow this box so that it contains the given point.
+	 * @param {IVector3} point - The point to grow our box by.
+	 */
+	public growByPoint ( point: Readonly < IVector3 > ): void
+	{
+		this.growByDimension ( point[0], 0 );
+		this.growByDimension ( point[1], 1 );
+		this.growByDimension ( point[2], 2 );
+	}
+
+	/**
+	 * Grow this box by all the points in the given array.
+	 * The point are assumed to be:
+	 * [ x0, x1, ..., xn ]
+	 * [ y0, y1, ..., yn ]
+	 * [ z0, z1, ..., zn ]
+	 * @param {number} num - The number of points to grow by.
+	 * @param {Float32Array} x - The x coordinates of the points.
+	 * @param {Float32Array} y - The y coordinates of the points.
+	 * @param {Float32Array} z - The z coordinates of the points.
+	 * @private
+	 */
+	public growByPoints ( num: number, x: Float32Array, y: Float32Array, z: Float32Array ): void
+	{
+		for ( let i = 0; i < num; ++i )
 		{
-			this.grow ( value.min );
-			this.grow ( value.max );
-		}
-		else
-		{
-			this._grow ( value, 0 );
-			this._grow ( value, 1 );
-			this._grow ( value, 2 );
+			this.growByDimension ( x[0], 0 );
+			this.growByDimension ( y[0], 1 );
+			this.growByDimension ( z[0], 2 );
 		}
 	}
 
 	/**
-	 * Grow the box by the given point.
-	 * @param {IVector3} v - The point to grow our box by.
+	 * Grow the box by the given dimension of a point.
+	 * @param {number} value - The dimension value.
 	 * @param {number} index - The index of the dimension to grow.
 	 * @private
 	 */
-	private _grow ( v: IVector3, index: number ): void
+	private growByDimension ( value: Readonly < number >, index: number ): void
 	{
-		const value = v[index];
-
 		// Do both of these because if the box is invalid and it's grown by a
 		// single point, then that point is both the new min and max.
 		if ( value < this.#min[index] )
@@ -229,7 +250,7 @@ export class Box
 	 * @static
 	 * @returns {boolean} True if the boxes are equal, otherwise false.
 	 */
-	static equal ( a: Box, b: Box ): boolean
+	static equal ( a: Readonly < Box >, b: Readonly < Box > ): boolean
 	{
 		return (
 			( a.min[0] === b.min[0] ) &&
