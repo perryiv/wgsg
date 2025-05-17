@@ -8,17 +8,26 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Load and run the other tests.
+//	Test code for the render graph.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { test as testConstants } from "./Constants";
-import { test as testFunctions } from "./Functions";
-import { test as testWebGPU } from "./WebGPU";
+import { expect } from "chai";
 
-describe ( "Tools", function ()
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Test the code.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export function test ()
 {
-	testConstants();
-	testFunctions();
-	testWebGPU();
-} );
+	describe ( "Render Graph", function ()
+	{
+		it ( "Can generate a render graph from a scene", function ()
+		{
+			expect ( false ).to.be.true;
+		} );
+	} );
+};

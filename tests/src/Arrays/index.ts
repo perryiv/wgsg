@@ -12,25 +12,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-void ( async () =>
+import { test as testArrays } from "./Arrays";
+
+describe ( "Arrays", function ()
 {
-	mocha.setup ( "bdd" );
-	mocha.checkLeaks();
-
-	// This one should be first.
-	await import ( "./Tools" );
-
-	// These can be in any order.
-	await import ( "./Algorithms" );
-	await import ( "./Arrays" );
-	await import ( "./Base" );
-	await import ( "./Math" );
-	await import ( "./Projections" );
-	await import ( "./Render" );
-	await import ( "./Scene" );
-	await import ( "./Types" );
-	await import ( "./Viewers" );
-	await import ( "./Visitors" );
-
-	mocha.run();
-} ) ();
+	testArrays();
+} );

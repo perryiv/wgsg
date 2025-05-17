@@ -8,7 +8,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Test code for math functions.
+//	Test code for math validation functions.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -27,7 +27,7 @@ import {
 
 export function test ()
 {
-	describe ( "Math Functions", function ()
+	describe ( "Validation", function ()
 	{
 		it ( "Test isFiniteNumber", function ()
 		{
