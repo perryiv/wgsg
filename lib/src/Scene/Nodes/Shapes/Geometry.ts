@@ -99,9 +99,9 @@ export class Geometry extends Shape
 
 			// Shortcuts.
 			// TODO: Why is the "as" needed here?
-			const x = points.x0 as PointArray;
-			const y = points.x1 as PointArray;
-			const z = points.x2 as PointArray;
+			const x = ( points.x0 as PointArray );
+			const y = ( points.x1 as PointArray );
+			const z = ( points.x2 as PointArray );
 			const numVectors = points.numVectors;
 
 			// Grow the box by all the points.
