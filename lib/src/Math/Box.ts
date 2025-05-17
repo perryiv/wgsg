@@ -217,9 +217,9 @@ export class Box
 	{
 		for ( let i = 0; i < num; ++i )
 		{
-			this.growByDimension ( x[0], 0 );
-			this.growByDimension ( y[0], 1 );
-			this.growByDimension ( z[0], 2 );
+			this.growByDimension ( x[i], 0 );
+			this.growByDimension ( y[i], 1 );
+			this.growByDimension ( z[i], 2 );
 		}
 	}
 
@@ -259,6 +259,25 @@ export class Box
 			( a.max[0] === b.max[0] ) &&
 			( a.max[1] === b.max[1] ) &&
 			( a.max[2] === b.max[2] )
+		);
+	}
+
+	/**
+	 * See if the two boxes intersect.
+	 * @param {Box} a - The first box.
+	 * @param {Box} b - The second box.
+	 * @static
+	 * @returns {boolean} True if the boxes intersect, otherwise false.
+	 */
+	static intersect ( a: Readonly < Box >, b: Readonly < Box > ): boolean
+	{
+		return (
+			( a.min[0] <= b.max[0] ) &&
+			( a.min[1] <= b.max[1] ) &&
+			( a.min[2] <= b.max[2] ) &&
+			( a.max[0] >= b.min[0] ) &&
+			( a.max[1] >= b.min[1] ) &&
+			( a.max[2] >= b.min[2] )
 		);
 	}
 }
