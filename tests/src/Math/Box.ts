@@ -181,5 +181,19 @@ export function test ()
 				new Box ( { min: [ 2, 1, 1 ], max: [ 3, 4, 4 ] } )
 			) ).to.be.true;
 		} );
+
+		it ( "Can get the box corners", function ()
+		{
+			const box = new Box ( { min: [ 1, 1, 1 ], max: [ 2, 2, 2 ] } );
+			const { llb, lrb, ulb, urb, llf, lrf, ulf, urf } = box.corners;
+			expect ( llb ).to.deep.equal ( [ 1, 1, 1 ] );
+			expect ( lrb ).to.deep.equal ( [ 2, 1, 1 ] );
+			expect ( ulb ).to.deep.equal ( [ 1, 2, 1 ] );
+			expect ( urb ).to.deep.equal ( [ 2, 2, 1 ] );
+			expect ( llf ).to.deep.equal ( [ 1, 1, 2 ] );
+			expect ( lrf ).to.deep.equal ( [ 2, 1, 2 ] );
+			expect ( ulf ).to.deep.equal ( [ 1, 2, 2 ] );
+			expect ( urf ).to.deep.equal ( [ 2, 2, 2 ] );
+		} );
 	} );
 };

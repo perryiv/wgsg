@@ -21,7 +21,7 @@ import { IVector3 } from "../Types";
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Possible input for the box constructor.
+//	Types used below.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -31,6 +31,17 @@ interface IBoxInput
 	max: Readonly < IVector3 >;
 };
 
+interface IBoxCorners
+{
+	llb: Readonly < IVector3 >; // Lower left back
+	lrb: Readonly < IVector3 >; // Lower right back
+	ulb: Readonly < IVector3 >; // Upper left back
+	urb: Readonly < IVector3 >; // Upper right back
+	llf: Readonly < IVector3 >; // Lower left front
+	lrf: Readonly < IVector3 >; // Lower right front
+	ulf: Readonly < IVector3 >; // Upper left front
+	urf: Readonly < IVector3 >; // Upper right front
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
@@ -279,5 +290,26 @@ export class Box
 			( a.max[1] >= b.min[1] ) &&
 			( a.max[2] >= b.min[2] )
 		);
+	}
+
+	/**
+	 * Get the corners of the box.
+	 * @returns {IBoxCorners} The corners of the box.
+	 */
+	public get corners(): IBoxCorners
+	{
+		const min = this.min;
+		const max = this.max;
+
+		return {
+			llb: [ min[0], min[1], min[2] ],
+			lrb: [ max[0], min[1], min[2] ],
+			ulb: [ min[0], max[1], min[2] ],
+			urb: [ max[0], max[1], min[2] ],
+			llf: [ min[0], min[1], max[2] ],
+			lrf: [ max[0], min[1], max[2] ],
+			ulf: [ min[0], max[1], max[2] ],
+			urf: [ max[0], max[1], max[2] ],
+		};
 	}
 }
