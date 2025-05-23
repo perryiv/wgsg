@@ -136,8 +136,9 @@ export function test ()
 
 		it ( "Can not make a sphere with negative subdivision", function ()
 		{
-			expect ( () => { estimateSphereSizes ( -1 ); } ).to.throw ( "Number of sphere subdivisions -1 is < 0" );
-			expect ( () => { testSphere ( -1 ); } ).to.throw ( "Number of sphere subdivisions -1 is < 0" );
+			const message = "Number of sphere subdivisions -1 is < 0";
+			expect ( () => { estimateSphereSizes ( -1 ); } ).to.throw ( message );
+			expect ( () => { testSphere ( -1 ); } ).to.throw ( message );
 		} );
 	} );
 };
