@@ -275,20 +275,190 @@ export class Box
 
 	/**
 	 * See if the two boxes intersect.
-	 * @param {Box} a - The first box.
-	 * @param {Box} b - The second box.
-	 * @static
+	 * @param {Box} box - The other box.
 	 * @returns {boolean} True if the boxes intersect, otherwise false.
 	 */
-	static intersect ( a: Readonly < Box >, b: Readonly < Box > ): boolean
+	public intersectsBox ( box: Readonly < Box > ): boolean
 	{
+		// Shortcuts to the min and max corners of the boxes.
+		const amn = this.min;
+		const amx = this.max;
+		const bmn = box.min;
+		const bmx = box.max;
+
+		// See if the boxes intersect.
 		return (
-			( a.min[0] <= b.max[0] ) &&
-			( a.min[1] <= b.max[1] ) &&
-			( a.min[2] <= b.max[2] ) &&
-			( a.max[0] >= b.min[0] ) &&
-			( a.max[1] >= b.min[1] ) &&
-			( a.max[2] >= b.min[2] )
+			( amn[0] <= bmx[0] ) &&
+			( amn[1] <= bmx[1] ) &&
+			( amn[2] <= bmx[2] ) &&
+			( amx[0] >= bmn[0] ) &&
+			( amx[1] >= bmn[1] ) &&
+			( amx[2] >= bmn[2] )
+		);
+	}
+
+	/**
+	 * See if the box contains the given box.
+	 * @param {Box} box - The box to check.
+	 * @returns {boolean} True if this box contains the given box, otherwise false.
+	 */
+	public containsBox ( box: Readonly < Box > ): boolean
+	{
+		// Shortcuts to the min and max corners of the boxes.
+		const amn = this.min;
+		const amx = this.max;
+		const bmn = box.min;
+		const bmx = box.max;
+
+		// See if this box contains the other box.
+		return (
+			( amn[0] <= bmn[0] ) &&
+			( amn[1] <= bmn[1] ) &&
+			( amn[2] <= bmn[2] ) &&
+			( amx[0] >= bmx[0] ) &&
+			( amx[1] >= bmx[1] ) &&
+			( amx[2] >= bmx[2] )
+		);
+	}
+
+	/**
+	 * See if the box intersects the given sphere.
+	 * @param {IVector3} center - The center of the sphere.
+	 * @param {number} radius - The radius of the sphere.
+	 * @returns {boolean} True if the box intersects the sphere, otherwise false.
+	 */
+	public intersectsSphere ( center: Readonly < IVector3 >, radius: number ): boolean
+	{
+		// Shortcuts to the min and max corners of the box.
+		const mn = this.min;
+		const mx = this.max;
+		const [ cx, cy, cz ] = center;
+
+		// See if the box intersects the sphere.
+		return (
+			( ( cx - radius ) <= mx[0] ) &&
+			( ( cy - radius ) <= mx[1] ) &&
+			( ( cz - radius ) <= mx[2] ) &&
+			( ( cx + radius ) >= mn[0] ) &&
+			( ( cy + radius ) >= mn[1] ) &&
+			( ( cz + radius ) >= mn[2] )
+		);
+	}
+
+	/**
+	 * See if the box contains the given sphere.
+	 * @param {IVector3} center - The center of the sphere.
+	 * @param {number} radius - The radius of the sphere.
+	 * @returns {boolean} True if this box contains the sphere, otherwise false.
+	 */
+	public containsSphere ( center: Readonly < IVector3 >, radius: number ): boolean
+	{
+		// Shortcuts to the min and max corners of the box.
+		const mn = this.min;
+		const mx = this.max;
+		const [ cx, cy, cz ] = center;
+
+		// See if this box contains the sphere.
+		return (
+			( ( cx - radius ) >= mn[0] ) &&
+			( ( cy - radius ) >= mn[1] ) &&
+			( ( cz - radius ) >= mn[2] ) &&
+			( ( cx + radius ) <= mx[0] ) &&
+			( ( cy + radius ) <= mx[1] ) &&
+			( ( cz + radius ) <= mx[2] )
+		);
+	}
+
+	/**
+	 * See if the box intersects the given infinite line (i.e., not a line-segment or ray).
+	 * @param {IVector3} p0 - The first point of the line.
+	 * @param {IVector3} p1 - The second point of the line.
+	 * @returns {boolean} True if the box intersects the line, otherwise false.
+	 */
+	public intersectsLine ( p0: Readonly < IVector3 >, p1: Readonly < IVector3 > ): boolean
+	{
+		// Shortcuts.
+		const min = this.min;
+		const max = this.max;
+
+		// Get the direction of the line.
+		const dx = p1[0] - p0[0];
+		const dy = p1[1] - p0[1];
+		const dz = p1[2] - p0[2];
+
+		//
+		// TODO: No idea how this works or if it's correct.
+		// Copilot wrote it. The couple of tests pass.
+		//
+
+		let txmin = ( min[0] - p0[0] ) / dx;
+		let txmax = ( max[0] - p0[0] ) / dx;
+
+		if ( txmin > txmax )
+		{
+			const temp = txmin;
+			txmin = txmax;
+			txmax = temp;
+		}
+
+		let tymin = ( min[1] - p0[1] ) / dy;
+		let tymax = ( max[1] - p0[1] ) / dy;
+
+		if ( tymin > tymax )
+		{
+			const temp = tymin;
+			tymin = tymax;
+			tymax = temp;
+		}
+
+		if ( ( txmin > tymax ) || ( tymin > txmax ) )
+		{
+			return false;
+		}
+
+		if ( tymin > txmin )
+		{
+			txmin = tymin;
+		}
+
+		if ( tymax < txmax )
+		{
+			txmax = tymax;
+		}
+
+		let tzmin = ( min[2] - p0[2] ) / dz;
+		let tzmax = ( max[2] - p0[2] ) / dz;
+
+		if ( tzmin > tzmax )
+		{
+			const temp = tzmin;
+			tzmin = tzmax;
+			tzmax = temp;
+		}
+
+		return !(
+			txmin > tzmax ||
+			tzmin > txmax
+		);
+	}
+
+	/**
+	 * See if the box contains the given point.
+	 * @param {IVector3} point - The point to check.
+	 * @returns {boolean} True if the box contains the point, otherwise false.
+	 */
+	public containsPoint ( point: Readonly < IVector3 > ): boolean
+	{
+		const mn = this.min;
+		const mx = this.max;
+
+		return (
+			( point[0] >= mn[0] ) &&
+			( point[1] >= mn[1] ) &&
+			( point[2] >= mn[2] ) &&
+			( point[0] <= mx[0] ) &&
+			( point[1] <= mx[1] ) &&
+			( point[2] <= mx[2] )
 		);
 	}
 
@@ -298,18 +468,18 @@ export class Box
 	 */
 	public get corners(): IBoxCorners
 	{
-		const min = this.min;
-		const max = this.max;
+		const mn = this.min;
+		const mx = this.max;
 
 		return {
-			llb: [ min[0], min[1], min[2] ],
-			lrb: [ max[0], min[1], min[2] ],
-			ulb: [ min[0], max[1], min[2] ],
-			urb: [ max[0], max[1], min[2] ],
-			llf: [ min[0], min[1], max[2] ],
-			lrf: [ max[0], min[1], max[2] ],
-			ulf: [ min[0], max[1], max[2] ],
-			urf: [ max[0], max[1], max[2] ],
+			llb: [ mn[0], mn[1], mn[2] ],
+			lrb: [ mx[0], mn[1], mn[2] ],
+			ulb: [ mn[0], mx[1], mn[2] ],
+			urb: [ mx[0], mx[1], mn[2] ],
+			llf: [ mn[0], mn[1], mx[2] ],
+			lrf: [ mx[0], mn[1], mx[2] ],
+			ulf: [ mn[0], mx[1], mx[2] ],
+			urf: [ mx[0], mx[1], mx[2] ],
 		};
 	}
 }

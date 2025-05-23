@@ -168,18 +168,21 @@ export function test ()
 
 		it ( "Can see if two boxes intersect", function ()
 		{
-			expect ( Box.intersect (
-				new Box ( { min: [ 1, 1, 1 ], max: [ 11, 11, 11 ] } ),
-				new Box ( { min: [ 8, 8, 8 ], max: [ 12, 12, 12 ] } )
-			) ).to.be.true;
-			expect ( Box.intersect (
-				new Box ( { min: [ 1, 1, 1 ], max: [ 2, 2, 2 ] } ),
-				new Box ( { min: [ 3, 3, 3 ], max: [ 4, 4, 4 ] } )
-			) ).to.be.false;
-			expect ( Box.intersect (
-				new Box ( { min: [ 1, 1, 1 ], max: [ 4, 4, 4 ] } ),
-				new Box ( { min: [ 2, 1, 1 ], max: [ 3, 4, 4 ] } )
-			) ).to.be.true;
+			{
+				const a = new Box ( { min: [ 1, 1, 1 ], max: [ 11, 11, 11 ] } );
+				const b = new Box ( { min: [ 8, 8, 8 ], max: [ 12, 12, 12 ] } )
+				expect ( a.intersectsBox ( b ) ).to.be.true;
+			}
+			{
+				const a = new Box ( { min: [ 1, 1, 1 ], max: [ 2, 2, 2 ] } );
+				const b = new Box ( { min: [ 3, 3, 3 ], max: [ 4, 4, 4 ] } )
+				expect ( a.intersectsBox ( b ) ).to.be.false;
+			}
+			{
+				const a = new Box ( { min: [ 1, 1, 1 ], max: [ 4, 4, 4 ] } );
+				const b = new Box ( { min: [ 2, 1, 1 ], max: [ 3, 4, 4 ] } )
+				expect ( a.intersectsBox ( b ) ).to.be.true;
+			}
 		} );
 
 		it ( "Can get the box corners", function ()
@@ -194,6 +197,42 @@ export function test ()
 			expect ( lrf ).to.deep.equal ( [ 2, 1, 2 ] );
 			expect ( ulf ).to.deep.equal ( [ 1, 2, 2 ] );
 			expect ( urf ).to.deep.equal ( [ 2, 2, 2 ] );
+		} );
+
+		it ( "Can see if the box contains a sphere", function ()
+		{
+			const box = new Box ( { min: [ 1, 1, 1 ], max: [ 2, 2, 2 ] } );
+			expect ( box.containsSphere ( [ 1.5, 1.5, 1.5 ], 0.5 ) ).to.be.true;
+			expect ( box.containsSphere ( [ 0.5, 1.5, 1.5 ], 0.5 ) ).to.be.false;
+			expect ( box.containsSphere ( [ 1.5, 0.5, 1.5 ], 0.5 ) ).to.be.false;
+			expect ( box.containsSphere ( [ 1.5, 1.5, 0.5 ], 0.5 ) ).to.be.false;
+		} );
+
+		it ( "Can see if the box contains a point", function ()
+		{
+			const box = new Box ( { min: [ 1, 1, 1 ], max: [ 2, 2, 2 ] } );
+			expect ( box.containsPoint ( [ 1.5, 1.5, 1.5 ] ) ).to.be.true;
+			expect ( box.containsPoint ( [ 0.5, 1.5, 1.5 ] ) ).to.be.false;
+			expect ( box.containsPoint ( [ 1.5, 0.5, 1.5 ] ) ).to.be.false;
+			expect ( box.containsPoint ( [ 1.5, 1.5, 0.5 ] ) ).to.be.false;
+		} );
+
+		it ( "Can see if the box contains another box", function ()
+		{
+			const box1 = new Box ( { min: [ 1, 1, 1 ], max: [ 2, 2, 2 ] } );
+			const box2 = new Box ( { min: [ 1.5, 1.5, 1.5 ], max: [ 1.75, 1.75, 1.75 ] } );
+			expect ( box1.containsBox ( box2 ) ).to.be.true;
+			box2.min[0] = 0;
+			expect ( box1.containsBox ( box2 ) ).to.be.false;
+		} );
+
+		it ( "Can see if the box intersects a line", function ()
+		{
+			const box = new Box ( { min: [ 0, 0, 0 ], max: [ 2, 2, 2 ] } );
+			expect ( box.intersectsLine ( [  1,  1, -1 ], [  1,  1,  3 ] ) ).to.be.true;
+			expect ( box.intersectsLine ( [  1,  1,  5 ], [  1,  1,  6 ] ) ).to.be.true;
+			expect ( box.intersectsLine ( [  3,  3, -1 ], [  4,  4,  3 ] ) ).to.be.false;
+			expect ( box.intersectsLine ( [ -1, -1, -1 ], [  3,  3,  3 ] ) ).to.be.true;
 		} );
 	} );
 };
