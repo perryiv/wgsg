@@ -106,7 +106,7 @@ function testSphere ( numSubdivisions: number )
 		indices.push ( [ i1, i2, i3 ] );
 	} );
 
-	// Is our extimate correct?
+	// Is our estimate correct?
 	expect ( indices.length ).to.be.equal ( estimated.numIndices );
 
 	// We expect repeated points.
@@ -127,11 +127,17 @@ export function test ()
 {
 	describe ( "Sphere", function ()
 	{
-		it ( "Can make sphere using subdivision", function ()
+		it ( "Can make spheres using subdivision", function ()
 		{
+			testSphere ( 0 );
 			testSphere ( 1 );
 			testSphere ( 2 );
-			testSphere ( 3 );
+		} );
+
+		it ( "Can not make a sphere with negative subdivision", function ()
+		{
+			expect ( () => { estimateSphereSizes ( -1 ); } ).to.throw ( "Number of sphere subdivisions -1 is < 0" );
+			expect ( () => { testSphere ( -1 ); } ).to.throw ( "Number of sphere subdivisions -1 is < 0" );
 		} );
 	} );
 };

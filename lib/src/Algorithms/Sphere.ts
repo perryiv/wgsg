@@ -146,9 +146,9 @@ export const generateUnitSphere = ( n: number, fun: ISubDivideCallback ) =>
   }
 
   // Check input.
-  if ( n <= 0 )
+  if ( n < 0 )
   {
-    throw new Error ( `Number of sphere subdivisions ${n} is not > 0` );
+    throw new Error ( `Number of sphere subdivisions ${n} is < 0` );
   }
 
   // Declare these constants used in the subdivision algorithm.
@@ -195,9 +195,9 @@ export const generateUnitSphere = ( n: number, fun: ISubDivideCallback ) =>
 export const estimateSphereSizes = ( n: number ) : { numPoints: number, numIndices: number } =>
 {
   // Check input.
-  if ( n <= 0 )
+  if ( n < 0 )
   {
-    throw new Error ( `Number of sphere subdivisions ${n} is not > 0` );
+    throw new Error ( `Number of sphere subdivisions ${n} is < 0` );
   }
 
   // This works out to ( 60 * ( 4 ^ n ) ).
