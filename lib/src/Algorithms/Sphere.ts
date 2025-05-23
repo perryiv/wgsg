@@ -137,7 +137,7 @@ function subdivide (
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const generate = ( n: number, fun: ISubDivideCallback ) =>
+export const generateUnitSphere = ( n: number, fun: ISubDivideCallback ) =>
 {
   // Handle invalid callback.
   if ( !fun )
@@ -192,7 +192,7 @@ export const generate = ( n: number, fun: ISubDivideCallback ) =>
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const estimateSizes = ( n: number ) : { numPoints: number, numIndices: number } =>
+export const estimateSphereSizes = ( n: number ) : { numPoints: number, numIndices: number } =>
 {
   // Check input.
   if ( n <= 0 )
@@ -203,8 +203,8 @@ export const estimateSizes = ( n: number ) : { numPoints: number, numIndices: nu
   // This works out to ( 60 * ( 4 ^ n ) ).
   const numPoints = 60 * Math.pow ( 4.0, n );
 
-  // Dividing by 2 instead of 3 to increase the chances that we allocate enough.
-  const numIndices = Math.floor ( numPoints / 2.0 );
+  // Determine the number of indices.
+  const numIndices = Math.ceil ( numPoints / 3.0 );
 
   // Return the numbers
   return { numPoints, numIndices };

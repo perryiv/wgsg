@@ -12,9 +12,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { test as testAlgorithms } from "./Algorithms";
+import { test as testSphere } from "./Sphere";
 
 describe ( "Algorithms", function ()
 {
-	testAlgorithms();
+	testSphere();
 } );
