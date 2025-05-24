@@ -49,7 +49,7 @@ export class Array3 extends ArrayBase
 	 * Check the values. It will throw if there is a problem
 	 * @param {ArrayType1D} values - Values for this array.
 	 */
-	public check ( values: ArrayType1D ) : void
+	protected check ( values: ArrayType1D ) : void
 	{
 		if ( 0 !== ( values.length % 3 ) )
 		{
@@ -96,7 +96,7 @@ export class Array3 extends ArrayBase
 	 */
 	public get x0() : ArrayType1D
 	{
-		return this.values.subarray ( this.ix0, this.numVectors );
+		return this.values.subarray ( this.ix0, ( this.ix0 + this.numVectors ) );
 	}
 
 	/**
@@ -105,7 +105,7 @@ export class Array3 extends ArrayBase
 	 */
 	public get x1() : ArrayType1D
 	{
-		return this.values.subarray ( this.ix1, this.numVectors );
+		return this.values.subarray ( this.ix1, ( this.ix1 + this.numVectors ) );
 	}
 
 	/**
@@ -114,7 +114,7 @@ export class Array3 extends ArrayBase
 	 */
 	public get x2() : ArrayType1D
 	{
-		return this.values.subarray ( this.ix2, this.numVectors );
+		return this.values.subarray ( this.ix2, ( this.ix2 + this.numVectors ) );
 	}
 
 	/**

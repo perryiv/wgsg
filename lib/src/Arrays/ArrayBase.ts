@@ -57,7 +57,7 @@ export abstract class ArrayBase
 	 * Check the values. It will throw if there is a problem
 	 * @param {ArrayType1D} values - Values for this array.
 	 */
-	public abstract check ( values: ArrayType1D ): void;
+	protected abstract check ( values: ArrayType1D ): void;
 
 	/**
 	 * Get the values.
