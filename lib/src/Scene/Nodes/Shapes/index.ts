@@ -14,3 +14,4 @@
 
 export * from "./Geometry";
 export * from "./Shape";
+export * from "./Sphere";
