@@ -20,6 +20,20 @@ import { vec3 } from "gl-matrix";
 
 
 ///////////////////////////////////////////////////////////////////////////////
+//
+//	Input for the sphere constructor.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export interface ISphereInput
+{
+	center?: IVector3;
+	radius?: number;
+	state?: State;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 /**
  * Sphere class.
  * @class
@@ -34,11 +48,27 @@ export class Sphere extends Geometry
 	/**
 	 * Construct the class.
 	 * @class
-	 * @param {State | null} state - Optional state for this geometry.
+	 * @param {ISphereInput} input - Input for the sphere.
+	 * @param {State} [input.state] - The state of the sphere.
+	 * @param {IVector3} [input.center] - Center of the sphere.
+	 * @param {number} [input.radius] - Radius of the sphere.
 	 */
-	constructor ( state?: ( State | null ) )
+	constructor ( input?: ISphereInput )
 	{
-		super ( state );
+		super ( input?.state ?? null );
+
+		if ( input )
+		{
+			const { center, radius } = input;
+			if ( center )
+			{
+				this.center = center;
+			}
+			if ( radius ) // Handles both undefined and zero.
+			{
+				this.radius = radius;
+			}
+		}
 	}
 
 	/**
