@@ -7,6 +7,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Base } from "../../Base";
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Class that contains the vertex and fragment shaders.
@@ -20,7 +22,7 @@
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Shaders
+export class Shaders extends Base
 {
 	#v: ( string | null ) = null;
 	#f: ( string | null ) = null;
@@ -33,8 +35,18 @@ export class Shaders
 	 */
 	constructor ( vertex?: ( string | null ), fragment?: ( string | null ) )
 	{
+		super();
 		this.#v = ( vertex ?? null );
 		this.#f = ( fragment ?? null );
+	}
+
+	/**
+	 * Return the class name.
+	 * @returns {string} The class name.
+	 */
+	public getClassName() : string
+	{
+		return "Render.Shaders";
 	}
 
 	/**

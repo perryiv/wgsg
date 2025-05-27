@@ -13,11 +13,33 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import type { IMatrix44 } from "../Types";
-import {
-	Shape,
-	State,
-} from "../Scene";
+import { Shape, State } from "../Scene";
 
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	The hierarchy of items in the render graph.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+/*
+- layers
+	- layer
+		- projection-matrix-map (unclipped)
+		- projection-matrix-map (clipped)
+			- projection-matrix (as string)
+				- projection-matrix-data
+					- projection-matrix
+					- states-map
+						- state-name
+							- state-data
+								- state
+								- model-matrix-map
+									- model-matrix (as string)
+										- model-matrix-data
+											- model-matrix
+											- shapes-array
+*/
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -26,106 +48,141 @@ import {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export type IShapesMap = Map < IMatrix44, Shape[] >;
-export type IProjectionGroup = Map < IMatrix44, IShapesMap >;
-export interface IStatePair
+export type IMatrixAsString = string;
+export interface IModelMatrixData
+{
+	modelMatrix: IMatrix44;
+	shapes: Shape[];
+}
+export type IModelMatrixMap = Map < IMatrixAsString, IModelMatrixData >;
+export interface IStateData
 {
 	state: State;
-	proj: IProjectionGroup
+	modelMatrices: IModelMatrixMap;
 }
-export type IStateMap = Map < string, IStatePair >;
-export interface IClipGroups
+export type IStateMap = Map < string, IStateData >;
+export interface IProjMatrixData
 {
-	clipped: IStateMap;
-	unclipped: IStateMap;
+	projMatrix: IMatrix44;
+	states: IStateMap;
 }
-export type ILayerMap = Map < number, IClipGroups >;
+export type IProjMatrixMap = Map < IMatrixAsString, IProjMatrixData >;
+export interface ILayer
+{
+	clipped: IProjMatrixMap;
+	unclipped: IProjMatrixMap;
+}
+export type ILayerMap = Map < number, ILayer >;
 
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Make the shapes list.
- * @param {IShapesMap} sm - The map containing lists of shapes.
+ * Get the map key from the matrix.
  * @param {IMatrix44} matrix - The transformation matrix.
- * @returns {Shape[]} The shapes list.
+ * @returns {IMatrixAsString} The key for the matrix map.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const getShapeList = ( sm: IShapesMap, matrix: IMatrix44 ) : Shape[] =>
+export const getIMatrixAsString = ( matrix: IMatrix44 ) : IMatrixAsString =>
 {
-	let sl = sm.get ( matrix );
-	if ( !sl )
-	{
-		sl = [];
-		sm.set ( matrix, sl );
-	}
-	return sl;
+	return matrix.toString();
 };
 
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Get the map of shapes. Make it if we have to.
- * @param {IProjectionGroup} proj - The projection group.
- * @param {IMatrix44} matrix - The transformation matrix.
- * @returns {IStatePair} The map of shapes.
+ * Get the data associated with the given model matrix.
+ * Make it if we have to.
+ * @param {IModelMatrixMap} mmm - The map of model matrices.
+ * @param {IMatrix44} modelMatrix - The model matrix.
+ * @returns {IModelMatrixData} The model matrix data.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const getShapesMap = ( proj: IProjectionGroup, matrix: IMatrix44 ) : IShapesMap =>
+export const getModelMatrixData = ( mmm: IModelMatrixMap, modelMatrix: IMatrix44 ) : IModelMatrixData =>
 {
-	let sm = proj.get ( matrix );
-	if ( !sm )
+	const name = getIMatrixAsString ( modelMatrix );
+	let mmd = mmm.get ( name );
+	if ( !mmd )
 	{
-		sm = new Map < IMatrix44, Shape[] > ();
-		proj.set ( matrix, sm );
+		mmd = {
+			modelMatrix,
+			shapes: []
+		};
+		mmm.set ( name, mmd );
 	}
-	return sm;
+	return mmd;
 };
 
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Get the state pair. Make it if we have to.
- * @param {IStateMap} stateMap - The state map.
- * @param {State} state - The state object.
- * @returns {IStatePair} The state pair.
+ * Get the state data associated with the given state name.
+ * Make it if we have to.
+ * @param {IStateMap} sm - The map of state data.
+ * @param {string} name - The name of the state.
+ * @returns {IStateData} The state data.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const getStatePair = ( stateMap: IStateMap, state: State ) : IStatePair =>
+export const getStateData = ( sm: IStateMap, name: string ) : IStateData =>
 {
-	const name = state.name;
-	let sp = stateMap.get ( name );
-	if ( !sp )
+	let sd = sm.get ( name );
+	if ( !sd )
 	{
-		sp = {
-			state,
-			proj: new Map < IMatrix44, IShapesMap > ()
+		sd = {
+			state: new State(),
+			modelMatrices: new Map < IMatrixAsString, IModelMatrixData > ()
+		};
+		sm.set ( name, sd );
+	}
+	return sd;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Get the data associated with the given projection matrix.
+ * Make it if we have to.
+ * @param {IProjMatrixMap} pmm - The map of projection matrices.
+ * @param {IMatrix44} projMatrix - The projection matrix.
+ * @returns {IProjMatrixData} The projection matrix data.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export const getProjMatrixData = ( pmm: IProjMatrixMap, projMatrix: IMatrix44 ) : IProjMatrixData =>
+{
+	const name = getIMatrixAsString ( projMatrix );
+	let pmd = pmm.get ( name );
+	if ( !pmd )
+	{
+		pmd = {
+			projMatrix,
+			states: new Map < string, IStateData > ()
 		}
-		stateMap.set ( name, sp );
+		pmm.set ( name, pmd );
 	}
-	return sp;
+	return pmd;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Get the clip groups. Make it if we have to.
+ * Get the layer. Make it if we have to.
  * @param {ILayerMap} layers - The map of layers.
  * @param {number} layer - The layer number.
- * @returns {IClipGroups} The clip groups.
+ * @returns {ILayer} The layer.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const getClipGroups = ( layers: ILayerMap, layer: number ) : IClipGroups =>
+export const getLayer = ( layers: ILayerMap, layer: number ) : ILayer =>
 {
 	let cg = layers.get ( layer );
 	if ( !cg )
 	{
 		cg = {
-			clipped:   new Map < string, IStatePair > (),
-			unclipped: new Map < string, IStatePair > ()
+			clipped:   new Map < IMatrixAsString, IProjMatrixData > (),
+			unclipped: new Map < IMatrixAsString, IProjMatrixData > ()
 		};
 		layers.set ( layer, cg );
 	}

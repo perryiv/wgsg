@@ -25,7 +25,7 @@ import { Box } from "../../Math";
  * Enumerations for node flags.
  * @enum {number}
  * @property {number} VISIBLE - Is the node visible?
- * @property {number} INTERACTABLE - Can the node be intersected?
+ * @property {number} INTERSECTABLE - Can the node be intersected?
  * @property {number} ADDS_TO_BOUNDS - Does the node add to the bounds?
  * @property {number} DIRTY - Is the node dirty?
  */
@@ -34,9 +34,10 @@ import { Box } from "../../Math";
 export enum Flags
 {
 	VISIBLE        = ( 1 << 0 ),
-	INTERACTABLE   = ( 1 << 1 ),
+	INTERSECTABLE  = ( 1 << 1 ),
 	ADDS_TO_BOUNDS = ( 1 << 2 ),
-	DIRTY          = ( 1 << 3 ),
+	CLIPPED        = ( 1 << 3 ),
+	DIRTY          = ( 1 << 4 ),
 };
 
 
@@ -59,7 +60,13 @@ export type INodeParentCallback = ( ( node: Node ) => void );
 export abstract class Node extends Base
 {
 	#parents: Map < number, Group > = new Map < number,Group > ();
-	#flags = 0;
+	#flags = (
+		Flags.VISIBLE |
+		Flags.INTERSECTABLE |
+		Flags.ADDS_TO_BOUNDS |
+		Flags.CLIPPED |
+		Flags.DIRTY
+	);
 
 	/**
 	 * Construct the class.
@@ -156,21 +163,21 @@ export abstract class Node extends Base
 	}
 
 	/**
-	 * Get the interactable state.
-	 * @returns {boolean} The interactable state.
+	 * Get the intersectable state.
+	 * @returns {boolean} The intersectable state.
 	 */
-	public get interactable() : boolean
+	public get intersectable() : boolean
 	{
-		return hasBits ( this.#flags, Flags.INTERACTABLE );
+		return hasBits ( this.#flags, Flags.INTERSECTABLE );
 	}
 
 	/**
-	 * Set the interactable state.
-	 * @param {boolean} interactable - The new interactable state.
+	 * Set the intersectable state.
+	 * @param {boolean} intersectable - The new intersectable state.
 	 */
-	public set interactable ( interactable: boolean )
+	public set intersectable ( intersectable: boolean )
 	{
-		setBits ( this.#flags, Flags.INTERACTABLE, interactable );
+		setBits ( this.#flags, Flags.INTERSECTABLE, intersectable );
 	}
 
 	/**
@@ -189,6 +196,24 @@ export abstract class Node extends Base
 	public set addsToBounds ( addsToBounds: boolean )
 	{
 		setBits ( this.#flags, Flags.ADDS_TO_BOUNDS, addsToBounds );
+	}
+
+	/**
+	 * Get the clipped state.
+	 * @returns {boolean} The clipped state.
+	 */
+	public get clipped() : boolean
+	{
+		return hasBits ( this.#flags, Flags.CLIPPED );
+	}
+
+	/**
+	 * Set the clipped state.
+	 * @param {boolean} clipped - The new clipped state.
+	 */
+	public set clipped ( clipped: boolean )
+	{
+		setBits ( this.#flags, Flags.CLIPPED, clipped );
 	}
 
 	/**

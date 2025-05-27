@@ -17,7 +17,7 @@ export * from "./Arrays";
 export * from "./Base";
 export * from "./Math";
 export * from "./Projections";
-export * from "./Render";
+export * from "./Render"; // Exported for testing purposes.
 export * from "./Scene";
 export * from "./Tools";
 export * from "./Types";

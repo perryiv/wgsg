@@ -13,5 +13,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 export * from "./Cull";
+export * from "./Draw";
 export * from "./Multiply";
 export * from "./Visitor";

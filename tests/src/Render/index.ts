@@ -12,9 +12,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { test as testRender } from "./Render";
+import { test as testGraph } from "./Graph";
 
 describe ( "Render", function ()
 {
-	testRender();
+	testGraph();
 } );

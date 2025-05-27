@@ -13,6 +13,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Base } from "../../Base";
 import { IMatrix44 } from "../../Types";
 import { Shaders } from "./Shaders";
 
@@ -42,6 +43,13 @@ export interface IStateInput
 {
 	name?: ( string | null );
 	shaders?: ( IShaders | null );
+	layer?: number;
+	renderBin?: number;
+}
+export interface IApplyInput
+{
+	projMatrix: IMatrix44;
+	modelMatrix: IMatrix44;
 }
 
 
@@ -52,12 +60,12 @@ export interface IStateInput
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class State
+export class State extends Base
 {
 	#name: string = DEFAULT_STATE_NAME;
 	#shaders: Shaders = new Shaders();
 	#layer = 0;
-	#clipped = true;
+	#renderBin = 0;
 
 	/**
 	 * Construct the class.
@@ -66,12 +74,9 @@ export class State
 	 */
 	constructor ( input?: IStateInput )
 	{
-		if ( !input )
-		{
-			return;
-		}
+		super();
 
-		const { name, shaders } = input;
+		const { name, shaders, layer, renderBin } = ( input ?? {} );
 
 		this.#name = ( name ?? DEFAULT_STATE_NAME );
 
@@ -80,14 +85,36 @@ export class State
 			this.#shaders.vertex = shaders.vertex;
 			this.#shaders.fragment = shaders.fragment;
 		}
+
+		if ( ( typeof layer ) === "number" )
+		{
+			// TODO: Why is the "!" needed when we explicitly check above?
+			this.#layer = layer!;
+		}
+
+		if ( ( typeof renderBin ) === "number" )
+		{
+			// TODO: Why is the "!" needed when we explicitly check above?
+			this.#renderBin = renderBin!;
+		}
+	}
+
+	/**
+	 * Return the class name.
+	 * @returns {string} The class name.
+	 */
+	public getClassName() : string
+	{
+		return "State";
 	}
 
 	/**
 	 * Apply the state.
+	 * @param {IApplyInput} input - The input for applying the state.
 	 */
-	public apply()
+	public apply ( input: IApplyInput )
 	{
-		console.log ( `Applied state: ${this.name}` );
+		console.log ( `Applied state: ${this.name}, input: ${JSON.stringify ( input )}` );
 	}
 
 	/**
@@ -96,24 +123,6 @@ export class State
 	public reset()
 	{
 		console.log ( `Reset state: ${this.name}` );
-	}
-
-	/**
-	 * Try to set the projection matrix. It will depend on the shaders.
-	 * @param {IMatrix44} matrix - The projection matrix.
-	 */
-	public set projMatrix ( matrix: IMatrix44 )
-	{
-		console.log ( "Setting projection matrix:", matrix );
-	}
-
-	/**
-	 * Try to set the model matrix. It will depend on the shaders.
-	 * @param {IMatrix44} matrix - The model matrix.
-	 */
-	public set modelMatrix ( matrix: IMatrix44 )
-	{
-		console.log ( "Setting model matrix:", matrix );
 	}
 
 	/**
@@ -145,7 +154,7 @@ export class State
 
 	/**
 	 * Get the layer.
-	 * @returns {number} layer for this shape.
+	 * @returns {number} The layer for this node.
 	 */
 	public get layer() : number
 	{
@@ -154,28 +163,30 @@ export class State
 
 	/**
 	 * Set the layer.
-	 * @param {number} layer - layer for this shape.
+	 * @param {number} layer - The new layer for this node.
 	 */
 	public set layer ( layer: number )
 	{
+		// Set the layer.
 		this.#layer = layer;
 	}
 
 	/**
-	 * Get the clipped state.
-	 * @returns {boolean} clipped state for this shape.
+	 * Get the renderBin.
+	 * @returns {number} The renderBin for this node.
 	 */
-	public get clipped() : boolean
+	public get renderBin() : number
 	{
-		return this.#clipped;
+		return this.#renderBin;
 	}
 
 	/**
-	 * Set the clipped state.
-	 * @param {boolean} clipped - clipped state for this shape.
+	 * Set the renderBin.
+	 * @param {number} renderBin - The new renderBin for this node.
 	 */
-	public set clipped ( clipped: boolean )
+	public set renderBin ( renderBin: number )
 	{
-		this.#clipped = clipped;
+		// Set the renderBin.
+		this.#renderBin = renderBin;
 	}
 }

@@ -23,15 +23,14 @@ import {
 	Transform,
 } from "../Scene";
 import {
-	getClipGroups,
-	getShapeList,
-	getShapesMap,
-	getStatePair,
-	type IClipGroups,
-	type ILayerMap,
-	type IShapesMap,
-	type IStateMap,
-	type IStatePair
+	getLayer,
+	getModelMatrixData,
+	getProjMatrixData,
+	getStateData,
+} from "../Render";
+import type {
+	ILayer,
+	ILayerMap,
 } from "../Render";
 
 
@@ -73,7 +72,7 @@ export class Cull extends Multiply
 
 		// Get the input or defaults.
 		const { layers, defaultState } = ( input ?? {
-			layers: new Map < number, IClipGroups > (),
+			layers: new Map < number, ILayer > (),
 			defaultState: new State()
 		} );
 
@@ -185,15 +184,15 @@ export class Cull extends Multiply
 		const modelMatrix = this.modelMatrix;
 		const projMatrix = this.projMatrix;
 		const state = shape.state ?? this.defaultState;
-		const clipped = state.clipped;
-		const layer = state.layer;
+		const clipped = shape.clipped;
 
 		// Get or make the containers we need.
-		const clipGroups: IClipGroups = getClipGroups ( layers, layer );
-		const stateMap: IStateMap = ( clipped ? clipGroups.clipped : clipGroups.unclipped );
-		const { proj }: IStatePair = getStatePair ( stateMap, state );
-		const shapeMap: IShapesMap = getShapesMap ( proj, projMatrix );
-		const shapes: Shape[] = getShapeList ( shapeMap, modelMatrix );
+		const layer = getLayer ( layers, state.layer );
+		const projMatrixMap = ( clipped ? layer.clipped : layer.unclipped );
+		const projMatrixData = getProjMatrixData ( projMatrixMap, projMatrix );
+		const { states } = projMatrixData;
+		const { modelMatrices } = getStateData ( states, state.name );
+		const { shapes } = getModelMatrixData ( modelMatrices, modelMatrix );
 
 		// Add our shape.
 		shapes.push ( shape );

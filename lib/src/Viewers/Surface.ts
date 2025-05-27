@@ -14,18 +14,18 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base } from "../Base/Base";
-import { Cull as CullVisitor } from "../Visitors";
 import { getRenderingContext } from "../Tools/WebGPU";
-import { Node, Shape, State } from "../Scene";
+import { Node, State } from "../Scene";
 import { Perspective, ProjectionBase as Projection } from "../Projections";
 import type { ISize, IViewport } from "../Types/Math";
 import type {
-	IClipGroups,
+	ILayer,
 	ILayerMap,
-	IProjectionGroup,
-	IShapesMap,
-	IStateMap,
 } from "../Render";
+import {
+	Cull as CullVisitor,
+	Draw as DrawVisitor,
+} from "../Visitors";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -59,6 +59,7 @@ export interface IFrameInfo
 interface IVisitors
 {
 	cull: CullVisitor;
+	draw: DrawVisitor;
 }
 
 
@@ -79,8 +80,11 @@ export class Surface extends Base
 	#projection: Projection = new Perspective();
 	#handles: ITimeoutHandles = { render: 0 };
 	#frame: IFrameInfo = { count: 0, start: 0 };
-	#visitors: IVisitors = { cull: new CullVisitor() };
-	#layers: ILayerMap = new Map < number, IClipGroups > ();
+	#visitors: IVisitors = {
+		cull: new CullVisitor(),
+		draw: new DrawVisitor(),
+	};
+	#layers: ILayerMap = new Map < number, ILayer > ();
 	#defaultState: State = new State();
 
 	/**
@@ -436,64 +440,6 @@ export class Surface extends Base
 	}
 
 	/**
-	 * Draw the list of shapes.
-	 * @param {Shape[]} shapes - The list of shapes to draw.
-	 */
-	private _drawShapeList ( shapes: Shape[] )
-	{
-		// Loop through the list of shapes and draw them.
-		for ( const shape of shapes )
-		{
-			shape.draw();
-		}
-	}
-
-	/**
-	 * Draw the map of shapes.
-	 * @param {State} state - The current state.
-	 * @param {IShapesMap} sm - The map of shapes to draw.
-	 */
-	private _drawShapesMap ( state: State, sm: IShapesMap )
-	{
-		// Loop through the map of shapes.
-		for ( const [ matrix, shapes ] of sm )
-		{
-			state.modelMatrix = matrix;
-			this._drawShapeList ( shapes );
-		}
-	}
-
-	/**
-	 * Draw the projection group.
-	 * @param {State} state - The current state.
-	 * @param {IProjectionGroup} proj - The projection group to draw.
-	 */
-	private _drawProjectionGroup ( state: State, proj: IProjectionGroup )
-	{
-		// Loop through the projection group.
-		for ( const [ matrix, sm ] of proj )
-		{
-			state.projMatrix = matrix;
-			this._drawShapesMap ( state, sm );
-		}
-	}
-
-	/**
-	 * Draw the clip group.
-	 * @param {IStateMap} sm - The state-map containing the projection groups to draw.
-	 */
-	private _drawStateMap ( sm: IStateMap )
-	{
-		// Loop through the state map.
-		for ( const { state, proj } of sm.values() )
-		{
-			state.apply();
-			this._drawProjectionGroup ( state, proj );
-			state.reset();
-		}
-	}
-
-	/**
 	 * Draw the render-graph, generating pixels that paint the canvas.
 	 * This gets called when the scene is rendered so it's not necessary
 	 * to explicitly call it. However, its public for unexpected use cases.
@@ -503,25 +449,21 @@ export class Surface extends Base
 	{
 		console.log ( "Drawing render-graph" );
 
-		// Make an array of layers.
-		const layers = Array.from ( this.#layers, ( [ layer, clipGroups ] ) =>
+		// Handle no render graph.
+		const layers = this.#layers;
+		if ( !layers )
 		{
-			return { layer, clipGroups };
-		} );
-
-		// Sort the array using the key.
-		layers.sort ( ( a, b ) =>
-		{
-			return ( a.layer - b.layer );
-		} );
-
-		// Loop through the array of layers.
-		for ( const { clipGroups } of layers )
-		{
-			const { clipped, unclipped } = clipGroups;
-			this._drawStateMap ( clipped );
-			this._drawStateMap ( unclipped );
+			return;
 		}
+
+		// Shortcuts.
+		const dv = this.#visitors.draw;
+
+		// Tell the visitor that it should return to its initial state.
+		dv.reset();
+
+		// Visit the layers
+		dv.visitLayers ( layers );
 	}
 
 	/**
