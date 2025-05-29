@@ -388,7 +388,7 @@ export class Box
 
 		//
 		// TODO: No idea how this works or if it's correct.
-		// Copilot wrote it. The couple of tests pass.
+		// Copilot wrote it. The small number of tests pass.
 		//
 
 		let txmin = ( min[0] - p0[0] ) / dx;
@@ -436,10 +436,7 @@ export class Box
 			tzmax = temp;
 		}
 
-		return !(
-			txmin > tzmax ||
-			tzmin > txmax
-		);
+		return !( ( txmin > tzmax ) || ( tzmin > txmax ) );
 	}
 
 	/**
