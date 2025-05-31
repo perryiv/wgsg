@@ -8,7 +8,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Base class for shaders.
+//	Base class for all shaders.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -38,6 +38,12 @@ export abstract class ShaderBase extends Base
 	{
 		// Do this first.
 		super();
+
+		// Make sure the code is a string.
+		if ( "string" !== ( typeof code ) )
+		{
+			throw new Error ( `Shader code type is: ${typeof code}` );
+		}
 
 		// Save the code string.
 		this.#code = code;
