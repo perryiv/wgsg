@@ -29,7 +29,7 @@ export function test ()
 		it ( "Get the next id a few times", function ()
 		{
 			const id = getNextId();
-			expect ( id ).to.equal ( 1 );
+			expect ( id ).to.equal ( 2 );
 			expect ( typeof id ).to.equal ( "number" );
 			for ( let i = 1; i < 11; ++i )
 			{

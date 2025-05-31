@@ -13,12 +13,26 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { vec4 } from "gl-matrix";
 import { IVector4 } from "../Types";
+import { Manager } from "./Manager";
 import { ShaderBase } from "./ShaderBase";
+import { vec4 } from "gl-matrix";
 
 // @ts-expect-error TypeScript does not recognize WGSL files.
-import shaderCode from "./SolidColor.wgsl?raw";
+import code from "./SolidColor.wgsl?raw";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Importing this class should register it with the shader manager.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+const THIS_CLASS_NAME = "Shaders.SolidColor";
+Manager.instance.add ( THIS_CLASS_NAME, (	device: GPUDevice ) =>
+{
+	return SolidColor.factory ( device );
+} );
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -38,9 +52,9 @@ export class SolidColor extends ShaderBase
 	 * @param {GPUDevice} device The GPU device.
 	 * @param {IVector4} [color] The color to use.
 	 */
-	constructor ( device: GPUDevice, color?: IVector4 )
+	protected constructor ( device: GPUDevice, color?: IVector4 )
 	{
-		super ( device, ( shaderCode as string ) );
+		super ( device, ( code as string ) );
 
 		if ( color )
 		{
@@ -49,12 +63,21 @@ export class SolidColor extends ShaderBase
 	}
 
 	/**
+	 * Factory function for this shader.
+	 * @param {GPUDevice} device The GPU device.
+	 * @returns {SolidColor} The shader instance.
+	 */
+	public static factory ( this: void, device: GPUDevice ) : SolidColor
+	{
+		return new SolidColor ( device );
+	}
+	/**
 	 * Return the class name.
 	 * @returns {string} The class name.
 	 */
 	public getClassName() : string
 	{
-		return "Shaders.SolidColor";
+		return THIS_CLASS_NAME;
 	}
 
 	/**

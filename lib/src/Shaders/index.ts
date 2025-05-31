@@ -12,5 +12,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export * from "./SolidColor";
 export * from "./Manager";
+export * from "./ShaderBase";
+export * from "./SolidColor";

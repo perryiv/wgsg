@@ -14,6 +14,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base } from "../Base";
+import { ShaderBase, type IShaderFactory } from "./ShaderBase";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -22,7 +23,12 @@ import { Base } from "../Base";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export type IShaderMap = Map < string, GPUShaderModule >;
+interface IShaderData
+{
+	factory: IShaderFactory;
+	shader: ( ShaderBase | null );
+}
+type IShaderMap = Map < string, IShaderData >;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -31,7 +37,7 @@ export type IShaderMap = Map < string, GPUShaderModule >;
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-let sm: ( Manager | null ) = null;
+let manager: ( Manager | null ) = null;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -43,7 +49,8 @@ let sm: ( Manager | null ) = null;
 
 export class Manager extends Base
 {
-	#shaders: IShaderMap = new Map < string, GPUShaderModule >();
+	#shaders: IShaderMap = new Map < string, IShaderData > ();
+	#device: ( GPUDevice | null ) = null;
 
 	/**
 	 * Construct the class.
@@ -61,12 +68,12 @@ export class Manager extends Base
 	public static get instance() : Manager
 	{
 		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-		if ( !sm )
+		if ( !manager )
 		{
-			sm = new Manager();
+			manager = new Manager();
 		}
 
-		return sm;
+		return manager;
 	}
 
 	/**
@@ -79,39 +86,92 @@ export class Manager extends Base
 	}
 
 	/**
+	 * Set the GPU device.
+	 * @param {GPUDevice} device The GPU device.
+	 */
+	public set device ( device: GPUDevice )
+	{
+		this.#device = device;
+	}
+
+	/**
+	 * Get the GPU device.
+	 * @returns {GPUDevice} The GPU device.
+	 */
+	public get device () : GPUDevice
+	{
+		if ( !this.#device )
+		{
+			throw new Error ( "GPU device is not set in shader manager" );
+		}
+
+		return this.#device;
+	}
+
+	/**
 	 * Add a shader to the manager.
 	 * @param {string} name The name of the shader.
-	 * @param {GPUShaderModule} shader The shader module.
+	 * @param {IShaderFactory} factory The factory function that creates the shader.
 	 */
-	public add ( name: string, shader: GPUShaderModule ) : void
+	public add ( name: string, factory: IShaderFactory ) : void
 	{
 		if ( !name )
 		{
 			throw new Error( "Invalid shader name" );
 		}
 
-		if ( !shader )
+		if ( !factory )
 		{
-			throw new Error( "Invalid shader module" );
+			throw new Error( "Invalid shader factory function" );
 		}
 
 		if ( this.#shaders.has ( name ) )
 		{
-			throw new Error ( `Shader with name '${name}' already exists` );
+			throw new Error ( `Shader factory with name '${name}' already exists` );
 		}
 
-		this.#shaders.set ( name, shader );
+		this.#shaders.set ( name, { shader: null, factory } );
 	}
 
 	/**
 	 * Get a shader by name.
 	 * @param {string} name The name of the shader.
-	 * @returns {GPUShaderModule | null} The shader module, or null.
+	 * @returns {ShaderBase} The shader class.
 	 */
-	public get ( name: string ) : ( GPUShaderModule | null )
+	public get ( name: string ) : ShaderBase
 	{
-		const shader = this.#shaders.get ( name );
-		return ( shader ?? null );
+		// Get the data associated with the given name.
+		const sd = this.#shaders.get ( name );
+
+		// There should be data.
+		if ( !sd )
+		{
+			throw new Error ( `Shader with name '${name}' does not exist` );
+		}
+
+		// Get the shader.
+		let { shader } = sd;
+
+		// Make it if we have to.
+		if ( !shader )
+		{
+			const { factory } = sd;
+			shader = factory ( this.device );
+			sd.shader = shader;
+		}
+
+		// Return the shader.
+		return shader;
+	}
+
+	/**
+	 * Check if a shader factory exists by name.
+	 * @param {string} name The name of the shader.
+	 * @returns {boolean} True if the shader exists, otherwise false.
+	 */
+	public has ( name: string ) : boolean
+	{
+		return this.#shaders.has ( name );
 	}
 
 	/**

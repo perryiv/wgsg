@@ -13,7 +13,15 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base } from "../Base";
-import { Manager } from "./Manager";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Shader factory function type.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export type IShaderFactory = ( ( this: void, device: GPUDevice ) => ShaderBase );
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -34,7 +42,7 @@ export abstract class ShaderBase extends Base
 	 * @param {GPUDevice} device The GPU device.
 	 * @param {string} code The shader code in WGSL format.
 	 */
-	constructor ( device: GPUDevice, code: string )
+	protected constructor ( device: GPUDevice, code: string )
 	{
 		// Do this first.
 		super();
@@ -51,9 +59,6 @@ export abstract class ShaderBase extends Base
 		// Make the shader module.
 		const label = this.getClassName();
 		this.#module = device.createShaderModule ( { label, code } );
-
-		// Register this shader with the manager.
-		Manager.instance.add ( label, this.#module );
 	}
 
 	/**
