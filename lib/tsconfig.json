@@ -51,5 +51,10 @@
 	},
 
 	// The files and folders to be compiled into JavaScript.
-	"include": [ "./src" ]
+	"include": [ "./src" ],
+
+	// The files and folders to be excluded from compilation.
+	"exclude": [
+		"**/*.wgsl",
+	],
 }
