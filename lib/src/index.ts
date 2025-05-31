@@ -19,6 +19,7 @@ export * from "./Math";
 export * from "./Projections";
 export * from "./Render"; // Exported for testing purposes.
 export * from "./Scene";
+export * from "./Shaders";
 export * from "./Tools";
 export * from "./Types";
 export * from "./Viewers";
