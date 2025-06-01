@@ -15,7 +15,6 @@
 
 import { Base } from "../../Base";
 import { IMatrix44 } from "../../Types";
-import { Shaders } from "./Shaders";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -28,29 +27,53 @@ const DEFAULT_STATE_NAME = "default_state";
 
 
 ///////////////////////////////////////////////////////////////////////////////
-/**
- * The input for the constructor.
- */
+//
+//	The input for the constructor.
+//
 ///////////////////////////////////////////////////////////////////////////////
 
-export interface IShaders
+export interface IStateConstructorInput
 {
-	vertex: ( string | null );
-	fragment: ( string | null );
-}
-
-export interface IStateInput
-{
-	name?: ( string | null );
-	shaders?: ( IShaders | null );
+	name?: string;
+	shader?: string;
 	layer?: number;
 	renderBin?: number;
 }
-export interface IApplyInput
+export interface IStateApplyInput
 {
+	state: State;
 	projMatrix: IMatrix44;
 	modelMatrix: IMatrix44;
 }
+export type IStateApplyFunction = ( ( input: IStateApplyInput ) => void );
+export type IStateResetFunction = ( () => void );
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * The function that applies the state.
+ * @param {IStateApplyInput} input - The input for applying the state.
+ * @returns {void}
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export const defaultApplyFunction: IStateApplyFunction = ( input: IStateApplyInput ) =>
+{
+	console.log ( `Default state apply function called with input: ${JSON.stringify ( input )}` );
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * The default reset function.
+ * @returns {void}
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export const defaultResetFunction: IStateResetFunction = () =>
+{
+	console.log ( "Default state reset function called" );
+};
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -63,27 +86,28 @@ export interface IApplyInput
 export class State extends Base
 {
 	#name: string = DEFAULT_STATE_NAME;
-	#shaders: Shaders = new Shaders();
+	#shader: ( string | null ) = null;
 	#layer = 0;
 	#renderBin = 0;
+	#apply: IStateApplyFunction = defaultApplyFunction;
+	#reset: IStateResetFunction = defaultResetFunction;
 
 	/**
 	 * Construct the class.
 	 * @class
-	 * @param {IStateInput | null | undefined} input - The constructor input object.
+	 * @param {IStateConstructorInput | null | undefined} input - The constructor input object.
 	 */
-	constructor ( input?: IStateInput )
+	constructor ( input?: IStateConstructorInput )
 	{
 		super();
 
-		const { name, shaders, layer, renderBin } = ( input ?? {} );
+		const { name, shader, layer, renderBin } = ( input ?? {} );
 
 		this.#name = ( name ?? DEFAULT_STATE_NAME );
 
-		if ( shaders )
+		if ( shader )
 		{
-			this.#shaders.vertex = shaders.vertex;
-			this.#shaders.fragment = shaders.fragment;
+			this.#shader = shader;
 		}
 
 		if ( ( typeof layer ) === "number" )
@@ -109,33 +133,79 @@ export class State extends Base
 	}
 
 	/**
-	 * Apply the state.
-	 * @param {IApplyInput} input - The input for applying the state.
+	 * Set the apply function.
+	 * @param {IStateApplyFunction} apply - The function that applies the state.
 	 */
-	public apply ( input: IApplyInput )
+	public set apply ( apply: IStateApplyFunction )
 	{
-		console.log ( `Applied state: ${this.name}, input: ${JSON.stringify ( input )}` );
+		this.#apply = apply;
 	}
 
 	/**
-	 * Reset the state.
+	 * Get the apply function.
+	 * @returns {IStateApplyFunction} The function that applies the state.
 	 */
-	public reset()
+	public get apply() : IStateApplyFunction
 	{
-		console.log ( `Reset state: ${this.name}` );
+		return this.#apply;
 	}
 
 	/**
-	 * Get the shader pair.
-	 * @returns {Shaders} Shader pair.
+	 * Call the apply function.
+	 * @param {IStateApplyInput} input - The input for applying the state.
 	 */
-	public get shaders() : Shaders
+	public doApply ( input: IStateApplyInput ) : void
 	{
-		return this.#shaders;
+		this.#apply ( input );
 	}
 
 	/**
-	 * Get the name.
+	 * Set the reset function.
+	 * @param {IStateResetFunction} reset - The function that resets the state.
+	 */
+	public set reset ( reset: IStateResetFunction )
+	{
+		this.#reset = reset;
+	}
+
+	/**
+	 * Get the reset function.
+	 * @returns {IStateResetFunction} The function that resets the state.
+	 */
+	public get reset() : IStateResetFunction
+	{
+		return this.#reset;
+	}
+
+	/**
+	 * Call the reset function.
+	 */
+	public doReset() : void
+	{
+		this.#reset();
+	}
+
+	/**
+	 * Get the shader name.
+	 * @returns {string} Shader name.
+	 */
+	public get shader() : ( string | null )
+	{
+		return this.#shader;
+	}
+
+	/**
+	 * Set the shader name.
+	 * @param {string | null} shader - The name of the shader, or null.
+	 */
+	public set shader ( shader: ( string | null ) )
+	{
+		// Set the shader.
+		this.#shader = shader;
+	}
+
+	/**
+	 * Get the state name.
 	 * @returns {string | null} The name of this state object, or null.
 	 */
 	public get name() : string
@@ -144,7 +214,7 @@ export class State extends Base
 	}
 
 	/**
-	 * Set the name.
+	 * Set the state name.
 	 * @param {string | null} name - The name of this state object, or null.
 	 */
 	public set name ( name: ( string | null ) )

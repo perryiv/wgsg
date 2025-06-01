@@ -193,7 +193,8 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 		mat4.copy ( this.#modelMatrix, modelMatrix );
 
 		// Apply the state.
-		state.apply ( {
+		state.doApply ( {
+			state,
 			projMatrix: this.#projMatrix,
 			modelMatrix,
 		} );
@@ -202,7 +203,7 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 		this.visitShapes ( shapes );
 
 		// Reset the state.
-		state.reset();
+		state.doReset();
 	}
 
 	/**

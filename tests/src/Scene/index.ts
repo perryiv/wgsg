@@ -13,13 +13,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { test as testNodes } from "./Nodes";
-import { test as testShaders } from "./Shaders";
 import { test as testState } from "./State";
 
 
 describe ( "Scene", function ()
 {
-	testShaders();
 	testState();
 	testNodes();
 } );

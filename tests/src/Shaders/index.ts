@@ -12,10 +12,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export function test ()
+import { test as testShaderManager } from "./Manager";
+
+describe ( "Shaders", function ()
 {
-	describe ( "Shaders", function ()
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	{
-	} );
-};
+	testShaderManager();
+} );

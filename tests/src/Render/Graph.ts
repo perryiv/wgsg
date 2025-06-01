@@ -15,6 +15,7 @@
 import { expect } from "chai";
 import {
 	Cull as CullVisitor,
+	Draw as DrawVisitor,
 	getIMatrixAsString,
 	Group,
 	IDENTITY_MATRIX,
@@ -168,6 +169,12 @@ export function test ()
 				expect ( "object" === ( typeof shape ) ).to.be.true;
 				expect ( shape instanceof Sphere ).to.be.true;
 			}
+		} );
+
+		it ( "Can draw the scene", function ()
+		{
+			const dv = new DrawVisitor();
+			dv.visitLayers ( layers );
 		} );
 	} );
 };

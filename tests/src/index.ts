@@ -28,6 +28,7 @@ void ( async () =>
 	await import ( "./Projections" );
 	await import ( "./Render" );
 	await import ( "./Scene" );
+	await import ( "./Shaders" );
 	await import ( "./Types" );
 	await import ( "./Viewers" );
 	await import ( "./Visitors" );
