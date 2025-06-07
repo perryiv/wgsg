@@ -40,8 +40,8 @@ import { Shape, State } from "../Scene";
 export class Draw extends Base // Note: Does not inherit from Visitor.
 {
 	#state: ( State | null ) = null;
-	#projMatrix: IMatrix44 = IDENTITY_MATRIX;
-	#modelMatrix: IMatrix44 = IDENTITY_MATRIX;
+	#projMatrix:  IMatrix44 = [ ...IDENTITY_MATRIX ]; // Has to be a copy.
+	#modelMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ]; // Has to be a copy.
 
 	/**
 	 * Construct the class.

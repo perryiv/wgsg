@@ -105,6 +105,7 @@ export const getModelMatrixData = ( mmm: IModelMatrixMap, modelMatrix: IMatrix44
 	let mmd = mmm.get ( name );
 	if ( !mmd )
 	{
+		modelMatrix = [ ...modelMatrix ]; // Important! Store a copy.
 		mmd = {
 			modelMatrix,
 			shapes: []
@@ -156,6 +157,7 @@ export const getProjMatrixData = ( pmm: IProjMatrixMap, projMatrix: IMatrix44 ) 
 	let pmd = pmm.get ( name );
 	if ( !pmd )
 	{
+		projMatrix = [ ...projMatrix ]; // Important! Store a copy.
 		pmd = {
 			projMatrix,
 			states: new Map < string, IStateData > ()

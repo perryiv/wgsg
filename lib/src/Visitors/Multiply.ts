@@ -28,8 +28,8 @@ import { Visitor } from "./Visitor";
 
 export abstract class Multiply extends Visitor
 {
-	#modelMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
-	#projMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
+	#modelMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ]; // Has to be a copy.
+	#projMatrix:  IMatrix44 = [ ...IDENTITY_MATRIX ]; // Has to be a copy.
 
 	/**
 	 * Construct the class.
