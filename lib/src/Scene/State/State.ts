@@ -59,7 +59,7 @@ export type IStateResetFunction = ( () => void );
 
 export const defaultApplyFunction: IStateApplyFunction = ( input: IStateApplyInput ) =>
 {
-	console.log ( `Default state apply function called with input: ${JSON.stringify ( input )}` );
+	console.log ( `Default state apply function called with name: '${input.state.name}', projMatrix: ${JSON.stringify ( input.projMatrix )}, modelMatrix: ${JSON.stringify ( input.modelMatrix )}` );
 };
 
 
