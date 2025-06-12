@@ -12,8 +12,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IDENTITY_MATRIX } from "../Tools";
 import { IMatrix44 } from "../Types";
+import { makeIdentity } from "../Tools/Math";
 import { mat4 } from "gl-matrix";
 import { ProjectionNode as Projection, Transform } from "../Scene";
 import { Visitor } from "./Visitor";
@@ -28,8 +28,8 @@ import { Visitor } from "./Visitor";
 
 export abstract class Multiply extends Visitor
 {
-	#modelMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ]; // Has to be a copy.
-	#projMatrix:  IMatrix44 = [ ...IDENTITY_MATRIX ]; // Has to be a copy.
+	#modelMatrix: IMatrix44 = makeIdentity(); // Has to be a copy.
+	#projMatrix:  IMatrix44 = makeIdentity(); // Has to be a copy.
 
 	/**
 	 * Construct the class.
@@ -57,6 +57,28 @@ export abstract class Multiply extends Visitor
 	public get projMatrix()
 	{
 		return this.#projMatrix;
+	}
+
+	/**
+	 * Set the projection matrix.
+	 * @param {IMatrix44} matrix - The projection matrix.
+	 */
+	public set projMatrix ( matrix: IMatrix44 )
+	{
+		// Check the input.
+		if ( !matrix )
+		{
+			throw new Error ( "Invalid projection matrix" );
+		}
+
+		// Make sure it is a matrix.
+		if ( 16 !== matrix.length )
+		{
+			throw new Error ( "Projection matrix must have 16 elements" );
+		}
+
+		// Copy the matrix.
+		mat4.copy ( this.#projMatrix, matrix );
 	}
 
 	/**
