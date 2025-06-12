@@ -12,9 +12,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IDENTITY_MATRIX } from "../Tools";
 import { IMatrix44, IViewport } from "../Types";
 import { isPositiveFiniteNumber } from "../Math";
+import { makeIdentity } from "../Tools";
 import { mat4 } from "gl-matrix";
 import { Projection } from "./Projection";
 
@@ -87,7 +87,7 @@ export class Orthographic extends Projection
 		}
 
 		// Initialize the answer.
-		const answer: IMatrix44 = [ ...IDENTITY_MATRIX ];
+		const answer: IMatrix44 = makeIdentity();
 
 		// Write the perspective matrix to the answer.
 		mat4.ortho ( answer, left, right, bottom, top, near, far );
