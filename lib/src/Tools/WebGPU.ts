@@ -1,4 +1,3 @@
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (c) 2025, Perry L Miller IV
@@ -18,6 +17,15 @@ import {
 	IDeviceOptions,
 	IRenderingContextInput,
 } from "../Types/Graphics";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Needed below.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+let preferredCanvasFormat: ( GPUTextureFormat | null ) = null;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -95,11 +103,8 @@ export const getRenderingContext = ( { device, canvas } : IRenderingContextInput
 		throw new Error ( "Invalid WebGPU rendering context" );
 	}
 
-	// Shortcut.
-	const { gpu } = navigator;
-
 	// Get the default canvas format.
-	const format = gpu.getPreferredCanvasFormat();
+	const format = getPreferredCanvasFormat();
 
 	// Handle invalid format.
 	if ( !format )
@@ -113,3 +118,33 @@ export const getRenderingContext = ( { device, canvas } : IRenderingContextInput
 	// Return the context.
 	return context;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Disable the JSDoc rule that complains about GPUTextureFormat being
+// undefined. It's not. There didn't seem to be a way to disable one line,
+// so this is at the bottom.
+/* eslint-disable jsdoc/no-undefined-types */
+//
+///////////////////////////////////////////////////////////////////////////////
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Get the preferred canvas format for WebGPU.
+ * @returns {GPUTextureFormat} The preferred canvas format.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export const getPreferredCanvasFormat = (): GPUTextureFormat =>
+{
+	// The first time we have to set it.
+	if ( !preferredCanvasFormat )
+	{
+		preferredCanvasFormat = navigator.gpu.getPreferredCanvasFormat();
+	}
+
+	// Return the format.
+	return preferredCanvasFormat;
+};
