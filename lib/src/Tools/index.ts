@@ -16,4 +16,5 @@ export * from "./Bits";
 export * from "./Constants";
 export * from "./Errors";
 export * from "./Functions";
+export * from "./Math";
 export * from "./WebGPU";
