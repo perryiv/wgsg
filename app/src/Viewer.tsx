@@ -17,10 +17,10 @@ import { mat4 } from "gl-matrix";
 import { useEffect, useRef, useState } from "react";
 import {
 	Device,
-	Geometry,
 	Group,
 	IDENTITY_MATRIX,
 	Viewer as InternalViewer,
+	Sphere,
 	Transform,
 } from "wgsg-lib";
 
@@ -38,18 +38,18 @@ const root: Group = ( () =>
 	{
 		const tr = new Transform();
 		mat4.translate ( tr.matrix, IDENTITY_MATRIX, [ 10, 0, 0 ] );
-		tr.addChild ( new Geometry() );
-		tr.addChild ( new Geometry() );
+		tr.addChild ( new Sphere ( { center: [ 0, 0, 0 ] } ) );
+		tr.addChild ( new Sphere ( { center: [ 2, 0, 0 ] } ) );
 		root.addChild ( tr );
 	}
 
 	{
 		const tr = new Transform();
 		mat4.translate ( tr.matrix, IDENTITY_MATRIX, [ 0, 10, 0 ] );
-		tr.addChild ( new Geometry() );
-		tr.addChild ( new Geometry() );
-		tr.addChild ( new Geometry() );
-		tr.addChild ( new Geometry() );
+		tr.addChild ( new Sphere ( { center: [ 0, 0, 0 ] } ) );
+		tr.addChild ( new Sphere ( { center: [ 2, 0, 0 ] } ) );
+		tr.addChild ( new Sphere ( { center: [ 4, 0, 0 ] } ) );
+		tr.addChild ( new Sphere ( { center: [ 6, 0, 0 ] } ) );
 		root.addChild ( tr );
 	}
 
