@@ -13,8 +13,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base } from "../Base/Base";
-import { IMatrix44 } from "../Types";
-import { mat4 } from "gl-matrix";
+import { IMatrix44, IVector4 } from "../Types";
+import { mat4, vec4 } from "gl-matrix";
 import { Shape, State } from "../Scene";
 import { Device, makeIdentity } from "../Tools";
 import type {
@@ -58,6 +58,7 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 	#projMatrix:	IMatrix44 = makeIdentity(); // Has to be a copy.
 	#modelMatrix: IMatrix44 = makeIdentity(); // Has to be a copy.
 	#pipeline: ( GPURenderPipeline | null ) = null;
+	#clearColor: IVector4 = [ 0.5, 0.5, 0.5, 1.0 ]; // Grey.
 
 	/**
 	 * Construct the class.
@@ -177,6 +178,28 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 
 		// Return the pipeline.
 		return pipeline;
+	}
+
+	/**
+	 * Get the clear color.
+	 * @returns {IVector4} The clear color.
+	 */
+	protected get clearColor () : IVector4
+	{
+		return [ ...this.#clearColor ];
+	}
+
+	/**
+	 * Set the clear color.
+	 * @param {IVector4} color - The clear color to use.
+	 */
+	protected set clearColor ( color: IVector4 )
+	{
+		if ( 4 !== color.length )
+		{
+			throw new Error ( `Invalid color length ${color.length as number}, expected 4` );
+		}
+		vec4.copy ( this.#clearColor, color );
 	}
 
 	/**
