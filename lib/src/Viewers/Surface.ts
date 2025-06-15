@@ -15,8 +15,10 @@
 
 import { Base } from "../Base/Base";
 import { Device } from "../Tools";
+import { IVector3, IVector4 } from "../Types";
 import { Perspective, ProjectionBase as Projection } from "../Projections";
 import { SolidColor } from "../Shaders";
+import { vec4 } from "gl-matrix";
 import type { ISize, IViewport } from "../Types/Math";
 import {
 	Node,
@@ -88,6 +90,7 @@ export class Surface extends Base
 	#visitors: ( IVisitors | null ) = null;
 	#layers: ILayerMap = new Map < number, ILayer > ();
 	#defaultState: State = new State();
+	#clearColor: IVector4 = [ 0.0, 0.0, 0.0, 0.0 ]; // Transparent black.
 
 	/**
 	 * Construct the class.
@@ -216,6 +219,34 @@ export class Surface extends Base
 
 		// Request a render in the near future.
 		this.requestRender();
+	}
+
+	/**
+	 * Get the clear color.
+	 * @returns {IVector4} The clear color.
+	 */
+	protected get clearColor () : IVector4
+	{
+		return [ ...this.#clearColor ];
+	}
+
+	/**
+	 * Set the clear color.
+	 * @param {IVector4} color - The clear color to use.
+	 */
+	protected set clearColor ( color: ( IVector3 | IVector4 ) )
+	{
+		if ( 3 === color.length )
+		{
+			color = [ ...color, 1.0 ]; // Add an alpha.
+		}
+
+		if ( 4 !== color.length )
+		{
+			throw new Error ( `Invalid color array length: ${( color as [] ).length}, expected 3 or 4` );
+		}
+
+		vec4.copy ( this.#clearColor, color );
 	}
 
 	/**
