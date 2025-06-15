@@ -132,7 +132,7 @@ export class Surface extends Base
 				layers: this.#layers,
 				defaultState: state
 			} ),
-			draw: new DrawVisitor ( { device } )
+			draw: new DrawVisitor ( { context, device } )
 		};
 
 		// Set the default state's properties.

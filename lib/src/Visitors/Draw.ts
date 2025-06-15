@@ -38,6 +38,7 @@ import type {
 
 export interface IDrawVisitorInput
 {
+	context: GPUCanvasContext;
 	device: Device;
 };
 
@@ -52,23 +53,35 @@ export interface IDrawVisitorInput
 export class Draw extends Base // Note: Does not inherit from Visitor.
 {
 	#device: Device;
+	#context: GPUCanvasContext;
 	#state: ( State | null ) = null;
-	#projMatrix:  IMatrix44 = makeIdentity(); // Has to be a copy.
+	#projMatrix:	IMatrix44 = makeIdentity(); // Has to be a copy.
 	#modelMatrix: IMatrix44 = makeIdentity(); // Has to be a copy.
 	#pipeline: ( GPURenderPipeline | null ) = null;
+	#renderPassDescriptor: GPURenderPassDescriptor;
+	#renderPassEncoder: ( GPURenderPassEncoder | null ) = null;
 
 	/**
 	 * Construct the class.
 	 * @class
 	 * @param {IDrawVisitorInput} input - The input for the constructor.
+	 * @param {GPUCanvasContext} input.context - The GPU canvas context to use for rendering.
 	 * @param {Device} input.device - The GPU device to use for rendering.
 	 */
-	constructor ( { device }: IDrawVisitorInput )
+	constructor ( { context, device }: IDrawVisitorInput )
 	{
 		// Call this first.
 		super();
 
 		// Check the input.
+		if ( !context )
+		{
+			throw new Error ( "Draw visitor context input is invalid" );
+		}
+		if ( !( context instanceof GPUCanvasContext ) )
+		{
+			throw new Error ( "Draw visitor context input is not a GPUCanvasContext" );
+		}
 		if ( !device )
 		{
 			throw new Error ( "Draw visitor device input is invalid" );
@@ -78,8 +91,22 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 			throw new Error ( "Draw visitor device input is not a GPUDevice" );
 		}
 
-		// Set the device.
+		// Make the render pass descriptor.
+		const rpd: GPURenderPassDescriptor = {
+			label: "Draw visitor default render pass descriptor",
+			colorAttachments: [
+			{
+				view: context.getCurrentTexture().createView(),
+				clearValue: [ 0.0, 0.0, 0.0, 0.0 ],
+				loadOp: "clear",
+				storeOp: "store"
+			} ]
+		};
+
+		// Set the members.
+		this.#context = context;
 		this.#device = device;
+		this.#renderPassDescriptor = rpd;
 	}
 
 	/**
@@ -108,6 +135,25 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 
 		// Return the state.
 		return state;
+	}
+
+	/**
+	 * Get the GPU canvas context.
+	 * @returns {GPUCanvasContext} The GPU canvas context.
+	 */
+	protected get context () : GPUCanvasContext
+	{
+		// Shortcut.
+		const context = this.#context;
+
+		// We should always have a valid context.
+		if ( !context )
+		{
+			throw new Error ( "Attempting to get invalid context in draw visitor" );
+		}
+
+		// Return the context.
+		return context;
 	}
 
 	/**
@@ -154,6 +200,15 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 	 */
 	public visitLayers ( layers: ILayerMap ) : void
 	{
+		// Make a command encoder.
+		const encoder = this.device.makeEncoder ( "draw_visitor_command_encoder" );
+
+		// Make and configure a render pass.
+		const pass = encoder.beginRenderPass ( this.#renderPassDescriptor );
+
+		// Set our member.
+		this.#renderPassEncoder = pass;
+
 		// Iterate over the layers in the map in numerical order using the key.
 		const keys: number[] = Array.from ( layers.keys() );
 		keys.sort ( ( a, b ) => { return ( a - b ); } );
@@ -171,6 +226,15 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 			// Visit the layer.
 			this.visitLayer ( layer );
 		}
+
+		// Example: Draw a triangle (3 vertices).
+		pass.draw ( 3 );
+
+		// End the render pass.
+		pass.end();
+
+		// Submit the commands to the GPU.
+		this.device.queue.submit ( [ encoder.finish() ] );
 	}
 
 	/**
@@ -240,26 +304,29 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 		// Make sure we have a shader module.
 		if ( !sm )
 		{
-			throw new Error ( `Shader module is not defined in state ${state.name}` );
+			throw new Error ( `Shader module is not defined in state '${state.name}'` );
 		}
 
 		// Make the new pipeline.
-		const pipeline = device.device.createRenderPipeline ( {
-			label: "Red triangle pipeline",
-			layout: "auto",
-			vertex: {
-				entryPoint: "vs",
-				module: shader.module,
-			},
-			fragment: {
-				entryPoint: "fs",
-				module: shader.module,
-				targets: [ { format: device.preferredFormat } ],
-			},
+		const pipeline = device.makePipeline ( {
+			label: `Pipeline for state ${state.name}`,
+			module: sm
 		} );
 
 		// Set our member.
 		this.#pipeline = pipeline;
+
+		// Shortcut.
+		const pass = this.#renderPassEncoder;
+
+		// Make sure we have a render pass encoder.
+		if ( !pass )
+		{
+			throw new Error ( `Render pass encoder is not defined when setting the pipeline in state '${state.name}'` );
+		}
+
+		// Set the pipeline on the render pass encoder.
+		pass.setPipeline ( pipeline );
 	}
 
 	/**
@@ -332,6 +399,7 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 			projMatrix: this.#projMatrix,
 			modelMatrix,
 		} );
+
 
 		// Visit the shapes.
 		this.visitShapes ( shapes );
