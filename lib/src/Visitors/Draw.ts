@@ -58,8 +58,6 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 	#projMatrix:	IMatrix44 = makeIdentity(); // Has to be a copy.
 	#modelMatrix: IMatrix44 = makeIdentity(); // Has to be a copy.
 	#pipeline: ( GPURenderPipeline | null ) = null;
-	#renderPassDescriptor: GPURenderPassDescriptor;
-	#renderPassEncoder: ( GPURenderPassEncoder | null ) = null;
 
 	/**
 	 * Construct the class.
@@ -91,22 +89,9 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 			throw new Error ( "Draw visitor device input is not a GPUDevice" );
 		}
 
-		// Make the render pass descriptor.
-		const rpd: GPURenderPassDescriptor = {
-			label: "Draw visitor default render pass descriptor",
-			colorAttachments: [
-			{
-				view: context.getCurrentTexture().createView(),
-				clearValue: [ 0.0, 0.0, 0.0, 0.0 ],
-				loadOp: "clear",
-				storeOp: "store"
-			} ]
-		};
-
 		// Set the members.
 		this.#context = context;
 		this.#device = device;
-		this.#renderPassDescriptor = rpd;
 	}
 
 	/**
@@ -203,11 +188,21 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 		// Make a command encoder.
 		const encoder = this.device.makeEncoder ( "draw_visitor_command_encoder" );
 
-		// Make and configure a render pass.
-		const pass = encoder.beginRenderPass ( this.#renderPassDescriptor );
+		// Make the render pass descriptor.
+		const renderPassDescriptor: GPURenderPassDescriptor = {
+			label: "Draw visitor default render pass descriptor",
+			colorAttachments: [
+			{
+				view: this.context.getCurrentTexture().createView(),
+				clearValue: [ 0.0, 0.0, 0.0, 0.0 ],
+				loadOp: "clear",
+				storeOp: "store"
+			} ]
+		};
 
-		// Set our member.
-		this.#renderPassEncoder = pass;
+		// Make and configure a render pass.
+		const pass = encoder.beginRenderPass ( renderPassDescriptor );
+		pass.label = "Draw visitor render pass";
 
 		// Iterate over the layers in the map in numerical order using the key.
 		const keys: number[] = Array.from ( layers.keys() );
@@ -226,6 +221,8 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 			// Visit the layer.
 			this.visitLayer ( layer );
 		}
+
+		pass.setPipeline ( this.pipeline );
 
 		// Example: Draw a triangle (3 vertices).
 		pass.draw ( 3 );
@@ -317,16 +314,16 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 		this.#pipeline = pipeline;
 
 		// Shortcut.
-		const pass = this.#renderPassEncoder;
+		// const pass = this.#renderPassEncoder;
 
 		// Make sure we have a render pass encoder.
-		if ( !pass )
-		{
-			throw new Error ( `Render pass encoder is not defined when setting the pipeline in state '${state.name}'` );
-		}
+		// if ( !pass )
+		// {
+		// 	throw new Error ( `Render pass encoder is not defined when setting the pipeline in state '${state.name}'` );
+		// }
 
 		// Set the pipeline on the render pass encoder.
-		pass.setPipeline ( pipeline );
+		// pass.setPipeline ( pipeline );
 	}
 
 	/**

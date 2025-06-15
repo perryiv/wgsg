@@ -602,74 +602,7 @@ export class Surface extends Base
 		dv.reset();
 
 		// Visit the layers
-		// dv.visitLayers ( layers );
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-		const sm = this.device.device.createShaderModule ( {
-			label: "our hardcoded red triangle shaders",
-			code: `
-				@vertex fn vs(
-					@builtin(vertex_index) vertexIndex : u32
-				) -> @builtin(position) vec4f {
-					let pos = array(
-						vec2f( 0.0,  0.5),  // top center
-						vec2f(-0.5, -0.5),  // bottom left
-						vec2f( 0.5, -0.5)   // bottom right
-					);
-
-					return vec4f(pos[vertexIndex], 0.0, 1.0);
-				}
-
-				@fragment fn fs() -> @location(0) vec4f {
-					return vec4f(1.0, 0.0, 0.0, 1.0);
-				}
-			`,
-		} );
-
-		const pipeline = this.device.device.createRenderPipeline ( {
-			label: "our hardcoded red triangle pipeline",
-			layout: "auto",
-			vertex: {
-				entryPoint: "vs",
-				module: sm,
-			},
-			fragment: {
-				entryPoint: "fs",
-				module: sm,
-				targets: [ {
-					format: navigator.gpu.getPreferredCanvasFormat()
-				} ],
-			},
-		} );
-
-		const renderPassDescriptor = {
-			label: "our basic canvas renderPass",
-			colorAttachments: [
-				{
-					// view: <- to be filled out when we render
-					clearValue: [0.3, 0.3, 0.3, 1],
-					loadOp: "clear",
-					storeOp: "store",
-				},
-			],
-		};
-
-		renderPassDescriptor.colorAttachments[0].view =
-        this.context.getCurrentTexture().createView();
-
-    // make a command encoder to start encoding commands
-    const encoder = this.device.device.createCommandEncoder ( { label: "our encoder" } );
-
-    // make a render pass encoder to encode render specific commands
-    const pass = encoder.beginRenderPass ( renderPassDescriptor );
-    pass.setPipeline ( pipeline );
-    pass.draw ( 3 );
-    pass.end();
-
-    const commandBuffer = encoder.finish();
-    this.device.queue.submit ( [ commandBuffer ] );
+		dv.visitLayers ( layers );
 	}
 
 	/**
