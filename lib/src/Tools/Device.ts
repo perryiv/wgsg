@@ -28,11 +28,7 @@ interface IPipelineShaderInput
 	module: GPUShaderModule;
 }
 
-interface IPipelineInput
-{
-	shaderInput?: IPipelineShaderInput;
-	descriptor?: GPURenderPipelineDescriptor;
-}
+type IPipelineInput = ( IPipelineShaderInput | GPURenderPipelineDescriptor );
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -194,41 +190,49 @@ export class Device extends Base
 	 */
 	public makePipeline ( input: IPipelineInput ) : GPURenderPipeline
 	{
-		// Get the input. It has to be one or the other.
-		let { descriptor } = input;
+		// Initialize the descriptor.
+		let descriptor: GPURenderPipelineDescriptor | null = null;
 
-		// If we were not given a descriptor ...
-		if ( !descriptor )
+		// See if we're supposed to make the descriptor.
+		const { label, module } = ( input as IPipelineShaderInput );
+		if ( module && label )
 		{
-			// Try to get the shader input.
-			const { shaderInput } = input;
-
-			// Make sure ...
-			if ( !shaderInput )
-			{
-				throw new Error ( "Must pass a descriptor object or shader input when making a render pipeline" );
-			}
-
-			// Get the properties we need.
-			const { label, module } = shaderInput;
-
 			// Make the descriptor.
+			const target = { format: this.preferredFormat };
 			descriptor = {
 				label,
 				layout: "auto",
-				vertex: {
-					entryPoint: "vs",
-					module,
-				},
-				fragment: {
-					entryPoint: "fs",
-					module,
-					targets: [ { format: this.preferredFormat } ],
-				}
+				vertex: { module },
+				fragment: { module, targets: [ target ] }
 			};
+		}
+
+		// Otherwise, just use the input as the descriptor.
+		else
+		{
+			descriptor = ( input as GPURenderPipelineDescriptor );
 		}
 
 		// Create the pipeline.
 		return this.device.createRenderPipeline ( descriptor );
+	}
+
+	/**
+	 * Make a command encoder.
+	 * @param {string} label - The label for the command encoder.
+	 * @returns {GPUCommandEncoder} The command encoder.
+	 */
+	public makeEncoder ( label: string ) : GPUCommandEncoder
+	{
+		return this.device.createCommandEncoder ( { label } );
+	}
+
+	/**
+	 * Get the GPU queue.
+	 * @returns {GPUQueue} The GPU queue.
+	 */
+	public get queue() : GPUQueue
+	{
+		return this.device.queue;
 	}
 }
