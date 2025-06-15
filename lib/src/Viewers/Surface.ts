@@ -15,10 +15,14 @@
 
 import { Base } from "../Base/Base";
 import { Device } from "../Tools";
-import { Node, State } from "../Scene";
 import { Perspective, ProjectionBase as Projection } from "../Projections";
 import { SolidColor } from "../Shaders";
 import type { ISize, IViewport } from "../Types/Math";
+import {
+	Node,
+	State,
+	type IStateApplyInput,
+} from "../Scene";
 import type {
 	ILayer,
 	ILayerMap,
@@ -119,54 +123,27 @@ export class Surface extends Base
 			throw new Error ( "Failed to get rendering context for canvas when constructing a surface" );
 		}
 
+		// Shortcuts.
+		const state = this.#defaultState;
+
 		// Now we can make the visitors.
 		this.#visitors = {
 			cull: new CullVisitor ( {
 				layers: this.#layers,
-				defaultState: this.#defaultState
+				defaultState: state
 			} ),
 			draw: new DrawVisitor ( { device } )
 		};
 
 		// Set the default state's properties.
-		this.#defaultState.name = `Default state for ${this.getClassName()} ${this.id}`;
-		this.#defaultState.shader = new SolidColor ( { device } );
+		state.name = `Default state for ${this.getClassName()} ${this.id}`;
+		state.shader = new SolidColor ( { device } );
+		state.apply = this.defaultApplyFunction.bind ( this );
+		state.reset = this.defaultResetFunction.bind ( this );
 
 		// Observe changes to the canvas size.
 		// https://webgpufundamentals.org/webgpu/lessons/webgpu-fundamentals.html#a-resizing
-		const observer = new ResizeObserver ( ( items ) =>
-		{
-			// There can be only one.
-			const item = items[0];
-			let { inlineSize: width, blockSize: height } = item.contentBoxSize[0];
-			const { maxTextureDimension2D: maxDimension } = device.limits;
-
-			// Ignore when one or both are zero.
-			if ( ( width <= 0 ) || ( height <= 0 ) )
-			{
-				return;
-			}
-
-			// Make sure it's within the device's range.
-			width  = Math.max ( 1, Math.min ( width,  maxDimension ) );
-			height = Math.max ( 1, Math.min ( height, maxDimension ) );
-
-			// console.log ( `New surface size: ${width}, ${height}` );
-
-			// Set the canvas size.
-			const canvas = ( item.target as HTMLCanvasElement );
-			canvas.width  = width;
-			canvas.height = height;
-
-			// Set this surface's size, which sets our viewport.
-			this.size = { width, height };
-
-			// Set the projection's viewport.
-			this.projection.viewport = { ...this.#viewport };
-
-			// Request a render in the near future.
-			this.requestRender();
-		} );
+		const observer = new ResizeObserver ( this.resizeHandler.bind ( this ) );
 		observer.observe ( canvas );
 
 		// Set our members.
@@ -182,6 +159,63 @@ export class Surface extends Base
 	public getClassName() : string
 	{
 		return "Viewers.Surface";
+	}
+
+	/**
+	 * Default state apply function.
+	 * @param {IStateApplyInput} input - The input object.
+	 * @return {void}
+	 */
+	protected defaultApplyFunction ( { state }: IStateApplyInput ) : void
+	{
+		console.log ( `In default state apply function for ${this.type} ${this.id} with state '${state.name}'` );
+	}
+
+	/**
+	 * Default state reset function.
+	 * @return {void}
+	 */
+	protected defaultResetFunction () : void
+	{
+		console.log ( `In default state reset function for ${this.type} ${this.id}` );
+	}
+
+	/**
+	 * Handle resize events.
+	 * @param {ResizeObserverEntry[]} items - The resize observer entries.
+	 */
+	protected resizeHandler ( items: ResizeObserverEntry[] ) : void
+	{
+		// There can be only one.
+		const item = items[0];
+		let { inlineSize: width, blockSize: height } = item.contentBoxSize[0];
+		const { maxTextureDimension2D: maxDimension } = this.device.limits;
+
+		// Ignore when one or both are zero.
+		if ( ( width <= 0 ) || ( height <= 0 ) )
+		{
+			return;
+		}
+
+		// Make sure it's within the device's range.
+		width  = Math.max ( 1, Math.min ( width,  maxDimension ) );
+		height = Math.max ( 1, Math.min ( height, maxDimension ) );
+
+		// console.log ( `New surface size: ${width}, ${height}` );
+
+		// Set the canvas size.
+		const canvas = ( item.target as HTMLCanvasElement );
+		canvas.width  = width;
+		canvas.height = height;
+
+		// Set this surface's size, which sets our viewport.
+		this.size = { width, height };
+
+		// Set the projection's viewport.
+		this.projection.viewport = { ...this.#viewport };
+
+		// Request a render in the near future.
+		this.requestRender();
 	}
 
 	/**
