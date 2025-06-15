@@ -15,8 +15,8 @@
 
 export interface IDeviceOptions
 {
-	rao?: GPURequestAdapterOptions;
-	dd?: GPUDeviceDescriptor;
+	requestAdapterOptions?: GPURequestAdapterOptions;
+	deviceDescriptor?: GPUDeviceDescriptor;
 }
 
 export interface IDeviceData
@@ -29,3 +29,5 @@ export interface IRenderingContextInput
 	device: GPUDevice;
 	canvas: ( HTMLCanvasElement | OffscreenCanvas );
 }
+
+export type ITextureFormat = GPUTextureFormat;

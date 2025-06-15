@@ -16,6 +16,7 @@ import {
 	IDeviceData,
 	IDeviceOptions,
 	IRenderingContextInput,
+	ITextureFormat,
 } from "../Types/Graphics";
 
 
@@ -25,7 +26,7 @@ import {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-let preferredCanvasFormat: ( GPUTextureFormat | null ) = null;
+let preferredCanvasFormat: ( ITextureFormat | null ) = null;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -49,7 +50,7 @@ export const getDeviceData = async ( options?: IDeviceOptions ) : Promise < IDev
 	}
 
 	// Get the adapter.
-	const adapter = await gpu.requestAdapter ( options?.rao );
+	const adapter = await gpu.requestAdapter ( options?.requestAdapterOptions );
 
 	// Handle no adapter.
 	if ( !adapter )
@@ -59,7 +60,7 @@ export const getDeviceData = async ( options?: IDeviceOptions ) : Promise < IDev
 
 	// Get the device from the adapter. Can only do this once with this
 	// particular adapter, which is why we don't return it also.
-	const device = await adapter.requestDevice ( options?.dd );
+	const device = await adapter.requestDevice ( options?.deviceDescriptor );
 
 	// Handle no device.
 	if ( !device )
@@ -121,23 +122,13 @@ export const getRenderingContext = ( { device, canvas } : IRenderingContextInput
 
 
 ///////////////////////////////////////////////////////////////////////////////
-//
-// Disable the JSDoc rule that complains about GPUTextureFormat being
-// undefined. It's not. There didn't seem to be a way to disable one line,
-// so this is at the bottom.
-/* eslint-disable jsdoc/no-undefined-types */
-//
-///////////////////////////////////////////////////////////////////////////////
-
-
-///////////////////////////////////////////////////////////////////////////////
 /**
  * Get the preferred canvas format for WebGPU.
- * @returns {GPUTextureFormat} The preferred canvas format.
+ * @returns {ITextureFormat} The preferred canvas format.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const getPreferredCanvasFormat = (): GPUTextureFormat =>
+export const getPreferredCanvasFormat = (): ITextureFormat =>
 {
 	// The first time we have to set it.
 	if ( !preferredCanvasFormat )

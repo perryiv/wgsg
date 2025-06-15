@@ -13,9 +13,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base } from "../Base/Base";
-import { IDENTITY_MATRIX } from "../Tools";
 import { IMatrix44 } from "../Types";
 import { mat4 } from "gl-matrix";
+import { Shape, State } from "../Scene";
+import { Device, makeIdentity } from "../Tools";
 import type {
 	ILayer,
 	ILayerMap,
@@ -27,7 +28,18 @@ import type {
 	IStateData,
 	IStateMap,
 } from "../Render";
-import { Shape, State } from "../Scene";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Interfaces used below.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export interface IDrawVisitorInput
+{
+	device: Device;
+};
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -39,18 +51,35 @@ import { Shape, State } from "../Scene";
 
 export class Draw extends Base // Note: Does not inherit from Visitor.
 {
+	#device: Device;
 	#state: ( State | null ) = null;
-	#projMatrix:  IMatrix44 = [ ...IDENTITY_MATRIX ]; // Has to be a copy.
-	#modelMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ]; // Has to be a copy.
+	#projMatrix:  IMatrix44 = makeIdentity(); // Has to be a copy.
+	#modelMatrix: IMatrix44 = makeIdentity(); // Has to be a copy.
+	#pipeline: ( GPURenderPipeline | null ) = null;
 
 	/**
 	 * Construct the class.
 	 * @class
+	 * @param {IDrawVisitorInput} input - The input for the constructor.
+	 * @param {Device} input.device - The GPU device to use for rendering.
 	 */
-	constructor()
+	constructor ( { device }: IDrawVisitorInput )
 	{
 		// Call this first.
 		super();
+
+		// Check the input.
+		if ( !device )
+		{
+			throw new Error ( "Draw visitor device input is invalid" );
+		}
+		if ( !( device instanceof Device ) )
+		{
+			throw new Error ( "Draw visitor device input is not a GPUDevice" );
+		}
+
+		// Set the device.
+		this.#device = device;
 	}
 
 	/**
@@ -60,6 +89,63 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 	public getClassName() : string
 	{
 		return "Visitors.Draw";
+	}
+
+	/**
+	 * Get the current state.
+	 * @returns {State} The current state.
+	 */
+	protected get state () : State
+	{
+		// Shortcut.
+		const state = this.#state;
+
+		// We should always have a valid state.
+		if ( !state )
+		{
+			throw new Error ( "Attempting to get invalid state in draw visitor" );
+		}
+
+		// Return the state.
+		return state;
+	}
+
+	/**
+	 * Get the device.
+	 * @returns {Device} The GPU device wrapper.
+	 */
+	protected get device () : Device
+	{
+		// Shortcut.
+		const device = this.#device;
+
+		// We should always have a valid device.
+		if ( !device )
+		{
+			throw new Error ( "Attempting to get invalid device in draw visitor" );
+		}
+
+		// Return the device.
+		return device;
+	}
+
+	/**
+	 * Get the pipeline.
+	 * @returns {GPURenderPipeline} The current render pipeline.
+	 */
+	protected get pipeline () : GPURenderPipeline
+	{
+		// Shortcut.
+		const pipeline = this.#pipeline;
+
+		// We should always have a valid pipeline.
+		if ( !pipeline )
+		{
+			throw new Error ( "Attempting to get invalid pipeline in draw visitor" );
+		}
+
+		// Return the pipeline.
+		return pipeline;
 	}
 
 	/**
@@ -141,19 +227,67 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 	}
 
 	/**
+	 * Set the pipeline based on the current state.
+	 */
+	private setPipeline() : void
+	{
+		// Shortcuts.
+		const device = this.device;
+		const state = this.state;
+		const shader = state.shader;
+		const sm = shader?.module;
+
+		// Make sure we have a shader module.
+		if ( !sm )
+		{
+			throw new Error ( `Shader module is not defined in state ${state.name}` );
+		}
+
+		// Make the new pipeline.
+		const pipeline = device.device.createRenderPipeline ( {
+			label: "Red triangle pipeline",
+			layout: "auto",
+			vertex: {
+				entryPoint: "vs",
+				module: shader.module,
+			},
+			fragment: {
+				entryPoint: "fs",
+				module: shader.module,
+				targets: [ { format: device.preferredFormat } ],
+			},
+		} );
+
+		// Set our member.
+		this.#pipeline = pipeline;
+	}
+
+	/**
+	 * Visit the state.
+	 * @param {IStateData} sd - The state-data to visit.
+	 */
+	public visitState ( { state, modelMatrices }: IStateData ) : void
+	{
+		// Set the current state.
+		this.#state = state;
+
+		// Set the pipeline.
+		this.setPipeline();
+
+		// Visit the model matrices.
+		this.visitModelMatrices ( modelMatrices );
+	}
+
+	/**
 	 * Visit the states.
 	 * @param {IStateMap} states - The states to visit.
 	 */
 	public visitStates ( states: Map < string, IStateData > ) : void
 	{
 		// Iterate over the states in the map.
-		states.forEach ( ( { state, modelMatrices }: IStateData ) =>
+		states.forEach ( ( sd: IStateData ) =>
 		{
-			// Set the current state.
-			this.#state = state;
-
-			// Visit the model matrices.
-			this.visitModelMatrices ( modelMatrices );
+			this.visitState ( sd );
 		} );
 	}
 

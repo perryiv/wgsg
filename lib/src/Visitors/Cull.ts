@@ -43,7 +43,7 @@ import type {
 
 interface ICullVisitorInput
 {
-	layers: ILayerMap,
+	layers?: ILayerMap,
 	defaultState: State
 }
 
@@ -63,22 +63,19 @@ export class Cull extends Multiply
 	/**
 	 * Construct the class.
 	 * @class
-	 * @param {ICullVisitorInput | undefined} input - Optional constructor input.
+	 * @param {ICullVisitorInput} input - The constructor input.
 	 */
-	constructor ( input?: ICullVisitorInput )
+	constructor ( input: ICullVisitorInput )
 	{
 		// Call this first.
 		super();
 
 		// Get the input or defaults.
-		const { layers, defaultState } = ( input ?? {
-			layers: new Map < number, ILayer > (),
-			defaultState: new State()
-		} );
+		const layers = ( input.layers ?? ( new Map < number, ILayer > () ) );
 
 		// Set our members.
 		this.#layers = layers;
-		this.#defaultState = defaultState;
+		this.#defaultState = input.defaultState;
 	}
 
 	/**
@@ -191,7 +188,7 @@ export class Cull extends Multiply
 		const projMatrixMap = ( clipped ? layer.clipped : layer.unclipped );
 		const projMatrixData = getProjMatrixData ( projMatrixMap, projMatrix );
 		const { states } = projMatrixData;
-		const { modelMatrices } = getStateData ( states, state.name );
+		const { modelMatrices } = getStateData ( states, state );
 		const { shapes } = getModelMatrixData ( modelMatrices, modelMatrix );
 
 		// Add our shape.

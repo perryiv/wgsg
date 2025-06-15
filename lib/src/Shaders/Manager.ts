@@ -14,6 +14,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base } from "../Base";
+import { Device } from "../Tools";
 import { ShaderBase, type IShaderFactory } from "./ShaderBase";
 
 
@@ -50,7 +51,7 @@ let manager: ( Manager | null ) = null;
 export class Manager extends Base
 {
 	#shaders: IShaderMap = new Map < string, IShaderData > ();
-	#device: ( GPUDevice | null ) = null;
+	#device: ( Device | null ) = null;
 
 	/**
 	 * Construct the class.
@@ -65,7 +66,7 @@ export class Manager extends Base
 	 * Static method to return the singleton instance of the shader manager.
 	 * @returns {Manager} The shader manager instance.
 	 */
-	public static get instance() : Manager
+	public static get instance123() : Manager
 	{
 		if ( !manager )
 		{
@@ -85,23 +86,23 @@ export class Manager extends Base
 	}
 
 	/**
-	 * Set the GPU device.
-	 * @param {GPUDevice} device The GPU device.
+	 * Set the GPU device wrapper.
+	 * @param {Device} device The GPU device wrapper.
 	 */
-	public set device ( device: GPUDevice )
+	public set device ( device: Device )
 	{
 		this.#device = device;
 	}
 
 	/**
-	 * Get the GPU device.
-	 * @returns {GPUDevice} The GPU device.
+	 * Get the GPU device wrapper.
+	 * @returns {Device} The GPU device wrapper.
 	 */
-	public get device () : GPUDevice
+	public get device () : Device
 	{
 		if ( !this.#device )
 		{
-			throw new Error ( "GPU device is not set in shader manager" );
+			throw new Error ( "Device is not set in shader manager" );
 		}
 
 		return this.#device;

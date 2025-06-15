@@ -15,6 +15,7 @@
 
 import { Base } from "../../Base";
 import { IMatrix44 } from "../../Types";
+import { ShaderBase } from "../../Shaders";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -35,7 +36,7 @@ const DEFAULT_STATE_NAME = "default_state";
 export interface IStateConstructorInput
 {
 	name?: string;
-	shader?: string;
+	shader?: ShaderBase;
 	layer?: number;
 	renderBin?: number;
 }
@@ -86,7 +87,7 @@ export const defaultResetFunction: IStateResetFunction = () =>
 export class State extends Base
 {
 	#name: string = DEFAULT_STATE_NAME;
-	#shader: ( string | null ) = null;
+	#shader: ( ShaderBase | null ) = null;
 	#layer = 0;
 	#renderBin = 0;
 	#apply: IStateApplyFunction = defaultApplyFunction;
@@ -103,23 +104,26 @@ export class State extends Base
 
 		const { name, shader, layer, renderBin } = ( input ?? {} );
 
-		this.#name = ( name ?? DEFAULT_STATE_NAME );
+		if ( name )
+		{
+			this.#name = name;
+		}
 
 		if ( shader )
 		{
 			this.#shader = shader;
 		}
 
-		if ( ( typeof layer ) === "number" )
+		// This is false when the value is zero, but it's already that.
+		if ( layer )
 		{
-			// TODO: Why is the "!" needed when we explicitly check above?
-			this.#layer = layer!;
+			this.#layer = layer;
 		}
 
-		if ( ( typeof renderBin ) === "number" )
+		// This is false when the value is zero, but it's already that.
+		if ( renderBin )
 		{
-			// TODO: Why is the "!" needed when we explicitly check above?
-			this.#renderBin = renderBin!;
+			this.#renderBin = renderBin;
 		}
 	}
 
@@ -129,7 +133,7 @@ export class State extends Base
 	 */
 	public getClassName() : string
 	{
-		return "State";
+		return "Scene.State.State";
 	}
 
 	/**
@@ -186,27 +190,26 @@ export class State extends Base
 	}
 
 	/**
-	 * Get the shader name.
-	 * @returns {string} Shader name.
+	 * Get the shader.
+	 * @returns {ShaderBase | null} The shader object, or null if not set.
 	 */
-	public get shader() : ( string | null )
+	public get shader() : ( ShaderBase | null )
 	{
 		return this.#shader;
 	}
 
 	/**
-	 * Set the shader name.
-	 * @param {string | null} shader - The name of the shader, or null.
+	 * Set the shader.
+	 * @param {ShaderBase | null} shader - The shader object, or null.
 	 */
-	public set shader ( shader: ( string | null ) )
+	public set shader ( shader: ( ShaderBase | null ) )
 	{
-		// Set the shader.
 		this.#shader = shader;
 	}
 
 	/**
 	 * Get the state name.
-	 * @returns {string | null} The name of this state object, or null.
+	 * @returns {string} The name of this state object.
 	 */
 	public get name() : string
 	{
@@ -237,7 +240,6 @@ export class State extends Base
 	 */
 	public set layer ( layer: number )
 	{
-		// Set the layer.
 		this.#layer = layer;
 	}
 
@@ -256,7 +258,6 @@ export class State extends Base
 	 */
 	public set renderBin ( renderBin: number )
 	{
-		// Set the renderBin.
 		this.#renderBin = renderBin;
 	}
 }

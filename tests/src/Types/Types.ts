@@ -37,7 +37,7 @@ export function test ()
 	{
 		it ( "IDeviceOptions", function ()
 		{
-			const a: IDeviceOptions = { rao: undefined, dd: undefined }
+			const a: IDeviceOptions = { requestAdapterOptions: undefined, deviceDescriptor: undefined }
 			expect ( a ).to.exist;
 		} );
 

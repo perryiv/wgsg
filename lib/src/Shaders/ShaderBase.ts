@@ -13,20 +13,27 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base } from "../Base";
+import { Device } from "../Tools";
 
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Shader factory function type.
+//	Types used below.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export type IShaderFactory = ( ( this: void, device: GPUDevice ) => ShaderBase );
+export interface IShaderBaseInput
+{
+	device: Device;
+	code: string;
+}
+
+export type IShaderFactory = ( ( this: void, device: Device ) => ShaderBase );
 
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Class that contains the base class for all shaders.
+ * Base class for all shaders.
  * @abstract
  */
 ///////////////////////////////////////////////////////////////////////////////
@@ -34,15 +41,15 @@ export type IShaderFactory = ( ( this: void, device: GPUDevice ) => ShaderBase )
 export abstract class ShaderBase extends Base
 {
 	#code: string;
-	#module: GPUShaderModule;
+	#device: Device;
+	#module: ( GPUShaderModule | null ) = null;
 
 	/**
 	 * Construct the class.
 	 * @class
-	 * @param {GPUDevice} device The GPU device.
-	 * @param {string} code The shader code in WGSL format.
+	 * @param {IShaderBaseInput} input - The input for the constructor.
 	 */
-	protected constructor ( device: GPUDevice, code: string )
+	protected constructor ( { device, code }: IShaderBaseInput )
 	{
 		// Do this first.
 		super();
@@ -53,12 +60,9 @@ export abstract class ShaderBase extends Base
 			throw new Error ( `Shader code type is: ${typeof code}` );
 		}
 
-		// Save the code string.
+		// Save the members.
 		this.#code = code;
-
-		// Make the shader module.
-		const label = this.getClassName();
-		this.#module = device.createShaderModule ( { label, code } );
+		this.#device = device;
 	}
 
 	/**
@@ -76,6 +80,16 @@ export abstract class ShaderBase extends Base
 	 */
 	public get module() : GPUShaderModule
 	{
+		// The first time we have to make it.
+		if ( !this.#module )
+		{
+			const label = this.getClassName();
+			const code = this.code;
+			const device = this.#device.device;
+			this.#module = device.createShaderModule ( { label, code } );
+		}
+
+		// Return what we have.
 		return this.#module;
 	}
 }

@@ -13,8 +13,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Device } from "../Tools";
 import { IVector4 } from "../Types";
-import { Manager } from "./Manager";
+// import { Manager } from "./Manager";
 import { ShaderBase } from "./ShaderBase";
 import { vec4 } from "gl-matrix";
 
@@ -24,15 +25,28 @@ import code from "./SolidColor.wgsl?raw";
 
 ///////////////////////////////////////////////////////////////////////////////
 //
+//	Types used below.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export interface ISolidColorShaderInput
+{
+	device: Device;
+	color?: IVector4;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
 //	Importing this class should register it with the shader manager.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-const THIS_CLASS_NAME = "Shaders.SolidColor";
-Manager.instance.add ( THIS_CLASS_NAME, (	device: GPUDevice ) =>
-{
-	return SolidColor.factory ( device );
-} );
+export const SOLID_COLOR_SHADER_NAME = "Shaders.SolidColor";
+// Manager.instance.add ( SOLID_COLOR_SHADER_NAME, (	device: Device ) =>
+// {
+// 	return SolidColor.factory ( device );
+// } );
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -49,12 +63,16 @@ export class SolidColor extends ShaderBase
 	/**
 	 * Construct the class.
 	 * @class
-	 * @param {GPUDevice} device The GPU device.
-	 * @param {IVector4} [color] The color to use.
+	 * @param {ISolidColorShaderInput} input - The input for the constructor.
+	 * @param {Device} input.device - The GPU device wrapper.
+	 * @param {string} [input.code] - The shader code.
+	 * @param {IVector4} [input.color] - The color to use.
 	 */
-	protected constructor ( device: GPUDevice, color?: IVector4 )
+	public constructor ( input: ISolidColorShaderInput )
 	{
-		super ( device, ( code as string ) );
+		const { device, color } = input;
+
+		super ( { device, code: ( code as string ) } );
 
 		if ( color )
 		{
@@ -64,20 +82,21 @@ export class SolidColor extends ShaderBase
 
 	/**
 	 * Factory function for this shader.
-	 * @param {GPUDevice} device The GPU device.
+	 * @param {Device} device The GPU device.
 	 * @returns {SolidColor} The shader instance.
 	 */
-	public static factory ( this: void, device: GPUDevice ) : SolidColor
-	{
-		return new SolidColor ( device );
-	}
+	// public static factory ( this: void, device: Device ) : SolidColor
+	// {
+	// 	return new SolidColor ( { device } );
+	// }
+
 	/**
 	 * Return the class name.
 	 * @returns {string} The class name.
 	 */
 	public getClassName() : string
 	{
-		return THIS_CLASS_NAME;
+		return SOLID_COLOR_SHADER_NAME;
 	}
 
 	/**

@@ -13,12 +13,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { test as testConstants } from "./Constants";
+import { test as testDevice } from "./Device";
 import { test as testFunctions } from "./Functions";
-import { test as testWebGPU } from "./WebGPU";
 
 describe ( "Tools", function ()
 {
 	testConstants();
+	testDevice();
 	testFunctions();
-	testWebGPU();
 } );

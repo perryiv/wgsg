@@ -118,23 +118,22 @@ export const getModelMatrixData = ( mmm: IModelMatrixMap, modelMatrix: IMatrix44
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Get the state data associated with the given state name.
+ * Get the state data associated with the given state.
  * Make it if we have to.
  * @param {IStateMap} sm - The map of state data.
- * @param {string} name - The name of the state.
+ * @param {State} state - The state.
  * @returns {IStateData} The state data.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const getStateData = ( sm: IStateMap, name: string ) : IStateData =>
+export const getStateData = ( sm: IStateMap, state: State ) : IStateData =>
 {
+	const { name } = state;
 	let sd = sm.get ( name );
 	if ( !sd )
 	{
-		sd = {
-			state: new State(),
-			modelMatrices: new Map < IMatrixAsString, IModelMatrixData > ()
-		};
+		const modelMatrices = new Map < IMatrixAsString, IModelMatrixData > ();
+		sd = { state, modelMatrices };
 		sm.set ( name, sd );
 	}
 	return sd;

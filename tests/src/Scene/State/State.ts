@@ -13,7 +13,15 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { expect } from "chai";
-import { defaultApplyFunction, defaultResetFunction, IStateApplyFunction, IStateResetFunction, State } from "wgsg-lib";
+import {
+	defaultApplyFunction,
+	defaultResetFunction,
+	Device,
+	SolidColor,
+	State,
+	type IStateApplyFunction,
+	type IStateResetFunction,
+} from "wgsg-lib";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -26,6 +34,13 @@ export function test ()
 {
 	describe ( "State", function ()
 	{
+		let device: ( Device | null ) = null;
+
+		this.beforeAll ( async function ()
+		{
+			device = await Device.create();
+		} );
+
 		it ( "Should be able to make a state", function ()
 		{
 			const state = new State();
@@ -43,6 +58,12 @@ export function test ()
 			expect ( state.reset ).to.equal ( defaultResetFunction );
 		} );
 
+		it ( "State should have default shader", function ()
+		{
+			const state = new State();
+			expect ( state.shader ).to.be.null;
+		} );
+
 		it ( "Should be able to set the shader properties", function ()
 		{
 			const localApplyFunction: IStateApplyFunction = ( input ) =>
@@ -53,15 +74,20 @@ export function test ()
 			{
 				console.log ( "Custom reset function called." );
 			};
+
+			const shader = new SolidColor ( { device: device! } );
+
 			const state = new State();
 			state.name = "test_state";
-			state.shader = "test_shader";
+			state.shader = shader;
 			state.layer = 1;
 			state.renderBin = 2;
 			state.apply = localApplyFunction;
 			state.reset = localResetFunction;
+
 			expect ( state.name ).to.equal ( "test_state" );
-			expect ( state.shader ).to.equal ( "test_shader" );
+			expect ( state.shader ).to.equal ( shader );
+			expect ( state.shader.type ).to.equal ( "Shaders.SolidColor" );
 			expect ( state.layer ).to.equal ( 1 );
 			expect ( state.renderBin ).to.equal ( 2 );
 			expect ( state.apply ).to.equal ( localApplyFunction );
@@ -70,14 +96,16 @@ export function test ()
 
 		it ( "Should be able to construct with input", function ()
 		{
+			const shader = new SolidColor ( { device: device! } );
 			const state = new State ( {
 				name: "test_state",
-				shader: "test_shader",
+				shader,
 				layer: 1,
 				renderBin: 2
 			} );
 			expect ( state.name ).to.equal ( "test_state" );
-			expect ( state.shader ).to.equal ( "test_shader" );
+			expect ( shader.type ).to.equal ( "Shaders.SolidColor" );
+			expect ( state.shader ).to.equal ( shader );
 			expect ( state.layer ).to.equal ( 1 );
 			expect ( state.renderBin ).to.equal ( 2 );
 		} );

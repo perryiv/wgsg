@@ -16,8 +16,8 @@
 import { mat4 } from "gl-matrix";
 import { useEffect, useRef, useState } from "react";
 import {
+	Device,
 	Geometry,
-	getDeviceData,
 	Group,
 	IDENTITY_MATRIX,
 	Viewer as InternalViewer,
@@ -78,7 +78,7 @@ export interface IViewerProps
 export function Viewer ( { style }: IViewerProps )
 {
 	// Get state.
-	const [ , setDevice ] = useState < GPUDevice | null > ( null );
+	const [ , setDevice ] = useState < Device | null > ( null );
 	const canvas = useRef < HTMLCanvasElement | null > ( null );
 	const [ , setViewer ] = useState < InternalViewer | null > ( null );
 
@@ -96,7 +96,7 @@ export function Viewer ( { style }: IViewerProps )
 				throw new Error ( "Invalid canvas element" );
 			}
 
-			const { device } = await getDeviceData();
+			const device = await Device.create();
 
 			if ( !device )
 			{
@@ -105,10 +105,13 @@ export function Viewer ( { style }: IViewerProps )
 
 			setDevice ( device );
 
-			void device.lost.then ( ( { reason }: GPUDeviceLostInfo ) =>
 			{
-				console.log ( "Context lost because: ", reason );
-			} );
+				const gd: GPUDevice = device.device;
+				void gd.lost.then ( ( { reason }: GPUDeviceLostInfo ) =>
+				{
+					console.log ( "Context lost because: ", reason );
+				} );
+			}
 
 			const viewer = new InternalViewer ( { device, canvas: canvas.current } );
 			viewer.scene = root;

@@ -16,6 +16,7 @@ import { expect } from "chai";
 import {
 	Cull as CullVisitor,
 	Multiply,
+	State,
 	Visitor,
 } from "wgsg-lib";
 
@@ -32,7 +33,7 @@ export function test ()
 	{
 		it ( "Should be able to make a cull visitor", function ()
 		{
-			const a = new CullVisitor();
+			const a = new CullVisitor ( { defaultState: new State() } );
 			expect ( a instanceof Visitor ).to.be.true;
 			expect ( a instanceof Multiply ).to.be.true;
 			expect ( a.type ).to.be.equal ( "Visitors.Cull" );

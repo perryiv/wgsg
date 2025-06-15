@@ -15,7 +15,7 @@
 import { test as testSurface } from "./Surface";
 import { test as testViewer } from "./Viewer";
 
-describe ( "Render", function ()
+describe ( "Viewers", function ()
 {
 	testSurface();
 	testViewer();

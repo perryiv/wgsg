@@ -14,9 +14,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base } from "../Base/Base";
-import { getRenderingContext } from "../Tools/WebGPU";
+import { Device } from "../Tools";
 import { Node, State } from "../Scene";
 import { Perspective, ProjectionBase as Projection } from "../Projections";
+import { SolidColor } from "../Shaders";
 import type { ISize, IViewport } from "../Types/Math";
 import type {
 	ILayer,
@@ -38,7 +39,7 @@ export interface ISurfaceConstructor
 {
 	// These two are needed.
 	canvas: HTMLCanvasElement;
-	device: GPUDevice;
+	device: Device;
 
 	// The user can configure this if desired.
 	context?: ( GPUCanvasContext | null );
@@ -74,16 +75,13 @@ export class Surface extends Base
 {
 	#canvas: HTMLCanvasElement;
 	#context: GPUCanvasContext;
-	#device: GPUDevice;
+	#device: Device;
 	#viewport: IViewport = { x: 0, y: 0, width: 0, height: 0 };
 	#scene: ( Node | null ) = null;
 	#projection: Projection = new Perspective();
 	#handles: ITimeoutHandles = { render: 0 };
 	#frame: IFrameInfo = { count: 0, start: 0 };
-	#visitors: IVisitors = {
-		cull: new CullVisitor(),
-		draw: new DrawVisitor(),
-	};
+	#visitors: ( IVisitors | null ) = null;
 	#layers: ILayerMap = new Map < number, ILayer > ();
 	#defaultState: State = new State();
 
@@ -110,10 +108,9 @@ export class Surface extends Base
 		}
 
 		// This one is optional. Make it if we have to.
-		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 		if ( !context )
 		{
-			context = getRenderingContext ( { device, canvas } );
+			context = device.getContext ( canvas );
 		}
 
 		// This should be valid when we get to here.
@@ -121,6 +118,19 @@ export class Surface extends Base
 		{
 			throw new Error ( "Failed to get rendering context for canvas when constructing a surface" );
 		}
+
+		// Now we can make the visitors.
+		this.#visitors = {
+			cull: new CullVisitor ( {
+				layers: this.#layers,
+				defaultState: this.#defaultState
+			} ),
+			draw: new DrawVisitor ( { device } )
+		};
+
+		// Set the default state's properties.
+		this.#defaultState.name = `Default state for ${this.getClassName()} ${this.id}`;
+		this.#defaultState.shader = new SolidColor ( { device } );
 
 		// Observe changes to the canvas size.
 		// https://webgpufundamentals.org/webgpu/lessons/webgpu-fundamentals.html#a-resizing
@@ -216,6 +226,100 @@ export class Surface extends Base
 	}
 
 	/**
+	 * Get the cull visitor.
+	 * @returns {CullVisitor} The cull visitor.
+	 */
+	public get cullVisitor () : CullVisitor
+	{
+		// Shortcut.
+		const cv = this.#visitors?.cull;
+
+		// Make sure the cull visitor is valid.
+		if ( !cv )
+		{
+			throw new Error ( "Accessing invalid cull visitor in surface class" );
+		}
+
+		// Return the cull visitor.
+		return cv;
+	}
+
+	/**
+	 * Set the cull visitor.
+	 * @param {CullVisitor} cv - The cull visitor.
+	 */
+	public set cullVisitor ( cv: CullVisitor )
+	{
+		// By the time we get to here this should be valid.
+		if ( !this.#visitors )
+		{
+			throw new Error ( "Invalid visitors in surface class" );
+		}
+
+		// Make sure the visitor is valid.
+		if ( !cv )
+		{
+			throw new Error ( "Invalid cull visitor in surface class" );
+		}
+
+		// Make sure the visitor is a CullVisitor.
+		if ( !( cv instanceof CullVisitor ) )
+		{
+			throw new Error ( "Trying to set surface cull visitor with object of wrong type" );
+		}
+
+		// Set our member.
+		this.#visitors.cull = cv;
+	}
+
+	/**
+	 * Get the draw visitor.
+	 * @returns {DrawVisitor} The draw visitor.
+	 */
+	public get drawVisitor () : DrawVisitor
+	{
+		// Shortcut.
+		const dv = this.#visitors?.draw;
+
+		// Make sure the draw visitor is valid.
+		if ( !dv )
+		{
+			throw new Error ( "Accessing invalid draw visitor in surface class" );
+		}
+
+		// Return the draw visitor.
+		return dv;
+	}
+
+	/**
+	 * Set the draw visitor.
+	 * @param {DrawVisitor} dv - The draw visitor.
+	 */
+	public set drawVisitor ( dv: DrawVisitor )
+	{
+		// By the time we get to here this should be valid.
+		if ( !this.#visitors )
+		{
+			throw new Error ( "Invalid visitors in surface class" );
+		}
+
+		// Make sure the visitor is valid.
+		if ( !dv )
+		{
+			throw new Error ( "Invalid draw visitor in surface class" );
+		}
+
+		// Make sure the visitor is a DrawVisitor.
+		if ( !( dv instanceof DrawVisitor ) )
+		{
+			throw new Error ( "Trying to set surface draw visitor with object of wrong type" );
+		}
+
+		// Set our member.
+		this.#visitors.draw = dv;
+	}
+
+	/**
 	 * Get the projection.
 	 * @returns {Projection} The projection object.
 	 */
@@ -245,9 +349,9 @@ export class Surface extends Base
 
 	/**
 	 * Get the device.
-	 * @returns {GPUDevice} The GPU device.
+	 * @returns {Device} The GPU device wrapper.
 	 */
-	public get device () : GPUDevice
+	public get device () : Device
 	{
 		// Get a shortcut to the device.
 		const device = this.#device;
@@ -424,12 +528,13 @@ export class Surface extends Base
 		}
 
 		// Shortcuts.
-		const cv = this.#visitors.cull;
+		const cv = this.cullVisitor;
 
 		// Make sure the visitor has our layers and default state.
 		// Note: It probably already does.
 		cv.layers = this.#layers;
 		cv.defaultState = this.defaultState;
+		cv.projMatrix = [ ...this.#projection.matrix ];
 
 		// Tell the visitor that it should return to its initial state.
 		// This will clear the layers.
@@ -457,7 +562,7 @@ export class Surface extends Base
 		}
 
 		// Shortcuts.
-		const dv = this.#visitors.draw;
+		const dv = this.drawVisitor;
 
 		// Tell the visitor that it should return to its initial state.
 		dv.reset();

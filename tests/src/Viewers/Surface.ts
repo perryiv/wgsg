@@ -14,9 +14,8 @@
 
 import { expect } from "chai";
 import {
-	getDeviceData,
+	Device,
 	getNextId,
-	getRenderingContext,
 	Surface,
 } from "wgsg-lib";
 
@@ -31,18 +30,27 @@ export function test ()
 {
 	describe ( "Surface", function ()
 	{
+		let device: ( Device | null ) = null;
+
+		this.beforeAll ( async function ()
+		{
+			device = await Device.create();
+		} );
+
 		it ( "Should not be able to make a surface with zero arguments", function ()
 		{
 			// @ts-expect-error Surface does not have a default constructor.
 			expect ( () => { new Surface() } ).to.throw();
 		} );
 
-		it ( "Should be able to make a surface with canvas and device", async function ()
+		it ( "Should be able to make a surface with canvas and device", function ()
 		{
+			expect ( device ).to.exist;
+			expect ( device instanceof Device ).to.be.true;
+
 			const id = getNextId();
 			const canvas = document.createElement ( "canvas" );
-			const { device } = await getDeviceData();
-			const surface = new Surface ( { canvas, device } );
+			const surface = new Surface ( { canvas, device: device! } );
 
 			expect ( surface ).to.exist;
 			expect ( surface instanceof Surface ).to.be.true;
@@ -60,16 +68,15 @@ export function test ()
 			expect ( surface.context ).to.equal ( canvas.getContext ( "webgpu" ) );
 
 			expect ( surface.device ).to.exist;
-			expect ( surface.device instanceof GPUDevice ).to.be.true;
+			expect ( surface.device instanceof Device ).to.be.true;
 			expect ( surface.device ).to.equal ( device );
 		} );
 
-		it ( "Should be able to make a surface with canvas, device, and context", async function ()
+		it ( "Should be able to make a surface with canvas, device, and context", function ()
 		{
 			const canvas = document.createElement ( "canvas" );
-			const { device } = await getDeviceData();
-			const context = getRenderingContext ( { device, canvas } );
-			const surface = new Surface ( { canvas, device, context } );
+			const context = device!.getContext ( canvas );
+			const surface = new Surface ( { canvas, device: device!, context } );
 
 			expect ( surface ).to.exist;
 			expect ( surface instanceof Surface ).to.be.true;
@@ -83,7 +90,7 @@ export function test ()
 			expect ( surface.context ).to.equal ( context );
 
 			expect ( surface.device ).to.exist;
-			expect ( surface.device instanceof GPUDevice ).to.be.true;
+			expect ( surface.device instanceof Device ).to.be.true;
 			expect ( surface.device ).to.equal ( device );
 		} );
 	} );

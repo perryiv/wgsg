@@ -13,11 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { expect } from "chai";
-import {
-	getDeviceData,
-	getRenderingContext,
-	IDeviceData,
-} from "wgsg-lib";
+import { Device } from "wgsg-lib";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -28,31 +24,36 @@ import {
 
 export function test ()
 {
-	describe ( "WebGPU", function ()
+	describe ( "Device", function ()
 	{
 		it ( "Make sure WebGPU is supported", function ()
 		{
-			expect ( navigator ).to.exist;
+			expect ( Device.supported ).to.be.true;
 			expect ( navigator instanceof Navigator ).to.be.true;
 			const { gpu } = navigator;
 			expect ( gpu ).to.exist;
 			expect ( gpu instanceof GPU ).to.be.true;
 		} );
 
-		it ( "Use the getDeviceData function", async function ()
+		it ( "Can make a device and use it", async function ()
 		{
-			const { device }: IDeviceData = await getDeviceData();
-			expect ( device ).to.exist;
-			expect ( device instanceof GPUDevice ).to.be.true;
-		} );
+			const device = await Device.create();
 
-		it ( "Use the getRenderingContext function", async function ()
-		{
+			expect ( device ).to.exist;
+			expect ( "Tools.Device" === device.type ).to.be.true;
+
+			expect ( device instanceof Device ).to.be.true;
+			expect ( device.device instanceof GPUDevice ).to.be.true;
+
+			const preferredFormat = device.preferredFormat
+			expect ( preferredFormat ).to.exist;
+			expect ( device.preferredFormat ).to.be.equal ( preferredFormat );
+
 			const canvas = document.createElement ( "canvas" );
 			expect ( canvas ).to.exist;
 			expect ( canvas instanceof HTMLCanvasElement ).to.be.true;
-			const { device } = await getDeviceData();
-			const context = getRenderingContext ( { device, canvas } );
+
+			const context = device.getContext ( canvas );
 			expect ( context ).to.exist;
 			expect ( context instanceof GPUCanvasContext ).to.be.true;
 		} );

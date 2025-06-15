@@ -28,8 +28,8 @@ export function test ()
 	{
 		it ( "Should be able to get the shader manager", function ()
 		{
-			expect ( Manager.instance ).to.exist;
-			expect ( Manager.instance instanceof Manager ).to.be.true;
+			expect ( Manager.instance123 ).to.exist;
+			expect ( Manager.instance123 instanceof Manager ).to.be.true;
 		} );
 	} );
 };
