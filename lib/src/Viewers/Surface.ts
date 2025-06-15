@@ -164,7 +164,7 @@ export class Surface extends Base
 	/**
 	 * Default state apply function.
 	 * @param {IStateApplyInput} input - The input object.
-	 * @return {void}
+	 * @returns {void}
 	 */
 	protected defaultApplyFunction ( { state }: IStateApplyInput ) : void
 	{
@@ -173,7 +173,7 @@ export class Surface extends Base
 
 	/**
 	 * Default state reset function.
-	 * @return {void}
+	 * @returns {void}
 	 */
 	protected defaultResetFunction () : void
 	{
