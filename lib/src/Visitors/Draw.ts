@@ -184,7 +184,7 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 	 * Get the clear color.
 	 * @returns {IVector4} The clear color.
 	 */
-	protected get clearColor () : IVector4
+	public get clearColor () : IVector4
 	{
 		return [ ...this.#clearColor ];
 	}
@@ -193,7 +193,7 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 	 * Set the clear color.
 	 * @param {IVector4} color - The clear color to use.
 	 */
-	protected set clearColor ( color: IVector4 )
+	public set clearColor ( color: IVector4 )
 	{
 		if ( 4 !== color.length )
 		{
@@ -211,13 +211,24 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 		// Make a command encoder.
 		const encoder = this.device.makeEncoder ( "draw_visitor_command_encoder" );
 
+		// Make the background color. We have to pre-multiply by the alpha value.
+		const color: IVector4 = [ 0, 0, 0, 0 ];
+		{
+			const c = this.clearColor;
+			const a = c[3];
+			color[0] = c[0] * a; // Red
+			color[1] = c[1] * a; // Green
+			color[2] = c[2] * a; // Blue
+			color[3] = a;        // Alpha
+		}
+
 		// Make the render pass descriptor.
 		const renderPassDescriptor: GPURenderPassDescriptor = {
-			label: "Draw visitor default render pass descriptor",
+			label: "draw_visitor_default_render_pass_descriptor",
 			colorAttachments: [
 			{
 				view: this.context.getCurrentTexture().createView(),
-				clearValue: [ 0.0, 0.0, 0.0, 0.0 ],
+				clearValue: color,
 				loadOp: "clear",
 				storeOp: "store"
 			} ]
@@ -225,7 +236,7 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 
 		// Make and configure a render pass.
 		const pass = encoder.beginRenderPass ( renderPassDescriptor );
-		pass.label = "Draw visitor render pass";
+		pass.label = "draw_visitor_render_pass";
 
 		// Iterate over the layers in the map in numerical order using the key.
 		const keys: number[] = Array.from ( layers.keys() );

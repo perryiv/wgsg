@@ -152,7 +152,11 @@ export class Device extends Base
 		}
 
 		// Configure the context.
-		context.configure ( { device: this.device, format: this.preferredFormat } );
+		context.configure ( {
+			device: this.device,
+			format: this.preferredFormat,
+			alphaMode: "premultiplied",
+		} );
 
 		// Return the context.
 		return context;

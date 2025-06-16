@@ -14,7 +14,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base } from "../Base/Base";
-import { Device } from "../Tools";
+import { clamp, Device } from "../Tools";
 import { IVector3, IVector4 } from "../Types";
 import { Perspective, ProjectionBase as Projection } from "../Projections";
 import { SolidColor } from "../Shaders";
@@ -130,13 +130,15 @@ export class Surface extends Base
 		const state = this.#defaultState;
 
 		// Now we can make the visitors.
-		this.#visitors = {
-			cull: new CullVisitor ( {
-				layers: this.#layers,
-				defaultState: state
-			} ),
-			draw: new DrawVisitor ( { context, device } )
-		};
+		const cull = new CullVisitor ( {
+			layers: this.#layers,
+			defaultState: state,
+		} );
+		const draw = new DrawVisitor ( {
+			context,
+			device
+		} );
+		this.#visitors = { cull, draw };
 
 		// Set the default state's properties.
 		state.name = `Default state for ${this.getClassName()} ${this.id}`;
@@ -225,7 +227,7 @@ export class Surface extends Base
 	 * Get the clear color.
 	 * @returns {IVector4} The clear color.
 	 */
-	protected get clearColor () : IVector4
+	public get clearColor () : IVector4
 	{
 		return [ ...this.#clearColor ];
 	}
@@ -234,18 +236,27 @@ export class Surface extends Base
 	 * Set the clear color.
 	 * @param {IVector4} color - The clear color to use.
 	 */
-	protected set clearColor ( color: ( IVector3 | IVector4 ) )
+	public set clearColor ( color: ( IVector3 | IVector4 ) )
 	{
+		// If there is no alpha then add one.
 		if ( 3 === color.length )
 		{
 			color = [ ...color, 1.0 ]; // Add an alpha.
 		}
 
+		// When we get to here this should be true.
 		if ( 4 !== color.length )
 		{
 			throw new Error ( `Invalid color array length: ${( color as [] ).length}, expected 3 or 4` );
 		}
 
+		// Make a copy because we may change it below.
+		color = [ ...color ];
+
+		// Clamp the color values to [0, 1].
+		clamp ( color, 0.0, 1.0 );
+
+		// Now copy the values to our member.
 		vec4.copy ( this.#clearColor, color );
 	}
 
@@ -628,6 +639,9 @@ export class Surface extends Base
 
 		// Shortcuts.
 		const dv = this.drawVisitor;
+
+		// Set the visitor's properties.
+		dv.clearColor = this.clearColor;
 
 		// Tell the visitor that it should return to its initial state.
 		dv.reset();
