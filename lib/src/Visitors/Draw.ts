@@ -20,7 +20,6 @@ import { Device, makeIdentity } from "../Tools";
 import type {
 	ILayer,
 	ILayerMap,
-	IMatrixAsString,
 	IModelMatrixData,
 	IModelMatrixMap,
 	IProjMatrixData,
@@ -57,7 +56,6 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 	#state: ( State | null ) = null;
 	#projMatrix:	IMatrix44 = makeIdentity(); // Has to be a copy.
 	#modelMatrix: IMatrix44 = makeIdentity(); // Has to be a copy.
-	#pipeline: ( GPURenderPipeline | null ) = null;
 	#clearColor: IVector4 = [ 0.5, 0.5, 0.5, 1.0 ]; // Grey.
 
 	/**
@@ -167,8 +165,18 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 	 */
 	protected get pipeline () : GPURenderPipeline
 	{
-		// Shortcut.
-		const pipeline = this.#pipeline;
+		// Shortcuts.
+		const state = this.state;
+		const shader = state.shader;
+
+		// We need a valid shader to proceed.
+		if ( !shader )
+		{
+			throw new Error ( `Shader is not defined in state '${state.name}' when getting pipeline in draw visitor` );
+		}
+
+		// Get the pipeline from the shader.
+		const pipeline = shader.pipeline;
 
 		// We should always have a valid pipeline.
 		if ( !pipeline )
@@ -285,7 +293,7 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 	 * Visit the projection matrices.
 	 * @param {IProjMatrixMap} projMatrices - The projection matrices to visit.
 	 */
-	public visitProjMatrices ( projMatrices: Map < string, IProjMatrixData > ) : void
+	public visitProjMatrices ( projMatrices: IProjMatrixMap ) : void
 	{
 		// Iterate over the projection matrices in the map.
 		projMatrices.forEach ( ( projMatrixData: IProjMatrixData ) =>
@@ -322,45 +330,6 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 	}
 
 	/**
-	 * Set the pipeline based on the current state.
-	 */
-	private setPipeline() : void
-	{
-		// Shortcuts.
-		const device = this.device;
-		const state = this.state;
-		const shader = state.shader;
-		const sm = shader?.module;
-
-		// Make sure we have a shader module.
-		if ( !sm )
-		{
-			throw new Error ( `Shader module is not defined in state '${state.name}'` );
-		}
-
-		// Make the new pipeline.
-		const pipeline = device.makePipeline ( {
-			label: `Pipeline for state ${state.name}`,
-			module: sm
-		} );
-
-		// Set our member.
-		this.#pipeline = pipeline;
-
-		// Shortcut.
-		// const pass = this.#renderPassEncoder;
-
-		// Make sure we have a render pass encoder.
-		// if ( !pass )
-		// {
-		// 	throw new Error ( `Render pass encoder is not defined when setting the pipeline in state '${state.name}'` );
-		// }
-
-		// Set the pipeline on the render pass encoder.
-		// pass.setPipeline ( pipeline );
-	}
-
-	/**
 	 * Visit the state.
 	 * @param {IStateData} sd - The state-data to visit.
 	 */
@@ -368,9 +337,6 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 	{
 		// Set the current state.
 		this.#state = state;
-
-		// Set the pipeline.
-		this.setPipeline();
 
 		// Visit the model matrices.
 		this.visitModelMatrices ( modelMatrices );
@@ -380,7 +346,7 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 	 * Visit the states.
 	 * @param {IStateMap} states - The states to visit.
 	 */
-	public visitStates ( states: Map < string, IStateData > ) : void
+	public visitStates ( states: IStateMap ) : void
 	{
 		// Iterate over the states in the map.
 		states.forEach ( ( sd: IStateData ) =>
@@ -393,7 +359,7 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 	 * Visit the model matrices.
 	 * @param {IModelMatrixMap} modelMatrices - The model matrices to visit.
 	 */
-	public visitModelMatrices ( modelMatrices: Map < IMatrixAsString, IModelMatrixData > ) : void
+	public visitModelMatrices ( modelMatrices: IModelMatrixMap ) : void
 	{
 		// Iterate over the model matrices in the map.
 		modelMatrices.forEach ( ( modelMatrixData: IModelMatrixData ) =>

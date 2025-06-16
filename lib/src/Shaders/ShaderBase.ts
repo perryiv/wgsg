@@ -43,6 +43,7 @@ export abstract class ShaderBase extends Base
 	#code: string;
 	#device: Device;
 	#module: ( GPUShaderModule | null ) = null;
+	#pipeline: ( GPURenderPipeline | null ) = null;
 
 	/**
 	 * Construct the class.
@@ -66,16 +67,53 @@ export abstract class ShaderBase extends Base
 	}
 
 	/**
-	 * Return the shader code.
+	 * Get the shader code.
 	 * @returns {string} The shader code.
 	 */
 	public get code() : string
 	{
+		// Shortcut.
+		const code = this.#code;
+
+		// Make sure.
+		if ( !code )
+		{
+			throw new Error ( "Shader code is not set" );
+		}
+		if ( "string" !== ( typeof code ) )
+		{
+			throw new Error ( `Shader code type is: ${typeof code}` );
+		}
+		if ( code.length < 1 )
+		{
+			throw new Error ( "Shader code is empty" );
+		}
+
+		// Return the code.
 		return this.#code;
 	}
 
 	/**
-	 * Return the shader module.
+	 * Get the device.
+	 * @returns {Device} The GPU device wrapper.
+	 */
+	protected get device () : Device
+	{
+		// Shortcut.
+		const device = this.#device;
+
+		// We should always have a valid device.
+		if ( !device )
+		{
+			throw new Error ( "Attempting to get invalid device in shader base" );
+		}
+
+		// Return the device.
+		return device;
+	}
+
+	/**
+	 * Get the shader module.
 	 * @returns {GPUShaderModule} The shader module.
 	 */
 	public get module() : GPUShaderModule
@@ -83,13 +121,32 @@ export abstract class ShaderBase extends Base
 		// The first time we have to make it.
 		if ( !this.#module )
 		{
-			const label = this.getClassName();
+			const label = this.type;
 			const code = this.code;
-			const device = this.#device.device;
-			this.#module = device.createShaderModule ( { label, code } );
+			const device = this.#device;
+			this.#module = device.makeShader ( { label, code } );
 		}
 
 		// Return what we have.
 		return this.#module;
+	}
+
+	/**
+	 * Get the pipeline.
+	 * @returns {GPURenderPipeline} The render pipeline.
+	 */
+	public get pipeline() : GPURenderPipeline
+	{
+		// The first time we have to make it.
+		if ( !this.#pipeline )
+		{
+			const device = this.device;
+			const label = `Pipeline for shader ${this.type}`;
+			const module = this.module;
+			this.#pipeline = device.makePipeline ( { label, module } );
+		}
+
+		// Return what we have.
+		return this.#pipeline;
 	}
 }
