@@ -219,7 +219,10 @@ export function test ()
 			}
 			expect ( device instanceof Device ).to.be.true;
 
-			const dv = new DrawVisitor ( { device } );
+			const canvas = document.createElement ( "canvas" );
+			const context = device.getContext ( canvas );
+
+			const dv = new DrawVisitor ( { context, device } );
 			dv.visitLayers ( layers );
 		} );
 	} );
