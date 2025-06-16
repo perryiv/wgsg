@@ -13,8 +13,17 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IMatrix44 } from "../Types";
+import { IMatrix44, IVector2, IVector3, IVector4 } from "../Types";
 import { IDENTITY_MATRIX } from "./Constants";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Types used below.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export type IClampInputType = number | IVector2 | IVector3 | IVector4;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -27,3 +36,92 @@ export const makeIdentity = () : IMatrix44 =>
 {
 	return [ ...IDENTITY_MATRIX ];
 };
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Return the number clamped to the given range.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+const getClampedNumber = ( n: Readonly < number >, mn: Readonly < number >, mx: Readonly < number > ) : number =>
+{
+	return Math.max ( mn, Math.min ( mx, n ) );
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Clamp the vector to the given range.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+const clampVec2 = ( v: IVector2, mn: Readonly < number >, mx: Readonly < number > ) : void =>
+{
+	v[0] = getClampedNumber ( v[0], mn, mx );
+	v[1] = getClampedNumber ( v[1], mn, mx );
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Clamp the vector to the given range.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+const clampVec3 = ( v: IVector3, mn: Readonly < number >, mx: Readonly < number > ) : void =>
+{
+	v[0] = getClampedNumber ( v[0], mn, mx );
+	v[1] = getClampedNumber ( v[1], mn, mx );
+	v[2] = getClampedNumber ( v[2], mn, mx );
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Clamp the vector to the given range.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+const clampVec4 = ( v: IVector4, mn: Readonly < number >, mx: Readonly < number > ) : void =>
+{
+	v[0] = getClampedNumber ( v[0], mn, mx );
+	v[1] = getClampedNumber ( v[1], mn, mx );
+	v[2] = getClampedNumber ( v[2], mn, mx );
+	v[3] = getClampedNumber ( v[3], mn, mx );
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Clamp the number or vector to the given range.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export const clamp = ( v: IClampInputType, mn: Readonly < number >, mx: Readonly < number > ) : IClampInputType =>
+{
+	if ( typeof v === "number" )
+	{
+		return getClampedNumber ( v, mn, mx );
+	}
+
+	else if ( 2 === v.length )
+	{
+		clampVec2 ( v, mn, mx );
+		return v;
+	}
+
+	else if ( 3 === v.length )
+	{
+		clampVec3 ( v, mn, mx );
+		return v;
+	}
+
+	else if ( 4 === v.length )
+	{
+		clampVec4 ( v, mn, mx );
+		return v;
+	}
+
+	throw new Error ( "Invalid input type for clamp function" );
+}
