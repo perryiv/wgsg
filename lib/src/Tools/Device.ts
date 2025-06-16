@@ -188,6 +188,27 @@ export class Device extends Base
 	}
 
 	/**
+	 * Make the shader module.
+	 * @param {GPUShaderModuleDescriptor} descriptor - The descriptor for the shader module.
+	 * @returns {GPUShaderModule} The shader module.
+	 */
+	public makeShader ( descriptor: GPUShaderModuleDescriptor ) : GPUShaderModule
+	{
+		// Make sure the code is a string. We do this because it could have been
+		// imported with vite or webpack, and that has to happen correctly.
+		{
+			const { code } = descriptor;
+			if ( "string" !== ( typeof code ) )
+			{
+				throw new Error ( `Shader code type is: ${typeof code}` );
+			}
+		}
+
+		// Create the shader module.
+		return this.device.createShaderModule ( descriptor );
+	}
+
+	/**
 	 * Return a new render pipeline.
 	 * @param {IPipelineInput} [input] - The input for the pipeline.
 	 * @returns {GPURenderPipeline} The new render pipeline.
