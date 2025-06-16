@@ -49,7 +49,7 @@ export function App()
 			style = { {
 				height: "100vh",
 				overflow: "hidden",
-				background: "#223344",
+				background: "linear-gradient(#DDEEFF,#778899)"
 			} }
 		>
 			<Viewer
