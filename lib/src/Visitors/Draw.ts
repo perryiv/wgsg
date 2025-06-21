@@ -57,6 +57,8 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 	#projMatrix:	IMatrix44 = makeIdentity(); // Has to be a copy.
 	#modelMatrix: IMatrix44 = makeIdentity(); // Has to be a copy.
 	#clearColor: IVector4 = [ 0.5, 0.5, 0.5, 1.0 ]; // Grey.
+	#encoder: ( GPUCommandEncoder | null ) = null;
+	#pass: ( GPURenderPassEncoder | null ) = null;
 
 	/**
 	 * Construct the class.
@@ -119,6 +121,15 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 
 		// Return the state.
 		return state;
+	}
+
+	/**
+	 * Set the current state.
+	 * @param {State | null} state - The state to set, or null to reset.
+	 */
+	protected set state ( state: ( State | null ) )
+	{
+		this.#state = state;
 	}
 
 	/**
@@ -189,6 +200,62 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 	}
 
 	/**
+	 * Get the render command encoder.
+	 * @returns {GPURenderCommandEncoder} The render command encoder.
+	 */
+	protected get encoder () : GPUCommandEncoder
+	{
+		// Shortcut.
+		const encoder = this.#encoder;
+
+		// We should always have a valid encoder.
+		if ( !encoder )
+		{
+			throw new Error ( "Attempting to get invalid encoder in draw visitor" );
+		}
+
+		// Return the encoder.
+		return encoder;
+	}
+
+	/**
+	 * Set the render command encoder.
+	 * @param {GPURenderCommandEncoder} encoder - The render command encoder to use.
+	 */
+	protected set encoder ( encoder: ( GPUCommandEncoder | null ) )
+	{
+		this.#encoder = encoder;
+	}
+
+	/**
+	 * Get the render pass.
+	 * @returns {GPURenderPassEncoder} The render pass.
+	 */
+	protected get pass () : GPURenderPassEncoder
+	{
+		// Shortcut.
+		const pass = this.#pass;
+
+		// We should always have a valid pass.
+		if ( !pass )
+		{
+			throw new Error ( "Attempting to get invalid render pass in draw visitor" );
+		}
+
+		// Return the pass.
+		return pass;
+	}
+
+	/**
+	 * Set the render pass.
+	 * @param {GPURenderPassEncoder | null} pass - The render pass, or null to reset.
+	 */
+	protected set pass ( pass: ( GPURenderPassEncoder | null ) )
+	{
+		this.#pass = pass;
+	}
+
+	/**
 	 * Get the clear color.
 	 * @returns {IVector4} The clear color.
 	 */
@@ -211,14 +278,11 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 	}
 
 	/**
-	 * Visit the layers.
-	 * @param {ILayerMap} layers - The layers to visit.
+	 * Get the pre-multiplied clear color.
+	 * @returns {IVector4} The pre-multiplied clear color.
 	 */
-	public visitLayers ( layers: ILayerMap ) : void
+	public get preMultipliedClearColor () : IVector4
 	{
-		// Make a command encoder.
-		const encoder = this.device.makeEncoder ( "draw_visitor_command_encoder" );
-
 		// Make the background color. We have to pre-multiply by the alpha value.
 		const color: IVector4 = [ 0, 0, 0, 0 ];
 		{
@@ -230,21 +294,29 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 			color[3] = a;        // Alpha
 		}
 
-		// Make the render pass descriptor.
-		const renderPassDescriptor: GPURenderPassDescriptor = {
-			label: "draw_visitor_default_render_pass_descriptor",
-			colorAttachments: [
-			{
-				view: this.context.getCurrentTexture().createView(),
-				clearValue: color,
-				loadOp: "clear",
-				storeOp: "store"
-			} ]
-		};
+		// Return the pre-multiplied color.
+		return color;
+	}
 
-		// Make and configure a render pass.
-		const pass = encoder.beginRenderPass ( renderPassDescriptor );
-		pass.label = "draw_visitor_render_pass";
+	/**
+	 * Visit the layers.
+	 * @param {ILayerMap} layers - The layers to visit.
+	 */
+	public visitLayers ( layers: ILayerMap ) : void
+	{
+		// Make a command encoder.
+		this.encoder = this.device.makeEncoder ( "draw_visitor_command_encoder" );
+
+		// Make the background color. We have to pre-multiply by the alpha value.
+		const color: IVector4 = [ 0, 0, 0, 0 ];
+		{
+			const c = this.clearColor;
+			const a = c[3];
+			color[0] = c[0] * a; // Red
+			color[1] = c[1] * a; // Green
+			color[2] = c[2] * a; // Blue
+			color[3] = a;        // Alpha
+		}
 
 		// Iterate over the layers in the map in numerical order using the key.
 		const keys: number[] = Array.from ( layers.keys() );
@@ -264,16 +336,11 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 			this.visitLayer ( layer );
 		}
 
-		pass.setPipeline ( this.pipeline );
-
-		// Example: Draw a triangle (3 vertices).
-		pass.draw ( 3 );
-
-		// End the render pass.
-		pass.end();
-
 		// Submit the commands to the GPU.
-		this.device.queue.submit ( [ encoder.finish() ] );
+		this.device.queue.submit ( [ this.encoder.finish() ] );
+
+		// Reset the encoder.
+		this.encoder = null;
 	}
 
 	/**
@@ -330,19 +397,6 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 	}
 
 	/**
-	 * Visit the state.
-	 * @param {IStateData} sd - The state-data to visit.
-	 */
-	public visitState ( { state, modelMatrices }: IStateData ) : void
-	{
-		// Set the current state.
-		this.#state = state;
-
-		// Visit the model matrices.
-		this.visitModelMatrices ( modelMatrices );
-	}
-
-	/**
 	 * Visit the states.
 	 * @param {IStateMap} states - The states to visit.
 	 */
@@ -353,6 +407,46 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 		{
 			this.visitState ( sd );
 		} );
+	}
+
+	/**
+	 * Visit the state.
+	 * @param {IStateData} sd - The state-data to visit.
+	 */
+	public visitState ( { state, modelMatrices }: IStateData ) : void
+	{
+		// Set the current state.
+		this.state = state;
+
+		// Make the render pass descriptor.
+		const renderPassDescriptor: GPURenderPassDescriptor = {
+			label: "draw_visitor_default_render_pass_descriptor",
+			colorAttachments: [
+			{
+				view: this.context.getCurrentTexture().createView(),
+				clearValue: this.preMultipliedClearColor,
+				loadOp: "clear",
+				storeOp: "store"
+			} ]
+		};
+
+		// Make and configure a render pass.
+		const pass = this.encoder.beginRenderPass ( renderPassDescriptor );
+		pass.label = `draw_visitor_render_pass_for_state_${state.name}`;
+		pass.setPipeline ( this.pipeline );
+
+		// This is important.
+		this.pass = pass;
+
+		// Visit the model matrices.
+		this.visitModelMatrices ( modelMatrices );
+
+		// End the render pass.
+		pass.end();
+
+		// Reset these.
+		this.pass = null;
+		this.state = null;
 	}
 
 	/**
@@ -379,7 +473,7 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 		const { modelMatrix, shapes } = modelMatrixData;
 
 		// Shortcut.
-		const state = this.#state;
+		const state = this.state;
 
 		// We should always have a valid state.
 		if ( !state )
@@ -426,6 +520,9 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 	public drawShape ( shape: Shape ) : void
 	{
 		console.log ( `Drawing ${shape.type} ${shape.id}` );
+
+		// Example: Draw a triangle (3 vertices).
+		this.pass.draw ( 3 );
 	}
 
 	/**
