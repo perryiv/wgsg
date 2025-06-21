@@ -226,9 +226,10 @@ export class Device extends Base
 			const target = { format: this.preferredFormat };
 			descriptor = {
 				label,
-				layout: "auto",
 				vertex: { module },
-				fragment: { module, targets: [ target ] }
+				fragment: { module, targets: [ target ] },
+				primitive: { topology: "triangle-list" },
+				layout: "auto",
 			};
 		}
 
