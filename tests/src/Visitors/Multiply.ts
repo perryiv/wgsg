@@ -43,7 +43,7 @@ class MyMultiplyVisitor extends Multiply
 		super.visitGroup ( group );
 	}
 	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	public reset() {}
+	public override reset() {}
 };
 
 

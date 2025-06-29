@@ -99,7 +99,7 @@ export class Update extends Visitor
 	/**
 	 * Reset to the initial state.
 	 */
-	public reset() : void
+	public override reset() : void
 	{
 		this.#wasDirty.clear();
 	}

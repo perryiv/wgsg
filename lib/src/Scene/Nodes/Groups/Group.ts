@@ -62,7 +62,7 @@ export class Group extends Node
 	 * Accept the visitor.
 	 * @param {Visitor} visitor - The visitor object.
 	 */
-	public accept ( visitor: Visitor ): void
+	public override accept ( visitor: Visitor ): void
 	{
 		visitor.visitGroup ( this );
 	}
@@ -71,7 +71,7 @@ export class Group extends Node
 	 * Get the bounds of this node.
 	 * @returns {Box} The bounds of this node.
 	 */
-	protected getBounds() : Box
+	protected override getBounds() : Box
 	{
 		// Return the bounding box if it is valid.
 		if ( true === this.#bounds.valid )
@@ -112,7 +112,7 @@ export class Group extends Node
 	 * Set the bounds of this node.
 	 * @param {Box | null} bounds - The new bounds of this node.
 	 */
-	protected setBounds ( bounds: Box | null ): void
+	protected override setBounds ( bounds: Box | null ): void
 	{
 		// If we were given a box then clone it.
 		// Otherwise, make a new default box.

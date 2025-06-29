@@ -210,7 +210,7 @@ export class Cull extends Multiply
 	/**
 	 * Reset to the initial state.
 	 */
-	public reset() : void
+	public override reset() : void
 	{
 		this.layers.clear();
 	}

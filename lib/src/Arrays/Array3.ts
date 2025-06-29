@@ -49,7 +49,7 @@ export class Array3 extends ArrayBase
 	 * Check the values. It will throw if there is a problem
 	 * @param {ArrayType1D} values - Values for this array.
 	 */
-	protected check ( values: ArrayType1D ) : void
+	protected override check ( values: ArrayType1D ) : void
 	{
 		if ( 0 !== ( values.length % 3 ) )
 		{

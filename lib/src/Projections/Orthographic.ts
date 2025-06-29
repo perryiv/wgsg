@@ -58,7 +58,7 @@ export class Orthographic extends Projection
 	 * Return the projection matrix.
 	 * @returns {IMatrix44} The projection matrix.
 	 */
-	public get matrix() : IMatrix44
+	public override get matrix() : IMatrix44
 	{
 		// Shortcuts.
 		const top = this.#top;
