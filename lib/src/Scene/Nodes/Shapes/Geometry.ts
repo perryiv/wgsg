@@ -19,6 +19,7 @@ import { State } from "../../State";
 import { Visitor } from "../../../Visitors";
 import { Node } from "../Node";
 import { Array3 } from "../../../Arrays";
+import { Primitives } from "../../Primitives";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -42,10 +43,11 @@ export type TexCoordArray = Float32Array;
 
 export class Geometry extends Shape
 {
-	#points:    ( PointArray    | null ) = null;
-	#normals:   ( NormalArray   | null ) = null;
-	#colors:    ( ColorArray    | null ) = null;
-	#texCoords: ( TexCoordArray | null ) = null;
+	#points:     ( PointArray    | null ) = null;
+	#normals:    ( NormalArray   | null ) = null;
+	#colors:     ( ColorArray    | null ) = null;
+	#texCoords:  ( TexCoordArray | null ) = null;
+	#primitives: ( Primitives[]  | null ) = null;
 	#bounds: Box = new Box();
 
 	/**
@@ -211,6 +213,26 @@ export class Geometry extends Shape
 	{
 		// Do not make a copy. These arrays can be shared.
 		this.#texCoords = texCoords;
+	}
+
+	/**
+	 * Get the primitives.
+	 * @returns {Primitives[] | null} The primitives for this geometry.
+	 */
+	public get primitives() : ( Primitives[] | null )
+	{
+		// Do not return a copy. These arrays can be shared.
+		return this.#primitives;
+	}
+
+	/**
+	 * Set the primitives.
+	 * @param {Primitives[] | null} primitives - The primitives for this geometry.
+	 */
+	public set primitives ( primitives: ( Primitives[] | null ) )
+	{
+		// Do not make a copy. These arrays can be shared.
+		this.#primitives = primitives;
 	}
 
 	/**

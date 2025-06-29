@@ -43,7 +43,7 @@ export interface ISphereInput
 export class Sphere extends Geometry
 {
 	#center: IVector3 = [ 0, 0, 0 ];
-	#radius = 1
+	#radius = 1.0;
 
 	/**
 	 * Construct the class.
@@ -64,10 +64,10 @@ export class Sphere extends Geometry
 			{
 				this.center = center;
 			}
-			if ( radius ) // Handles both undefined and zero.
-			{
-				this.radius = radius;
-			}
+
+			// Make undefined, null, and zero set a radius of zero.
+			// Other numbers are set as is.
+			this.radius = ( radius ? radius : 0 );
 		}
 	}
 
@@ -113,6 +113,6 @@ export class Sphere extends Geometry
 	 */
 	public set radius ( radius: number )
 	{
-		this.#radius = radius;
+		this.#radius = radius; // We permit negative and zero radii.
 	}
 }
