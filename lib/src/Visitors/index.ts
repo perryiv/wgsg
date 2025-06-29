@@ -15,4 +15,5 @@
 export * from "./Cull";
 export * from "./Draw";
 export * from "./Multiply";
+export * from "./Update";
 export * from "./Visitor";
