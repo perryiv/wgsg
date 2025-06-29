@@ -223,7 +223,7 @@ export function test ()
 			const context = device.getContext ( canvas );
 
 			const dv = new DrawVisitor ( { context, device } );
-			dv.visitLayers ( layers );
+			dv.drawLayers ( layers );
 		} );
 	} );
 };

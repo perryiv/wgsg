@@ -12,11 +12,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Base } from "../Base/Base";
+import { Device, makeIdentity } from "../Tools";
 import { IMatrix44, IVector4 } from "../Types";
 import { mat4, vec4 } from "gl-matrix";
-import { Shape, State } from "../Scene";
-import { Device, makeIdentity } from "../Tools";
+import { Geometry, Shape, State } from "../Scene";
+import { Visitor } from "./Visitor";
 import type {
 	ILayer,
 	ILayerMap,
@@ -49,7 +49,7 @@ export interface IDrawVisitorInput
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Draw extends Base // Note: Does not inherit from Visitor.
+export class Draw extends Visitor
 {
 	#device: Device;
 	#context: GPUCanvasContext;
@@ -299,10 +299,10 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 	}
 
 	/**
-	 * Visit the layers.
+	 * Draw the layers.
 	 * @param {ILayerMap} layers - The layers to visit.
 	 */
-	public visitLayers ( layers: ILayerMap ) : void
+	public drawLayers ( layers: ILayerMap ) : void
 	{
 		// Make a command encoder.
 		this.encoder = this.device.makeEncoder ( "draw_visitor_command_encoder" );
@@ -332,8 +332,8 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 				throw new Error ( `Layer ${key} not found in the maps of layers` );
 			}
 
-			// Visit the layer.
-			this.visitLayer ( layer );
+			// Draw the layer.
+			this.drawLayer ( layer );
 		}
 
 		// Submit the commands to the GPU.
@@ -344,37 +344,37 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 	}
 
 	/**
-	 * Visit the layer.
+	 * Draw the layer.
 	 * @param {ILayer} layer - The layer to visit.
 	 */
-	public visitLayer ( layer: ILayer ) : void
+	public drawLayer ( layer: ILayer ) : void
 	{
-		// Visit the clipped projection matrices.
-		this.visitProjMatrices ( layer.clipped );
+		// Draw the clipped projection matrices.
+		this.drawProjMatrices ( layer.clipped );
 
-		// Visit the unclipped projection matrices.
-		this.visitProjMatrices ( layer.unclipped );
+		// Draw the unclipped projection matrices.
+		this.drawProjMatrices ( layer.unclipped );
 	}
 
 	/**
-	 * Visit the projection matrices.
+	 * Draw the projection matrices.
 	 * @param {IProjMatrixMap} projMatrices - The projection matrices to visit.
 	 */
-	public visitProjMatrices ( projMatrices: IProjMatrixMap ) : void
+	public drawProjMatrices ( projMatrices: IProjMatrixMap ) : void
 	{
 		// Iterate over the projection matrices in the map.
 		projMatrices.forEach ( ( projMatrixData: IProjMatrixData ) =>
 		{
-			// Visit the projection matrix data.
-			this.visitProjMatrixData ( projMatrixData );
+			// Draw the projection matrix data.
+			this.drawProjMatrixData ( projMatrixData );
 		} );
 	}
 
 	/**
-	 * Visit the projection matrix data.
+	 * Draw the projection matrix data.
 	 * @param {IProjMatrixData} projMatrixData - The projection matrix data to visit.
 	 */
-	public visitProjMatrixData ( projMatrixData: IProjMatrixData ) : void
+	public drawProjMatrixData ( projMatrixData: IProjMatrixData ) : void
 	{
 		// Get the data.
 		const { projMatrix, states } = projMatrixData;
@@ -392,28 +392,28 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 		// Set our current projection matrix.
 		mat4.copy ( this.#projMatrix, projMatrix );
 
-		// Visit the states.
-		this.visitStates ( states );
+		// Draw the states.
+		this.drawStates ( states );
 	}
 
 	/**
-	 * Visit the states.
+	 * Draw the states.
 	 * @param {IStateMap} states - The states to visit.
 	 */
-	public visitStates ( states: IStateMap ) : void
+	public drawStates ( states: IStateMap ) : void
 	{
 		// Iterate over the states in the map.
 		states.forEach ( ( sd: IStateData ) =>
 		{
-			this.visitState ( sd );
+			this.drawState ( sd );
 		} );
 	}
 
 	/**
-	 * Visit the state.
+	 * Draw the state.
 	 * @param {IStateData} sd - The state-data to visit.
 	 */
-	public visitState ( { state, modelMatrices }: IStateData ) : void
+	public drawState ( { state, modelMatrices }: IStateData ) : void
 	{
 		// Set the current state.
 		this.state = state;
@@ -438,8 +438,8 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 		// This is important.
 		this.pass = pass;
 
-		// Visit the model matrices.
-		this.visitModelMatrices ( modelMatrices );
+		// Draw the model matrices.
+		this.drawModelMatrices ( modelMatrices );
 
 		// End the render pass.
 		pass.end();
@@ -450,24 +450,24 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 	}
 
 	/**
-	 * Visit the model matrices.
+	 * Draw the model matrices.
 	 * @param {IModelMatrixMap} modelMatrices - The model matrices to visit.
 	 */
-	public visitModelMatrices ( modelMatrices: IModelMatrixMap ) : void
+	public drawModelMatrices ( modelMatrices: IModelMatrixMap ) : void
 	{
 		// Iterate over the model matrices in the map.
 		modelMatrices.forEach ( ( modelMatrixData: IModelMatrixData ) =>
 		{
-			// Visit the model matrix data.
-			this.visitModelMatrixData ( modelMatrixData );
+			// Draw the model matrix data.
+			this.drawModelMatrixData ( modelMatrixData );
 		} );
 	}
 
 	/**
-	 * Visit the model matrix data.
+	 * Draw the model matrix data.
 	 * @param {IModelMatrixData} modelMatrixData - The model matrix data to visit.
 	 */
-	public visitModelMatrixData ( modelMatrixData: IModelMatrixData ) : void
+	public drawModelMatrixData ( modelMatrixData: IModelMatrixData ) : void
 	{
 		// Get input.
 		const { modelMatrix, shapes } = modelMatrixData;
@@ -492,37 +492,37 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 		} );
 
 
-		// Visit the shapes.
-		this.visitShapes ( shapes );
+		// Draw the shapes.
+		this.drawShapes ( shapes );
 
 		// Reset the state.
 		state.doReset();
 	}
 
 	/**
-	 * Visit the shapes.
+	 * Draw the shapes.
 	 * @param {Shape[]} shapes - The shapes to visit.
 	 */
-	public visitShapes ( shapes: Shape[] ) : void
+	public drawShapes ( shapes: Shape[] ) : void
 	{
 		// Iterate over the shapes.
 		for ( const shape of shapes )
 		{
-			// Draw the shape.
-			this.drawShape ( shape );
+			// Have the shape accept this visitor.
+			shape.accept ( this );
+
+			// Example: Draw a triangle (3 vertices).
+			this.pass.draw ( 3 );
 		}
 	}
 
 	/**
-	 * Draw the shape.
-	 * @param {Shape} shape - The shape to draw.
+	 * Visit and draw the geometry.
+	 * @param {Geometry} geom - The geometry to draw.
 	 */
-	public drawShape ( shape: Shape ) : void
+	public override visitGeometry ( geom: Geometry ) : void
 	{
-		console.log ( `Drawing ${shape.type} ${shape.id}` );
-
-		// Example: Draw a triangle (3 vertices).
-		this.pass.draw ( 3 );
+		console.log ( `Draw visitor is drawing '${geom.type}' ${geom.id}` );
 	}
 
 	/**

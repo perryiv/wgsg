@@ -708,8 +708,8 @@ export class Surface extends Base
 		// Tell the visitor that it should return to its initial state.
 		dv.reset();
 
-		// Visit the layers
-		dv.visitLayers ( layers );
+		// Draw the layers
+		dv.drawLayers ( layers );
 	}
 
 	/**

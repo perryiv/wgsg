@@ -229,8 +229,14 @@ export class Geometry extends Shape
 	 * Set the primitives.
 	 * @param {Primitives[] | null} primitives - The primitives for this geometry.
 	 */
-	public set primitives ( primitives: ( Primitives[] | null ) )
+	public set primitives ( primitives: ( Primitives | Primitives[] | null ) )
 	{
+		// If we were given a single primitive then make it an array.
+		if ( primitives instanceof Primitives )
+		{
+			primitives = [ primitives ];
+		}
+
 		// Do not make a copy. These arrays can be shared.
 		this.#primitives = primitives;
 	}
@@ -241,13 +247,5 @@ export class Geometry extends Shape
 	public override update() : void
 	{
 		// There is nothing to do here.
-	}
-
-	/**
-	 * Draw the shape.
-	 */
-	public override draw() : void
-	{
-		console.log ( `Drawing ${this.type} ${this.id}` );
 	}
 }

@@ -23,7 +23,7 @@ import { Primitives } from "./Primitives";
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export abstract class Arrays extends Primitives
+export class Arrays extends Primitives
 {
 	#first = 0;
 	#count = 0;
@@ -35,6 +35,15 @@ export abstract class Arrays extends Primitives
 	constructor()
 	{
 		super();
+	}
+
+	/**
+	 * Return the class name.
+	 * @returns {string} The class name.
+	 */
+	public override getClassName() : string
+	{
+		return "Scene.Primitives.Arrays";
 	}
 
 	/**

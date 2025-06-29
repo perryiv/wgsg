@@ -13,7 +13,19 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Primitives } from "./Primitives";
+import { IPrimitivesInput, Primitives } from "./Primitives";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Types used below.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export interface IElementsInput extends IPrimitivesInput
+{
+	indices: ( Uint32Array | Uint16Array );
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -23,17 +35,36 @@ import { Primitives } from "./Primitives";
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export abstract class Elements extends Primitives
+export class Elements extends Primitives
 {
 	#indices: ( Uint32Array | Uint16Array | null ) = null;
 
 	/**
 	 * Construct the class.
 	 * @class
+	 * @param {IElementsInput} [input] - Input for the elements.
+	 * @param {GPUPrimitiveTopology} [input.mode] - The primitive topology mode.
+	 * @param {Uint32Array | Uint16Array} [input.indices] - The
 	 */
-	constructor()
+	constructor ( input ?: IElementsInput )
 	{
-		super();
+		// Call this first.
+		super ( input );
+
+		// Is there input?
+		if ( input?.indices )
+		{
+			this.indices = input.indices;
+		}
+	}
+
+	/**
+	 * Return the class name.
+	 * @returns {string} The class name.
+	 */
+	public override getClassName() : string
+	{
+		return "Scene.Primitives.Elements";
 	}
 
 	/**

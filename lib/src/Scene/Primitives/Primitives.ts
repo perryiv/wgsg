@@ -17,6 +17,18 @@ import { Base } from "../../Base/Base";
 
 
 ///////////////////////////////////////////////////////////////////////////////
+//
+//	Types used below.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export interface IPrimitivesInput
+{
+	mode: GPUPrimitiveTopology;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 /**
  * Base primitive list class.
  * @abstract
@@ -30,10 +42,19 @@ export abstract class Primitives extends Base
 	/**
 	 * Construct the class.
 	 * @class
+	 * @param {IPrimitivesInput} [input] - Input for the primitives.
+	 * @param {GPUPrimitiveTopology} [input.mode] - The primitive topology mode.
 	 */
-	constructor()
+	constructor ( input ?: IPrimitivesInput )
 	{
+		// Call this first.
 		super();
+
+		// Is there input?
+		if ( input?.mode )
+		{
+			this.#mode = input.mode;
+		}
 	}
 
 	/**
