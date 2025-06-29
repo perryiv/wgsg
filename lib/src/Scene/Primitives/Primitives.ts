@@ -1,0 +1,56 @@
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Copyright (c) 2025, Perry L Miller IV
+//	All rights reserved.
+//	MIT License: https://opensource.org/licenses/mit-license.html
+//
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Base class for all primitive lists.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+import { Base } from "../../Base/Base";
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Base primitive list class.
+ * @abstract
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export abstract class Primitives extends Base
+{
+	#mode: GPUPrimitiveTopology = "point-list";
+
+	/**
+	 * Construct the class.
+	 * @class
+	 */
+	constructor()
+	{
+		super();
+	}
+
+	/**
+	 * Get the mode.
+	 * @returns {GPUPrimitiveTopology} The mode.
+	 */
+	get mode(): GPUPrimitiveTopology
+	{
+		return this.#mode;
+	}
+
+	/**
+	 * Set the mode.
+	 * @param {GPUPrimitiveTopology} mode The mode.
+	 */
+	set mode ( mode: GPUPrimitiveTopology )
+	{
+		this.#mode = mode;
+	}
+}
