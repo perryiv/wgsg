@@ -33,11 +33,11 @@ import {
 class MyMultiplyVisitor extends Multiply
 {
 	public result = new Array < IMatrix44 > ();
-	public getClassName() : string
+	public override getClassName() : string
 	{
 		return "MyMultiplyVisitor";
 	}
-	public visitGroup ( group: Group ): void
+	public override visitGroup ( group: Group ): void
 	{
 		this.result.push ( [ ...this.modelMatrix ] );
 		super.visitGroup ( group );

@@ -110,7 +110,7 @@ export class Device extends Base
 	 * Return the class name.
 	 * @returns {string} The class name.
 	 */
-	public getClassName() : string
+	public override getClassName() : string
 	{
 		return "Tools.Device";
 	}

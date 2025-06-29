@@ -53,7 +53,7 @@ export class Transform extends Group
 	 * Return the class name.
 	 * @returns {string} The class name.
 	 */
-	public getClassName() : string
+	public override getClassName() : string
 	{
 		return "Scene.Nodes.Groups.Transform";
 	}
@@ -62,7 +62,7 @@ export class Transform extends Group
 	 * Accept the visitor.
 	 * @param {Visitor} visitor - The visitor object.
 	 */
-	public accept ( visitor: Visitor ): void
+	public override accept ( visitor: Visitor ): void
 	{
 		visitor.visitTransform ( this );
 	}

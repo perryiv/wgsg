@@ -45,6 +45,12 @@
 		// No output files because we generate one with vite.
 		"noEmit": true,
 
+		// Make sure the "override" modifier is used where needed.
+		"noImplicitOverride": true,
+
+		// Make sure all paths return from a function.
+		"noImplicitReturns": true,
+
 		// Declaration files that describe the target environment.
 		"lib": [ "ES2020", "DOM", "DOM.Iterable" ],
 

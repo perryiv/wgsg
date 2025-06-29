@@ -53,7 +53,7 @@ export class Group extends Node
 	 * Return the class name.
 	 * @returns {string} The class name.
 	 */
-	public getClassName() : string
+	public override getClassName() : string
 	{
 		return "Scene.Nodes.Groups.Group";
 	}

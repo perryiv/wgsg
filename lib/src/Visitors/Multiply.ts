@@ -85,7 +85,7 @@ export abstract class Multiply extends Visitor
 	 * Visit the transform.
 	 * @param {Transform} tr - The transform to visit.
 	 */
-	public visitTransform ( tr: Transform ) : void
+	public override visitTransform ( tr: Transform ) : void
 	{
 		// Make a copy of the original matrix.
 		const original: IMatrix44 = [ ...this.#modelMatrix ];
@@ -104,7 +104,7 @@ export abstract class Multiply extends Visitor
 	 * Visit the projection.
 	 * @param {Projection} proj - The projection to visit.
 	 */
-	public visitProjection ( proj: Projection ) : void
+	public override visitProjection ( proj: Projection ) : void
 	{
 		// Make a copy of the original matrix.
 		const original: IMatrix44 = [ ...this.#projMatrix ];

@@ -47,7 +47,13 @@
 		"tsBuildInfoFile": "./node_modules/.tmp/tsconfig.tsbuildinfo",
 
 		// No output files because we generate one with vite.
-		"noEmit": true
+		"noEmit": true,
+
+		// Make sure the "override" modifier is used where needed.
+		"noImplicitOverride": true,
+
+		// Make sure all paths return from a function.
+		"noImplicitReturns": true,
 	},
 
 	// The files and folders to be compiled into JavaScript.

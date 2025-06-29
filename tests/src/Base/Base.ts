@@ -24,7 +24,7 @@ import { Base } from "wgsg-lib";
 
 class MyConcreteClass extends Base
 {
-	public getClassName() : string
+	public override getClassName() : string
 	{
 		return "MyConcreteClass";
 	}

@@ -24,7 +24,7 @@ import { Visitor } from "wgsg-lib";
 
 class MyConcreteVisitor extends Visitor
 {
-	public getClassName() : string
+	public override getClassName() : string
 	{
 		return "MyConcreteVisitor";
 	}

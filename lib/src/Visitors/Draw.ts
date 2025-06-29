@@ -99,7 +99,7 @@ export class Draw extends Base // Note: Does not inherit from Visitor.
 	 * Return the class name.
 	 * @returns {string} The class name.
 	 */
-	public getClassName() : string
+	public override getClassName() : string
 	{
 		return "Visitors.Draw";
 	}

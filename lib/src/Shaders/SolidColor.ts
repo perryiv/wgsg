@@ -94,7 +94,7 @@ export class SolidColor extends ShaderBase
 	 * Return the class name.
 	 * @returns {string} The class name.
 	 */
-	public getClassName() : string
+	public override getClassName() : string
 	{
 		return SOLID_COLOR_SHADER_NAME;
 	}

@@ -82,7 +82,7 @@ export class Cull extends Multiply
 	 * Return the class name.
 	 * @returns {string} The class name.
 	 */
-	public getClassName() : string
+	public override getClassName() : string
 	{
 		return "Visitors.Cull";
 	}
@@ -137,7 +137,7 @@ export class Cull extends Multiply
 	 * Visit the group.
 	 * @param {Group} group - The group node.
 	 */
-	public visitGroup ( group: Group ) : void
+	public override visitGroup ( group: Group ) : void
 	{
 		super.visitGroup ( group );
 	}
@@ -146,7 +146,7 @@ export class Cull extends Multiply
 	 * Visit the transform.
 	 * @param {Transform} tr - The transform node.
 	 */
-	public visitTransform ( tr: Transform ) : void
+	public override visitTransform ( tr: Transform ) : void
 	{
 		super.visitTransform ( tr );
 	}
@@ -155,7 +155,7 @@ export class Cull extends Multiply
 	 * Visit the projection.
 	 * @param {Projection} proj - The projection node.
 	 */
-	public visitProjection ( proj: Projection ) : void
+	public override visitProjection ( proj: Projection ) : void
 	{
 		super.visitProjection ( proj );
 	}
@@ -164,7 +164,7 @@ export class Cull extends Multiply
 	 * Visit the geometry.
 	 * @param {Geometry} geom - The geometry node.
 	 */
-	public visitGeometry ( geom: Geometry ) : void
+	public override visitGeometry ( geom: Geometry ) : void
 	{
 		// Treat it like a shape.
 		this.visitShape ( geom );
@@ -174,7 +174,7 @@ export class Cull extends Multiply
 	 * Visit the shape.
 	 * @param {Shape} shape - The shape node.
 	 */
-	public visitShape ( shape: Shape ) : void
+	public override visitShape ( shape: Shape ) : void
 	{
 		// Shortcuts.
 		const layers = this.layers;
@@ -202,7 +202,7 @@ export class Cull extends Multiply
 	 * Visit the node.
 	 * @param {Node} node - The scene node.
 	 */
-	public visitNode ( node: Node ) : void
+	public override visitNode ( node: Node ) : void
 	{
 		super.visitNode ( node );
 	}

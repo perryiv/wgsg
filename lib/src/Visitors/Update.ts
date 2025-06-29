@@ -40,7 +40,7 @@ export class Update extends Visitor
 	 * Return the class name.
 	 * @returns {string} The class name.
 	 */
-	public getClassName() : string
+	public override getClassName() : string
 	{
 		return "Visitors.Update";
 	}
@@ -73,7 +73,7 @@ export class Update extends Visitor
 	 * Visit the shape.
 	 * @param {Shape} shape - The shape node.
 	 */
-	public visitShape ( shape: Shape ) : void
+	public override visitShape ( shape: Shape ) : void
 	{
 		if ( true === shape.dirty )
 		{
@@ -86,7 +86,7 @@ export class Update extends Visitor
 	 * Visit the node.
 	 * @param {Node} node - The scene node.
 	 */
-	public visitNode ( node: Node ) : void
+	public override visitNode ( node: Node ) : void
 	{
 		// Handle all nodes that are not shapes. It's probably a group and was
 		// only dirty because one of its child nodes was marked dirty.
