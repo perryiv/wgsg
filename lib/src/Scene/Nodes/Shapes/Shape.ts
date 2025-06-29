@@ -58,6 +58,11 @@ export abstract class Shape extends Node
 	}
 
 	/**
+	 * Update the shape.
+	 */
+	public abstract update() : void;
+
+	/**
 	 * Draw the shape.
 	 */
 	public abstract draw() : void;

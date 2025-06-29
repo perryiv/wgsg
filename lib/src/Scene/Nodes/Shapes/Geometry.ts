@@ -236,6 +236,14 @@ export class Geometry extends Shape
 	}
 
 	/**
+	 * Update this node.
+	 */
+	public override update() : void
+	{
+		// There is nothing to do here.
+	}
+
+	/**
 	 * Draw the shape.
 	 */
 	public draw() : void

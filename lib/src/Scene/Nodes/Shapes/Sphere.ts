@@ -115,4 +115,12 @@ export class Sphere extends Geometry
 	{
 		this.#radius = radius; // We permit negative and zero radii.
 	}
+
+	/**
+	 * Update this node.
+	 */
+	public override update() : void
+	{
+		console.log ( `Updating ${this.type} ${this.id}` );
+	}
 }
