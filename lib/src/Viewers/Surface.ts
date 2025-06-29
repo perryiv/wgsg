@@ -32,6 +32,7 @@ import type {
 import {
 	Cull as CullVisitor,
 	Draw as DrawVisitor,
+	Update as UpdateVisitor,
 } from "../Visitors";
 
 
@@ -65,6 +66,7 @@ export interface IFrameInfo
 
 interface IVisitors
 {
+	update: UpdateVisitor;
 	cull: CullVisitor;
 	draw: DrawVisitor;
 }
@@ -130,6 +132,7 @@ export class Surface extends Base
 		const state = this.#defaultState;
 
 		// Now we can make the visitors.
+		const update = new UpdateVisitor();
 		const cull = new CullVisitor ( {
 			layers: this.#layers,
 			defaultState: state,
@@ -138,7 +141,7 @@ export class Surface extends Base
 			context,
 			device
 		} );
-		this.#visitors = { cull, draw };
+		this.#visitors = { update, cull, draw };
 
 		// Set the default state's properties.
 		state.name = `Default state for ${this.getClassName()} ${this.id}`;
@@ -299,6 +302,53 @@ export class Surface extends Base
 	public set scene ( scene: ( Node | null ) )
 	{
 		this.#scene = scene;
+	}
+
+	/**
+	 * Get the update visitor.
+	 * @returns {UpdateVisitor} The update visitor.
+	 */
+	public get updateVisitor () : UpdateVisitor
+	{
+		// Shortcut.
+		const uv = this.#visitors?.update;
+
+		// Make sure the update visitor is valid.
+		if ( !uv )
+		{
+			throw new Error ( "Accessing invalid update visitor in surface class" );
+		}
+
+		// Return the update visitor.
+		return uv;
+	}
+
+	/**
+	 * Set the update visitor.
+	 * @param {UpdateVisitor} uv - The update visitor.
+	 */
+	public set updateVisitor ( uv: UpdateVisitor )
+	{
+		// By the time we get to here this should be valid.
+		if ( !this.#visitors )
+		{
+			throw new Error ( "Invalid visitors in surface class" );
+		}
+
+		// Make sure the visitor is valid.
+		if ( !uv )
+		{
+			throw new Error ( "Invalid update visitor in surface class" );
+		}
+
+		// Make sure the visitor is an UpdateVisitor.
+		if ( !( uv instanceof UpdateVisitor ) )
+		{
+			throw new Error ( "Trying to set surface update visitor with object of wrong type" );
+		}
+
+		// Set our member.
+		this.#visitors.update = uv;
 	}
 
 	/**
@@ -585,7 +635,19 @@ export class Surface extends Base
 	 */
 	public update ()
 	{
-		console.log ( "Updating scene" );
+		// Handle no scene.
+		const scene = this.#scene;
+		if ( !scene )
+		{
+			return;
+		}
+
+		// Shortcuts.
+		const uv = this.updateVisitor;
+
+		// The update visitor does several things before and after visiting the
+		// scene so call its function to handle that.
+		uv.update ( scene );
 	}
 
 	/**
