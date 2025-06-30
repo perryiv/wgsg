@@ -490,19 +490,21 @@ export class Draw extends Visitor
 		// Set our current model matrix.
 		mat4.copy ( this.#modelMatrix, modelMatrix );
 
-		// Apply the state.
-		state.doApply ( {
+		// We pass this when applying and resetting the state.
+		const stateData = {
 			state,
 			projMatrix: this.#projMatrix,
 			modelMatrix,
-		} );
+		};
 
+		// Apply the state.
+		state.doApply ( stateData );
 
 		// Draw the shapes.
 		this.drawShapes ( shapes );
 
 		// Reset the state.
-		state.doReset();
+		state.doReset ( stateData );
 	}
 
 	/**
@@ -528,7 +530,7 @@ export class Draw extends Visitor
 	 */
 	public override visitGeometry ( geom: Geometry ) : void
 	{
-		console.log ( `Draw visitor is drawing '${geom.type}' ${geom.id}` );
+		// console.log ( `Drawing '${geom.type}' ${geom.id}` );
 
 		// Get the primitives.
 		const primitives = geom.primitives;
@@ -564,7 +566,7 @@ export class Draw extends Visitor
 	 */
 	public visitElements ( elements: IndexedElements ): void
 	{
-		console.log ( `Draw visitor is drawing elements '${elements.type}' ${elements.id}` );
+		console.log ( `Drawing '${elements.type}' ${elements.id}` );
 
 		// Shortcuts.
 		// const pass = this.pass;
@@ -581,7 +583,7 @@ export class Draw extends Visitor
 	 */
 	public visitArrays ( arrays: ArrayElements ): void
 	{
-		console.log ( `Draw visitor is drawing arrays '${arrays.type}' ${arrays.id}'` );
+		console.log ( `Drawing '${arrays.type}' ${arrays.id}` );
 
 		// Shortcuts.
 		// const pass = this.pass;

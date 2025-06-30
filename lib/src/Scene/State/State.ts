@@ -46,8 +46,9 @@ export interface IStateApplyInput
 	projMatrix: IMatrix44;
 	modelMatrix: IMatrix44;
 }
+export type IStateResetInput = IStateApplyInput;
 export type IStateApplyFunction = ( ( input: IStateApplyInput ) => void );
-export type IStateResetFunction = ( () => void );
+export type IStateResetFunction = ( ( input: IStateResetInput ) => void );
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -183,10 +184,11 @@ export class State extends Base
 
 	/**
 	 * Call the reset function.
+	 * @param {IStateResetInput} input - The input for resetting the state.
 	 */
-	public doReset() : void
+	public doReset ( input: IStateResetInput ) : void
 	{
-		this.#reset();
+		this.#reset ( input );
 	}
 
 	/**

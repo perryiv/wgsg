@@ -181,11 +181,12 @@ export class Surface extends Base
 
 	/**
 	 * Default state reset function.
+	 * @param {IStateApplyInput} input - The input object.
 	 * @returns {void}
 	 */
-	protected defaultResetFunction () : void
+	protected defaultResetFunction ( { state }: IStateApplyInput ) : void
 	{
-		console.log ( `In default state reset function for ${this.type} ${this.id}` );
+		console.log ( `In default state reset function for ${this.type} ${this.id} with state '${state.name}'` );
 	}
 
 	/**
