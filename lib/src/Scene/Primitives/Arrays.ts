@@ -14,6 +14,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Primitives } from "./Primitives";
+import { Draw as DrawVisitor } from "../../Visitors/Draw";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -44,6 +45,15 @@ export class Arrays extends Primitives
 	public override getClassName() : string
 	{
 		return "Scene.Primitives.Arrays";
+	}
+
+	/**
+	 * Accept the draw-visitor.
+	 * @param {DrawVisitor} visitor - The visitor object.
+	 */
+	public override accept ( visitor: DrawVisitor ): void
+	{
+		visitor.visitArrays ( this );
 	}
 
 	/**

@@ -12,8 +12,15 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Node, Shape } from "../Scene";
 import { Visitor } from "./Visitor";
+import {
+	Geometry,
+	Group,
+	Node,
+	ProjectionNode as Projection,
+	Shape,
+	Transform,
+} from "../Scene";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -25,7 +32,7 @@ import { Visitor } from "./Visitor";
 
 export class Update extends Visitor
 {
-	#wasDirty = new Set < Node > ();
+	#wasDirty = new Map < number, Node > ();
 
 	/**
 	 * Construct the class.
@@ -70,6 +77,59 @@ export class Update extends Visitor
 	}
 
 	/**
+	 * Visit the group.
+	 * @param {Group} group - The group to visit.
+	 */
+	public override visitGroup ( group: Group ) : void
+	{
+		if ( true === group.dirty )
+		{
+			super.visitGroup ( group );
+			this.#wasDirty.set ( group.id, group );
+		}
+	}
+
+	/**
+	 * Visit the transform.
+	 * @param {Transform} tr - The transform to visit.
+	 */
+	public override visitTransform ( tr: Transform ) : void
+	{
+		if ( true === tr.dirty )
+		{
+			super.visitTransform ( tr );
+			this.#wasDirty.set ( tr.id, tr );
+		}
+	}
+
+	/**
+	 * Visit the projection.
+	 * @param {Projection} proj - The projection to visit.
+	 */
+	public override visitProjection ( proj: Projection ) : void
+	{
+		if ( true === proj.dirty )
+		{
+			super.visitProjection ( proj );
+			this.#wasDirty.set ( proj.id, proj );
+		}
+	}
+
+	/**
+	 * Visit the geometry.
+	 * @param {Geometry} geom - The geometry to visit.
+	 */
+	public override visitGeometry ( geom: Geometry ) : void
+	{
+		if ( true === geom.dirty )
+		{
+			geom.update();
+			super.visitGeometry ( geom );
+			this.#wasDirty.set ( geom.id, geom );
+		}
+	}
+
+	/**
 	 * Visit the shape.
 	 * @param {Shape} shape - The shape node.
 	 */
@@ -78,7 +138,8 @@ export class Update extends Visitor
 		if ( true === shape.dirty )
 		{
 			shape.update();
-			this.#wasDirty.add ( shape );
+			super.visitShape ( shape );
+			this.#wasDirty.set ( shape.id, shape );
 		}
 	}
 
@@ -88,11 +149,10 @@ export class Update extends Visitor
 	 */
 	public override visitNode ( node: Node ) : void
 	{
-		// Handle all nodes that are not shapes. It's probably a group and was
-		// only dirty because one of its child nodes was marked dirty.
 		if ( true === node.dirty )
 		{
-			this.#wasDirty.add ( node );
+			super.visitNode ( node );
+			this.#wasDirty.set ( node.id, node );
 		}
 	}
 

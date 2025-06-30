@@ -15,8 +15,14 @@
 import { Device, makeIdentity } from "../Tools";
 import { IMatrix44, IVector4 } from "../Types";
 import { mat4, vec4 } from "gl-matrix";
-import { Geometry, Shape, State } from "../Scene";
 import { Visitor } from "./Visitor";
+import {
+	Arrays as ArrayElements,
+	Elements as IndexedElements,
+	Geometry,
+	Shape,
+	State,
+} from "../Scene";
 import type {
 	ILayer,
 	ILayerMap,
@@ -523,6 +529,66 @@ export class Draw extends Visitor
 	public override visitGeometry ( geom: Geometry ) : void
 	{
 		console.log ( `Draw visitor is drawing '${geom.type}' ${geom.id}` );
+
+		// Get the primitives.
+		const primitives = geom.primitives;
+
+		// Handle null.
+		if ( !primitives )
+		{
+			// This is not an error.
+			console.warn ( `Geometry '${geom.type}' ${geom.id} has no primitives to draw` );
+			return;
+		}
+
+		// Is there only one?
+		if ( 1 === primitives.length )
+		{
+			primitives[0].accept ( this );
+		}
+
+		// Otherwise ...
+		else
+		{
+			// Draw each primitive.
+			for ( const primitive of primitives )
+			{
+				primitive.accept ( this );
+			}
+		}
+	}
+
+	/**
+	 * Draw the indexed elements.
+	 * @param {IndexedElements} elements - The primitive elements to draw.
+	 */
+	public visitElements ( elements: IndexedElements ): void
+	{
+		console.log ( `Draw visitor is drawing elements '${elements.type}' ${elements.id}` );
+
+		// Shortcuts.
+		// const pass = this.pass;
+
+		// Draw the indexed primitives.
+		// pass.setVertexBuffer ( 0, elements.vertexBuffer );
+		// pass.setIndexBuffer ( elements.indexBuffer, "uint32" );
+		// pass.drawIndexed ( elements.indexCount, 1, 0, 0, 0 );
+	}
+
+	/**
+	 * Draw the arrays.
+	 * @param {ArrayElements} arrays - The primitive arrays to draw.
+	 */
+	public visitArrays ( arrays: ArrayElements ): void
+	{
+		console.log ( `Draw visitor is drawing arrays '${arrays.type}' ${arrays.id}'` );
+
+		// Shortcuts.
+		// const pass = this.pass;
+
+		// Draw the array primitives.
+		// pass.setVertexBuffer ( 0, arrays.vertexBuffer );
+		// pass.drawArrays ( arrays.vertexCount, 1, 0, 0 );
 	}
 
 	/**

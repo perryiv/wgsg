@@ -14,6 +14,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { IPrimitivesInput, Primitives } from "./Primitives";
+import { Draw as DrawVisitor } from "../../Visitors/Draw";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -65,6 +66,15 @@ export class Elements extends Primitives
 	public override getClassName() : string
 	{
 		return "Scene.Primitives.Elements";
+	}
+
+	/**
+	 * Accept the draw-visitor.
+	 * @param {DrawVisitor} visitor - The visitor object.
+	 */
+	public override accept ( visitor: DrawVisitor ): void
+	{
+		visitor.visitElements ( this );
 	}
 
 	/**

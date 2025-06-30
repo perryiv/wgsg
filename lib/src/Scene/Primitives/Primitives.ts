@@ -14,6 +14,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base } from "../../Base/Base";
+import { Draw as DrawVisitor } from "../../Visitors/Draw";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -74,4 +75,10 @@ export abstract class Primitives extends Base
 	{
 		this.#mode = mode;
 	}
+
+	/**
+	 * Accept the draw-visitor.
+	 * @param {DrawVisitor} visitor - The visitor object.
+	 */
+	public abstract accept ( _: DrawVisitor ): void;
 }
