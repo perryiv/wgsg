@@ -12,12 +12,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { test as testBits } from "./Bits";
 import { test as testConstants } from "./Constants";
 import { test as testDevice } from "./Device";
 import { test as testFunctions } from "./Functions";
 
 describe ( "Tools", function ()
 {
+	testBits();
 	testConstants();
 	testDevice();
 	testFunctions();
