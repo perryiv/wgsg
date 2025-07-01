@@ -13,10 +13,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Flags, Node } from "../Node";
 import { Visitor } from "../../../Visitors/Visitor";
 import { Box } from "../../../Math";
 import { hasBits } from "../../../Tools";
+import {
+	Flags,
+	Node,
+	type INodeTraverseCallback,
+} from "../Node";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -133,6 +137,19 @@ export class Group extends Node
 	public get size() : number
 	{
 		return this.#children.length;
+	}
+
+	/**
+	 * Traverse this node.
+	 * @param {INodeTraverseCallback} cb - Callback function.
+	 */
+	public override traverse ( cb: INodeTraverseCallback ) : void
+	{
+		cb ( this );
+		this.forEachChild ( ( child: Node ) =>
+		{
+			child.traverse ( cb );
+		} );
 	}
 
 	/**

@@ -13,8 +13,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Node } from "../Node";
 import { State } from "../../State";
+import {
+	Node,
+	type INodeTraverseCallback,
+} from "../Node";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -55,6 +58,15 @@ export abstract class Shape extends Node
 	public set state ( state: ( State | null ) )
 	{
 		this.#state = state;
+	}
+
+	/**
+	 * Traverse this node.
+	 * @param {INodeTraverseCallback} cb - Callback function.
+	 */
+	public override traverse ( cb: INodeTraverseCallback ) : void
+	{
+		cb ( this );
 	}
 
 	/**

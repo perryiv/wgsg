@@ -43,11 +43,12 @@ export enum Flags
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Callback type.
+ * Callback types.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
 export type INodeParentCallback = ( ( node: Node ) => void );
+export type INodeTraverseCallback = ( ( node: Node ) => void );
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -159,7 +160,7 @@ export abstract class Node extends Base
 	 */
 	public set visible ( visible: boolean )
 	{
-		setBits ( this.#flags, Flags.VISIBLE, visible );
+		this.#flags = setBits ( this.#flags, Flags.VISIBLE, visible );
 	}
 
 	/**
@@ -177,7 +178,7 @@ export abstract class Node extends Base
 	 */
 	public set intersectable ( intersectable: boolean )
 	{
-		setBits ( this.#flags, Flags.INTERSECTABLE, intersectable );
+		this.#flags = setBits ( this.#flags, Flags.INTERSECTABLE, intersectable );
 	}
 
 	/**
@@ -195,7 +196,7 @@ export abstract class Node extends Base
 	 */
 	public set addsToBounds ( addsToBounds: boolean )
 	{
-		setBits ( this.#flags, Flags.ADDS_TO_BOUNDS, addsToBounds );
+		this.#flags = setBits ( this.#flags, Flags.ADDS_TO_BOUNDS, addsToBounds );
 	}
 
 	/**
@@ -213,7 +214,7 @@ export abstract class Node extends Base
 	 */
 	public set clipped ( clipped: boolean )
 	{
-		setBits ( this.#flags, Flags.CLIPPED, clipped );
+		this.#flags = setBits ( this.#flags, Flags.CLIPPED, clipped );
 	}
 
 	/**
@@ -232,7 +233,7 @@ export abstract class Node extends Base
 	public set dirty ( dirty: boolean )
 	{
 		// Set our state.
-		setBits ( this.#flags, Flags.DIRTY, dirty );
+		this.#flags = setBits ( this.#flags, Flags.DIRTY, dirty );
 
 		// Do nothing if we're not dirty.
 		if ( false === dirty )
@@ -287,4 +288,10 @@ export abstract class Node extends Base
 	 * @param {Box | null} bounds - The new bounds of this node.
 	 */
 	protected abstract setBounds ( _: Box | null ): void;
+
+	/**
+	 * Traverse this node.
+	 * @param {INodeTraverseCallback} cb - Callback function.
+	 */
+	public abstract traverse ( cb: INodeTraverseCallback ): void;
 }
