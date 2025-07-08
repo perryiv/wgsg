@@ -17,9 +17,9 @@ import { IMatrix44, IVector4 } from "../Types";
 import { mat4, vec4 } from "gl-matrix";
 import { Visitor } from "./Visitor";
 import {
-	Arrays as ArrayElements,
-	Elements as IndexedElements,
+	Arrays,
 	Geometry,
+	Indexed,
 	Shape,
 	State,
 } from "../Scene";
@@ -65,6 +65,7 @@ export class Draw extends Visitor
 	#clearColor: IVector4 = [ 0.5, 0.5, 0.5, 1.0 ]; // Grey.
 	#encoder: ( GPUCommandEncoder | null ) = null;
 	#pass: ( GPURenderPassEncoder | null ) = null;
+	#geometry: ( Geometry | null ) = null;
 
 	/**
 	 * Construct the class.
@@ -259,6 +260,33 @@ export class Draw extends Visitor
 	protected set pass ( pass: ( GPURenderPassEncoder | null ) )
 	{
 		this.#pass = pass;
+	}
+
+	/**
+	 * Get the geometry node.
+	 * @returns {Geometry} The geometry node.
+	 */
+	protected get geometry () : Geometry
+	{
+		// Shortcut.
+		const geometry = this.#geometry;
+
+		// We should always have a valid geometry.
+		if ( !geometry )
+		{
+			throw new Error ( "Attempting to get invalid geometry in draw visitor" );
+		}
+
+		// Return the geometry.
+		return geometry;
+	}
+	/**
+	 * Set the geometry node.
+	 * @param {Geometry | null} geometry - The geometry node to set, or null to reset.
+	 */
+	protected set geometry ( geometry: ( Geometry | null ) )
+	{
+		this.#geometry = geometry;
 	}
 
 	/**
@@ -532,6 +560,9 @@ export class Draw extends Visitor
 	{
 		// console.log ( `Drawing '${geom.type}' ${geom.id}` );
 
+		// Set this first.
+		this.geometry = geom;
+
 		// Get the primitives.
 		const primitives = geom.primitives;
 
@@ -558,37 +589,89 @@ export class Draw extends Visitor
 				primitive.accept ( this );
 			}
 		}
+
+		// Reset this.
+		this.geometry = null;
 	}
 
 	/**
-	 * Draw the indexed elements.
-	 * @param {IndexedElements} elements - The primitive elements to draw.
+	 * Draw the indexed primitives.
+	 * @param {Indexed} prims - The indexed primitives to draw.
 	 */
-	public visitElements ( elements: IndexedElements ): void
+	public visitIndexed ( prims: Indexed ): void
 	{
-		console.log ( `Drawing '${elements.type}' ${elements.id}` );
+		console.log ( `Drawing '${prims.type}' ${prims.id}` );
 
 		// Shortcuts.
-		// const pass = this.pass;
+		const pass = this.pass;
+		const geom = this.geometry;
+		const device = this.device.device;
+
+		// Get the buffers.
+		const pointsBuffer = geom.getPointsBuffer ( device );
+		const indexBuffer = prims.getBuffer ( device );
+
+		// We need points to continue.
+		if ( !pointsBuffer )
+		{
+			return; // This is not an error.
+		}
+
+		// We also need indices to continue.
+		if ( !indexBuffer )
+		{
+			return; // This is not an error.
+		}
+
+		// Set the points and index buffer.
+		pass.setVertexBuffer ( 0, pointsBuffer );
+		pass.setIndexBuffer ( indexBuffer, prims.indexType );
+
+		// Get the other buffers.
+		const normalsBuffer = geom.getNormalsBuffer ( device );
+		const colorsBuffer = geom.getColorsBuffer ( device );
+		const texCoordsBuffer = geom.getTexCoordsBuffer ( device );
+
+		// Set the buffer of normals if we can.
+		if ( normalsBuffer )
+		{
+			pass.setVertexBuffer ( 1, normalsBuffer );
+		}
+
+		// Set the buffer of colors if we can.
+		if ( colorsBuffer )
+		{
+			pass.setVertexBuffer ( 2, colorsBuffer );
+		}
+
+		// Set the buffer of texture coordinates if we can.
+		if ( texCoordsBuffer )
+		{
+			pass.setVertexBuffer ( 3, texCoordsBuffer );
+		}
 
 		// Draw the indexed primitives.
-		// pass.setVertexBuffer ( 0, elements.vertexBuffer );
-		// pass.setIndexBuffer ( elements.indexBuffer, "uint32" );
-		// pass.drawIndexed ( elements.indexCount, 1, 0, 0, 0 );
+		pass.drawIndexed (
+			prims.numIndices, // The number of indices to draw.
+			1, // Number of instances to draw.
+			0, // Offset into the index buffer, in indices, to begin drawing from.
+			0, // Added to each index value before indexing into the vertex buffers.
+			0  // First instance to draw.
+		);
 	}
 
 	/**
-	 * Draw the arrays.
-	 * @param {ArrayElements} arrays - The primitive arrays to draw.
+	 * Draw the arrays of primitives.
+	 * @param {Arrays} arrays - The arrays of primitives to draw.
 	 */
-	public visitArrays ( arrays: ArrayElements ): void
+	public visitArrays ( arrays: Arrays ): void
 	{
 		console.log ( `Drawing '${arrays.type}' ${arrays.id}` );
 
 		// Shortcuts.
 		// const pass = this.pass;
 
-		// Draw the array primitives.
+		// Draw the arrays of primitives.
 		// pass.setVertexBuffer ( 0, arrays.vertexBuffer );
 		// pass.drawArrays ( arrays.vertexCount, 1, 0, 0 );
 	}

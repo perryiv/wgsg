@@ -28,10 +28,15 @@ import { Primitives } from "../../Primitives";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export type PointArray    = Float32Array;
-export type NormalArray   = Float32Array;
-export type ColorArray    = Float32Array;
-export type TexCoordArray = Float32Array;
+export interface IVertexData
+{
+	data: ( Float32Array | null );
+	buffer: ( GPUBuffer | null );
+}
+export type IPointData    = IVertexData;
+export type INormalData   = IVertexData;
+export type IColorData    = IVertexData;
+export type ITexCoordData = IVertexData;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -43,10 +48,10 @@ export type TexCoordArray = Float32Array;
 
 export class Geometry extends Shape
 {
-	#points:     ( PointArray    | null ) = null;
-	#normals:    ( NormalArray   | null ) = null;
-	#colors:     ( ColorArray    | null ) = null;
-	#texCoords:  ( TexCoordArray | null ) = null;
+	#points:     IPointData    = { data: null, buffer: null };
+	#normals:    INormalData   = { data: null, buffer: null };
+	#colors:     IColorData    = { data: null, buffer: null };
+	#texCoords:  ITexCoordData = { data: null, buffer: null };
 	#primitives: ( Primitives[]  | null ) = null;
 	#bounds: Box = new Box();
 
@@ -94,16 +99,16 @@ export class Geometry extends Shape
 		const answer = new Box();
 
 		// Are there any points?
-		if ( this.#points )
+		if ( this.#points?.data )
 		{
 			// Make the helper array wrapper.
-			const points = new Array3 ( this.#points );
+			const points = new Array3 ( this.#points.data );
 
 			// Shortcuts.
 			// TODO: Why is the "as" needed here?
-			const x = ( points.x0 as PointArray );
-			const y = ( points.x1 as PointArray );
-			const z = ( points.x2 as PointArray );
+			const x = ( points.x0 as Float32Array );
+			const y = ( points.x1 as Float32Array );
+			const z = ( points.x2 as Float32Array );
 			const numVectors = points.numVectors;
 
 			// Grow the box by all the points.
@@ -137,82 +142,86 @@ export class Geometry extends Shape
 
 	/**
 	 * Get the points.
-	 * @returns {PointArray | null} Points for this geometry.
+	 * @returns {Float32Array | null} Points for this geometry.
 	 */
-	public get points() : ( PointArray | null )
+	public get points() : Float32Array | null
 	{
 		// Do not return a copy. These arrays can be shared.
-		return this.#points;
+		return this.#points.data;
 	}
 
 	/**
 	 * Set the points.
-	 * @param {PointArray | null} points - Points for this geometry.
+	 * @param {Float32Array | null} points - Points for this geometry.
 	 */
-	public set points ( points: ( PointArray | null ) )
+	public set points ( points: ( Float32Array | null ) )
 	{
 		// Do not make a copy. These arrays can be shared.
-		this.#points = points;
+		// We also set the buffer to null so that it gets made again.
+		this.#points = { data: points, buffer: null };
 	}
 
 	/**
 	 * Get the normal vectors.
-	 * @returns {NormalArray | null} Normal vectors for this geometry.
+	 * @returns {Float32Array | null} Normal vectors for this geometry.
 	 */
-	public get normals() : ( NormalArray | null )
+	public get normals() : ( Float32Array | null )
 	{
 		// Do not return a copy. These arrays can be shared.
-		return this.#normals;
+		return ( this.#normals?.data || null );
 	}
 
 	/**
 	 * Set the normals.
-	 * @param {NormalArray | null} normals - Normal vectors for this geometry.
+	 * @param {Float32Array | null} normals - Normal vectors for this geometry.
 	 */
-	public set normals ( normals: ( NormalArray | null ) )
+	public set normals ( normals: ( Float32Array | null ) )
 	{
 		// Do not make a copy. These arrays can be shared.
-		this.#normals = normals;
+		// We also set the buffer to null so that it gets made again.
+		this.#normals = { data: normals, buffer: null };
 	}
 
 	/**
 	 * Get the colors.
-	 * @returns {ColorArray | null} Colors for this geometry.
+	 * @returns {Float32Array | null} Colors for this geometry.
 	 */
-	public get colors() : ( ColorArray | null )
+	public get colors() : ( Float32Array | null )
 	{
 		// Do not return a copy. These arrays can be shared.
-		return this.#colors;
+		return ( this.#colors?.data || null );
 	}
 
 	/**
 	 * Set the colors.
-	 * @param {ColorArray | null} colors - Colors for this geometry.
+	 * @param {Float32Array | null} colors - Colors for this geometry.
 	 */
-	public set colors ( colors: ( ColorArray | null ) )
+	public set colors ( colors: ( Float32Array | null ) )
 	{
 		// Do not make a copy. These arrays can be shared.
-		this.#colors = colors;
+		// We also set the buffer to null so that it gets made again.
+		this.#colors = { data: colors, buffer: null };
 	}
 
 	/**
 	 * Get the texture coordinates.
-	 * @returns {TexCoordArray | null} Texture coordinates for this geometry.
+	 * @returns {Float32Array | null} Texture coordinates for this geometry.
 	 */
-	public get texCoords() : ( TexCoordArray | null )
+	public get texCoords() : ( Float32Array | null )
 	{
 		// Do not return a copy. These arrays can be shared.
-		return this.#texCoords;
+		return ( this.#texCoords?.data || null );
 	}
 
 	/**
 	 * Set the texture coordinates.
-	 * @param {TexCoordArray | null} texCoords - Texture coordinates for this geometry.
+	 * @param {Float32Array | null} texCoords - Texture coordinates for this geometry.
 	 */
-	public set texCoords ( texCoords: ( TexCoordArray | null ) )
+	public set texCoords ( texCoords: ( Float32Array | null ) )
 	{
 		// Do not make a copy. These arrays can be shared.
-		this.#texCoords = texCoords;
+		// We also set the buffer to null so that it gets made again.
+		this.#texCoords = { data: texCoords, buffer: null };
 	}
 
 	/**
@@ -239,6 +248,156 @@ export class Geometry extends Shape
 
 		// Do not make a copy. These arrays can be shared.
 		this.#primitives = primitives;
+	}
+
+	/**
+	 * Get the number of elements.
+	 * @param {Float32Array} array - The array containing the elements.
+	 * @param {number} dimension - The dimension of the elements (e.g., 3 for points).
+	 * @returns {number} The number of elements.
+	 */
+	static getNumElements ( array: ( Float32Array | null ), dimension: number ) : number
+	{
+		// Handle invalid array.
+		if ( !array )
+		{
+			return 0;
+		}
+
+		// Handle no elements.
+		if ( array.length < 1 )
+		{
+			return 0;
+		}
+
+		// The length should be evenly divisible by the given dimension.
+		if ( 0 !== ( array.length % dimension ) )
+		{
+			throw new Error ( `Array length ${array.length} is not evenly divisible by ${dimension}` );
+		}
+
+		// Return the number of elements.
+		return ( array.length / dimension );
+	}
+
+	/**
+	 * Get the number of points.
+	 * @returns {number} The number of points in this geometry.
+	 */
+	public get numPoints() : number
+	{
+		return Geometry.getNumElements ( this.points, 3 );
+	}
+
+	/**
+	 * Get the number of normals.
+	 * @returns {number} The number of normals in this geometry.
+	 */
+	public get numNormals() : number
+	{
+		return Geometry.getNumElements ( this.normals, 3 );
+	}
+
+	/**
+	 * Get the number of colors.
+	 * @returns {number} The number of colors in this geometry.
+	 */
+	public get numColors() : number
+	{
+		return Geometry.getNumElements ( this.colors, 4 );
+	}
+
+	/**
+	 * Get the number of texture coordinates.
+	 * @returns {number} The number of texture coordinates in this geometry.
+	 */
+	public get numTexCoords() : number
+	{
+		return Geometry.getNumElements ( this.texCoords, 2 );
+	}
+
+	/**
+	 * Get the number of primitives.
+	 * @returns {number} The number of primitives in this geometry.
+	 */
+	public get numPrimitives() : number
+	{
+		const primitives = this.primitives;
+		return ( primitives ? primitives.length : 0 );
+	}
+
+	/**
+	 * Get the points buffer.
+	 * @param {IVertexData} input - The vertex data containing the data and buffer.
+	 * @param {GPUDevice} [device] - Optional GPU device to create the buffer if it does not exist.
+	 * @returns {GPUBuffer | null} The points buffer for this geometry.
+	 */
+	static getVertexBuffer ( input: IVertexData, device?: GPUDevice ) : ( GPUBuffer | null )
+	{
+		// If the buffer already exists then return it.
+		if ( input.buffer )
+		{
+			return input.buffer;
+		}
+
+		// If we get to here then try to make the buffer.
+		if ( input.data && device )
+		{
+			// Make the buffer.
+			input.buffer = device.createBuffer ( {
+				size: input.data.byteLength,
+				usage: ( GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST )
+			} );
+
+			// Write the data to the buffer.
+			device.queue.writeBuffer ( input.buffer, 0, input.data, 0, input.data.length );
+
+			// Return the buffer.
+			return input.buffer;
+		}
+
+		// If we get to here then there is no buffer.
+		return null;
+	}
+
+	/**
+	 * Get the points buffer.
+	 * @param {GPUDevice} [device] - Optional GPU device to create the buffer if it does not exist.
+	 * @returns {GPUBuffer | null} The points buffer for this geometry.
+	 */
+	public getPointsBuffer ( device?: GPUDevice ) : ( GPUBuffer | null )
+	{
+		return Geometry.getVertexBuffer ( this.#points, device );
+	}
+
+	/**
+	 * Get the normals buffer.
+	 * @param {GPUDevice} [device] - Optional GPU device to create the buffer if it does not exist.
+	 * @returns {GPUBuffer | null} The normals buffer for this geometry.
+	 */
+	public getNormalsBuffer ( device?: GPUDevice ) : ( GPUBuffer | null )
+	{
+		return Geometry.getVertexBuffer ( this.#normals, device );
+	}
+
+	/**
+	 * Get the colors buffer.
+	 * @param {GPUDevice} [device] - Optional GPU device to create the buffer if it does not exist.
+	 * @returns {GPUBuffer | null} The colors buffer for this geometry.
+	 */
+	public getColorsBuffer ( device?: GPUDevice ) : ( GPUBuffer | null )
+	{
+		return Geometry.getVertexBuffer ( this.#colors, device );
+	}
+
+	/**
+	 * Get the texture coordinates buffer.
+	 * @param {GPUDevice} [device] - Optional GPU device to create the buffer if it does not exist.
+	 * @returns {GPUBuffer | null} The texture coordinates buffer for this geometry.
+	 */
+	public getTexCoordsBuffer ( device?: GPUDevice ) : ( GPUBuffer | null )
+	{
+		return Geometry.getVertexBuffer ( this.#texCoords, device );
 	}
 
 	/**

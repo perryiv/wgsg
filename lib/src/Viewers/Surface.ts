@@ -691,7 +691,7 @@ export class Surface extends Base
 	 */
 	public draw ()
 	{
-		console.log ( "Drawing render-graph" );
+		// console.log ( "Drawing render-graph" );
 
 		// Handle no render graph.
 		const layers = this.#layers;
