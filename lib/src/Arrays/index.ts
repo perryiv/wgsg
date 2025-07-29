@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 export * from "./ArrayBase";
+export * from "./Array1";
 export * from "./Array2";
 export * from "./Array3";
 export * from "./Array4";

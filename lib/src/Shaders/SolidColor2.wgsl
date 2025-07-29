@@ -26,7 +26,7 @@ struct VertexOut
 	output.position = position;
 	output.color = color;
 	return output;
-} 
+}
 @fragment fn fs(fragData: VertexOut) -> @location(0) vec4f
 {
 	return fragData.color;
