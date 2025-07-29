@@ -13,5 +13,5 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 export * from "./Arrays";
-export * from "./Elements";
+export * from "./Indexed";
 export * from "./Primitives";

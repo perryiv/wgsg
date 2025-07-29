@@ -226,9 +226,28 @@ export class Device extends Base
 			const target = { format: this.preferredFormat };
 			descriptor = {
 				label,
-				vertex: { module },
-				fragment: { module, targets: [ target ] },
-				primitive: { topology: "triangle-list" },
+				vertex: {
+					module,
+					buffers: [
+					{
+						attributes: [
+						{
+							shaderLocation: 0,
+							offset: 0,
+							format: "float32x3", // Position
+						} ],
+						arrayStride: 12, // 3 floats * 4 bytes each
+						// https://www.w3.org/TR/webgpu/#enumdef-gpuvertexstepmode
+						stepMode: "vertex",
+					} ]
+				},
+				fragment: {
+					module,
+					targets: [ target ]
+				},
+				primitive: {
+					topology: "triangle-list"
+				},
 				layout: "auto",
 			};
 		}
