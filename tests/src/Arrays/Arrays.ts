@@ -82,7 +82,7 @@ export function test ()
 			expect ( a.buffer ).to.not.equal ( b1 );
 		} );
 
-		it ( "Can make a 2D array wrapper around a 1D array", function ()
+		it ( "Can make a 2D array wrapper around a Float32Array", function ()
 		{
 			const v = new Float32Array ( [ 1, 2, 3, 4, 5, 6 ] )
 			const a = new Array2 ( v );
@@ -133,6 +133,72 @@ export function test ()
 			a.setVector ( 1, [ 10, 20 ] );
 
 			expect ( a.values ).to.deep.equal ( new Float32Array ( [
+				1, 10, 3,
+				4, 20, 6
+			] ) );
+
+			expect ( x[1] ).to.equal ( 10 );
+			expect ( y[1] ).to.equal ( 20 );
+
+			a.forEach ( ( vector, index ) =>
+			{
+				expect ( vector ).to.deep.equal ( a.getVector ( index ) );
+				expect ( vector[0] ).to.equal ( x[index] );
+				expect ( vector[1] ).to.equal ( y[index] );
+			} );
+		} );
+
+		it ( "Can make a 2D array wrapper around a Float64Array", function ()
+		{
+			const v = new Float64Array ( [ 1, 2, 3, 4, 5, 6 ] )
+			const a = new Array2 ( v );
+
+			const i = a.ix0;
+			const j = a.ix1;
+
+			const x = a.x0;
+			const y = a.x1;
+
+			expect ( a ).to.be.instanceOf ( Array2 );
+			expect ( a.values ).to.be.instanceOf ( Float64Array );
+			expect ( a.values ).to.equal ( v );
+			expect ( a.numVectors ).to.equal ( 3 );
+			expect ( a.values.length ).to.equal ( 6 );
+
+			expect ( i ).to.be.a ( "number" );
+			expect ( j ).to.be.a ( "number" );
+
+			expect ( i ).to.equal ( 0 );
+			expect ( j ).to.equal ( 3 );
+
+			expect ( x ).to.be.instanceOf ( Float64Array );
+			expect ( y ).to.be.instanceOf ( Float64Array );
+
+			expect ( x ).to.deep.equal ( new Float64Array ( [ 1, 2, 3 ] ) );
+			expect ( y ).to.deep.equal ( new Float64Array ( [ 4, 5, 6 ] ) );
+
+			expect ( x[0] ).to.equal ( 1 );
+			expect ( x[1] ).to.equal ( 2 );
+			expect ( x[2] ).to.equal ( 3 );
+
+			expect ( y[0] ).to.equal ( 4 );
+			expect ( y[1] ).to.equal ( 5 );
+			expect ( y[2] ).to.equal ( 6 );
+
+			expect ( x[3] ).to.be.undefined;
+			expect ( y[3] ).to.be.undefined;
+
+			expect ( x[-1] ).to.be.undefined;
+			expect ( y[-1] ).to.be.undefined;
+
+			expect ( a.getVector ( 0 ) ).to.deep.equal ( [ 1, 4 ] );
+			expect ( a.getVector ( 1 ) ).to.deep.equal ( [ 2, 5 ] );
+			expect ( a.getVector ( 2 ) ).to.deep.equal ( [ 3, 6 ] );
+			expect ( a.getVector ( 3 )[0] ).to.be.undefined
+
+			a.setVector ( 1, [ 10, 20 ] );
+
+			expect ( a.values ).to.deep.equal ( new Float64Array ( [
 				1, 10, 3,
 				4, 20, 6
 			] ) );
