@@ -43,37 +43,34 @@ export type PossibleArrayType = (
 
 export class Array1 < InternalArrayType extends PossibleArrayType >
 {
-	#device: Device;
-	#values: InternalArrayType;
+	#values: ( InternalArrayType | null ) = null;
 	#buffer: ( GPUBuffer | null ) = null;
 
 	/**
 	 * Construct the class.
 	 * @class
-	 * @param {Device} device - The WebGPU device.
 	 * @param {InternalArrayType} values - The values for this array.
 	 */
-	constructor ( device: Device, values: InternalArrayType )
+	constructor ( values: InternalArrayType )
 	{
-		this.#device = device;
 		this.#values = values;
 		this.#buffer = null;
 	}
 
 	/**
 	 * Get the values.
-	 * @returns {InternalArrayType} The values of this array.
+	 * @returns {InternalArrayType | null} The values of this array.
 	 */
-	public get values() : InternalArrayType
+	public get values() : ( InternalArrayType | null )
 	{
 		return this.#values;
 	}
 
 	/**
 	 * Set the values.
-	 * @param {InternalArrayType} values - Values for this array.
+	 * @param {InternalArrayType | null} values - Values for this array.
 	 */
-	public set values ( values: InternalArrayType )
+	public set values ( values: ( InternalArrayType | null ) )
 	{
 		this.#values = values;
 		this.#buffer = null;
@@ -85,27 +82,57 @@ export class Array1 < InternalArrayType extends PossibleArrayType >
 	 */
 	public get length() : number
 	{
-		return this.values.length;
+		const values = this.values;
+		return ( values ? values.length : 0 );
 	}
 
 	/**
-	 * Get or make the WebGPU buffer.
-	 * @returns {GPUBuffer} The WebGPU buffer.
+	 * Get or try to make the WebGPU buffer.
+	 * @returns {GPUBuffer | null} The WebGPU buffer.
 	 */
-	public get buffer() : GPUBuffer
+	public get buffer() : ( GPUBuffer | null )
 	{
-		// If the buffer is dirty...
-		if ( !( this.#buffer ) )
+		// Shortcuts.
+		const values = this.#values;
+		const buffer = this.#buffer;
+
+		// If we have values and the buffer is dirty...
+		if ( ( values ) && ( !buffer ) )
 		{
 			// Shortcuts.
-			const device = this.#device.device;
-			const values = this.values;
+			const device = Device.instance.device;
+
+			// This should never happen.
+			if ( !device )
+			{
+				throw new Error ( "No device when making buffer" );
+			}
+
+			// Determine the usage.
+			let usage = ( GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE );
+			if (
+				( values instanceof Float64Array ) ||
+				( values instanceof Float32Array ) )
+			{
+				usage |= GPUBufferUsage.VERTEX;
+			}
+			else if (
+				( values instanceof Uint32Array ) ||
+				( values instanceof Uint16Array ) ||
+				( values instanceof Uint8Array ) )
+			{
+				usage |= GPUBufferUsage.INDEX;
+			}
+			else
+			{
+				throw new Error ( `Unknown array type: ${typeof values}` );
+			}
 
 			// Make the new buffer.
 			const buffer = device.createBuffer ( {
 		    label: "Array1 buffer",
     		size: values.byteLength,
-    		usage: ( GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST )
+    		usage
   		} );
 
 			// Fill the buffer with the values.

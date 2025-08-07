@@ -13,9 +13,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Device } from "../Tools";
 import { IVector4 } from "../Types";
-// import { Manager } from "./Manager";
 import { ShaderBase } from "./ShaderBase";
 import { vec4 } from "gl-matrix";
 
@@ -31,7 +29,6 @@ import code from "./SolidColor.wgsl?raw";
 
 export interface ISolidColorShaderInput
 {
-	device: Device;
 	color?: IVector4;
 }
 
@@ -43,10 +40,6 @@ export interface ISolidColorShaderInput
 ///////////////////////////////////////////////////////////////////////////////
 
 export const SOLID_COLOR_SHADER_NAME = "Shaders.SolidColor";
-// Manager.instance.add ( SOLID_COLOR_SHADER_NAME, (	device: Device ) =>
-// {
-// 	return SolidColor.factory ( device );
-// } );
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -64,31 +57,20 @@ export class SolidColor extends ShaderBase
 	 * Construct the class.
 	 * @class
 	 * @param {ISolidColorShaderInput} input - The input for the constructor.
-	 * @param {Device} input.device - The GPU device wrapper.
 	 * @param {string} [input.code] - The shader code.
 	 * @param {IVector4} [input.color] - The color to use.
 	 */
-	public constructor ( input: ISolidColorShaderInput )
+	public constructor ( input?: ISolidColorShaderInput )
 	{
-		const { device, color } = input;
+		super ( { code: ( code as string ) } );
 
-		super ( { device, code: ( code as string ) } );
+		const { color } = ( input ? input : {} );
 
-		if ( color )
+		if ( ( color ) && ( 4 === color.length ) )
 		{
 			vec4.copy ( this.#color, color );
 		}
 	}
-
-	/**
-	 * Factory function for this shader.
-	 * @param {Device} device The GPU device.
-	 * @returns {SolidColor} The shader instance.
-	 */
-	// public static factory ( this: void, device: Device ) : SolidColor
-	// {
-	// 	return new SolidColor ( { device } );
-	// }
 
 	/**
 	 * Return the class name.

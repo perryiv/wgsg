@@ -26,18 +26,15 @@ export function test ()
 {
 	describe ( "Array", function ()
 	{
-		let device: ( Device | null ) = null;
-
 		this.beforeAll ( async function ()
 		{
-			device = await Device.create();
+			await Device.init();
 		} );
 
 		it ( "Can make a 1D wrapper around Float32Array", function ()
 		{
-			device = device!;
 			const v = new Float32Array ( [ 1, 2, 3, 4, 5 ] );
-			const a = new Array1 ( device, v );
+			const a = new Array1 ( v );
 
 			expect ( a ).to.be.instanceOf ( Array1 );
 			expect ( a.values ).to.be.instanceOf ( Float32Array );

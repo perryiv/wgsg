@@ -13,7 +13,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Array3 } from "../../../Arrays";
+import { Array1, Array3 } from "../../../Arrays";
 import { Geometry } from "./Geometry";
 import { Indexed } from "../../Primitives";
 import { State } from "../../State";
@@ -246,8 +246,8 @@ export class Sphere extends Geometry
 		} );
 
 		// Set the new arrays.
-		this.points = points;
-		this.normals = normals;
+		this.points = new Array1 ( points );
+		this.normals = new Array1 ( normals );
 
 		// Set the primitive list.
 		this.primitives = new Indexed ( { mode: "triangle-list", indices } );

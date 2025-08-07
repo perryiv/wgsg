@@ -75,7 +75,7 @@ export function test ()
 				console.log ( "Custom reset function called." );
 			};
 
-			const shader = new SolidColor ( { device: device! } );
+			const shader = new SolidColor();
 
 			const state = new State();
 			state.name = "test_state";
@@ -96,7 +96,7 @@ export function test ()
 
 		it ( "Should be able to construct with input", function ()
 		{
-			const shader = new SolidColor ( { device: device! } );
+			const shader = new SolidColor();
 			const state = new State ( {
 				name: "test_state",
 				shader,

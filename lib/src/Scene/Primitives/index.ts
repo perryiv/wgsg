@@ -14,4 +14,3 @@
 
 export * from "./Arrays";
 export * from "./Indexed";
-export * from "./Primitives";

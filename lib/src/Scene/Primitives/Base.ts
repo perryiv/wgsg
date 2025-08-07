@@ -13,7 +13,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Base } from "../../Base/Base";
+import { Base as BaseClass } from "../../Base/Base";
 import { Draw as DrawVisitor } from "../../Visitors/Draw";
 
 
@@ -36,7 +36,7 @@ export interface IPrimitivesInput
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export abstract class Primitives extends Base
+export abstract class Base extends BaseClass
 {
 	#mode: GPUPrimitiveTopology = "point-list";
 
@@ -46,7 +46,7 @@ export abstract class Primitives extends Base
 	 * @param {IPrimitivesInput} [input] - Input for the primitives.
 	 * @param {GPUPrimitiveTopology} [input.mode] - The primitive topology mode.
 	 */
-	constructor ( input ?: IPrimitivesInput )
+	constructor ( input?: IPrimitivesInput )
 	{
 		// Call this first.
 		super();

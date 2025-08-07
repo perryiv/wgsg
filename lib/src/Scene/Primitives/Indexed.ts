@@ -9,12 +9,16 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Primitive list class that uses indices.
+//	The primitive class for when there are indices.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IPrimitivesInput, Primitives } from "./Primitives";
+import { Array1 } from "../../Arrays";
 import { Draw as DrawVisitor } from "../../Visitors/Draw";
+import {
+	Base as BaseClass,
+	type IPrimitivesInput,
+} from "./Base";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -23,15 +27,10 @@ import { Draw as DrawVisitor } from "../../Visitors/Draw";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-type IIndexType = ( Uint32Array | Uint16Array );
-export interface IIndexedInput extends IPrimitivesInput
+export type IIndexArray = Array1 < Uint32Array | Uint16Array >;
+export interface IIndexedPrimitivesInput extends IPrimitivesInput
 {
-	indices: IIndexType;
-}
-export interface IIndexData
-{
-	data: ( IIndexType | null );
-	buffer: ( GPUBuffer | null );
+	indices: ( IIndexArray | Uint32Array | Uint16Array );
 }
 
 
@@ -42,9 +41,9 @@ export interface IIndexData
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Indexed extends Primitives
+export class Indexed extends BaseClass
 {
-	#indices: IIndexData = { data: null, buffer: null };
+	#indices: ( IIndexArray | null ) = null;
 
 	/**
 	 * Construct the class.
@@ -53,15 +52,17 @@ export class Indexed extends Primitives
 	 * @param {GPUPrimitiveTopology} [input.mode] - The primitive topology mode.
 	 * @param {IIndexType} [input.indices] - The
 	 */
-	constructor ( input ?: IIndexedInput )
+	constructor ( input?: IIndexedPrimitivesInput )
 	{
 		// Call this first.
 		super ( input );
 
+		const { indices } = input || {};
+
 		// Is there input?
-		if ( input?.indices )
+		if ( indices )
 		{
-			this.indices = input.indices;
+			this.indices = indices;
 		}
 	}
 
@@ -85,27 +86,27 @@ export class Indexed extends Primitives
 
 	/**
 	 * Get the indices.
-	 * @returns {IIndexType} The indices.
+	 * @returns {IIndexArray} | null The indices.
 	 */
-	get indices (): IIndexType
+	get indices (): ( IIndexArray | null )
 	{
-		let indices = this.#indices.data;
-		if ( !indices )
-		{
-			indices = new Uint32Array ( 0 );
-			this.#indices.data = indices;
-		}
-		return indices;
+		return this.#indices;
 	}
 
 	/**
 	 * Set the indices.
-	 * @param {IIndexType} indices The indices.
+	 * @param {IIndexArray | Uint32Array | Uint16Array | null} indices The indices.
 	 */
-	set indices ( indices: IIndexType )
+	set indices ( indices: ( IIndexArray | Uint32Array | Uint16Array | null ) )
 	{
+		// Wrap it if we should.
+		if ( indices instanceof Uint32Array || indices instanceof Uint16Array )
+		{
+			indices = new Array1 ( indices );
+		}
+
 		// Do not copy. These arrays can be shared.
-		this.#indices.data = indices;
+		this.#indices = indices;
 	}
 
 	/**
@@ -114,7 +115,7 @@ export class Indexed extends Primitives
 	 */
 	get numIndices (): number
 	{
-		const indices = this.#indices.data;
+		const indices = this.#indices;
 		return ( indices ? indices.length : 0 );
 	}
 
@@ -125,7 +126,7 @@ export class Indexed extends Primitives
 	get indexType (): GPUIndexFormat
 	{
 		// Shortcut.
-		const indices = this.#indices.data;
+		const indices = this.#indices?.values;
 
 		// Handle no indices.
 		if ( !indices )
@@ -141,41 +142,4 @@ export class Indexed extends Primitives
 			default: throw new Error ( "Unknown index type" );
 		}
 	}
-
-	/**
-	 * Get the buffer.
-	 * @param {GPUDevice} [device] - Optional GPU device to create the buffer if it does not exist.
-	 * @returns {GPUBuffer | null} The buffer for this indexed primitive list.
-	 */
-	public getBuffer ( device?: GPUDevice ) : ( GPUBuffer | null )
-	{
-		// Shortcut.
-		const indices = this.#indices;
-
-		// If the buffer already exists then return it.
-		if ( indices.buffer )
-		{
-			return indices.buffer;
-		}
-
-		// If we get to here then try to make the buffer.
-		if ( indices.data && device )
-		{
-			// Make the buffer.
-			indices.buffer = device.createBuffer ( {
-				size: indices.data.byteLength,
-				usage: ( GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST )
-			} );
-
-			// Write the data to the buffer.
-			device.queue.writeBuffer ( indices.buffer, 0, indices.data, 0, indices.data.length );
-
-			// Return the buffer.
-			return indices.buffer;
-		}
-
-		// If we get to here then there is no buffer.
-		return null;
-	}
-
 }

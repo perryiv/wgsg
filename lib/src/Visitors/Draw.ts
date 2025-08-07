@@ -44,7 +44,6 @@ import type {
 export interface IDrawVisitorInput
 {
 	context: GPUCanvasContext;
-	device: Device;
 };
 
 
@@ -57,7 +56,6 @@ export interface IDrawVisitorInput
 
 export class Draw extends Visitor
 {
-	#device: Device;
 	#context: GPUCanvasContext;
 	#state: ( State | null ) = null;
 	#projMatrix:	IMatrix44 = makeIdentity(); // Has to be a copy.
@@ -72,9 +70,8 @@ export class Draw extends Visitor
 	 * @class
 	 * @param {IDrawVisitorInput} input - The input for the constructor.
 	 * @param {GPUCanvasContext} input.context - The GPU canvas context to use for rendering.
-	 * @param {Device} input.device - The GPU device to use for rendering.
 	 */
-	constructor ( { context, device }: IDrawVisitorInput )
+	constructor ( { context }: IDrawVisitorInput )
 	{
 		// Call this first.
 		super();
@@ -88,18 +85,9 @@ export class Draw extends Visitor
 		{
 			throw new Error ( "Draw visitor context input is not a GPUCanvasContext" );
 		}
-		if ( !device )
-		{
-			throw new Error ( "Draw visitor device input is invalid" );
-		}
-		if ( !( device instanceof Device ) )
-		{
-			throw new Error ( "Draw visitor device input is not a GPUDevice" );
-		}
 
 		// Set the members.
 		this.#context = context;
-		this.#device = device;
 	}
 
 	/**
@@ -156,25 +144,6 @@ export class Draw extends Visitor
 
 		// Return the context.
 		return context;
-	}
-
-	/**
-	 * Get the device.
-	 * @returns {Device} The GPU device wrapper.
-	 */
-	protected get device () : Device
-	{
-		// Shortcut.
-		const device = this.#device;
-
-		// We should always have a valid device.
-		if ( !device )
-		{
-			throw new Error ( "Attempting to get invalid device in draw visitor" );
-		}
-
-		// Return the device.
-		return device;
 	}
 
 	/**
@@ -339,7 +308,9 @@ export class Draw extends Visitor
 	public drawLayers ( layers: ILayerMap ) : void
 	{
 		// Make a command encoder.
-		this.encoder = this.device.makeEncoder ( "draw_visitor_command_encoder" );
+		this.encoder = Device.instance.device.createCommandEncoder ( {
+			label: "draw_visitor_command_encoder"
+		} );
 
 		// Make the background color. We have to pre-multiply by the alpha value.
 		const color: IVector4 = [ 0, 0, 0, 0 ];
@@ -371,7 +342,7 @@ export class Draw extends Visitor
 		}
 
 		// Submit the commands to the GPU.
-		this.device.queue.submit ( [ this.encoder.finish() ] );
+		Device.instance.device.queue.submit ( [ this.encoder.finish() ] );
 
 		// Reset the encoder.
 		this.encoder = null;
@@ -605,11 +576,10 @@ export class Draw extends Visitor
 		// Shortcuts.
 		const pass = this.pass;
 		const geom = this.geometry;
-		const device = this.device.device;
 
 		// Get the buffers.
-		const pointsBuffer = geom.getPointsBuffer ( device );
-		const indexBuffer = prims.getBuffer ( device );
+		const pointsBuffer = geom.points?.buffer;
+		const indexBuffer = prims.indices?.buffer;
 
 		// We need points to continue.
 		if ( !pointsBuffer )
@@ -628,9 +598,9 @@ export class Draw extends Visitor
 		pass.setIndexBuffer ( indexBuffer, prims.indexType );
 
 		// Get the other buffers.
-		const normalsBuffer = geom.getNormalsBuffer ( device );
-		const colorsBuffer = geom.getColorsBuffer ( device );
-		const texCoordsBuffer = geom.getTexCoordsBuffer ( device );
+		const normalsBuffer = geom.normals?.buffer;
+		const colorsBuffer = geom.colors?.buffer;
+		const texCoordsBuffer = geom.texCoords?.buffer;
 
 		// Set the buffer of normals if we can.
 		if ( normalsBuffer )
