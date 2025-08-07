@@ -34,11 +34,9 @@ export function test ()
 {
 	describe ( "State", function ()
 	{
-		let device: ( Device | null ) = null;
-
 		this.beforeAll ( async function ()
 		{
-			device = await Device.create();
+			await Device.init();
 		} );
 
 		it ( "Should be able to make a state", function ()

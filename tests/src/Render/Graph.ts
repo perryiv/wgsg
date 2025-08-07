@@ -210,19 +210,14 @@ export function test ()
 
 		it ( "Can draw the scene", function ()
 		{
-			const device = Device.instance;
-			expect ( device ).to.not.be.null;
-			expect ( device ).to.not.be.undefined;
-			if ( !device )
-			{
-				throw new Error ( "Device is not defined" );
-			}
-			expect ( device instanceof Device ).to.be.true;
+			expect ( Device.instance ).to.not.be.null;
+			expect ( Device.instance ).to.not.be.undefined;
+			expect ( Device.instance instanceof Device ).to.be.true;
 
 			const canvas = document.createElement ( "canvas" );
-			const context = device.getConfiguredContext ( canvas );
+			const context = Device.instance.getConfiguredContext ( canvas );
 
-			const dv = new DrawVisitor ( { context, device } );
+			const dv = new DrawVisitor ( { context } );
 			dv.drawLayers ( layers );
 		} );
 	} );

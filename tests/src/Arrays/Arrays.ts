@@ -43,8 +43,8 @@ export function test ()
 			expect ( a.length ).to.equal ( 5 );
 
 			expect ( a.buffer ).to.not.be.null;
-			expect ( a.buffer.size ).to.equal ( v.length * Float32Array.BYTES_PER_ELEMENT );
-			expect ( a.buffer.size ).to.equal ( 5 * 4 );
+			expect ( a.buffer?.size ).to.equal ( v.length * Float32Array.BYTES_PER_ELEMENT );
+			expect ( a.buffer?.size ).to.equal ( 5 * 4 );
 
 			const b1 = a.buffer;
 			a.values = new Float32Array ( [ 6, 7, 8, 9, 10 ] );
@@ -56,9 +56,8 @@ export function test ()
 
 		it ( "Can make a 1D wrapper around Float64Array", function ()
 		{
-			device = device!;
 			const v = new Float64Array ( [ 1, 2, 3, 4, 5 ] );
-			const a = new Array1 ( device, v );
+			const a = new Array1 ( v );
 
 			expect ( a ).to.be.instanceOf ( Array1 );
 			expect ( a.values ).to.be.instanceOf ( Float64Array );
@@ -68,8 +67,8 @@ export function test ()
 
 			const buffer = a.buffer;
 			expect ( buffer ).to.not.be.null;
-			expect ( buffer.size ).to.equal ( v.length * Float64Array.BYTES_PER_ELEMENT );
-			expect ( buffer.size ).to.equal ( 5 * 8 );
+			expect ( buffer?.size ).to.equal ( v.length * Float64Array.BYTES_PER_ELEMENT );
+			expect ( buffer?.size ).to.equal ( 5 * 8 );
 
 			const b1 = a.buffer;
 			a.values = new Float64Array ( [ 6, 7, 8, 9, 10 ] );
