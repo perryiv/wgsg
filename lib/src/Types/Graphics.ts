@@ -19,15 +19,4 @@ export interface IDeviceOptions
 	deviceDescriptor?: GPUDeviceDescriptor;
 }
 
-export interface IDeviceData
-{
-	device: GPUDevice;
-}
-
-export interface IRenderingContextInput
-{
-	device: GPUDevice;
-	canvas: ( HTMLCanvasElement | OffscreenCanvas );
-}
-
 export type ITextureFormat = GPUTextureFormat;
