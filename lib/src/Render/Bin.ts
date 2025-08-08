@@ -1,0 +1,67 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Copyright (c) 2025, Perry L Miller IV
+//	All rights reserved.
+//	MIT License: https://opensource.org/licenses/mit-license.html
+//
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Represents a render bin.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+import { Base as BaseClass } from "../Base";
+import { ShaderBase } from "../Shaders";
+import { Pipeline } from "./Pipeline";
+import { ProjMatrix } from "./ProjMatrix";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Types used below.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export type IPipelineMap = Map < string, Pipeline >;
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Class that represents a render bin.
+ * @class
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export class Bin extends BaseClass
+{
+	#pipelines: IPipelineMap = new Map < string, Pipeline > ();
+
+	/**
+	 * Construct the class.
+	 * @class
+	 */
+	constructor()
+	{
+		super();
+	}
+
+	/**
+	 * Return the class name.
+	 * @returns {string} The class name.
+	 */
+	public override getClassName() : string
+	{
+		return "Render.Bin";
+	}
+
+	/**
+	 * Get the pipelines.
+	 * @returns {IPipelineMap} The pipelines.
+	 */
+	public get pipelines() : IPipelineMap
+	{
+		return this.#pipelines;
+	}
+}
