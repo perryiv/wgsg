@@ -15,7 +15,7 @@
 import { Device, makeIdentity } from "../Tools";
 import { IMatrix44, IVector4 } from "../Types";
 import { mat4, vec4 } from "gl-matrix";
-import { Visitor } from "./Visitor";
+import { Visitor as BaseClass } from "./Visitor";
 import {
 	Arrays,
 	Geometry,
@@ -54,7 +54,7 @@ export interface IDrawVisitorInput
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Draw extends Visitor
+export class Draw extends BaseClass
 {
 	#context: GPUCanvasContext;
 	#state: ( State | null ) = null;
