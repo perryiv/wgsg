@@ -78,7 +78,6 @@ export interface IViewerProps
 export function Viewer ( { style }: IViewerProps )
 {
 	// Get state.
-	const [ , setDevice ] = useState < Device | null > ( null );
 	const canvas = useRef < HTMLCanvasElement | null > ( null );
 	const [ , setViewer ] = useState < InternalViewer | null > ( null );
 
@@ -96,24 +95,19 @@ export function Viewer ( { style }: IViewerProps )
 				throw new Error ( "Invalid canvas element" );
 			}
 
-			const device = await Device.create();
+			await Device.init();
 
-			if ( !device )
+			if ( !Device.instance )
 			{
 				throw new Error ( "Invalid device" );
 			}
 
-			setDevice ( device );
-
+			void Device.instance.device.lost.then ( ( { reason }: GPUDeviceLostInfo ) =>
 			{
-				const gd: GPUDevice = device.device;
-				void gd.lost.then ( ( { reason }: GPUDeviceLostInfo ) =>
-				{
-					console.log ( "Context lost because: ", reason );
-				} );
-			}
+				console.log ( "Context lost because: ", reason );
+			} );
 
-			const viewer = new InternalViewer ( { device, canvas: canvas.current } );
+			const viewer = new InternalViewer ( { canvas: canvas.current } );
 			viewer.scene = root;
 			setViewer ( viewer );
 
