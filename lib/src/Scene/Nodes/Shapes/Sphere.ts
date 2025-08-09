@@ -1,4 +1,3 @@
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (c) 2025, Perry L Miller IV
@@ -13,9 +12,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Array3 } from "../../../Arrays";
-import { Elements } from "../../Primitives";
-import { Geometry, NormalArray, PointArray } from "./Geometry";
+import { Array1, Array3 } from "../../../Arrays";
+import { Geometry } from "./Geometry";
+import { Indexed } from "../../Primitives";
 import { State } from "../../State";
 import { vec3 } from "gl-matrix";
 import type { IVector3 } from "../../../Types";
@@ -189,9 +188,9 @@ export class Sphere extends Geometry
 		const { numPoints, numIndices } = estimateSphereSizes ( ns );
 
 		// Make the arrays.
-		const indices: Uint32Array = new Uint32Array ( numIndices );
-		const points: PointArray = new Float32Array ( numPoints * 3 );
-		const normals: NormalArray = new Float32Array ( numPoints * 3 );
+		const indices = new Uint32Array ( numIndices );
+		const points = new Float32Array ( numPoints * 3 );
+		const normals = new Float32Array ( numPoints * 3 );
 
 		// Shortcuts.
 		const [ cx, cy, cz ] = this.center;
@@ -246,11 +245,11 @@ export class Sphere extends Geometry
 		} );
 
 		// Set the new arrays.
-		this.points = points;
-		this.normals = normals;
+		this.points = new Array1 ( points );
+		this.normals = new Array1 ( normals );
 
 		// Set the primitive list.
-		this.primitives = new Elements ( { mode: "triangle-list", indices } );
+		this.primitives = new Indexed ( { mode: "triangle-list", indices } );
 
 		// The bounds is now dirty.
 		this.setBounds ( null );

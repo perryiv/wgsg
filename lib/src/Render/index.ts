@@ -12,4 +12,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export * from "./Graph";
+export * from "./Bin";
+export * from "./Layer";
+export * from "./ModelMatrix";
+export * from "./Pipeline";
+export * from "./ProjMatrix";
+export * from "./Root";

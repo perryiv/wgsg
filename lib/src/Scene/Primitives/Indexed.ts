@@ -1,4 +1,3 @@
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (c) 2025, Perry L Miller IV
@@ -9,12 +8,16 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Primitive list class that uses indices.
+//	The primitive class for when there are indices.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IPrimitivesInput, Primitives } from "./Primitives";
+import { Array1 } from "../../Arrays";
 import { Draw as DrawVisitor } from "../../Visitors/Draw";
+import {
+	Base as BaseClass,
+	type IPrimitivesInput,
+} from "./Base";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -23,39 +26,42 @@ import { Draw as DrawVisitor } from "../../Visitors/Draw";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export interface IElementsInput extends IPrimitivesInput
+export type IIndexArray = Array1 < Uint32Array | Uint16Array >;
+export interface IIndexedPrimitivesInput extends IPrimitivesInput
 {
-	indices: ( Uint32Array | Uint16Array );
+	indices: ( IIndexArray | Uint32Array | Uint16Array );
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Primitive elements class.
+ * Primitive indexed class.
  * @class
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Elements extends Primitives
+export class Indexed extends BaseClass
 {
-	#indices: ( Uint32Array | Uint16Array | null ) = null;
+	#indices: ( IIndexArray | null ) = null;
 
 	/**
 	 * Construct the class.
 	 * @class
-	 * @param {IElementsInput} [input] - Input for the elements.
+	 * @param {IIndexedInput} [input] - Input for the constructor.
 	 * @param {GPUPrimitiveTopology} [input.mode] - The primitive topology mode.
-	 * @param {Uint32Array | Uint16Array} [input.indices] - The
+	 * @param {IIndexType} [input.indices] - The
 	 */
-	constructor ( input ?: IElementsInput )
+	constructor ( input?: IIndexedPrimitivesInput )
 	{
 		// Call this first.
 		super ( input );
 
+		const { indices } = input || {};
+
 		// Is there input?
-		if ( input?.indices )
+		if ( indices )
 		{
-			this.indices = input.indices;
+			this.indices = indices;
 		}
 	}
 
@@ -65,7 +71,7 @@ export class Elements extends Primitives
 	 */
 	public override getClassName() : string
 	{
-		return "Scene.Primitives.Elements";
+		return "Scene.Primitives.Indexed";
 	}
 
 	/**
@@ -74,30 +80,30 @@ export class Elements extends Primitives
 	 */
 	public override accept ( visitor: DrawVisitor ): void
 	{
-		visitor.visitElements ( this );
+		visitor.visitIndexed ( this );
 	}
 
 	/**
 	 * Get the indices.
-	 * @returns {Uint32Array | Uint16Array} The indices.
+	 * @returns {IIndexArray} | null The indices.
 	 */
-	get indices (): Uint32Array | Uint16Array
+	get indices (): ( IIndexArray | null )
 	{
-		let indices = this.#indices;
-		if ( !indices )
-		{
-			indices = new Uint32Array ( 0 );
-			this.#indices = indices;
-		}
-		return indices;
+		return this.#indices;
 	}
 
 	/**
 	 * Set the indices.
-	 * @param {Uint32Array | Uint16Array} indices The indices.
+	 * @param {IIndexArray | Uint32Array | Uint16Array | null} indices The indices.
 	 */
-	set indices ( indices: Uint32Array | Uint16Array )
+	set indices ( indices: ( IIndexArray | Uint32Array | Uint16Array | null ) )
 	{
+		// Wrap it if we should.
+		if ( indices instanceof Uint32Array || indices instanceof Uint16Array )
+		{
+			indices = new Array1 ( indices );
+		}
+
 		// Do not copy. These arrays can be shared.
 		this.#indices = indices;
 	}
@@ -110,5 +116,29 @@ export class Elements extends Primitives
 	{
 		const indices = this.#indices;
 		return ( indices ? indices.length : 0 );
+	}
+
+	/**
+	 * Get the index type.
+	 * @returns {GPUIndexFormat} The index type.
+	 */
+	get indexType (): GPUIndexFormat
+	{
+		// Shortcut.
+		const indices = this.#indices?.values;
+
+		// Handle no indices.
+		if ( !indices )
+		{
+			throw new Error ( "No indices when getting type" );
+		}
+
+		// Return the correct type.
+		switch ( indices.BYTES_PER_ELEMENT )
+		{
+			case 2: return "uint16";
+			case 4: return "uint32";
+			default: throw new Error ( "Unknown index type" );
+		}
 	}
 }

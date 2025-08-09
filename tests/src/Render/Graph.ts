@@ -64,7 +64,6 @@ export function test ()
 		state: "test_render_graph_default_state"
 	};
 
-	let device: ( Device | null ) = null;
 	let scene: ( Group | null ) = null;
 	let cv: ( CullVisitor | null ) = null;
 	const layers: ILayerMap = new Map < number, ILayer > ();
@@ -73,7 +72,7 @@ export function test ()
 	{
 		this.beforeAll ( async function ()
 		{
-			device = await Device.create();
+			await Device.init();
 		} );
 
 		it ( "Cull visitor has expected properties", function ()
@@ -81,7 +80,7 @@ export function test ()
 			cv = new CullVisitor ( {
 				defaultState: new State ( {
 					name: names.state,
-					shader: new SolidColor ( { device: device! } )
+					shader: new SolidColor()
 				} ),
 				layers
 			} );
@@ -211,18 +210,14 @@ export function test ()
 
 		it ( "Can draw the scene", function ()
 		{
-			expect ( device ).to.not.be.null;
-			expect ( device ).to.not.be.undefined;
-			if ( !device )
-			{
-				throw new Error ( "Device is not defined" );
-			}
-			expect ( device instanceof Device ).to.be.true;
+			expect ( Device.instance ).to.not.be.null;
+			expect ( Device.instance ).to.not.be.undefined;
+			expect ( Device.instance instanceof Device ).to.be.true;
 
 			const canvas = document.createElement ( "canvas" );
-			const context = device.getContext ( canvas );
+			const context = Device.instance.getConfiguredContext ( canvas );
 
-			const dv = new DrawVisitor ( { context, device } );
+			const dv = new DrawVisitor ( { context } );
 			dv.drawLayers ( layers );
 		} );
 	} );

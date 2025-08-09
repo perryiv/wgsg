@@ -37,7 +37,8 @@ export function test ()
 
 		it ( "Can make a device and use it", async function ()
 		{
-			const device = await Device.create();
+			await Device.init();
+			const device = Device.instance;
 
 			expect ( device ).to.exist;
 			expect ( "Tools.Device" === device.type ).to.be.true;
@@ -53,7 +54,7 @@ export function test ()
 			expect ( canvas ).to.exist;
 			expect ( canvas instanceof HTMLCanvasElement ).to.be.true;
 
-			const context = device.getContext ( canvas );
+			const context = Device.instance.getConfiguredContext ( canvas );
 			expect ( context ).to.exist;
 			expect ( context instanceof GPUCanvasContext ).to.be.true;
 		} );

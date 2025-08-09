@@ -1,4 +1,3 @@
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (c) 2025, Perry L Miller IV
@@ -46,7 +45,6 @@ export interface ISurfaceConstructor
 {
 	// These two are needed.
 	canvas: HTMLCanvasElement;
-	device: Device;
 
 	// The user can configure this if desired.
 	context?: ( GPUCanvasContext | null );
@@ -83,7 +81,6 @@ export class Surface extends Base
 {
 	#canvas: HTMLCanvasElement;
 	#context: GPUCanvasContext;
-	#device: Device;
 	#viewport: IViewport = { x: 0, y: 0, width: 0, height: 0 };
 	#scene: ( Node | null ) = null;
 	#projection: Projection = new Perspective();
@@ -99,7 +96,7 @@ export class Surface extends Base
 	 * @class
 	 * @param {ISurfaceConstructor} input - The constructor input object.
 	 */
-	constructor ( { canvas, device, context } : ISurfaceConstructor )
+	constructor ( { canvas, context } : ISurfaceConstructor )
 	{
 		// Call this first.
 		super();
@@ -110,16 +107,10 @@ export class Surface extends Base
 			throw new Error ( "Invalid canvas when constructing a surface" );
 		}
 
-		// This should be valid.
-		if ( !device )
-		{
-			throw new Error ( "Invalid device when constructing a surface" );
-		}
-
 		// This one is optional. Make it if we have to.
 		if ( !context )
 		{
-			context = device.getContext ( canvas );
+			context = Device.instance.getConfiguredContext ( canvas );
 		}
 
 		// This should be valid when we get to here.
@@ -138,14 +129,13 @@ export class Surface extends Base
 			defaultState: state,
 		} );
 		const draw = new DrawVisitor ( {
-			context,
-			device
+			context
 		} );
 		this.#visitors = { update, cull, draw };
 
 		// Set the default state's properties.
 		state.name = `Default state for ${this.getClassName()} ${this.id}`;
-		state.shader = new SolidColor ( { device } );
+		state.shader = new SolidColor();
 		state.apply = this.defaultApplyFunction.bind ( this );
 		state.reset = this.defaultResetFunction.bind ( this );
 
@@ -157,7 +147,7 @@ export class Surface extends Base
 		// Set our members.
 		this.#canvas = canvas;
 		this.#context = context;
-		this.#device = device;
+		this.#viewport = { x: 0, y: 0, width: canvas.width, height: canvas.height };
 	}
 
 	/**
@@ -198,7 +188,7 @@ export class Surface extends Base
 		// There can be only one.
 		const item = items[0];
 		let { inlineSize: width, blockSize: height } = item.contentBoxSize[0];
-		const { maxTextureDimension2D: maxDimension } = this.device.limits;
+		const { maxTextureDimension2D: maxDimension } = Device.instance.device.limits;
 
 		// Ignore when one or both are zero.
 		if ( ( width <= 0 ) || ( height <= 0 ) )
@@ -475,25 +465,6 @@ export class Surface extends Base
 	}
 
 	/**
-	 * Get the device.
-	 * @returns {Device} The GPU device wrapper.
-	 */
-	public get device () : Device
-	{
-		// Get a shortcut to the device.
-		const device = this.#device;
-
-		// Given how we construct the class, this is probably unnecessary.
-		if ( !device )
-		{
-			throw new Error ( "Invalid GPU device in surface class" );
-		}
-
-		// Return the device.
-		return device;
-	}
-
-	/**
 	 * Get the canvas.
 	 * @returns {HTMLCanvasElement} The HTML canvas element.
 	 */
@@ -691,7 +662,7 @@ export class Surface extends Base
 	 */
 	public draw ()
 	{
-		console.log ( "Drawing render-graph" );
+		// console.log ( "Drawing render-graph" );
 
 		// Handle no render graph.
 		const layers = this.#layers;

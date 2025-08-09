@@ -8,54 +8,58 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Base class for most other classes.
+//	Represents a layer.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { getNextId } from "../Tools/Functions";
+import { Base as BaseClass } from "../Base";
+import { Bin } from "./Bin";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Types used below.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export type IBinMap = Map < string, Bin >;
 
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Object class.
- * @abstract
+ * Class that represents a layer.
+ * @class
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export abstract class Base
+export class Layer extends BaseClass
 {
-	#id: number = getNextId();
+	#bins: IBinMap = new Map < string, Bin > ();
 
 	/**
 	 * Construct the class.
 	 * @class
 	 */
 	constructor()
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
 	{
-	}
-
-	/**
-	 * Return the id.
-	 * @returns {number} The id.
-	 */
-	public get id()
-	{
-		return this.#id;
+		super();
 	}
 
 	/**
 	 * Return the class name.
 	 * @returns {string} The class name.
 	 */
-	public abstract getClassName() : string;
+	public override getClassName() : string
+	{
+		return "Render.Layer";
+	}
 
 	/**
-	 * Return the type.
-	 * @returns {string} The type.
+	 * Get the bins.
+	 * @returns {IBinMap} The bins.
 	 */
-	public get type()
+	public get bins() : IBinMap
 	{
-		return this.getClassName();
+		return this.#bins;
 	}
 }

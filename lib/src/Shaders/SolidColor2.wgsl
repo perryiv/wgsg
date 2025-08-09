@@ -8,19 +8,26 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Types related to math.
+//	Shader code that renders a solid color.
+//	https://gist.github.com/ccincotti3/f5bbfca9acd27c0efb9a2d22509b5aca
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export interface IViewport
+struct VertexOut
 {
-	x: number;
-	y: number;
-	width: number;
-	height: number;
+	@builtin(position) position : vec4f,
+	@location(0) color : vec4f,
+};
+@vertex fn vs (
+	@location(0) position: vec4f,
+	@location(1) color: vec4f ) -> VertexOut
+{
+	var output : VertexOut;
+	output.position = position;
+	output.color = color;
+	return output;
 }
-export interface ISize
+@fragment fn fs(fragData: VertexOut) -> @location(0) vec4f
 {
-	width: number;
-	height: number;
+	return fragData.color;
 }

@@ -8,54 +8,60 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Base class for most other classes.
+//	Represents a render bin.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { getNextId } from "../Tools/Functions";
+import { Base as BaseClass } from "../Base";
+import { ShaderBase } from "../Shaders";
+import { Pipeline } from "./Pipeline";
+import { ProjMatrix } from "./ProjMatrix";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Types used below.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export type IPipelineMap = Map < string, Pipeline >;
 
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Object class.
- * @abstract
+ * Class that represents a render bin.
+ * @class
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export abstract class Base
+export class Bin extends BaseClass
 {
-	#id: number = getNextId();
+	#pipelines: IPipelineMap = new Map < string, Pipeline > ();
 
 	/**
 	 * Construct the class.
 	 * @class
 	 */
 	constructor()
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
 	{
-	}
-
-	/**
-	 * Return the id.
-	 * @returns {number} The id.
-	 */
-	public get id()
-	{
-		return this.#id;
+		super();
 	}
 
 	/**
 	 * Return the class name.
 	 * @returns {string} The class name.
 	 */
-	public abstract getClassName() : string;
+	public override getClassName() : string
+	{
+		return "Render.Bin";
+	}
 
 	/**
-	 * Return the type.
-	 * @returns {string} The type.
+	 * Get the pipelines.
+	 * @returns {IPipelineMap} The pipelines.
 	 */
-	public get type()
+	public get pipelines() : IPipelineMap
 	{
-		return this.getClassName();
+		return this.#pipelines;
 	}
 }

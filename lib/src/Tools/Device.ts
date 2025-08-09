@@ -17,21 +17,6 @@ import { IDeviceOptions, ITextureFormat } from "../Types/Graphics";
 
 
 ///////////////////////////////////////////////////////////////////////////////
-//
-//	Types used below.
-//
-///////////////////////////////////////////////////////////////////////////////
-
-interface IPipelineShaderInput
-{
-	label: string
-	module: GPUShaderModule;
-}
-
-type IPipelineInput = ( IPipelineShaderInput | GPURenderPipelineDescriptor );
-
-
-///////////////////////////////////////////////////////////////////////////////
 /**
  * Class that contains the GPU device and other associated resources.
  * @class
@@ -40,6 +25,7 @@ type IPipelineInput = ( IPipelineShaderInput | GPURenderPipelineDescriptor );
 
 export class Device extends Base
 {
+	static #instance: Device | null = null;
 	#device: ( GPUDevice | null ) = null;
 	#preferredFormat: ( ITextureFormat | null ) = null;
 
@@ -68,11 +54,24 @@ export class Device extends Base
 	}
 
 	/**
-	 * Create an instance of this class.
-	 * @param {IDeviceOptions} options The options.
-	 * @returns {Promise<Device>} A promise that resolves to the device instance.
+	 * Get the singleton instance.
+	 * @returns {Device} The singleton instance.
 	 */
-	public static async create ( options?: IDeviceOptions ) : Promise < Device >
+	public static get instance() : Device
+	{
+		if ( !Device.#instance )
+		{
+			throw new Error ( "Device is not initialized" );
+		}
+		return Device.#instance;
+	}
+	
+	/**
+	 * Initialize the singleton instance of this class.
+	 * @param {IDeviceOptions} options The options.
+	 * @returns {Promise<void>} A promise that resolves when the device is initialized.
+	 */
+	public static async init ( options?: IDeviceOptions ) : Promise < void >
 	{
 		// Shortcut.
 		const { gpu } = navigator;
@@ -102,8 +101,8 @@ export class Device extends Base
 			throw new Error ( "Failed to get device from WebGPU adapter" );
 		}
 
-		// If we get to here then return the new object.
-		return ( new Device ( device ) );
+		// If we get to here then set the singleton instance.
+		Device.#instance = new Device ( device );
 	}
 
 	/**
@@ -134,7 +133,7 @@ export class Device extends Base
 	 * @param {HTMLCanvasElement | OffscreenCanvas} canvas The canvas to use for rendering.
 	 * @returns {GPUCanvasContext} Configured GPU canvas context.
 	 */
-	public getContext ( canvas: ( HTMLCanvasElement | OffscreenCanvas ) ) : GPUCanvasContext
+	public getConfiguredContext ( canvas: ( HTMLCanvasElement | OffscreenCanvas ) ) : GPUCanvasContext
 	{
 		// Check input.
 		if ( !canvas )
@@ -179,86 +178,12 @@ export class Device extends Base
 	}
 
 	/**
-	 * Return the limits of the device.
-	 * @returns {GPUSupportedLimits} The device limits.
-	 */
-	public get limits() : GPUSupportedLimits
-	{
-		return this.device.limits;
-	}
-
-	/**
-	 * Make the shader module.
-	 * @param {GPUShaderModuleDescriptor} descriptor - The descriptor for the shader module.
-	 * @returns {GPUShaderModule} The shader module.
-	 */
-	public makeShader ( descriptor: GPUShaderModuleDescriptor ) : GPUShaderModule
-	{
-		// Make sure the code is a string. We do this because it could have been
-		// imported with vite or webpack, and that has to happen correctly.
-		{
-			const { code } = descriptor;
-			if ( "string" !== ( typeof code ) )
-			{
-				throw new Error ( `Shader code type is: ${typeof code}` );
-			}
-		}
-
-		// Create the shader module.
-		return this.device.createShaderModule ( descriptor );
-	}
-
-	/**
-	 * Return a new render pipeline.
-	 * @param {IPipelineInput} [input] - The input for the pipeline.
-	 * @returns {GPURenderPipeline} The new render pipeline.
-	 */
-	public makePipeline ( input: IPipelineInput ) : GPURenderPipeline
-	{
-		// Initialize the descriptor.
-		let descriptor: GPURenderPipelineDescriptor | null = null;
-
-		// See if we're supposed to make the descriptor.
-		const { label, module } = ( input as IPipelineShaderInput );
-		if ( module && label )
-		{
-			// Make the descriptor.
-			const target = { format: this.preferredFormat };
-			descriptor = {
-				label,
-				vertex: { module },
-				fragment: { module, targets: [ target ] },
-				primitive: { topology: "triangle-list" },
-				layout: "auto",
-			};
-		}
-
-		// Otherwise, just use the input as the descriptor.
-		else
-		{
-			descriptor = ( input as GPURenderPipelineDescriptor );
-		}
-
-		// Create the pipeline.
-		return this.device.createRenderPipeline ( descriptor );
-	}
-
-	/**
 	 * Make a command encoder.
 	 * @param {string} label - The label for the command encoder.
 	 * @returns {GPUCommandEncoder} The command encoder.
 	 */
-	public makeEncoder ( label: string ) : GPUCommandEncoder
-	{
-		return this.device.createCommandEncoder ( { label } );
-	}
-
-	/**
-	 * Get the GPU queue.
-	 * @returns {GPUQueue} The GPU queue.
-	 */
-	public get queue() : GPUQueue
-	{
-		return this.device.queue;
-	}
+	// public makeEncoder ( label: string ) : GPUCommandEncoder
+	// {
+	// 	return this.device.createCommandEncoder ( { label } );
+	// }
 }
