@@ -37,7 +37,7 @@ export interface IStateConstructorInput
 	name?: string;
 	shader?: ShaderBase;
 	layer?: number;
-	renderBin?: number;
+	bin?: number;
 }
 export interface IStateApplyInput
 {
@@ -89,7 +89,7 @@ export class State extends Base
 	#name: string = DEFAULT_STATE_NAME;
 	#shader: ( ShaderBase | null ) = null;
 	#layer = 0;
-	#renderBin = 0;
+	#bin = 0;
 	#apply: IStateApplyFunction = defaultApplyFunction;
 	#reset: IStateResetFunction = defaultResetFunction;
 
@@ -102,7 +102,7 @@ export class State extends Base
 	{
 		super();
 
-		const { name, shader, layer, renderBin } = ( input ?? {} );
+		const { name, shader, layer, bin } = ( input ?? {} );
 
 		if ( name )
 		{
@@ -121,9 +121,9 @@ export class State extends Base
 		}
 
 		// This is false when the value is zero, but it's already that.
-		if ( renderBin )
+		if ( bin )
 		{
-			this.#renderBin = renderBin;
+			this.#bin = bin;
 		}
 	}
 
@@ -245,20 +245,20 @@ export class State extends Base
 	}
 
 	/**
-	 * Get the renderBin.
-	 * @returns {number} The renderBin for this node.
+	 * Get the bin.
+	 * @returns {number} The bin for this node.
 	 */
-	public get renderBin() : number
+	public get bin() : number
 	{
-		return this.#renderBin;
+		return this.#bin;
 	}
 
 	/**
-	 * Set the renderBin.
-	 * @param {number} renderBin - The new renderBin for this node.
+	 * Set the bin.
+	 * @param {number} bin - The new bin for this node.
 	 */
-	public set renderBin ( renderBin: number )
+	public set bin ( bin: number )
 	{
-		this.#renderBin = renderBin;
+		this.#bin = bin;
 	}
 }

@@ -115,43 +115,20 @@ export abstract class ShaderBase extends Base
 	 */
 	public get pipeline() : GPURenderPipeline
 	{
-		// Return the pipeline if we already made it
-		if ( this.#pipeline )
+		let pipeline = this.#pipeline;
+
+		if ( !pipeline )
 		{
-			return this.#pipeline;
+			pipeline = this.makePipeline();
+			this.#pipeline = pipeline;
 		}
 
-		// Make the pipeline.
-		this.#pipeline = Device.instance.device.createRenderPipeline ( {
-			label: `Pipeline for shader ${this.type}`,
-			vertex: {
-				module: this.module,
-				buffers: [
-				{
-					attributes: [
-					{
-						shaderLocation: 0,
-						offset: 0,
-						format: "float32x3", // Position
-					} ],
-					arrayStride: 12, // 3 floats * 4 bytes each
-					// https://www.w3.org/TR/webgpu/#enumdef-gpuvertexstepmode
-					stepMode: "vertex",
-				} ]
-			},
-			fragment: {
-				module: this.module,
-				targets: [ {
-					format: Device.instance.preferredFormat
-				} ]
-			},
-			primitive: {
-				topology: "triangle-list"
-			},
-			layout: "auto",
-		} );
-
-		// Return what we have.
-		return this.#pipeline;
+		return pipeline;
 	}
+
+	/**
+	 * Make the render pipeline.
+	 * @returns {GPURenderPipeline} The render pipeline.
+	 */
+	protected abstract makePipeline() : GPURenderPipeline;
 }

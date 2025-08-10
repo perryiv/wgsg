@@ -16,10 +16,9 @@ import { Array1, Array3 } from "../../../Arrays";
 import { Arrays, Indexed } from "../../Primitives";
 import { Box } from "../../../Math";
 import { getNumElements } from "../../../Tools";
-import { Node } from "../Node";
 import { Shape } from "./Shape";
-import { State } from "../../State";
 import { Visitor } from "../../../Visitors";
+import type { INodeConstructorInput } from "../Node";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -54,11 +53,11 @@ export class Geometry extends Shape
 	/**
 	 * Construct the class.
 	 * @class
-	 * @param {State | null} state - Optional state for this geometry.
+	 * @param {INodeConstructorInput} [input] - The input for the node.
 	 */
-	constructor ( state?: ( State | null ) )
+	constructor ( input?: INodeConstructorInput )
 	{
-		super ( state );
+		super ( input );
 	}
 
 	/**
@@ -134,7 +133,7 @@ export class Geometry extends Shape
 		this.#bounds = ( bounds ? bounds.clone() : new Box() );
 
 		// Let the parents know that their bounds are now invalid.
-		this.forEachParent ( ( parent: Node ) =>
+		this.forEachParent ( ( parent ) =>
 		{
 			parent.bounds = null;
 		} );

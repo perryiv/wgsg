@@ -43,10 +43,12 @@ export class ProjMatrix extends BaseClass
 	/**
 	 * Construct the class.
 	 * @class
+	 * @param {IMatrix44} matrix - The projection matrix.
 	 */
-	constructor()
+	constructor ( matrix: IMatrix44 )
 	{
 		super();
+		mat4.copy ( this.#matrix, matrix );
 	}
 
 	/**
@@ -68,20 +70,38 @@ export class ProjMatrix extends BaseClass
 	}
 
 	/**
-	 * Set the matrix.
-	 * @param {IMatrix44} matrix - The new matrix.
+	 * Get the model matrix. Make it if we have to.
+	 * @param {IMatrix44} matrix - The model matrix.
+	 * @returns {ModelMatrix} The model matrix.
 	 */
-	public set matrix ( matrix: IMatrix44 )
+	public getModelMatrix ( matrix: IMatrix44 ) : ModelMatrix
 	{
-		mat4.copy ( this.#matrix, matrix );
+		const name = JSON.stringify ( matrix );
+		let modelMatrix = this.#modelMatrixMap.get ( name );
+		if ( !modelMatrix )
+		{
+			modelMatrix = new ModelMatrix ( matrix );
+			this.#modelMatrixMap.set ( name, modelMatrix );
+		}
+		return modelMatrix;
 	}
 
 	/**
-	 * Get the model matrix map.
-	 * @returns {IModelMatrixMap} The model matrix map.
+	 * Call the given function for each model matrix.
+	 * @param {Function} func - The function to call.
 	 */
-	public get modelMatrixMap() : IModelMatrixMap
+	public forEachModelMatrix ( func: ( modelMatrix: ModelMatrix ) => void ) : void
 	{
-		return this.#modelMatrixMap;
+		// The order doesn't matter so we don't sort like the layers and bins.
+		this.#modelMatrixMap.forEach ( func );
+	}
+
+	/**
+	 * Get the number of model matrices.
+	 * @returns {number} The number of model matrices.
+	 */
+	public get numModelMatrices () : number
+	{
+		return this.#modelMatrixMap.size;
 	}
 }

@@ -34,10 +34,12 @@ export class ModelMatrix extends BaseClass
 	/**
 	 * Construct the class.
 	 * @class
+	 * @param {IMatrix44} matrix - The model matrix.
 	 */
-	constructor()
+	constructor ( matrix: IMatrix44 )
 	{
 		super();
+		mat4.copy ( this.#matrix, matrix );
 	}
 
 	/**
@@ -59,20 +61,29 @@ export class ModelMatrix extends BaseClass
 	}
 
 	/**
-	 * Set the matrix.
-	 * @param {IMatrix44} matrix - The new matrix.
+	 * Add the shape to the model matrix.
+	 * @param {Shape} shape - The shape to add.
 	 */
-	public set matrix ( matrix: IMatrix44 )
+	public addShape ( shape: Shape )
 	{
-		mat4.copy ( this.#matrix, matrix );
+		this.#shapes.push ( shape );
 	}
 
 	/**
-	 * Get the shapes.
-	 * @returns {Shape[]} The shapes array.
+	 * Call the given function for each shape.
+	 * @param {Function} func - The function to call.
 	 */
-	public get shapes() : Shape[]
+	public forEachShape ( func: ( shape: Shape, index: number ) => void )
 	{
-		return this.#shapes;
+		this.#shapes.forEach ( func );
+	}
+
+	/**
+	 * Get the number of shapes.
+	 * @returns {number} The number of shapes.
+	 */
+	public get numShapes() : number
+	{
+		return this.#shapes.length;
 	}
 }

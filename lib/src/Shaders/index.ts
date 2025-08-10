@@ -14,4 +14,4 @@
 
 export * from "./Manager";
 export * from "./ShaderBase";
-export * from "./SolidColor";
+export * from "./TrianglesSolidColor";

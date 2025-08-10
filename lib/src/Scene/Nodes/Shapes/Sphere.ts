@@ -15,8 +15,8 @@
 import { Array1, Array3 } from "../../../Arrays";
 import { Geometry } from "./Geometry";
 import { Indexed } from "../../Primitives";
-import { State } from "../../State";
 import { vec3 } from "gl-matrix";
+import type { INodeConstructorInput } from "../Node";
 import type { IVector3 } from "../../../Types";
 import {
 	estimateSphereSizes,
@@ -30,12 +30,11 @@ import {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export interface ISphereInput
+export interface ISphereInput extends INodeConstructorInput
 {
 	center?: IVector3;
 	radius?: number;
 	numSubdivisions?: number;
-	state?: State;
 }
 
 
@@ -56,14 +55,13 @@ export class Sphere extends Geometry
 	 * Construct the class.
 	 * @class
 	 * @param {ISphereInput} input - Input for the sphere.
-	 * @param {State} [input.state] - The state of the sphere.
 	 * @param {IVector3} [input.center] - Center of the sphere.
 	 * @param {number} [input.radius] - Radius of the sphere.
 	 * @param {number} [input.numSubdivisions] - Number of subdivisions for the sphere.
 	 */
 	constructor ( input?: ISphereInput )
 	{
-		super ( input?.state ?? null );
+		super ( input );
 
 		// Get the input.
 		if ( input )

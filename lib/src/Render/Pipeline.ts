@@ -13,8 +13,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base as BaseClass } from "../Base";
-import { ShaderBase } from "../Shaders";
+import { IMatrix44 } from "../Types";
 import { ProjMatrix } from "./ProjMatrix";
+import { State } from "../Scene/State";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -35,17 +36,18 @@ export type IProjMatrixMap = Map < string, ProjMatrix >;
 
 export class Pipeline extends BaseClass
 {
-	#shader: ( ShaderBase | null ) = null;
-	#pipeline: ( GPUShaderModule | null ) = null;
+	#state: State;
 	#projMatrixMap: IProjMatrixMap = new Map < string, ProjMatrix > ();
 
 	/**
 	 * Construct the class.
 	 * @class
+	 * @param {State} state - The pipeline state.
 	 */
-	constructor()
+	constructor ( state: State )
 	{
 		super();
+		this.#state = state;
 	}
 
 	/**
@@ -56,45 +58,54 @@ export class Pipeline extends BaseClass
 	{
 		return "Render.Pipeline";
 	}
-	
-	/**
-	 * Get the projection matrices.
-	 * @returns {IProjMatrixMap} The projection matrices map.
-	 */
-	public get projMatrixMap() : IProjMatrixMap
-	{
-		return this.#projMatrixMap;
-	}
 
 	/**
-	 * Get the shader.
-	 * @returns {ShaderBase | null} The shader.
+	 * Get the projection matrix. Make it if we have to.
+	 * @param {IMatrix44} matrix - The projection matrix.
+	 * @returns {ProjMatrix} The projection matrix.
 	 */
-	public get shader() : ( ShaderBase | null )
+	public getProjMatrix ( matrix: IMatrix44 ) : ProjMatrix
 	{
-		return this.#shader;
-	}
-
-	/**
-	 * Set the shader.
-	 * @param {ShaderBase | null} shader - The new shader.
-	 */
-	public set shader ( shader: ( ShaderBase | null ) )
-	{
-		this.#shader = shader;
-	}
-
-	/**
-	 * Get the GPU pipeline.
-	 * @returns {GPUShaderModule} The GPU pipeline.
-	 */
-	public get pipeline() : GPUShaderModule
-	{
-		const pipeline = this.#pipeline;
-		if ( !pipeline )
+		const name = JSON.stringify ( matrix );
+		let projMatrix = this.#projMatrixMap.get ( name );
+		if ( !projMatrix )
 		{
-			throw new Error ( "TODO: Make the pipeline here" );
+			projMatrix = new ProjMatrix ( matrix );
+			this.#projMatrixMap.set ( name, projMatrix );
 		}
-		return pipeline;
+		return projMatrix;
+	}
+
+	/**
+	 * Call the given function for each projection matrix.
+	 * @param {Function} func - The function to call.
+	 */
+	public forEachProjMatrix ( func: ( projMatrix: ProjMatrix ) => void ) : void
+	{
+		// The order doesn't matter so we don't sort like the layers and bins.
+		this.#projMatrixMap.forEach ( func );
+	}
+
+	/**
+	 * Get the number of projection matrices.
+	 * @returns {number} The number of projection matrices.
+	 */
+	public get numProjMatrices () : number
+	{
+		return this.#projMatrixMap.size;
+	}
+
+	/**
+	 * Get the state.
+	 * @returns {State} The state.
+	 */
+	public get state() : State
+	{
+		const state = this.#state;
+		if ( !state )
+		{
+			throw new Error ( "Pipeline has invalid state" );
+		}
+		return state;
 	}
 }

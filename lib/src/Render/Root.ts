@@ -33,24 +33,15 @@ import { Layer } from "./Layer";
 
 
 ///////////////////////////////////////////////////////////////////////////////
-//
-//	Types used below.
-//
-///////////////////////////////////////////////////////////////////////////////
-
-export type ILayers = Map < number, Layer >;
-
-
-///////////////////////////////////////////////////////////////////////////////
 /**
- * Class that contains the state of a shape.
+ * Class that contains the root of the render graph.
  * @class
  */
 ///////////////////////////////////////////////////////////////////////////////
 
 export class Root extends BaseClass
 {
-	#layers: ILayers = new Map < number, Layer > ();
+	#layers = new Map < number, Layer > ();
 
 	/**
 	 * Construct the class.
@@ -71,20 +62,53 @@ export class Root extends BaseClass
 	}
 	
 	/**
-	 * Get the layers.
-	 * @returns {ILayers} The layers map.
+	 * Get the layer. Make it if we have to.
+	 * @param {number} index - The layer index.
+	 * @returns {Layer} The layer.
 	 */
-	public get layers() : ILayers
+	public getLayer ( index: number ) : Layer
 	{
-		return this.#layers;
+		let layer: ( Layer | undefined ) = this.#layers.get ( index );
+		if ( !layer )
+		{
+			layer = new Layer ();
+			this.#layers.set ( index, layer );
+		}
+		return layer;
 	}
 
 	/**
-	 * Set the layers.
-	 * @param {ILayers} layers - The new layers map.
+	 * Call the given function for each layer in numerical order.
+	 * @param {Function} func - The function to call.
 	 */
-	public set layers ( layers: ILayers )
+	public forEachLayer ( func: ( layer: Layer, index: number ) => void ) : void
 	{
-		this.#layers = layers;
+		const layers = Array.from ( this.#layers.entries() );
+		layers.sort ( ( a, b ) =>
+		{
+			return ( a[0] - b[0] );
+		} );
+		layers.forEach ( ( [ index, layer ] ) =>
+		{
+			func ( layer, index )
+		} );
+	}
+
+	/**
+	 * Get the number of layers.
+	 * @returns {number} The number of layers.
+	 */
+	public get numLayers () : number
+	{
+		return this.#layers.size;
+	}
+
+	/** 
+	 * Clear the layers.
+	 * @returns {void}
+	 */
+	public clear () : void
+	{
+		this.#layers.clear ();
 	}
 }

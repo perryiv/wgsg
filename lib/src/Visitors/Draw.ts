@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Device, makeIdentity } from "../Tools";
+import { Device, IDENTITY_MATRIX } from "../Tools";
 import { IMatrix44, IVector4 } from "../Types";
 import { mat4, vec4 } from "gl-matrix";
 import { Visitor as BaseClass } from "./Visitor";
@@ -21,17 +21,14 @@ import {
 	Geometry,
 	Indexed,
 	Shape,
-	State,
 } from "../Scene";
-import type {
-	ILayer,
-	ILayerMap,
-	IModelMatrixData,
-	IModelMatrixMap,
-	IProjMatrixData,
-	IProjMatrixMap,
-	IStateData,
-	IStateMap,
+import {
+	Bin,
+	Layer,
+	ModelMatrix,
+	Pipeline,
+	ProjMatrix,
+	Root,
 } from "../Render";
 
 
@@ -57,12 +54,11 @@ export interface IDrawVisitorInput
 export class Draw extends BaseClass
 {
 	#context: GPUCanvasContext;
-	#state: ( State | null ) = null;
-	#projMatrix:	IMatrix44 = makeIdentity(); // Has to be a copy.
-	#modelMatrix: IMatrix44 = makeIdentity(); // Has to be a copy.
 	#clearColor: IVector4 = [ 0.5, 0.5, 0.5, 1.0 ]; // Grey.
-	#encoder: ( GPUCommandEncoder | null ) = null;
-	#pass: ( GPURenderPassEncoder | null ) = null;
+	#renderPassEncoder: ( GPURenderPassEncoder | null ) = null;
+	#commandEncoder: ( GPUCommandEncoder | null ) = null;
+	#projMatrix:	IMatrix44 = [ ...IDENTITY_MATRIX ]; // Has to be a copy.
+	#modelMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ]; // Has to be a copy.
 	#geometry: ( Geometry | null ) = null;
 
 	/**
@@ -100,34 +96,6 @@ export class Draw extends BaseClass
 	}
 
 	/**
-	 * Get the current state.
-	 * @returns {State} The current state.
-	 */
-	protected get state () : State
-	{
-		// Shortcut.
-		const state = this.#state;
-
-		// We should always have a valid state.
-		if ( !state )
-		{
-			throw new Error ( "Attempting to get invalid state in draw visitor" );
-		}
-
-		// Return the state.
-		return state;
-	}
-
-	/**
-	 * Set the current state.
-	 * @param {State | null} state - The state to set, or null to reset.
-	 */
-	protected set state ( state: ( State | null ) )
-	{
-		this.#state = state;
-	}
-
-	/**
 	 * Get the GPU canvas context.
 	 * @returns {GPUCanvasContext} The GPU canvas context.
 	 */
@@ -147,42 +115,13 @@ export class Draw extends BaseClass
 	}
 
 	/**
-	 * Get the pipeline.
-	 * @returns {GPURenderPipeline} The current render pipeline.
-	 */
-	protected get pipeline () : GPURenderPipeline
-	{
-		// Shortcuts.
-		const state = this.state;
-		const shader = state.shader;
-
-		// We need a valid shader to proceed.
-		if ( !shader )
-		{
-			throw new Error ( `Shader is not defined in state '${state.name}' when getting pipeline in draw visitor` );
-		}
-
-		// Get the pipeline from the shader.
-		const pipeline = shader.pipeline;
-
-		// We should always have a valid pipeline.
-		if ( !pipeline )
-		{
-			throw new Error ( "Attempting to get invalid pipeline in draw visitor" );
-		}
-
-		// Return the pipeline.
-		return pipeline;
-	}
-
-	/**
 	 * Get the render command encoder.
 	 * @returns {GPURenderCommandEncoder} The render command encoder.
 	 */
-	protected get encoder () : GPUCommandEncoder
+	protected get commandEncoder () : GPUCommandEncoder
 	{
 		// Shortcut.
-		const encoder = this.#encoder;
+		const encoder = this.#commandEncoder;
 
 		// We should always have a valid encoder.
 		if ( !encoder )
@@ -192,70 +131,6 @@ export class Draw extends BaseClass
 
 		// Return the encoder.
 		return encoder;
-	}
-
-	/**
-	 * Set the render command encoder.
-	 * @param {GPURenderCommandEncoder} encoder - The render command encoder to use.
-	 */
-	protected set encoder ( encoder: ( GPUCommandEncoder | null ) )
-	{
-		this.#encoder = encoder;
-	}
-
-	/**
-	 * Get the render pass.
-	 * @returns {GPURenderPassEncoder} The render pass.
-	 */
-	protected get pass () : GPURenderPassEncoder
-	{
-		// Shortcut.
-		const pass = this.#pass;
-
-		// We should always have a valid pass.
-		if ( !pass )
-		{
-			throw new Error ( "Attempting to get invalid render pass in draw visitor" );
-		}
-
-		// Return the pass.
-		return pass;
-	}
-
-	/**
-	 * Set the render pass.
-	 * @param {GPURenderPassEncoder | null} pass - The render pass, or null to reset.
-	 */
-	protected set pass ( pass: ( GPURenderPassEncoder | null ) )
-	{
-		this.#pass = pass;
-	}
-
-	/**
-	 * Get the geometry node.
-	 * @returns {Geometry} The geometry node.
-	 */
-	protected get geometry () : Geometry
-	{
-		// Shortcut.
-		const geometry = this.#geometry;
-
-		// We should always have a valid geometry.
-		if ( !geometry )
-		{
-			throw new Error ( "Attempting to get invalid geometry in draw visitor" );
-		}
-
-		// Return the geometry.
-		return geometry;
-	}
-	/**
-	 * Set the geometry node.
-	 * @param {Geometry | null} geometry - The geometry node to set, or null to reset.
-	 */
-	protected set geometry ( geometry: ( Geometry | null ) )
-	{
-		this.#geometry = geometry;
 	}
 
 	/**
@@ -286,146 +161,91 @@ export class Draw extends BaseClass
 	 */
 	public get preMultipliedClearColor () : IVector4
 	{
-		// Make the background color. We have to pre-multiply by the alpha value.
-		const color: IVector4 = [ 0, 0, 0, 0 ];
-		{
-			const c = this.clearColor;
-			const a = c[3];
-			color[0] = c[0] * a; // Red
-			color[1] = c[1] * a; // Green
-			color[2] = c[2] * a; // Blue
-			color[3] = a;        // Alpha
-		}
-
-		// Return the pre-multiplied color.
-		return color;
+		const c = this.#clearColor;
+		const a = c[3];
+		return [
+			c[0] * a, // Red
+			c[1] * a, // Green
+			c[2] * a, // Blue
+			a         // Alpha
+		];
 	}
 
 	/**
-	 * Draw the layers.
-	 * @param {ILayerMap} layers - The layers to visit.
+	 * Draw the render graph.
+	 * @param {IRoot} root - The root of the render graph.
 	 */
-	public drawLayers ( layers: ILayerMap ) : void
+	public draw ( root: Root ) : void
 	{
 		// Make a command encoder.
-		this.encoder = Device.instance.device.createCommandEncoder ( {
+		const ce = Device.instance.device.createCommandEncoder ( {
 			label: "draw_visitor_command_encoder"
 		} );
+		this.#commandEncoder = ce;
 
-		// Make the background color. We have to pre-multiply by the alpha value.
-		const color: IVector4 = [ 0, 0, 0, 0 ];
+		// Iterate over the layers in order.
+		root.forEachLayer ( ( layer: Layer ) =>
 		{
-			const c = this.clearColor;
-			const a = c[3];
-			color[0] = c[0] * a; // Red
-			color[1] = c[1] * a; // Green
-			color[2] = c[2] * a; // Blue
-			color[3] = a;        // Alpha
-		}
-
-		// Iterate over the layers in the map in numerical order using the key.
-		const keys: number[] = Array.from ( layers.keys() );
-		keys.sort ( ( a, b ) => { return ( a - b ); } );
-		for ( const key of keys )
-		{
-			// Get the layer.
-			const layer = layers.get ( key );
-
-			// We should always have a layer.
-			if ( !layer )
-			{
-				throw new Error ( `Layer ${key} not found in the maps of layers` );
-			}
-
 			// Draw the layer.
 			this.drawLayer ( layer );
-		}
+		} );
 
 		// Submit the commands to the GPU.
-		Device.instance.device.queue.submit ( [ this.encoder.finish() ] );
+		Device.instance.device.queue.submit ( [ ce.finish() ] );
 
-		// Reset the encoder.
-		this.encoder = null;
+		// Reset these.
+		this.#renderPassEncoder = null;
+		this.#commandEncoder = null;
+		mat4.copy ( this.#projMatrix,  IDENTITY_MATRIX );
+		mat4.copy ( this.#modelMatrix, IDENTITY_MATRIX );
+		this.#geometry = null;
 	}
 
 	/**
 	 * Draw the layer.
-	 * @param {ILayer} layer - The layer to visit.
+	 * @param {Layer} layer - The layer to draw.
 	 */
-	public drawLayer ( layer: ILayer ) : void
+	protected drawLayer ( layer: Layer ) : void
 	{
-		// Draw the clipped projection matrices.
-		this.drawProjMatrices ( layer.clipped );
-
-		// Draw the unclipped projection matrices.
-		this.drawProjMatrices ( layer.unclipped );
-	}
-
-	/**
-	 * Draw the projection matrices.
-	 * @param {IProjMatrixMap} projMatrices - The projection matrices to visit.
-	 */
-	public drawProjMatrices ( projMatrices: IProjMatrixMap ) : void
-	{
-		// Iterate over the projection matrices in the map.
-		projMatrices.forEach ( ( projMatrixData: IProjMatrixData ) =>
+		// Draw the bins.
+		layer.forEachBin ( ( bin: Bin ) =>
 		{
-			// Draw the projection matrix data.
-			this.drawProjMatrixData ( projMatrixData );
+			this.drawBin ( bin );
 		} );
 	}
 
 	/**
-	 * Draw the projection matrix data.
-	 * @param {IProjMatrixData} projMatrixData - The projection matrix data to visit.
+	 * Draw the render bin.
+	 * @param {Bin} bin - The bin to draw.
 	 */
-	public drawProjMatrixData ( projMatrixData: IProjMatrixData ) : void
+	protected drawBin ( bin: Bin ) : void
 	{
-		// Get the data.
-		const { projMatrix, states } = projMatrixData;
-
-		// These should always be valid.
-		if ( !projMatrix )
+		// Draw the pipelines.
+		bin.forEachPipeline ( ( pipeline: Pipeline ) =>
 		{
-			throw new Error ( "Projection matrix is not defined" );
-		}
-		if ( !states )
-		{
-			throw new Error ( "States are not defined for the projection matrix" );
-		}
-
-		// Set our current projection matrix.
-		mat4.copy ( this.#projMatrix, projMatrix );
-
-		// Draw the states.
-		this.drawStates ( states );
-	}
-
-	/**
-	 * Draw the states.
-	 * @param {IStateMap} states - The states to visit.
-	 */
-	public drawStates ( states: IStateMap ) : void
-	{
-		// Iterate over the states in the map.
-		states.forEach ( ( sd: IStateData ) =>
-		{
-			this.drawState ( sd );
+			this.drawPipeline ( pipeline );
 		} );
 	}
 
 	/**
-	 * Draw the state.
-	 * @param {IStateData} sd - The state-data to visit.
+	 * Draw the pipeline.
+	 * @param {Pipeline} pipeline - The pipeline to draw.
 	 */
-	public drawState ( { state, modelMatrices }: IStateData ) : void
+	protected drawPipeline ( pipeline: Pipeline ) : void
 	{
-		// Set the current state.
-		this.state = state;
+		// Shortcuts.
+		const { state } = pipeline;
+		const { name, shader } = state;
 
-		// Make the render pass descriptor.
-		const renderPassDescriptor: GPURenderPassDescriptor = {
-			label: "draw_visitor_default_render_pass_descriptor",
+		// Make sure there is a shader.
+		if ( !shader )
+		{
+			throw new Error ( "Pipeline has invalid shader" );
+		}
+
+		// Make the render pass encoder.
+		const pass = this.commandEncoder.beginRenderPass ( {
+			label: `draw_visitor_render_pass_for_state_${name}`,
 			colorAttachments: [
 			{
 				view: this.context.getCurrentTexture().createView(),
@@ -433,94 +253,51 @@ export class Draw extends BaseClass
 				loadOp: "clear",
 				storeOp: "store"
 			} ]
-		};
+		} );
+		this.#renderPassEncoder = pass;
 
 		// Make and configure a render pass.
-		const pass = this.encoder.beginRenderPass ( renderPassDescriptor );
 		pass.label = `draw_visitor_render_pass_for_state_${state.name}`;
-		pass.setPipeline ( this.pipeline );
+		pass.setPipeline ( shader.pipeline );
 
-		// This is important.
-		this.pass = pass;
-
-		// Draw the model matrices.
-		this.drawModelMatrices ( modelMatrices );
-
-		// End the render pass.
-		pass.end();
-
-		// Reset these.
-		this.pass = null;
-		this.state = null;
-	}
-
-	/**
-	 * Draw the model matrices.
-	 * @param {IModelMatrixMap} modelMatrices - The model matrices to visit.
-	 */
-	public drawModelMatrices ( modelMatrices: IModelMatrixMap ) : void
-	{
-		// Iterate over the model matrices in the map.
-		modelMatrices.forEach ( ( modelMatrixData: IModelMatrixData ) =>
+		// Draw the projection matrix groups.
+		pipeline.forEachProjMatrix ( ( projMatrix: ProjMatrix ) =>
 		{
-			// Draw the model matrix data.
-			this.drawModelMatrixData ( modelMatrixData );
+			this.drawProjMatrix ( projMatrix );
 		} );
 	}
 
 	/**
-	 * Draw the model matrix data.
-	 * @param {IModelMatrixData} modelMatrixData - The model matrix data to visit.
+	 * Draw the projection matrix group.
+	 * @param {ProjMatrix} projMatrix - The projection matrix group to draw.
 	 */
-	public drawModelMatrixData ( modelMatrixData: IModelMatrixData ) : void
+	protected drawProjMatrix ( projMatrix: ProjMatrix ) : void
 	{
-		// Get input.
-		const { modelMatrix, shapes } = modelMatrixData;
+		// This is now the current projection matrix.
+		mat4.copy ( this.#projMatrix, projMatrix.matrix );
 
-		// Shortcut.
-		const state = this.state;
-
-		// We should always have a valid state.
-		if ( !state )
+		// Draw the model matrix groups.
+		projMatrix.forEachModelMatrix ( ( modelMatrix: ModelMatrix ) =>
 		{
-			throw new Error ( "State is not defined when visiting model matrices" );
-		}
-
-		// Set our current model matrix.
-		mat4.copy ( this.#modelMatrix, modelMatrix );
-
-		// We pass this when applying and resetting the state.
-		const stateData = {
-			state,
-			projMatrix: this.#projMatrix,
-			modelMatrix,
-		};
-
-		// Apply the state.
-		state.doApply ( stateData );
-
-		// Draw the shapes.
-		this.drawShapes ( shapes );
-
-		// Reset the state.
-		state.doReset ( stateData );
+			this.drawModelMatrix ( modelMatrix );
+		} );
 	}
 
 	/**
-	 * Draw the shapes.
-	 * @param {Shape[]} shapes - The shapes to visit.
+	 * Draw the model matrix group.
+	 * @param {ModelMatrix} modelMatrix - The model matrix group to draw.
 	 */
-	public drawShapes ( shapes: Shape[] ) : void
+	protected drawModelMatrix ( modelMatrix: ModelMatrix ) : void
 	{
-		// Iterate over the shapes.
-		for ( const shape of shapes )
-		{
-			// Have the shape accept this visitor.
-			shape.accept ( this );
+		// This is now the current model matrix.
+		mat4.copy ( this.#modelMatrix, modelMatrix.matrix );
 
-			// Example: Draw a triangle (3 vertices).
-			this.pass.draw ( 3 );
-		}
+		// Draw the shapes.
+		modelMatrix.forEachShape ( ( shape: Shape ) =>
+		{
+			// The shape decides which function to call in order to draw itself.
+			shape.accept ( this );
+		} );
 	}
 
 	/**
@@ -532,7 +309,7 @@ export class Draw extends BaseClass
 		// console.log ( `Drawing '${geom.type}' ${geom.id}` );
 
 		// Set this first.
-		this.geometry = geom;
+		this.#geometry = geom;
 
 		// Get the primitives.
 		const primitives = geom.primitives;
@@ -562,7 +339,7 @@ export class Draw extends BaseClass
 		}
 
 		// Reset this.
-		this.geometry = null;
+		this.#geometry = null;
 	}
 
 	/**
@@ -573,56 +350,69 @@ export class Draw extends BaseClass
 	{
 		console.log ( `Drawing '${prims.type}' ${prims.id}` );
 
-		// Shortcuts.
-		const pass = this.pass;
-		const geom = this.geometry;
+		// Handle no primitives.
+		const numIndices = prims.numIndices;
+		if ( numIndices <= 0 )
+		{
+			return; // This is not an error.
+		}
 
-		// Get the buffers.
-		const pointsBuffer = geom.points?.buffer;
-		const indexBuffer = prims.indices?.buffer;
+		// Handle no geometry.
+		const geom = this.#geometry;
+		if ( !geom )
+		{
+			return; // This is not an error.
+		}
 
 		// We need points to continue.
-		if ( !pointsBuffer )
+		const points = geom.points?.buffer;
+		if ( !points )
 		{
 			return; // This is not an error.
 		}
 
 		// We also need indices to continue.
-		if ( !indexBuffer )
+		const indices = prims.indices?.buffer;
+		if ( !indices )
 		{
 			return; // This is not an error.
 		}
 
-		// Set the points and index buffer.
-		pass.setVertexBuffer ( 0, pointsBuffer );
-		pass.setIndexBuffer ( indexBuffer, prims.indexType );
+		// Get the render pass encoder.
+		const pass = this.#renderPassEncoder;
+		if ( !pass )
+		{
+			throw new Error ( "Attempting to draw indexed primitives without a render pass" );
+		}
 
-		// Get the other buffers.
-		const normalsBuffer = geom.normals?.buffer;
-		const colorsBuffer = geom.colors?.buffer;
-		const texCoordsBuffer = geom.texCoords?.buffer;
+		// Set the points and index buffer.
+		pass.setVertexBuffer ( 0, points );
+		pass.setIndexBuffer ( indices, prims.indexType );
 
 		// Set the buffer of normals if we can.
-		if ( normalsBuffer )
+		const normals = geom.normals?.buffer;
+		if ( normals )
 		{
-			pass.setVertexBuffer ( 1, normalsBuffer );
+			pass.setVertexBuffer ( 1, normals );
 		}
 
 		// Set the buffer of colors if we can.
-		if ( colorsBuffer )
+		const colors = geom.colors?.buffer;
+		if ( colors )
 		{
-			pass.setVertexBuffer ( 2, colorsBuffer );
+			pass.setVertexBuffer ( 2, colors );
 		}
 
 		// Set the buffer of texture coordinates if we can.
-		if ( texCoordsBuffer )
+		const texCoords = geom.texCoords?.buffer;
+		if ( texCoords )
 		{
-			pass.setVertexBuffer ( 3, texCoordsBuffer );
+			pass.setVertexBuffer ( 3, texCoords );
 		}
 
 		// Draw the indexed primitives.
 		pass.drawIndexed (
-			prims.numIndices, // The number of indices to draw.
+			numIndices, // The number of indices to draw.
 			1, // Number of instances to draw.
 			0, // Offset into the index buffer, in indices, to begin drawing from.
 			0, // Added to each index value before indexing into the vertex buffers.
@@ -654,3 +444,72 @@ export class Draw extends BaseClass
 		// Nothing to do.
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// /**
+//  * Draw the state.
+//  * @param {IStateData} sd - The state-data to visit.
+//  */
+// protected drawState ( { state, modelMatrices }: IStateData ) : void
+// {
+// 	// Set the current state.
+// 	this.state = state;
+
+// 	// Make the render pass descriptor.
+// 	const renderPassDescriptor: GPURenderPassDescriptor = {
+// 		label: "draw_visitor_default_render_pass_descriptor",
+// 		colorAttachments: [
+// 		{
+// 			view: this.context.getCurrentTexture().createView(),
+// 			clearValue: this.preMultipliedClearColor,
+// 			loadOp: "clear",
+// 			storeOp: "store"
+// 		} ]
+// 	};
+
+// 	// Make and configure a render pass.
+// 	const pass = this.encoder.beginRenderPass ( renderPassDescriptor );
+// 	pass.label = `draw_visitor_render_pass_for_state_${state.name}`;
+// 	pass.setPipeline ( this.pipeline );
+
+// 	// This is important.
+// 	this.pass = pass;
+
+// 	// Draw the model matrices.
+// 	this.drawModelMatrices ( modelMatrices );
+
+// 	// End the render pass.
+// 	pass.end();
+
+// 	// Reset these.
+// 	this.pass = null;
+// 	this.state = null;
+// }
+
+// /**
+//  * Draw the shapes.
+//  * @param {Shape[]} shapes - The shapes to visit.
+//  */
+// protected drawShapes ( shapes: Shape[] ) : void
+// {
+// 	// Iterate over the shapes.
+// 	for ( const shape of shapes )
+// 	{
+// 		// Example: Draw a triangle (3 vertices).
+// 		this.pass.draw ( 3 );
+// 	}
+// }

@@ -8,14 +8,15 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Represents a render bin.
+//	Represents a render bin. Each bin renders its children in order.
+//	This can be used, for example, for correct transparency by putting those
+//	objects in a bin with a large key, which will make them render last.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base as BaseClass } from "../Base";
-import { ShaderBase } from "../Shaders";
 import { Pipeline } from "./Pipeline";
-import { ProjMatrix } from "./ProjMatrix";
+import { State } from "../Scene";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -29,7 +30,7 @@ export type IPipelineMap = Map < string, Pipeline >;
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Class that represents a render bin.
+ * Class that represents a bin (ordered container) in the render graph.
  * @class
  */
 ///////////////////////////////////////////////////////////////////////////////
@@ -57,11 +58,38 @@ export class Bin extends BaseClass
 	}
 
 	/**
-	 * Get the pipelines.
-	 * @returns {IPipelineMap} The pipelines.
+	 * Get the pipeline. Make it if we have to.
+	 * @param {State} state - The pipeline state.
+	 * @returns {Pipeline} The pipeline.
 	 */
-	public get pipelines() : IPipelineMap
+	public getPipeline ( state: State ) : Pipeline
 	{
-		return this.#pipelines;
+		const { name } = state;
+		let pipeline: ( Pipeline | undefined ) = this.#pipelines.get ( name );
+		if ( !pipeline )
+		{
+			pipeline = new Pipeline ( state );
+			this.#pipelines.set ( name, pipeline );
+		}
+		return pipeline;
+	}
+
+	/**
+	 * Call the given function for each pipeline.
+	 * @param {Function} func - The function to call.
+	 */
+	public forEachPipeline ( func: ( pipeline: Pipeline ) => void ) : void
+	{
+		// The order doesn't matter so we don't sort like the layers and bins.
+		this.#pipelines.forEach ( func );
+	}
+
+	/**
+	 * Get the number of pipelines.
+	 * @returns {number} The number of pipelines.
+	 */
+	public get numPipelines () : number
+	{
+		return this.#pipelines.size;
 	}
 }

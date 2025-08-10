@@ -12,9 +12,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { test as testGraph } from "./Graph";
+import { test as testRoot } from "./Root";
 
 describe ( "Render", function ()
 {
-	testGraph();
+	testRoot();
 } );
