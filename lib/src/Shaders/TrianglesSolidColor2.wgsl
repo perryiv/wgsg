@@ -15,19 +15,17 @@
 
 struct VertexOut
 {
-	@builtin(position) position : vec4f,
-	@location(0) color : vec4f,
+	@builtin ( position ) position : vec4f,
 };
-@vertex fn vs (
-	@location(0) position: vec4f,
-	@location(1) color: vec4f ) -> VertexOut
+
+@vertex fn vs ( @location ( 0 ) position: vec4f ) -> VertexOut
 {
 	var output : VertexOut;
 	output.position = position;
-	output.color = color;
 	return output;
 }
-@fragment fn fs(fragData: VertexOut) -> @location(0) vec4f
+
+@fragment fn fs ( fragData: VertexOut ) -> @location ( 0 ) vec4f
 {
-	return fragData.color;
+	return vec4f ( 0.8, 0.2, 0.2, 1.0 );
 }
