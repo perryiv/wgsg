@@ -153,8 +153,14 @@ export class Geometry extends Shape
 	 * Set the points.
 	 * @param {IPointData | Float32Array | null} points - Points for this geometry.
 	 */
-	public set points ( points: ( IPointData | Float32Array | null ) )
+	public set points ( points: ( IPointData | Float32Array | number[] | null ) )
 	{
+		// Convert it if we should.
+		if ( Array.isArray ( points ) )
+		{
+			points = new Float32Array ( points );
+		}
+
 		// Wrap it if we should.
 		if ( points instanceof Float32Array )
 		{

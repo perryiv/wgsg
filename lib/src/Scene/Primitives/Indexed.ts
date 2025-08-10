@@ -29,7 +29,7 @@ import {
 export type IIndexArray = Array1 < Uint32Array | Uint16Array >;
 export interface IIndexedPrimitivesInput extends IPrimitivesInput
 {
-	indices: ( IIndexArray | Uint32Array | Uint16Array );
+	indices: ( IIndexArray | Uint32Array | Uint16Array | number[] );
 }
 
 
@@ -94,10 +94,16 @@ export class Indexed extends BaseClass
 
 	/**
 	 * Set the indices.
-	 * @param {IIndexArray | Uint32Array | Uint16Array | null} indices The indices.
+	 * @param {IIndexArray | Uint32Array | Uint16Array | number[] | null} indices The indices.
 	 */
-	set indices ( indices: ( IIndexArray | Uint32Array | Uint16Array | null ) )
+	set indices ( indices: ( IIndexArray | Uint32Array | Uint16Array | number[] | null ) )
 	{
+		// Convert it if we should.
+		if ( Array.isArray ( indices ) )
+		{
+			indices = new Uint32Array ( indices );
+		}
+
 		// Wrap it if we should.
 		if ( indices instanceof Uint32Array || indices instanceof Uint16Array )
 		{
