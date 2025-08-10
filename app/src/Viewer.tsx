@@ -70,12 +70,11 @@ const root: Node = ( () =>
 		mode: "triangle-list",
 		indices: [
 			0, 1, 2,
+			1, 3, 2,
 		]
 	} );
 
 	return geom;
-
-	// return new Sphere ( { center: [ 0, 0, 0 ] } );
 } ) ();
 
 
