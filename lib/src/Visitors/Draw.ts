@@ -177,11 +177,14 @@ export class Draw extends BaseClass
 	 */
 	public draw ( root: Root ) : void
 	{
+		// Shortcut.
+		const device = Device.instance.device;
+
 		// Make a command encoder.
-		const ce = Device.instance.device.createCommandEncoder ( {
-			label: "draw_visitor_command_encoder"
+		const encoder = device.createCommandEncoder ( {
+			label: "Draw visitor command encoder"
 		} );
-		this.#commandEncoder = ce;
+		this.#commandEncoder = encoder;
 
 		// Iterate over the layers in order.
 		root.forEachLayer ( ( layer: Layer ) =>
@@ -191,7 +194,7 @@ export class Draw extends BaseClass
 		} );
 
 		// Submit the commands to the GPU.
-		Device.instance.device.queue.submit ( [ ce.finish() ] );
+		device.queue.submit ( [ encoder.finish() ] );
 
 		// Reset these.
 		this.#renderPassEncoder = null;
@@ -245,7 +248,7 @@ export class Draw extends BaseClass
 
 		// Make the render pass encoder.
 		const pass = this.commandEncoder.beginRenderPass ( {
-			label: `draw_visitor_render_pass_for_state_${name}`,
+			label: `Render pass for draw visitor with state '${name}'`,
 			colorAttachments: [
 			{
 				view: this.context.getCurrentTexture().createView(),
@@ -257,7 +260,6 @@ export class Draw extends BaseClass
 		this.#renderPassEncoder = pass;
 
 		// Make and configure a render pass.
-		pass.label = `draw_visitor_render_pass_for_state_${state.name}`;
 		pass.setPipeline ( shader.pipeline );
 
 		// Draw the projection matrix groups.
@@ -265,6 +267,9 @@ export class Draw extends BaseClass
 		{
 			this.drawProjMatrix ( projMatrix );
 		} );
+
+		// End this render pass.
+		pass.end();
 	}
 
 	/**
@@ -444,72 +449,3 @@ export class Draw extends BaseClass
 		// Nothing to do.
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// /**
-//  * Draw the state.
-//  * @param {IStateData} sd - The state-data to visit.
-//  */
-// protected drawState ( { state, modelMatrices }: IStateData ) : void
-// {
-// 	// Set the current state.
-// 	this.state = state;
-
-// 	// Make the render pass descriptor.
-// 	const renderPassDescriptor: GPURenderPassDescriptor = {
-// 		label: "draw_visitor_default_render_pass_descriptor",
-// 		colorAttachments: [
-// 		{
-// 			view: this.context.getCurrentTexture().createView(),
-// 			clearValue: this.preMultipliedClearColor,
-// 			loadOp: "clear",
-// 			storeOp: "store"
-// 		} ]
-// 	};
-
-// 	// Make and configure a render pass.
-// 	const pass = this.encoder.beginRenderPass ( renderPassDescriptor );
-// 	pass.label = `draw_visitor_render_pass_for_state_${state.name}`;
-// 	pass.setPipeline ( this.pipeline );
-
-// 	// This is important.
-// 	this.pass = pass;
-
-// 	// Draw the model matrices.
-// 	this.drawModelMatrices ( modelMatrices );
-
-// 	// End the render pass.
-// 	pass.end();
-
-// 	// Reset these.
-// 	this.pass = null;
-// 	this.state = null;
-// }
-
-// /**
-//  * Draw the shapes.
-//  * @param {Shape[]} shapes - The shapes to visit.
-//  */
-// protected drawShapes ( shapes: Shape[] ) : void
-// {
-// 	// Iterate over the shapes.
-// 	for ( const shape of shapes )
-// 	{
-// 		// Example: Draw a triangle (3 vertices).
-// 		this.pass.draw ( 3 );
-// 	}
-// }
