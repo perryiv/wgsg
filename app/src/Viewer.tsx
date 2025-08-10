@@ -13,15 +13,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { mat4 } from "gl-matrix";
 import { useEffect, useRef, useState } from "react";
 import {
 	Device,
-	Group,
-	IDENTITY_MATRIX,
+	Geometry,
+	Indexed,
 	Viewer as InternalViewer,
+	Node,
 	Sphere,
-	Transform,
 } from "wgsg-lib";
 
 
@@ -31,29 +30,52 @@ import {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-const root: Group = ( () =>
+// const root: Node = ( () =>
+// {
+// 	const root = new Group();
+
+// 	{
+// 		const tr = new Transform();
+// 		mat4.translate ( tr.matrix, IDENTITY_MATRIX, [ 10, 0, 0 ] );
+// 		tr.addChild ( new Sphere ( { center: [ 0, 0, 0 ] } ) );
+// 		tr.addChild ( new Sphere ( { center: [ 2, 0, 0 ] } ) );
+// 		root.addChild ( tr );
+// 	}
+
+// 	{
+// 		const tr = new Transform();
+// 		mat4.translate ( tr.matrix, IDENTITY_MATRIX, [ 0, 10, 0 ] );
+// 		tr.addChild ( new Sphere ( { center: [ 0, 0, 0 ] } ) );
+// 		tr.addChild ( new Sphere ( { center: [ 2, 0, 0 ] } ) );
+// 		tr.addChild ( new Sphere ( { center: [ 4, 0, 0 ] } ) );
+// 		tr.addChild ( new Sphere ( { center: [ 6, 0, 0 ] } ) );
+// 		root.addChild ( tr );
+// 	}
+
+// 	return root;
+// } ) ();
+
+const root: Node = ( () =>
 {
-	const root = new Group();
+	const geom = new Geometry();
 
-	{
-		const tr = new Transform();
-		mat4.translate ( tr.matrix, IDENTITY_MATRIX, [ 10, 0, 0 ] );
-		tr.addChild ( new Sphere ( { center: [ 0, 0, 0 ] } ) );
-		tr.addChild ( new Sphere ( { center: [ 2, 0, 0 ] } ) );
-		root.addChild ( tr );
-	}
+	geom.points = [
+		0.0, 0.0, 0.0,
+		0.5, 0.0, 0.0,
+		0.0, 0.5, 0.0,
+		0.5, 0.5, 0.0,
+	];
 
-	{
-		const tr = new Transform();
-		mat4.translate ( tr.matrix, IDENTITY_MATRIX, [ 0, 10, 0 ] );
-		tr.addChild ( new Sphere ( { center: [ 0, 0, 0 ] } ) );
-		tr.addChild ( new Sphere ( { center: [ 2, 0, 0 ] } ) );
-		tr.addChild ( new Sphere ( { center: [ 4, 0, 0 ] } ) );
-		tr.addChild ( new Sphere ( { center: [ 6, 0, 0 ] } ) );
-		root.addChild ( tr );
-	}
+	geom.primitives = new Indexed ( {
+		mode: "triangle-list",
+		indices: [
+			0, 1, 2,
+		]
+	} );
 
-	return root;
+	return geom;
+
+	// return new Sphere ( { center: [ 0, 0, 0 ] } );
 } ) ();
 
 
