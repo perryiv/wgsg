@@ -19,7 +19,7 @@ import { ShaderBase as BaseClass } from "./ShaderBase";
 import { vec4 } from "gl-matrix";
 
 // @ts-expect-error TypeScript does not recognize WGSL files.
-import code from "./TrianglesSolidColor.wgsl?raw";
+import code from "./TrianglesSolidColor2.wgsl?raw";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -103,15 +103,18 @@ export class TriangleSolidColor extends BaseClass
 		// Make the pipeline.
 		const pipeline = Device.instance.device.createRenderPipeline ( {
 			label: `Pipeline for shader ${this.type}`,
+			layout: "auto",
 			vertex: {
 				module: this.module,
+				entryPoint: "vs",
 				buffers: [
 				{
 					attributes: [
 					{
+						// Position
 						shaderLocation: 0,
 						offset: 0,
-						format: "float32x3", // Position
+						format: "float32x3",
 					} ],
 					arrayStride,
 					stepMode: "vertex",
@@ -119,6 +122,7 @@ export class TriangleSolidColor extends BaseClass
 			},
 			fragment: {
 				module: this.module,
+				entryPoint: "fs",
 				targets: [ {
 					format: Device.instance.preferredFormat
 				} ]
@@ -126,7 +130,6 @@ export class TriangleSolidColor extends BaseClass
 			primitive: {
 				topology: "triangle-list"
 			},
-			layout: "auto",
 		} );
 
 		// Do not return an invalid pipeline.
