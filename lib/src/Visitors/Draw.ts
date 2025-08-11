@@ -259,7 +259,7 @@ export class Draw extends BaseClass
 		} );
 		this.#renderPassEncoder = pass;
 
-		// Make and configure a render pass.
+		// Configure the render pass.
 		pass.setPipeline ( shader.pipeline );
 
 		// Draw the projection matrix groups.
