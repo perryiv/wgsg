@@ -17,6 +17,7 @@ import { useEffect, useRef, useState } from "react";
 import {
 	Device,
 	Geometry,
+	Group,
 	Indexed,
 	Viewer as InternalViewer,
 	Node,
@@ -60,41 +61,83 @@ import {
 
 const root: Node = ( () =>
 {
-	const geom = new Geometry();
+	const group = new Group();
 
-	geom.points = [
-		0.0, 0.0, 0.0,
-		0.5, 0.0, 0.0,
-		0.0, 0.5, 0.0,
-		0.5, 0.5, 0.0,
-	];
+	{
+		const geom = new Geometry();
 
-	geom.primitives = new Indexed ( {
-		mode: "triangle-list",
-		indices: [
-			0, 1, 2,
-			1, 3, 2,
-		]
-	} );
+		geom.points = [
+			0.0, 0.0, 0.0,
+			0.5, 0.0, 0.0,
+			0.0, 0.5, 0.0,
+			0.5, 0.5, 0.0,
+		];
 
-	const shader = new TriangleSolidColor();
-	shader.color = [ 0.2, 0.8, 0.2, 1.0 ];
+		geom.primitives = new Indexed ( {
+			mode: "triangle-list",
+			indices: [
+				0, 1, 2,
+				1, 2, 3,
+			]
+		} );
 
-	const state = new State();
-	state.shader = shader;
+		const shader = new TriangleSolidColor();
+		shader.color = [ 0.2, 0.8, 0.2, 1.0 ];
 
-	geom.state = state;
+		const state = new State();
+		state.shader = shader;
 
-	const tr = new Transform ( [
-		1, 0, 0, 0,
-		0, 1, 0, 0,
-		0, 0, 1, 0.5,
-		0, 0, 0, 1
-	] );
+		geom.state = state;
 
-	tr.addChild ( geom );
+		const tr = new Transform ( [
+			1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, 1, 0.5,
+			0, 0, 0, 1
+		] );
 
-	return tr;
+		tr.addChild ( geom );
+		group.addChild ( tr );
+	}
+
+	{
+		const geom = new Geometry();
+
+		geom.points = [
+			-0.5, -0.5,  0.0,
+			 0.0, -0.5,  0.0,
+			-0.5,  0.0,  0.0,
+			 0.0,  0.0,  0.0,
+		];
+
+		geom.primitives = new Indexed ( {
+			mode: "triangle-list",
+			indices: [
+				0, 1, 2,
+				1, 2, 3,
+			]
+		} );
+
+		const shader = new TriangleSolidColor();
+		shader.color = [ 0.2, 0.2, 0.8, 1.0 ];
+
+		const state = new State();
+		state.shader = shader;
+
+		geom.state = state;
+
+		const tr = new Transform ( [
+			1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, 1, 0.5,
+			0, 0, 0, 1
+		] );
+
+		tr.addChild ( geom );
+		group.addChild ( tr );
+	}
+
+	return group;
 } ) ();
 
 
