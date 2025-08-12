@@ -1,4 +1,3 @@
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (c) 2025, Perry L Miller IV
@@ -13,9 +12,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { State } from "../../State";
 import {
 	Node,
+	type INodeConstructorInput,
 	type INodeTraverseCallback,
 } from "../Node";
 
@@ -29,35 +28,14 @@ import {
 
 export abstract class Shape extends Node
 {
-	#state: ( State | null ) = null;
-
 	/**
 	 * Construct the class.
 	 * @class
-	 * @param {State | null} state - Optional state for this shape.
+	 * @param {INodeConstructorInput} [input] - The input for the node.
 	 */
-	constructor ( state?: ( State | null ) )
+	constructor ( input?: INodeConstructorInput )
 	{
-		super();
-		this.#state = ( state ?? null );
-	}
-
-	/**
-	 * Get the state.
-	 * @returns {State | null} State for this shape.
-	 */
-	public get state() : ( State | null )
-	{
-		return this.#state;
-	}
-
-	/**
-	 * Set the state.
-	 * @param {State | null} state - State for this shape.
-	 */
-	public set state ( state: ( State | null ) )
-	{
-		this.#state = state;
+		super ( input );
 	}
 
 	/**

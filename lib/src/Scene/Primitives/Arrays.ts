@@ -1,4 +1,3 @@
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (c) 2025, Perry L Miller IV
@@ -9,12 +8,30 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Primitive list class that uses arrays.
+//	The primitive class for when there are arrays but no indices.
+//	The name is plural because, while it refers to only one array of points,
+//	there are likely also normals, and maybe colors and texture coordinates.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Primitives } from "./Primitives";
 import { Draw as DrawVisitor } from "../../Visitors/Draw";
+import {
+	Base as BaseClass,
+	type IPrimitivesInput,
+} from "./Base";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Types used below.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export interface IArrayPrimitivesInput extends IPrimitivesInput
+{
+	first: number;
+	count: number;
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -24,7 +41,7 @@ import { Draw as DrawVisitor } from "../../Visitors/Draw";
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Arrays extends Primitives
+export class Arrays extends BaseClass
 {
 	#first = 0;
 	#count = 0;
@@ -32,10 +49,19 @@ export class Arrays extends Primitives
 	/**
 	 * Construct the class.
 	 * @class
+	 * @param {IPrimitivesInput} [input] - Input for the primitives.
+	 * @param {GPUPrimitiveTopology} [input.mode] - The primitive topology mode.
+	 * @param {number} [input.first] - The first index to draw.
+	 * @param {number} [input.count] - The number of vertices to draw.
 	 */
-	constructor()
+	constructor ( input?: IArrayPrimitivesInput )
 	{
-		super();
+		super ( input );
+
+		const { first = 0, count = 0 } = input || {};
+
+		this.#first = first;
+		this.#count = count;
 	}
 
 	/**

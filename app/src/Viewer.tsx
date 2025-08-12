@@ -13,15 +13,17 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { mat4 } from "gl-matrix";
 import { useEffect, useRef, useState } from "react";
 import {
 	Device,
-	Group,
-	IDENTITY_MATRIX,
+	Geometry,
+	Indexed,
 	Viewer as InternalViewer,
+	Node,
 	Sphere,
+	State,
 	Transform,
+	TriangleSolidColor,
 } from "wgsg-lib";
 
 
@@ -31,29 +33,68 @@ import {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-const root: Group = ( () =>
+// const root: Node = ( () =>
+// {
+// 	const root = new Group();
+
+// 	{
+// 		const tr = new Transform();
+// 		mat4.translate ( tr.matrix, IDENTITY_MATRIX, [ 10, 0, 0 ] );
+// 		tr.addChild ( new Sphere ( { center: [ 0, 0, 0 ] } ) );
+// 		tr.addChild ( new Sphere ( { center: [ 2, 0, 0 ] } ) );
+// 		root.addChild ( tr );
+// 	}
+
+// 	{
+// 		const tr = new Transform();
+// 		mat4.translate ( tr.matrix, IDENTITY_MATRIX, [ 0, 10, 0 ] );
+// 		tr.addChild ( new Sphere ( { center: [ 0, 0, 0 ] } ) );
+// 		tr.addChild ( new Sphere ( { center: [ 2, 0, 0 ] } ) );
+// 		tr.addChild ( new Sphere ( { center: [ 4, 0, 0 ] } ) );
+// 		tr.addChild ( new Sphere ( { center: [ 6, 0, 0 ] } ) );
+// 		root.addChild ( tr );
+// 	}
+
+// 	return root;
+// } ) ();
+
+const root: Node = ( () =>
 {
-	const root = new Group();
+	const geom = new Geometry();
 
-	{
-		const tr = new Transform();
-		mat4.translate ( tr.matrix, IDENTITY_MATRIX, [ 10, 0, 0 ] );
-		tr.addChild ( new Sphere ( { center: [ 0, 0, 0 ] } ) );
-		tr.addChild ( new Sphere ( { center: [ 2, 0, 0 ] } ) );
-		root.addChild ( tr );
-	}
+	geom.points = [
+		0.0, 0.0, 0.0,
+		0.5, 0.0, 0.0,
+		0.0, 0.5, 0.0,
+		0.5, 0.5, 0.0,
+	];
 
-	{
-		const tr = new Transform();
-		mat4.translate ( tr.matrix, IDENTITY_MATRIX, [ 0, 10, 0 ] );
-		tr.addChild ( new Sphere ( { center: [ 0, 0, 0 ] } ) );
-		tr.addChild ( new Sphere ( { center: [ 2, 0, 0 ] } ) );
-		tr.addChild ( new Sphere ( { center: [ 4, 0, 0 ] } ) );
-		tr.addChild ( new Sphere ( { center: [ 6, 0, 0 ] } ) );
-		root.addChild ( tr );
-	}
+	geom.primitives = new Indexed ( {
+		mode: "triangle-list",
+		indices: [
+			0, 1, 2,
+			1, 3, 2,
+		]
+	} );
 
-	return root;
+	const shader = new TriangleSolidColor();
+	shader.color = [ 0.2, 0.8, 0.2, 1.0 ];
+
+	const state = new State();
+	state.shader = shader;
+
+	geom.state = state;
+
+	const tr = new Transform ( [
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0.5,
+		0, 0, 0, 1
+	] );
+
+	tr.addChild ( geom );
+
+	return tr;
 } ) ();
 
 
@@ -78,7 +119,6 @@ export interface IViewerProps
 export function Viewer ( { style }: IViewerProps )
 {
 	// Get state.
-	const [ , setDevice ] = useState < Device | null > ( null );
 	const canvas = useRef < HTMLCanvasElement | null > ( null );
 	const [ , setViewer ] = useState < InternalViewer | null > ( null );
 
@@ -96,24 +136,19 @@ export function Viewer ( { style }: IViewerProps )
 				throw new Error ( "Invalid canvas element" );
 			}
 
-			const device = await Device.create();
+			await Device.init();
 
-			if ( !device )
+			if ( !Device.instance )
 			{
 				throw new Error ( "Invalid device" );
 			}
 
-			setDevice ( device );
-
+			void Device.instance.device.lost.then ( ( { reason }: GPUDeviceLostInfo ) =>
 			{
-				const gd: GPUDevice = device.device;
-				void gd.lost.then ( ( { reason }: GPUDeviceLostInfo ) =>
-				{
-					console.log ( "Context lost because: ", reason );
-				} );
-			}
+				console.log ( "Context lost because: ", reason );
+			} );
 
-			const viewer = new InternalViewer ( { device, canvas: canvas.current } );
+			const viewer = new InternalViewer ( { canvas: canvas.current } );
 			viewer.scene = root;
 			setViewer ( viewer );
 

@@ -1,4 +1,3 @@
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (c) 2025, Perry L Miller IV
@@ -17,7 +16,7 @@ import { Base } from "../Base/Base";
 import { clamp, Device } from "../Tools";
 import { IVector3, IVector4 } from "../Types";
 import { Perspective, ProjectionBase as Projection } from "../Projections";
-import { SolidColor } from "../Shaders";
+import { TriangleSolidColor } from "../Shaders";
 import { vec4 } from "gl-matrix";
 import type { ISize, IViewport } from "../Types/Math";
 import {
@@ -25,10 +24,7 @@ import {
 	State,
 	type IStateApplyInput,
 } from "../Scene";
-import type {
-	ILayer,
-	ILayerMap,
-} from "../Render";
+import { Root } from "../Render";
 import {
 	Cull as CullVisitor,
 	Draw as DrawVisitor,
@@ -46,7 +42,6 @@ export interface ISurfaceConstructor
 {
 	// These two are needed.
 	canvas: HTMLCanvasElement;
-	device: Device;
 
 	// The user can configure this if desired.
 	context?: ( GPUCanvasContext | null );
@@ -83,14 +78,13 @@ export class Surface extends Base
 {
 	#canvas: HTMLCanvasElement;
 	#context: GPUCanvasContext;
-	#device: Device;
 	#viewport: IViewport = { x: 0, y: 0, width: 0, height: 0 };
 	#scene: ( Node | null ) = null;
 	#projection: Projection = new Perspective();
 	#handles: ITimeoutHandles = { render: 0 };
 	#frame: IFrameInfo = { count: 0, start: 0 };
 	#visitors: ( IVisitors | null ) = null;
-	#layers: ILayerMap = new Map < number, ILayer > ();
+	#root = new Root();
 	#defaultState: State = new State();
 	#clearColor: IVector4 = [ 0.0, 0.0, 0.0, 0.0 ]; // Transparent black.
 
@@ -99,7 +93,7 @@ export class Surface extends Base
 	 * @class
 	 * @param {ISurfaceConstructor} input - The constructor input object.
 	 */
-	constructor ( { canvas, device, context } : ISurfaceConstructor )
+	constructor ( { canvas, context } : ISurfaceConstructor )
 	{
 		// Call this first.
 		super();
@@ -110,16 +104,10 @@ export class Surface extends Base
 			throw new Error ( "Invalid canvas when constructing a surface" );
 		}
 
-		// This should be valid.
-		if ( !device )
-		{
-			throw new Error ( "Invalid device when constructing a surface" );
-		}
-
 		// This one is optional. Make it if we have to.
 		if ( !context )
 		{
-			context = device.getContext ( canvas );
+			context = Device.instance.getConfiguredContext ( canvas );
 		}
 
 		// This should be valid when we get to here.
@@ -129,25 +117,21 @@ export class Surface extends Base
 		}
 
 		// Shortcuts.
-		const state = this.#defaultState;
+		const { width, height } = canvas;
+		const root = this.#root;
+
+		// Set the default state's properties.
+		const defaultState = this.#defaultState;
+		defaultState.name = `Default state for ${this.getClassName()} ${this.id}`;
+		defaultState.shader = new TriangleSolidColor();
+		defaultState.apply = this.defaultApplyFunction.bind ( this );
+		defaultState.reset = this.defaultResetFunction.bind ( this );
 
 		// Now we can make the visitors.
 		const update = new UpdateVisitor();
-		const cull = new CullVisitor ( {
-			layers: this.#layers,
-			defaultState: state,
-		} );
-		const draw = new DrawVisitor ( {
-			context,
-			device
-		} );
+		const cull = new CullVisitor ( { root, defaultState } );
+		const draw = new DrawVisitor ( { context } );
 		this.#visitors = { update, cull, draw };
-
-		// Set the default state's properties.
-		state.name = `Default state for ${this.getClassName()} ${this.id}`;
-		state.shader = new SolidColor ( { device } );
-		state.apply = this.defaultApplyFunction.bind ( this );
-		state.reset = this.defaultResetFunction.bind ( this );
 
 		// Observe changes to the canvas size.
 		// https://webgpufundamentals.org/webgpu/lessons/webgpu-fundamentals.html#a-resizing
@@ -157,7 +141,7 @@ export class Surface extends Base
 		// Set our members.
 		this.#canvas = canvas;
 		this.#context = context;
-		this.#device = device;
+		this.#viewport = { x: 0, y: 0, width, height };
 	}
 
 	/**
@@ -198,7 +182,7 @@ export class Surface extends Base
 		// There can be only one.
 		const item = items[0];
 		let { inlineSize: width, blockSize: height } = item.contentBoxSize[0];
-		const { maxTextureDimension2D: maxDimension } = this.device.limits;
+		const { maxTextureDimension2D: maxDimension } = Device.instance.device.limits;
 
 		// Ignore when one or both are zero.
 		if ( ( width <= 0 ) || ( height <= 0 ) )
@@ -475,25 +459,6 @@ export class Surface extends Base
 	}
 
 	/**
-	 * Get the device.
-	 * @returns {Device} The GPU device wrapper.
-	 */
-	public get device () : Device
-	{
-		// Get a shortcut to the device.
-		const device = this.#device;
-
-		// Given how we construct the class, this is probably unnecessary.
-		if ( !device )
-		{
-			throw new Error ( "Invalid GPU device in surface class" );
-		}
-
-		// Return the device.
-		return device;
-	}
-
-	/**
 	 * Get the canvas.
 	 * @returns {HTMLCanvasElement} The HTML canvas element.
 	 */
@@ -669,9 +634,9 @@ export class Surface extends Base
 		// Shortcuts.
 		const cv = this.cullVisitor;
 
-		// Make sure the visitor has our layers and default state.
+		// Make sure the visitor has our render graph and default state.
 		// Note: It probably already does.
-		cv.layers = this.#layers;
+		cv.root = this.#root;
 		cv.defaultState = this.defaultState;
 		cv.projMatrix = [ ...this.#projection.matrix ];
 
@@ -691,11 +656,11 @@ export class Surface extends Base
 	 */
 	public draw ()
 	{
-		console.log ( "Drawing render-graph" );
+		// console.log ( "Drawing render-graph" );
 
 		// Handle no render graph.
-		const layers = this.#layers;
-		if ( !layers )
+		const root = this.#root;
+		if ( !root )
 		{
 			return;
 		}
@@ -709,8 +674,8 @@ export class Surface extends Base
 		// Tell the visitor that it should return to its initial state.
 		dv.reset();
 
-		// Draw the layers
-		dv.drawLayers ( layers );
+		// Draw the render graph.
+		dv.draw ( root );
 	}
 
 	/**

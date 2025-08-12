@@ -1,4 +1,3 @@
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (c) 2025, Perry L Miller IV
@@ -14,7 +13,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base } from "../Base";
-import { Device } from "../Tools";
 import { ShaderBase, type IShaderFactory } from "./ShaderBase";
 
 
@@ -51,7 +49,6 @@ let manager: ( Manager | null ) = null;
 export class Manager extends Base
 {
 	#shaders: IShaderMap = new Map < string, IShaderData > ();
-	#device: ( Device | null ) = null;
 
 	/**
 	 * Construct the class.
@@ -83,29 +80,6 @@ export class Manager extends Base
 	public override getClassName() : string
 	{
 		return "Shaders.Manager";
-	}
-
-	/**
-	 * Set the GPU device wrapper.
-	 * @param {Device} device The GPU device wrapper.
-	 */
-	public set device ( device: Device )
-	{
-		this.#device = device;
-	}
-
-	/**
-	 * Get the GPU device wrapper.
-	 * @returns {Device} The GPU device wrapper.
-	 */
-	public get device () : Device
-	{
-		if ( !this.#device )
-		{
-			throw new Error ( "Device is not set in shader manager" );
-		}
-
-		return this.#device;
 	}
 
 	/**
@@ -156,7 +130,7 @@ export class Manager extends Base
 		if ( !shader )
 		{
 			const { factory } = sd;
-			shader = factory ( this.device );
+			shader = factory();
 			sd.shader = shader;
 		}
 

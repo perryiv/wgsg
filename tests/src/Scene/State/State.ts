@@ -17,8 +17,8 @@ import {
 	defaultApplyFunction,
 	defaultResetFunction,
 	Device,
-	SolidColor,
 	State,
+	TriangleSolidColor,
 	type IStateApplyFunction,
 	type IStateResetFunction,
 } from "wgsg-lib";
@@ -34,11 +34,9 @@ export function test ()
 {
 	describe ( "State", function ()
 	{
-		let device: ( Device | null ) = null;
-
 		this.beforeAll ( async function ()
 		{
-			device = await Device.create();
+			await Device.init();
 		} );
 
 		it ( "Should be able to make a state", function ()
@@ -53,7 +51,7 @@ export function test ()
 			const state = new State();
 			expect ( state.name ).to.equal ( "default_state" );
 			expect ( state.layer ).to.equal ( 0 );
-			expect ( state.renderBin ).to.equal ( 0 );
+			expect ( state.bin ).to.equal ( 0 );
 			expect ( state.apply ).to.equal ( defaultApplyFunction );
 			expect ( state.reset ).to.equal ( defaultResetFunction );
 		} );
@@ -75,39 +73,39 @@ export function test ()
 				console.log ( "Custom reset function called." );
 			};
 
-			const shader = new SolidColor ( { device: device! } );
+			const shader = new TriangleSolidColor();
 
 			const state = new State();
 			state.name = "test_state";
 			state.shader = shader;
 			state.layer = 1;
-			state.renderBin = 2;
+			state.bin = 2;
 			state.apply = localApplyFunction;
 			state.reset = localResetFunction;
 
 			expect ( state.name ).to.equal ( "test_state" );
 			expect ( state.shader ).to.equal ( shader );
-			expect ( state.shader.type ).to.equal ( "Shaders.SolidColor" );
+			expect ( state.shader.type ).to.equal ( "Shaders.TriangleSolidColor" );
 			expect ( state.layer ).to.equal ( 1 );
-			expect ( state.renderBin ).to.equal ( 2 );
+			expect ( state.bin ).to.equal ( 2 );
 			expect ( state.apply ).to.equal ( localApplyFunction );
 			expect ( state.reset ).to.equal ( localResetFunction );
 		} );
 
 		it ( "Should be able to construct with input", function ()
 		{
-			const shader = new SolidColor ( { device: device! } );
+			const shader = new TriangleSolidColor();
 			const state = new State ( {
 				name: "test_state",
 				shader,
 				layer: 1,
-				renderBin: 2
+				bin: 2
 			} );
 			expect ( state.name ).to.equal ( "test_state" );
-			expect ( shader.type ).to.equal ( "Shaders.SolidColor" );
+			expect ( shader.type ).to.equal ( "Shaders.TriangleSolidColor" );
 			expect ( state.shader ).to.equal ( shader );
 			expect ( state.layer ).to.equal ( 1 );
-			expect ( state.renderBin ).to.equal ( 2 );
+			expect ( state.bin ).to.equal ( 2 );
 		} );
 	} );
 };

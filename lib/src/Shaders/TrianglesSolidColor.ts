@@ -1,0 +1,234 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Copyright (c) 2025, Perry L Miller IV
+//	All rights reserved.
+//	MIT License: https://opensource.org/licenses/mit-license.html
+//
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Shader class that renders a solid color.
+//	https://stackoverflow.com/questions/71535213/a-way-to-load-wglsl-files-in-typescript-files-using-esbuild
+//
+///////////////////////////////////////////////////////////////////////////////
+
+import { Device } from "../Tools";
+import { IVector4 } from "../Types";
+import { ShaderBase as BaseClass } from "./ShaderBase";
+import { vec4 } from "gl-matrix";
+
+// @ts-expect-error TypeScript does not recognize WGSL files.
+import code from "./TrianglesSolidColor2.wgsl?raw";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Types used below.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export interface ITriangleSolidColorShaderInput
+{
+	color?: IVector4;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Class that contains the shader code.
+ * @class
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export class TriangleSolidColor extends BaseClass
+{
+	#color: IVector4 = [ 0.5, 0.5, 0.5, 1.0 ];
+	#buffer: ( GPUBuffer | null ) = null;
+	#bindGroup: ( GPUBindGroup | null ) = null;
+
+	/**
+	 * Construct the class.
+	 * @class
+	 * @param {ITriangleSolidColorShaderInput} input - The input for the constructor.
+	 * @param {IVector4} [input.color] - The color to use.
+	 */
+	public constructor ( input?: ITriangleSolidColorShaderInput )
+	{
+		super ( { code: ( code as string ) } );
+
+		const { color } = ( input ? input : {} );
+
+		if ( ( color ) && ( 4 === color.length ) )
+		{
+			vec4.copy ( this.#color, color );
+		}
+	}
+
+	/**
+	 * Return the class name.
+	 * @returns {string} The class name.
+	 */
+	public override getClassName() : string
+	{
+		return "Shaders.TriangleSolidColor";
+	}
+
+	/**
+	 * Set the color.
+	 * @param {IVector4} color The color to use.
+	 */
+	public set color ( color: IVector4 )
+	{
+		vec4.copy ( this.#color, color );
+		this.#buffer = null;
+	}
+
+	/**
+	 * Return the color.
+	 * @returns {IVector4} The color.
+	 */
+	public get color () : IVector4
+	{
+		return [ ...this.#color ];
+	}
+
+	/**
+	 * Return the uniform buffer.
+	 * @returns {GPUBuffer | null} The uniform buffer.
+	 */
+	protected get uniforms () : GPUBuffer
+	{
+		// Shortcut
+		let buffer = this.#buffer;
+
+		// Make it if we have to.
+		if ( !buffer )
+		{
+			// Shortcut
+			const device = Device.instance.device;
+
+			// Create the buffer.
+			buffer = device.createBuffer ( {
+				label: `Uniform buffer for shader ${this.type}`,
+				size: 16, // 4 values, 4 bytes each.
+				usage: ( GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST )
+			} );
+
+			// Write the color values to a typed array.
+			const values = new Float32Array ( this.#color );
+
+			// Write the typed array to the buffer.
+			device.queue.writeBuffer ( buffer, 0, values );
+
+			// Set this for next time.
+			this.#buffer = buffer;
+		}
+
+		// Return what we have.
+		return buffer;
+	}
+
+	/**
+	 * Make the render pipeline.
+	 * @returns {GPURenderPipeline} The render pipeline.
+	 */
+	protected makePipeline() : GPURenderPipeline
+	{
+		// Shortcuts
+		const { device, preferredFormat } = Device.instance;
+
+		// Define the array stride.
+		// https://www.w3.org/TR/webgpu/#enumdef-gpuvertexstepmode
+		const arrayStride = 12; // 3 floats * 4 bytes each.
+
+		// Make the pipeline.
+		const pipeline = device.createRenderPipeline ( {
+			label: `Render pass for shader ${this.type}`,
+			layout: "auto",
+			vertex: {
+				module: this.module,
+				entryPoint: "vs",
+				buffers: [
+				{
+					attributes: [
+					{
+						// Position
+						shaderLocation: 0,
+						offset: 0,
+						format: "float32x3",
+					} ],
+					arrayStride,
+					stepMode: "vertex",
+				} ]
+			},
+			fragment: {
+				module: this.module,
+				entryPoint: "fs",
+				targets: [ {
+					format: preferredFormat
+				} ]
+			},
+			primitive: {
+				topology: "triangle-list"
+			},
+		} );
+
+		// Do not return an invalid pipeline.
+		if ( !pipeline )
+		{
+			throw new Error ( "Failed to create pipeline" );
+		}
+
+		// Return the new pipeline.
+		return pipeline;
+	}
+
+	/**
+	 * Get the bind group.
+	 * @returns {GPUBindGroup} The bind group.
+	 */
+	protected get bindGroup () : GPUBindGroup
+	{
+		// Shortcut
+		let bindGroup = this.#bindGroup;
+
+		// Make it if we have to.
+		if ( !bindGroup )
+		{
+			// Shortcuts.
+			const { pipeline } = this;
+			const device = Device.instance.device;
+
+			// Make the bind group.
+			bindGroup = device.createBindGroup ( {
+				label: `Bind group for shader ${this.type}`,
+				layout: pipeline.getBindGroupLayout ( 0 ),
+				entries: [
+				{
+					binding: 0,
+					resource: { buffer: this.uniforms }
+				} ],
+			} );
+
+			// Set for next time.
+			this.#bindGroup = bindGroup;
+		}
+
+		// Return the bind group.
+		return bindGroup;
+	}
+
+	/**
+	 * Configure the render pass.
+	 * @param {GPURenderPassEncoder} pass - The render pass encoder.
+	 */
+	public configureRenderPass ( pass: GPURenderPassEncoder ) : void
+	{
+		// Set the pipeline.
+		pass.setPipeline ( this.pipeline );
+
+		// Set the color buffer.
+		pass.setBindGroup ( 0, this.bindGroup );
+	}
+}

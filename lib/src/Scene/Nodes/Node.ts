@@ -1,4 +1,3 @@
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (c) 2025, Perry L Miller IV
@@ -14,10 +13,24 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base } from "../../Base/Base";
-import { Group } from "./Groups/Group";
-import { Visitor } from "../../Visitors/Visitor";
-import { hasBits, setBits } from "../../Tools";
 import { Box } from "../../Math";
+import { Group } from "./Groups/Group";
+import { hasBits, setBits } from "../../Tools";
+import { State } from "../State";
+import { Visitor } from "../../Visitors/Visitor";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Types for node construction.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export interface INodeConstructorInput
+{
+	state?: ( State | null );
+	flags?: ( number | null );
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -60,6 +73,7 @@ export type INodeTraverseCallback = ( ( node: Node ) => void );
 
 export abstract class Node extends Base
 {
+	#state: ( State | null ) = null;
 	#parents: Map < number, Group > = new Map < number,Group > ();
 	#flags = (
 		Flags.VISIBLE |
@@ -72,10 +86,28 @@ export abstract class Node extends Base
 	/**
 	 * Construct the class.
 	 * @class
+	 * @param {INodeConstructorInput} [input] - The input for the node.
+	 * @param {State | null} [input.state] - Optional state for this node.
+	 * @param {number} [input.flags] - Optional flags for this node.
 	 */
-	constructor()
+	constructor ( input?: INodeConstructorInput )
 	{
 		super();
+
+		if ( input )
+		{
+			const { state, flags } = input;
+
+			if ( state )
+			{
+				this.#state = state;
+			}
+
+			if ( ( flags ) && ( flags > 0 ) )
+			{
+				this.#flags = flags;
+			}
+		}
 	}
 
 	/**
@@ -83,6 +115,24 @@ export abstract class Node extends Base
 	 * @param {Visitor} visitor - The visitor object.
 	 */
 	public abstract accept ( _: Visitor ): void;
+
+	/**
+	 * Get the state.
+	 * @returns {State | null} State for this shape.
+	 */
+	public get state() : ( State | null )
+	{
+		return this.#state;
+	}
+
+	/**
+	 * Set the state.
+	 * @param {State | null} state - State for this shape.
+	 */
+	public set state ( state: ( State | null ) )
+	{
+		this.#state = state;
+	}
 
 	/**
 	 * Add a parent. This is for the Group class. Do not use it directly.

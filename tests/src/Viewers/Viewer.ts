@@ -30,11 +30,9 @@ export function test ()
 {
 	describe ( "Viewer", function ()
 	{
-		let device: ( Device | null ) = null;
-
 		this.beforeAll ( async function ()
 		{
-			device = await Device.create();
+			await Device.init();
 		} );
 
 		it ( "Should not be able to make a viewer with zero arguments", function ()
@@ -45,12 +43,12 @@ export function test ()
 
 		it ( "Should be able to make a viewer with canvas and device", function ()
 		{
-			expect ( device ).to.exist;
-			expect ( device instanceof Device ).to.be.true;
+			expect ( Device.instance ).to.exist;
+			expect ( Device.instance instanceof Device ).to.be.true;
 
 			const id = getNextId();
 			const canvas = document.createElement ( "canvas" );
-			const viewer = new Viewer ( { canvas, device: device! } );
+			const viewer = new Viewer ( { canvas } );
 
 			expect ( viewer ).to.exist;
 			expect ( viewer instanceof Viewer ).to.be.true;
@@ -66,17 +64,13 @@ export function test ()
 			expect ( viewer.context ).to.exist;
 			expect ( viewer.context instanceof GPUCanvasContext ).to.be.true;
 			expect ( viewer.context ).to.equal ( canvas.getContext ( "webgpu" ) );
-
-			expect ( viewer.device ).to.exist;
-			expect ( viewer.device instanceof Device ).to.be.true;
-			expect ( viewer.device ).to.equal ( device );
 		} );
 
 		it ( "Should be able to make a viewer with a canvas, device, name, and context", function ()
 		{
 			const canvas = document.createElement ( "canvas" );
-			const context = device!.getContext ( canvas );
-			const viewer = new Viewer ( { canvas, device: device!, context } );
+			const context = Device.instance.getConfiguredContext ( canvas );
+			const viewer = new Viewer ( { canvas, context } );
 
 			expect ( viewer ).to.exist;
 			expect ( viewer instanceof Viewer ).to.be.true;
@@ -88,10 +82,6 @@ export function test ()
 			expect ( viewer.context ).to.exist;
 			expect ( viewer.context instanceof GPUCanvasContext ).to.be.true;
 			expect ( viewer.context ).to.equal ( context );
-
-			expect ( viewer.device ).to.exist;
-			expect ( viewer.device instanceof Device ).to.be.true;
-			expect ( viewer.device ).to.equal ( device );
 		} );
 	} );
 };

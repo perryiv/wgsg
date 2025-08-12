@@ -1,4 +1,3 @@
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (c) 2025, Perry L Miller IV
@@ -17,17 +16,6 @@ export interface IDeviceOptions
 {
 	requestAdapterOptions?: GPURequestAdapterOptions;
 	deviceDescriptor?: GPUDeviceDescriptor;
-}
-
-export interface IDeviceData
-{
-	device: GPUDevice;
-}
-
-export interface IRenderingContextInput
-{
-	device: GPUDevice;
-	canvas: ( HTMLCanvasElement | OffscreenCanvas );
 }
 
 export type ITextureFormat = GPUTextureFormat;

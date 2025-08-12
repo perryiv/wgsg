@@ -24,11 +24,10 @@ import { Device } from "../Tools";
 
 export interface IShaderBaseInput
 {
-	device: Device;
 	code: string;
 }
 
-export type IShaderFactory = ( ( this: void, device: Device ) => ShaderBase );
+export type IShaderFactory = ( ( this: void ) => ShaderBase );
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -41,7 +40,6 @@ export type IShaderFactory = ( ( this: void, device: Device ) => ShaderBase );
 export abstract class ShaderBase extends Base
 {
 	#code: string;
-	#device: Device;
 	#module: ( GPUShaderModule | null ) = null;
 	#pipeline: ( GPURenderPipeline | null ) = null;
 
@@ -50,7 +48,7 @@ export abstract class ShaderBase extends Base
 	 * @class
 	 * @param {IShaderBaseInput} input - The input for the constructor.
 	 */
-	protected constructor ( { device, code }: IShaderBaseInput )
+	protected constructor ( { code }: IShaderBaseInput )
 	{
 		// Do this first.
 		super();
@@ -63,7 +61,6 @@ export abstract class ShaderBase extends Base
 
 		// Save the members.
 		this.#code = code;
-		this.#device = device;
 	}
 
 	/**
@@ -94,25 +91,6 @@ export abstract class ShaderBase extends Base
 	}
 
 	/**
-	 * Get the device.
-	 * @returns {Device} The GPU device wrapper.
-	 */
-	protected get device () : Device
-	{
-		// Shortcut.
-		const device = this.#device;
-
-		// We should always have a valid device.
-		if ( !device )
-		{
-			throw new Error ( "Attempting to get invalid device in shader base" );
-		}
-
-		// Return the device.
-		return device;
-	}
-
-	/**
 	 * Get the shader module.
 	 * @returns {GPUShaderModule} The shader module.
 	 */
@@ -121,10 +99,10 @@ export abstract class ShaderBase extends Base
 		// The first time we have to make it.
 		if ( !this.#module )
 		{
-			const label = this.type;
-			const code = this.code;
-			const device = this.#device;
-			this.#module = device.makeShader ( { label, code } );
+			this.#module = Device.instance.device.createShaderModule ( {
+				label: this.type,
+				code: this.code
+			} );
 		}
 
 		// Return what we have.
@@ -137,16 +115,26 @@ export abstract class ShaderBase extends Base
 	 */
 	public get pipeline() : GPURenderPipeline
 	{
-		// The first time we have to make it.
-		if ( !this.#pipeline )
+		let pipeline = this.#pipeline;
+
+		if ( !pipeline )
 		{
-			const device = this.device;
-			const label = `Pipeline for shader ${this.type}`;
-			const module = this.module;
-			this.#pipeline = device.makePipeline ( { label, module } );
+			pipeline = this.makePipeline();
+			this.#pipeline = pipeline;
 		}
 
-		// Return what we have.
-		return this.#pipeline;
+		return pipeline;
 	}
+
+	/**
+	 * Make the render pipeline.
+	 * @returns {GPURenderPipeline} The render pipeline.
+	 */
+	protected abstract makePipeline() : GPURenderPipeline;
+
+	/**
+	 * Configure the render pass.
+	 * @param {GPURenderPassEncoder} pass - The render pass encoder.
+	 */
+	public abstract configureRenderPass ( pass: GPURenderPassEncoder ) : void;
 }

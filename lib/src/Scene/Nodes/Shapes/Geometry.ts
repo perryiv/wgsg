@@ -1,4 +1,3 @@
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (c) 2025, Perry L Miller IV
@@ -13,13 +12,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Array1, Array3 } from "../../../Arrays";
+import { Arrays, Indexed } from "../../Primitives";
 import { Box } from "../../../Math";
+import { getNumElements } from "../../../Tools";
 import { Shape } from "./Shape";
-import { State } from "../../State";
 import { Visitor } from "../../../Visitors";
-import { Node } from "../Node";
-import { Array3 } from "../../../Arrays";
-import { Primitives } from "../../Primitives";
+import type { INodeConstructorInput } from "../Node";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -28,10 +27,11 @@ import { Primitives } from "../../Primitives";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export type PointArray    = Float32Array;
-export type NormalArray   = Float32Array;
-export type ColorArray    = Float32Array;
-export type TexCoordArray = Float32Array;
+export type IPointData     = Array1 < Float32Array >;
+export type INormalData    = Array1 < Float32Array >;
+export type IColorData     = Array1 < Float32Array >;
+export type ITexCoordData  = Array1 < Float32Array >;
+export type IPrimitiveList = Indexed | Arrays;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -43,21 +43,21 @@ export type TexCoordArray = Float32Array;
 
 export class Geometry extends Shape
 {
-	#points:     ( PointArray    | null ) = null;
-	#normals:    ( NormalArray   | null ) = null;
-	#colors:     ( ColorArray    | null ) = null;
-	#texCoords:  ( TexCoordArray | null ) = null;
-	#primitives: ( Primitives[]  | null ) = null;
-	#bounds: Box = new Box();
+	#points:     ( IPointData       | null ) = null;
+	#normals:    ( INormalData      | null ) = null;
+	#colors:     ( IColorData       | null ) = null;
+	#texCoords:  ( ITexCoordData    | null ) = null;
+	#primitives: ( IPrimitiveList[] | null ) = null;
+	#bounds:     ( Box              | null ) = null;
 
 	/**
 	 * Construct the class.
 	 * @class
-	 * @param {State | null} state - Optional state for this geometry.
+	 * @param {INodeConstructorInput} [input] - The input for the node.
 	 */
-	constructor ( state?: ( State | null ) )
+	constructor ( input?: INodeConstructorInput )
 	{
-		super ( state );
+		super ( input );
 	}
 
 	/**
@@ -84,34 +84,38 @@ export class Geometry extends Shape
 	 */
 	protected override getBounds() : Box
 	{
+		// Shortcut.
+		const current = this.#bounds;
+
 		// Return the bounding box if it is valid.
-		if ( true === this.#bounds.valid )
+		if ( ( current ) && ( true === current.valid ) )
 		{
-			return this.#bounds;
+			return current;
 		}
 
 		// Make a new bounds.
 		const answer = new Box();
 
 		// Are there any points?
-		if ( this.#points )
+		if ( this.#points?.values )
 		{
 			// Make the helper array wrapper.
-			const points = new Array3 ( this.#points );
+			const points = new Array3 ( this.#points.values );
 
 			// Shortcuts.
 			// TODO: Why is the "as" needed here?
-			const x = ( points.x0 as PointArray );
-			const y = ( points.x1 as PointArray );
-			const z = ( points.x2 as PointArray );
+			const x = ( points.x0 as Float32Array );
+			const y = ( points.x1 as Float32Array );
+			const z = ( points.x2 as Float32Array );
 			const numVectors = points.numVectors;
 
 			// Grow the box by all the points.
 			answer.growByPoints ( numVectors, x, y, z );
-		}
 
-		// Save the answer for next time.
-		this.#bounds = answer;
+			// We save the answer for next time here, inside the "if" block,
+			// to keep from storing an invalid bounding box.
+			this.#bounds = answer;
+		}
 
 		// Return the answer.
 		return answer;
@@ -129,7 +133,7 @@ export class Geometry extends Shape
 		this.#bounds = ( bounds ? bounds.clone() : new Box() );
 
 		// Let the parents know that their bounds are now invalid.
-		this.forEachParent ( ( parent: Node ) =>
+		this.forEachParent ( ( parent ) =>
 		{
 			parent.bounds = null;
 		} );
@@ -137,9 +141,9 @@ export class Geometry extends Shape
 
 	/**
 	 * Get the points.
-	 * @returns {PointArray | null} Points for this geometry.
+	 * @returns {IPointData | null} Points for this geometry.
 	 */
-	public get points() : ( PointArray | null )
+	public get points() : IPointData | null
 	{
 		// Do not return a copy. These arrays can be shared.
 		return this.#points;
@@ -147,19 +151,31 @@ export class Geometry extends Shape
 
 	/**
 	 * Set the points.
-	 * @param {PointArray | null} points - Points for this geometry.
+	 * @param {IPointData | Float32Array | null} points - Points for this geometry.
 	 */
-	public set points ( points: ( PointArray | null ) )
+	public set points ( points: ( IPointData | Float32Array | number[] | null ) )
 	{
+		// Convert it if we should.
+		if ( Array.isArray ( points ) )
+		{
+			points = new Float32Array ( points );
+		}
+
+		// Wrap it if we should.
+		if ( points instanceof Float32Array )
+		{
+			points = new Array1 ( points );
+		}
+
 		// Do not make a copy. These arrays can be shared.
 		this.#points = points;
 	}
 
 	/**
 	 * Get the normal vectors.
-	 * @returns {NormalArray | null} Normal vectors for this geometry.
+	 * @returns {INormalData | null} Normal vectors for this geometry.
 	 */
-	public get normals() : ( NormalArray | null )
+	public get normals() : ( INormalData | null )
 	{
 		// Do not return a copy. These arrays can be shared.
 		return this.#normals;
@@ -167,19 +183,25 @@ export class Geometry extends Shape
 
 	/**
 	 * Set the normals.
-	 * @param {NormalArray | null} normals - Normal vectors for this geometry.
+	 * @param {INormalData | Float32Array | null} normals - Normal vectors for this geometry.
 	 */
-	public set normals ( normals: ( NormalArray | null ) )
+	public set normals ( normals: ( INormalData | Float32Array | null ) )
 	{
+		// Wrap it if we should.
+		if ( normals instanceof Float32Array )
+		{
+			normals = new Array1 ( normals );
+		}
+
 		// Do not make a copy. These arrays can be shared.
 		this.#normals = normals;
 	}
 
 	/**
 	 * Get the colors.
-	 * @returns {ColorArray | null} Colors for this geometry.
+	 * @returns {IColorData | null} Colors for this geometry.
 	 */
-	public get colors() : ( ColorArray | null )
+	public get colors() : ( IColorData | null )
 	{
 		// Do not return a copy. These arrays can be shared.
 		return this.#colors;
@@ -187,19 +209,25 @@ export class Geometry extends Shape
 
 	/**
 	 * Set the colors.
-	 * @param {ColorArray | null} colors - Colors for this geometry.
+	 * @param {IColorData | Float32Array | null} colors - Colors for this geometry.
 	 */
-	public set colors ( colors: ( ColorArray | null ) )
+	public set colors ( colors: ( IColorData | Float32Array | null ) )
 	{
+		// Wrap it if we should.
+		if ( colors instanceof Float32Array )
+		{
+			colors = new Array1 ( colors );
+		}
+
 		// Do not make a copy. These arrays can be shared.
 		this.#colors = colors;
 	}
 
 	/**
 	 * Get the texture coordinates.
-	 * @returns {TexCoordArray | null} Texture coordinates for this geometry.
+	 * @returns {ITexCoordData | null} Texture coordinates for this geometry.
 	 */
-	public get texCoords() : ( TexCoordArray | null )
+	public get texCoords() : ( ITexCoordData | null )
 	{
 		// Do not return a copy. These arrays can be shared.
 		return this.#texCoords;
@@ -207,19 +235,25 @@ export class Geometry extends Shape
 
 	/**
 	 * Set the texture coordinates.
-	 * @param {TexCoordArray | null} texCoords - Texture coordinates for this geometry.
+	 * @param {ITexCoordData | Float32Array | null} texCoords - Texture coordinates for this geometry.
 	 */
-	public set texCoords ( texCoords: ( TexCoordArray | null ) )
+	public set texCoords ( texCoords: ( ITexCoordData | Float32Array | null ) )
 	{
+		// Wrap it if we should.
+		if ( texCoords instanceof Float32Array )
+		{
+			texCoords = new Array1 ( texCoords );
+		}
+
 		// Do not make a copy. These arrays can be shared.
 		this.#texCoords = texCoords;
 	}
 
 	/**
 	 * Get the primitives.
-	 * @returns {Primitives[] | null} The primitives for this geometry.
+	 * @returns {IPrimitiveList[] | null} The primitives for this geometry.
 	 */
-	public get primitives() : ( Primitives[] | null )
+	public get primitives() : ( IPrimitiveList[] | null )
 	{
 		// Do not return a copy. These arrays can be shared.
 		return this.#primitives;
@@ -227,18 +261,64 @@ export class Geometry extends Shape
 
 	/**
 	 * Set the primitives.
-	 * @param {Primitives[] | null} primitives - The primitives for this geometry.
+	 * @param {IPrimitiveList | IPrimitiveList[] | null} primitives - The primitives for this geometry.
 	 */
-	public set primitives ( primitives: ( Primitives | Primitives[] | null ) )
+	public set primitives ( primitives: ( IPrimitiveList | IPrimitiveList[] | null ) )
 	{
 		// If we were given a single primitive then make it an array.
-		if ( primitives instanceof Primitives )
+		if ( ( primitives instanceof Indexed ) || ( primitives instanceof Arrays ) )
 		{
 			primitives = [ primitives ];
 		}
 
 		// Do not make a copy. These arrays can be shared.
 		this.#primitives = primitives;
+	}
+
+	/**
+	 * Get the number of points.
+	 * @returns {number} The number of points in this geometry.
+	 */
+	public get numPoints() : number
+	{
+		return getNumElements ( this.points, 3 );
+	}
+
+	/**
+	 * Get the number of normals.
+	 * @returns {number} The number of normals in this geometry.
+	 */
+	public get numNormals() : number
+	{
+		return getNumElements ( this.normals, 3 );
+	}
+
+	/**
+	 * Get the number of colors.
+	 * @returns {number} The number of colors in this geometry.
+	 */
+	public get numColors() : number
+	{
+		return getNumElements ( this.colors, 4 );
+	}
+
+	/**
+	 * Get the number of texture coordinates.
+	 * @returns {number} The number of texture coordinates in this geometry.
+	 */
+	public get numTexCoords() : number
+	{
+		return getNumElements ( this.texCoords, 2 );
+	}
+
+	/**
+	 * Get the number of primitives.
+	 * @returns {number} The number of primitives in this geometry.
+	 */
+	public get numPrimitives() : number
+	{
+		const primitives = this.primitives;
+		return ( primitives ? primitives.length : 0 );
 	}
 
 	/**

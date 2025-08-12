@@ -52,7 +52,7 @@ export function test ()
 		it ( "Should be able to construct with state", function ()
 		{
 			const state = new State();
-			const geom = new Geometry ( state );
+			const geom = new Geometry ( { state } );
 			expect ( geom.state ).to.exist;
 			expect ( geom.state instanceof State ).to.be.true;
 			expect ( geom.state ).to.equal ( state );
