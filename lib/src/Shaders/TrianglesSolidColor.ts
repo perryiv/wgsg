@@ -19,7 +19,7 @@ import { ShaderBase as BaseClass } from "./ShaderBase";
 import { vec4 } from "gl-matrix";
 
 // @ts-expect-error TypeScript does not recognize WGSL files.
-import code from "./TrianglesSolidColor2.wgsl?raw";
+import code from "./TrianglesSolidColor.wgsl?raw";
 
 
 ///////////////////////////////////////////////////////////////////////////////

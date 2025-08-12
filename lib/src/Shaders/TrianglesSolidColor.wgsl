@@ -9,22 +9,30 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Shader code that renders a solid color.
-//	https://webgpufundamentals.org/webgpu/lessons/webgpu-fundamentals.html
+//	https://gist.github.com/ccincotti3/f5bbfca9acd27c0efb9a2d22509b5aca
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-@vertex fn vs(
-	@builtin(vertex_index) vertexIndex : u32
-) -> @builtin(position) vec4f {
-	let pos = array(
-		vec2f( 0.0,  0.5),  // top center
-		vec2f(-0.5, -0.5),  // bottom left
-		vec2f( 0.5, -0.5)   // bottom right
-	);
+struct Uniforms
+{
+	color: vec4f,
+};
 
-	return vec4f(pos[vertexIndex], 0.0, 1.0);
+@group ( 0 ) @binding ( 0 ) var<uniform> uniforms : Uniforms;
+
+struct VertexOut
+{
+	@builtin ( position ) position : vec4f,
+};
+
+@vertex fn vs ( @location ( 0 ) position: vec4f ) -> VertexOut
+{
+	var output : VertexOut;
+	output.position = position;
+	return output;
 }
 
-@fragment fn fs() -> @location(0) vec4f {
-	return vec4f(1.0, 0.0, 0.0, 1.0);
+@fragment fn fs ( fragData: VertexOut ) -> @location ( 0 ) vec4f
+{
+	return uniforms.color;
 }
