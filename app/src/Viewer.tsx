@@ -19,12 +19,15 @@ import {
 	Geometry,
 	Group,
 	Indexed,
-	Viewer as InternalViewer,
 	Node,
 	Sphere,
 	State,
 	Transform,
 	TriangleSolidColor,
+	type IVector2,
+	type IVector3,
+	type IVector4,
+	Viewer as InternalViewer,
 } from "wgsg-lib";
 
 
@@ -59,84 +62,49 @@ import {
 // 	return root;
 // } ) ();
 
+const makeQuad = ( origin: IVector3, size: IVector2, color: IVector4 ) =>
+{
+	const geom = new Geometry();
+
+	geom.points = [
+		origin[0],           origin[1],           origin[2],
+		origin[0] + size[0], origin[1],           origin[2],
+		origin[0],           origin[1] + size[1], origin[2],
+		origin[0] + size[0], origin[1] + size[1], origin[2],
+	];
+
+	geom.primitives = new Indexed ( {
+		mode: "triangle-list",
+		indices: [
+			0, 1, 2,
+			1, 3, 2,
+		]
+	} );
+
+	const shader = new TriangleSolidColor();
+	shader.color = color;
+
+	const state = new State();
+	state.shader = shader;
+
+	geom.state = state;
+
+	return geom;
+};
+
 const root: Node = ( () =>
 {
 	const group = new Group();
-
-	{
-		const geom = new Geometry();
-
-		geom.points = [
-			0.0, 0.0, 0.0,
-			0.5, 0.0, 0.0,
-			0.0, 0.5, 0.0,
-			0.5, 0.5, 0.0,
-		];
-
-		geom.primitives = new Indexed ( {
-			mode: "triangle-list",
-			indices: [
-				0, 1, 2,
-				1, 2, 3,
-			]
-		} );
-
-		const shader = new TriangleSolidColor();
-		shader.color = [ 0.2, 0.8, 0.2, 1.0 ];
-
-		const state = new State();
-		state.shader = shader;
-
-		geom.state = state;
-
-		const tr = new Transform ( [
-			1, 0, 0, 0,
-			0, 1, 0, 0,
-			0, 0, 1, 0.5,
-			0, 0, 0, 1
-		] );
-
-		tr.addChild ( geom );
-		group.addChild ( tr );
-	}
-
-	{
-		const geom = new Geometry();
-
-		geom.points = [
-			-0.5, -0.5,  0.0,
-			 0.0, -0.5,  0.0,
-			-0.5,  0.0,  0.0,
-			 0.0,  0.0,  0.0,
-		];
-
-		geom.primitives = new Indexed ( {
-			mode: "triangle-list",
-			indices: [
-				0, 1, 2,
-				1, 2, 3,
-			]
-		} );
-
-		const shader = new TriangleSolidColor();
-		shader.color = [ 0.2, 0.2, 0.8, 1.0 ];
-
-		const state = new State();
-		state.shader = shader;
-
-		geom.state = state;
-
-		const tr = new Transform ( [
-			1, 0, 0, 0,
-			0, 1, 0, 0,
-			0, 0, 1, 0.5,
-			0, 0, 0, 1
-		] );
-
-		tr.addChild ( geom );
-		group.addChild ( tr );
-	}
-
+	group.addChild ( makeQuad (
+		[ 0.0, 0.0, 0.0 ],
+		[ 0.5, 0.5 ],
+		[ 0.2, 0.8, 0.2, 1.0 ]
+	) );
+	group.addChild ( makeQuad (
+		[ -0.5, -0.5, 0.0 ],
+		[ 0.5, 0.5 ],
+		[ 0.8, 0.2, 0.2, 1.0 ]
+	) );
 	return group;
 } ) ();
 
