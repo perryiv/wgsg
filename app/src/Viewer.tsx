@@ -21,6 +21,9 @@ import {
 	Viewer as InternalViewer,
 	Node,
 	Sphere,
+	State,
+	Transform,
+	TriangleSolidColor,
 } from "wgsg-lib";
 
 
@@ -74,7 +77,24 @@ const root: Node = ( () =>
 		]
 	} );
 
-	return geom;
+	const shader = new TriangleSolidColor();
+	shader.color = [ 0.2, 0.8, 0.2, 1.0 ];
+
+	const state = new State();
+	state.shader = shader;
+
+	geom.state = state;
+
+	const tr = new Transform ( [
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0.5,
+		0, 0, 0, 1
+	] );
+
+	tr.addChild ( geom );
+
+	return tr;
 } ) ();
 
 

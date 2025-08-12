@@ -131,4 +131,10 @@ export abstract class ShaderBase extends Base
 	 * @returns {GPURenderPipeline} The render pipeline.
 	 */
 	protected abstract makePipeline() : GPURenderPipeline;
+
+	/**
+	 * Configure the render pass.
+	 * @param {GPURenderPassEncoder} pass - The render pass encoder.
+	 */
+	public abstract configureRenderPass ( pass: GPURenderPassEncoder ) : void;
 }

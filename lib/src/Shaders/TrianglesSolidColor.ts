@@ -44,6 +44,8 @@ export interface ITriangleSolidColorShaderInput
 export class TriangleSolidColor extends BaseClass
 {
 	#color: IVector4 = [ 0.5, 0.5, 0.5, 1.0 ];
+	#buffer: ( GPUBuffer | null ) = null;
+	#bindGroup: ( GPUBindGroup | null ) = null;
 
 	/**
 	 * Construct the class.
@@ -79,6 +81,7 @@ export class TriangleSolidColor extends BaseClass
 	public set color ( color: IVector4 )
 	{
 		vec4.copy ( this.#color, color );
+		this.#buffer = null;
 	}
 
 	/**
@@ -91,18 +94,57 @@ export class TriangleSolidColor extends BaseClass
 	}
 
 	/**
+	 * Return the uniform buffer.
+	 * @returns {GPUBuffer | null} The uniform buffer.
+	 */
+	protected get uniforms () : GPUBuffer
+	{
+		// Shortcut
+		let buffer = this.#buffer;
+
+		// Make it if we have to.
+		if ( !buffer )
+		{
+			// Shortcut
+			const device = Device.instance.device;
+
+			// Create the buffer.
+			buffer = device.createBuffer ( {
+				label: `Uniform buffer for shader ${this.type}`,
+				size: 16, // 4 values, 4 bytes each.
+				usage: ( GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST )
+			} );
+
+			// Write the color values to a typed array.
+			const values = new Float32Array ( this.#color );
+
+			// Write the typed array to the buffer.
+			device.queue.writeBuffer ( buffer, 0, values );
+
+			// Set this for next time.
+			this.#buffer = buffer;
+		}
+
+		// Return what we have.
+		return buffer;
+	}
+
+	/**
 	 * Make the render pipeline.
 	 * @returns {GPURenderPipeline} The render pipeline.
 	 */
 	protected makePipeline() : GPURenderPipeline
 	{
+		// Shortcuts
+		const { device, preferredFormat } = Device.instance;
+
 		// Define the array stride.
 		// https://www.w3.org/TR/webgpu/#enumdef-gpuvertexstepmode
 		const arrayStride = 12; // 3 floats * 4 bytes each.
-					
+
 		// Make the pipeline.
-		const pipeline = Device.instance.device.createRenderPipeline ( {
-			label: `Pipeline for shader ${this.type}`,
+		const pipeline = device.createRenderPipeline ( {
+			label: `Render pass for shader ${this.type}`,
 			layout: "auto",
 			vertex: {
 				module: this.module,
@@ -124,7 +166,7 @@ export class TriangleSolidColor extends BaseClass
 				module: this.module,
 				entryPoint: "fs",
 				targets: [ {
-					format: Device.instance.preferredFormat
+					format: preferredFormat
 				} ]
 			},
 			primitive: {
@@ -140,5 +182,53 @@ export class TriangleSolidColor extends BaseClass
 
 		// Return the new pipeline.
 		return pipeline;
+	}
+
+	/**
+	 * Get the bind group.
+	 * @returns {GPUBindGroup} The bind group.
+	 */
+	protected get bindGroup () : GPUBindGroup
+	{
+		// Shortcut
+		let bindGroup = this.#bindGroup;
+
+		// Make it if we have to.
+		if ( !bindGroup )
+		{
+			// Shortcuts.
+			const { pipeline } = this;
+			const device = Device.instance.device;
+
+			// Make the bind group.
+			bindGroup = device.createBindGroup ( {
+				label: `Bind group for shader ${this.type}`,
+				layout: pipeline.getBindGroupLayout ( 0 ),
+				entries: [
+				{
+					binding: 0,
+					resource: { buffer: this.uniforms }
+				} ],
+			} );
+
+			// Set for next time.
+			this.#bindGroup = bindGroup;
+		}
+
+		// Return the bind group.
+		return bindGroup;
+	}
+
+	/**
+	 * Configure the render pass.
+	 * @param {GPURenderPassEncoder} pass - The render pass encoder.
+	 */
+	public configureRenderPass ( pass: GPURenderPassEncoder ) : void
+	{
+		// Set the pipeline.
+		pass.setPipeline ( this.pipeline );
+
+		// Set the color buffer.
+		pass.setBindGroup ( 0, this.bindGroup );
 	}
 }

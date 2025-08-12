@@ -182,7 +182,7 @@ export class Draw extends BaseClass
 
 		// Make a command encoder.
 		const encoder = device.createCommandEncoder ( {
-			label: "Draw visitor command encoder"
+			label: `Command encoder for ${this.type}`
 		} );
 		this.#commandEncoder = encoder;
 
@@ -260,7 +260,7 @@ export class Draw extends BaseClass
 		this.#renderPassEncoder = pass;
 
 		// Configure the render pass.
-		pass.setPipeline ( shader.pipeline );
+		shader.configureRenderPass ( pass );
 
 		// Draw the projection matrix groups.
 		pipeline.forEachProjMatrix ( ( projMatrix: ProjMatrix ) =>

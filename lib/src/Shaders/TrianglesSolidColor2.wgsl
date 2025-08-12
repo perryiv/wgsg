@@ -13,6 +13,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+struct Uniforms
+{
+	color: vec4f,
+};
+
+@group ( 0 ) @binding ( 0 ) var<uniform> uniforms : Uniforms;
+
 struct VertexOut
 {
 	@builtin ( position ) position : vec4f,
@@ -27,5 +34,5 @@ struct VertexOut
 
 @fragment fn fs ( fragData: VertexOut ) -> @location ( 0 ) vec4f
 {
-	return vec4f ( 0.8, 0.2, 0.2, 1.0 );
+	return uniforms.color;
 }
