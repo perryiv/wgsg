@@ -49,7 +49,7 @@ export function test ()
 		it ( "Default state should have default properties", function ()
 		{
 			const state = new State();
-			expect ( state.name ).to.equal ( "default_state" );
+			expect ( state.name ).to.equal ( "Scene.State.State with shader 'invalid_shader'" );
 			expect ( state.layer ).to.equal ( 0 );
 			expect ( state.bin ).to.equal ( 0 );
 			expect ( state.apply ).to.equal ( defaultApplyFunction );

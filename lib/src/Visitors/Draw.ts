@@ -445,7 +445,7 @@ export class Draw extends BaseClass
 	 */
 	public visitArrays ( arrays: Arrays ): void
 	{
-		// console.log ( `Drawing '${arrays.type}' ${arrays.id}` );
+		console.log ( `Drawing '${arrays.type}' ${arrays.id}` );
 
 		// Shortcuts.
 		// const pass = this.pass;
