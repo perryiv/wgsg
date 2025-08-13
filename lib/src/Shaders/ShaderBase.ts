@@ -127,6 +127,12 @@ export abstract class ShaderBase extends Base
 	}
 
 	/**
+	 * Get the name.
+	 * @returns {string} The name of the shader.
+	 */
+	public abstract get name() : string;
+
+	/**
 	 * Make the render pipeline.
 	 * @returns {GPURenderPipeline} The render pipeline.
 	 */

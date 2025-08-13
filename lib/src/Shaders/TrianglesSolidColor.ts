@@ -75,6 +75,16 @@ export class TriangleSolidColor extends BaseClass
 	}
 
 	/**
+	 * Get the name.
+	 * @returns {string} The name of the shader.
+	 */
+	public get name() : string
+	{
+		const color = this.color.join ( ", " );
+		return `${this.type} with color [${color}]`;
+	}
+
+	/**
 	 * Set the color.
 	 * @param {IVector4} color The color to use.
 	 */
