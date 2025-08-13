@@ -89,26 +89,30 @@ const makeQuad = ( origin: IVector3, size: IVector2, color: IVector4 ) =>
 const root: Node = ( () =>
 {
 	const group = new Group();
-	group.addChild ( makeQuad (
-		[  0.0,  0.0,  0.0 ],
-		[  0.5,  0.5 ],
-		[  0.2,  0.8,  0.2,  1.0 ]
-	) );
-	group.addChild ( makeQuad (
-		[ -0.5, -0.5, 0.0 ],
-		[  0.5,  0.5 ],
-		[  0.8,  0.2,  0.2,  1.0 ]
-	) );
-	group.addChild ( makeQuad (
-		[ 0.0, -0.5,  0.0 ],
-		[ 0.5,  0.5 ],
-		[ 0.2,  0.2,  0.8,  1.0 ]
-	) );
-	group.addChild ( makeQuad (
-		[ -0.5,  0.0,  0.0 ],
-		[  0.5,  0.5 ],
-		[  0.8,  0.8,  0.2,  1.0 ]
-	) );
+
+	const num = 10;
+	const w = 2.0 / num;
+	const h = 2.0 / num;
+
+	for ( let i = 0; i < num; ++i )
+	{
+		for ( let j = 0; j < num; ++j )
+		{
+			const x = -1 + ( i * w );
+			const y = -1 + ( j * h );
+
+			const r = ( 0.1 + 0.8 * Math.random() );
+			const g = ( 0.1 + 0.8 * Math.random() );
+			const b = ( 0.1 + 0.8 * Math.random() );
+
+			group.addChild ( makeQuad (
+				[ x, y, 0.0 ],
+				[ w, h ],
+				[ r, g, b, 1.0 ]
+			) );
+		}
+	}
+
 	return group;
 } ) ();
 
