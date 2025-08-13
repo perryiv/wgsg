@@ -32,6 +32,14 @@ export type INormalData    = Array1 < Float32Array >;
 export type IColorData     = Array1 < Float32Array >;
 export type ITexCoordData  = Array1 < Float32Array >;
 export type IPrimitiveList = Indexed | Arrays;
+export interface IGeometryConstructorInput extends INodeConstructorInput
+{
+	points?:     ( IPointData     | Float32Array | number[] | null );
+	normals?:    ( INormalData    | Float32Array | number[] | null );
+	colors?:     ( IColorData     | Float32Array | number[] | null );
+	texCoords?:  ( ITexCoordData  | Float32Array | number[] | null );
+	primitives?: ( IPrimitiveList | IPrimitiveList[] | null );
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -53,11 +61,38 @@ export class Geometry extends Shape
 	/**
 	 * Construct the class.
 	 * @class
-	 * @param {INodeConstructorInput} [input] - The input for the node.
+	 * @param {IGeometryConstructorInput} [input] - The input for the node.
 	 */
-	constructor ( input?: INodeConstructorInput )
+	constructor ( input?: IGeometryConstructorInput )
 	{
 		super ( input );
+
+		const { points, normals, colors, texCoords, primitives } = ( input ?? {} );
+
+		if ( points )
+		{
+			this.points = points;
+		}
+
+		if ( normals )
+		{
+			this.normals = normals;
+		}
+
+		if ( colors )
+		{
+			this.colors = colors;
+		}
+
+		if ( texCoords )
+		{
+			this.texCoords = texCoords;
+		}
+
+		if ( primitives )
+		{
+			this.primitives = primitives;
+		}
 	}
 
 	/**
@@ -185,8 +220,14 @@ export class Geometry extends Shape
 	 * Set the normals.
 	 * @param {INormalData | Float32Array | null} normals - Normal vectors for this geometry.
 	 */
-	public set normals ( normals: ( INormalData | Float32Array | null ) )
+	public set normals ( normals: ( INormalData | Float32Array | number[] | null ) )
 	{
+		// Convert it if we should.
+		if ( Array.isArray ( normals ) )
+		{
+			normals = new Float32Array ( normals );
+		}
+
 		// Wrap it if we should.
 		if ( normals instanceof Float32Array )
 		{
@@ -211,8 +252,14 @@ export class Geometry extends Shape
 	 * Set the colors.
 	 * @param {IColorData | Float32Array | null} colors - Colors for this geometry.
 	 */
-	public set colors ( colors: ( IColorData | Float32Array | null ) )
+	public set colors ( colors: ( IColorData | Float32Array | number[] | null ) )
 	{
+		// Convert it if we should.
+		if ( Array.isArray ( colors ) )
+		{
+			colors = new Float32Array ( colors );
+		}
+
 		// Wrap it if we should.
 		if ( colors instanceof Float32Array )
 		{
@@ -237,8 +284,14 @@ export class Geometry extends Shape
 	 * Set the texture coordinates.
 	 * @param {ITexCoordData | Float32Array | null} texCoords - Texture coordinates for this geometry.
 	 */
-	public set texCoords ( texCoords: ( ITexCoordData | Float32Array | null ) )
+	public set texCoords ( texCoords: ( ITexCoordData | Float32Array | number[] | null ) )
 	{
+		// Convert it if we should.
+		if ( Array.isArray ( texCoords ) )
+		{
+			texCoords = new Float32Array ( texCoords );
+		}
+
 		// Wrap it if we should.
 		if ( texCoords instanceof Float32Array )
 		{
