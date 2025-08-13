@@ -367,7 +367,7 @@ export class Draw extends BaseClass
 	 */
 	public visitIndexed ( prims: Indexed ): void
 	{
-		console.log ( `Drawing '${prims.type}' ${prims.id}` );
+		// console.log ( `Drawing '${prims.type}' ${prims.id}` );
 
 		// Handle no primitives.
 		const numIndices = prims.numIndices;
@@ -445,7 +445,7 @@ export class Draw extends BaseClass
 	 */
 	public visitArrays ( arrays: Arrays ): void
 	{
-		console.log ( `Drawing '${arrays.type}' ${arrays.id}` );
+		// console.log ( `Drawing '${arrays.type}' ${arrays.id}` );
 
 		// Shortcuts.
 		// const pass = this.pass;
