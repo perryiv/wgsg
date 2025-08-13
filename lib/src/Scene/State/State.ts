@@ -205,17 +205,31 @@ export class State extends Base
 	 */
 	public get name() : string
 	{
-		// Get the name that we have.
+		// If the user chooses to set the name then we use it. Otherwise we make
+		// it, every time, from the shader type and its properties. That way when
+		// those properties change, this name will automatically change, and the
+		// state-sorting will work as expected. If you cache the name then the user
+		// has to remember to invalidate the name whenever, for example, the
+		// shader's color property changes. Or, you'll need the shaders to somehow
+		// inform the state about any changes. All things considered, this is most
+		// likely the best way.
+
+		// Get the name.
 		let name = this.#name;
 
-		// If we don't have a name then make one.
-		if ( !name )
+		// If it is valid then return it.
+		if ( name )
 		{
-			const shader = this.shader;
-			name = ( shader ? shader.name : "invalid_shader" );
-			name = `${this.type} with shader '${name}'`;
-			this.#name = name;
+			return name;
 		}
+
+		// If we get to here then make the name.
+		const shader = this.shader;
+		name = ( shader ? shader.name : "invalid_shader" );
+		name = `${this.type} with shader '${name}'`;
+
+		// Do not set this! See note above.
+		// this.#name = name;
 
 		// Return the name.
 		return name;
