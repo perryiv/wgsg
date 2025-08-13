@@ -19,15 +19,6 @@ import { ShaderBase } from "../../Shaders";
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Constants used below.
-//
-///////////////////////////////////////////////////////////////////////////////
-
-const DEFAULT_STATE_NAME = "default_state";
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
 //	The input for the constructor.
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -86,7 +77,7 @@ export const defaultResetFunction: IStateResetFunction = () =>
 
 export class State extends Base
 {
-	#name: string = DEFAULT_STATE_NAME;
+	#name: ( string | null ) = null;
 	#shader: ( ShaderBase | null ) = null;
 	#layer = 0;
 	#bin = 0;
@@ -214,7 +205,20 @@ export class State extends Base
 	 */
 	public get name() : string
 	{
-		return this.#name;
+		// Get the name that we have.
+		let name = this.#name;
+
+		// If we don't have a name then make one.
+		if ( !name )
+		{
+			const shader = this.shader;
+			name = ( shader ? shader.name : "invalid_shader" );
+			name = `${this.type} with shader '${name}'`;
+			this.#name = name;
+		}
+
+		// Return the name.
+		return name;
 	}
 
 	/**
@@ -223,7 +227,7 @@ export class State extends Base
 	 */
 	public set name ( name: ( string | null ) )
 	{
-		this.#name = ( name ?? DEFAULT_STATE_NAME );
+		this.#name = name;
 	}
 
 	/**
