@@ -186,12 +186,33 @@ export class Draw extends BaseClass
 		} );
 		this.#commandEncoder = encoder;
 
+		// Shortcuts.
+		const context = this.context;
+		const texture = context.getCurrentTexture();
+		const view = texture.createView();
+		const clearValue = this.preMultipliedClearColor;
+		const loadOp: GPULoadOp = "clear";
+		const storeOp: GPUStoreOp = "store";
+
+		// For debugging.
+		texture.label = `Texture for ${this.type} ${this.id}`;
+
+		// Make the render pass encoder.
+		const pass = this.commandEncoder.beginRenderPass ( {
+			label: `Render pass for ${this.type} ${this.id}`,
+			colorAttachments: [ { view, clearValue, loadOp, storeOp } ]
+		} );
+		this.#renderPassEncoder = pass;
+
 		// Iterate over the layers in order.
 		root.forEachLayer ( ( layer: Layer ) =>
 		{
 			// Draw the layer.
 			this.drawLayer ( layer );
 		} );
+
+		// End this render pass.
+		pass.end();
 
 		// Submit the commands to the GPU.
 		device.queue.submit ( [ encoder.finish() ] );
@@ -237,27 +258,23 @@ export class Draw extends BaseClass
 	protected drawPipeline ( pipeline: Pipeline ) : void
 	{
 		// Shortcuts.
+		const pass = this.#renderPassEncoder;
+
+		// Make sure there is a render pass.
+		if ( !pass )
+		{
+			throw new Error ( `Invalid render pass in ${this.type} ${this.id}` );
+		}
+
+		// Shortcuts.
 		const { state } = pipeline;
-		const { name, shader } = state;
+		const { shader } = state;
 
 		// Make sure there is a shader.
 		if ( !shader )
 		{
 			throw new Error ( "Pipeline has invalid shader" );
 		}
-
-		// Make the render pass encoder.
-		const pass = this.commandEncoder.beginRenderPass ( {
-			label: `Render pass for draw visitor with state '${name}'`,
-			colorAttachments: [
-			{
-				view: this.context.getCurrentTexture().createView(),
-				clearValue: this.preMultipliedClearColor,
-				loadOp: "clear",
-				storeOp: "store"
-			} ]
-		} );
-		this.#renderPassEncoder = pass;
 
 		// Configure the render pass.
 		shader.configureRenderPass ( pass );
@@ -267,9 +284,6 @@ export class Draw extends BaseClass
 		{
 			this.drawProjMatrix ( projMatrix );
 		} );
-
-		// End this render pass.
-		pass.end();
 	}
 
 	/**

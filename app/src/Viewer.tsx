@@ -85,6 +85,7 @@ const makeQuad = ( origin: IVector3, size: IVector2, color: IVector4 ) =>
 	shader.color = color;
 
 	const state = new State();
+	state.name = `TriangleSolidColor with color [${color.join ( ", " )}]`;
 	state.shader = shader;
 
 	geom.state = state;
