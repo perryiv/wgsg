@@ -64,32 +64,26 @@ import {
 
 const makeQuad = ( origin: IVector3, size: IVector2, color: IVector4 ) =>
 {
-	const geom = new Geometry();
-
-	geom.points = [
-		origin[0],           origin[1],           origin[2],
-		origin[0] + size[0], origin[1],           origin[2],
-		origin[0],           origin[1] + size[1], origin[2],
-		origin[0] + size[0], origin[1] + size[1], origin[2],
-	];
-
-	geom.primitives = new Indexed ( {
-		mode: "triangle-list",
-		indices: [
-			0, 1, 2,
-			1, 3, 2,
-		]
+	return new Geometry ( {
+		points: [
+			origin[0],           origin[1],           origin[2],
+			origin[0] + size[0], origin[1],           origin[2],
+			origin[0],           origin[1] + size[1], origin[2],
+			origin[0] + size[0], origin[1] + size[1], origin[2],
+		],
+		primitives: new Indexed ( {
+			mode: "triangle-list",
+			indices: [
+				0, 1, 2,
+				1, 3, 2,
+			]
+		} ),
+		state: new State ( {
+			shader: new TriangleSolidColor ( {
+				color
+			} )
+		} )
 	} );
-
-	const shader = new TriangleSolidColor();
-	shader.color = color;
-
-	const state = new State();
-	state.shader = shader;
-
-	geom.state = state;
-
-	return geom;
 };
 
 const root: Node = ( () =>
