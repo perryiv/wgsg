@@ -44,35 +44,18 @@ export class Device extends Base
 	}
 
 	/**
-	 * Check for WebGPU support.
-	 * @returns {boolean} True if WebGPU is supported, false otherwise.
-	 */
-	public static get supported() : boolean
-	{
-		const { gpu } = navigator;
-		return ( !!gpu );
-	}
-
-	/**
-	 * Get the singleton instance.
-	 * @returns {Device} The singleton instance.
-	 */
-	public static get instance() : Device
-	{
-		if ( !Device.#instance )
-		{
-			throw new Error ( "Device is not initialized" );
-		}
-		return Device.#instance;
-	}
-	
-	/**
 	 * Initialize the singleton instance of this class.
 	 * @param {IDeviceOptions} options The options.
 	 * @returns {Promise<void>} A promise that resolves when the device is initialized.
 	 */
 	public static async init ( options?: IDeviceOptions ) : Promise < void >
 	{
+		// Is there already an instance?
+		if ( Device.#instance )
+		{
+			return;
+		}
+
 		// Shortcut.
 		const { gpu } = navigator;
 
@@ -106,12 +89,53 @@ export class Device extends Base
 	}
 
 	/**
+	 * Destroy the singleton instance.
+	 */
+	public static destroy() : void
+	{
+		const instance = Device.#instance;
+		if ( instance )
+		{
+			const device = instance.device;
+			if ( device )
+			{
+				// Destroy the device. This prevents any future operations on it.
+				device.destroy();
+			}
+		}
+		Device.#instance = null;
+	}
+
+	/**
 	 * Return the class name.
 	 * @returns {string} The class name.
 	 */
 	public override getClassName() : string
 	{
 		return "Tools.Device";
+	}
+
+	/**
+	 * Check for WebGPU support.
+	 * @returns {boolean} True if WebGPU is supported, false otherwise.
+	 */
+	public static get supported() : boolean
+	{
+		const { gpu } = navigator;
+		return ( !!gpu );
+	}
+
+	/**
+	 * Get the singleton instance.
+	 * @returns {Device} The singleton instance.
+	 */
+	public static get instance() : Device
+	{
+		if ( !Device.#instance )
+		{
+			throw new Error ( "Device is not initialized" );
+		}
+		return Device.#instance;
 	}
 
 	/**
@@ -176,14 +200,4 @@ export class Device extends Base
 		// Return the format.
 		return this.#preferredFormat;
 	}
-
-	/**
-	 * Make a command encoder.
-	 * @param {string} label - The label for the command encoder.
-	 * @returns {GPUCommandEncoder} The command encoder.
-	 */
-	// public makeEncoder ( label: string ) : GPUCommandEncoder
-	// {
-	// 	return this.device.createCommandEncoder ( { label } );
-	// }
 }
