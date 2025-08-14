@@ -86,13 +86,16 @@ const makeQuad = ( origin: IVector3, size: IVector2, color: IVector4 ) =>
 	} );
 };
 
-const root: Node = ( () =>
+const buildScene = () : Node =>
 {
 	const group = new Group();
 
-	const num = 10;
+	const num = 32;
 	const w = 2.0 / num;
 	const h = 2.0 / num;
+
+	const start = Date.now();
+	let count = 0;
 
 	for ( let i = 0; i < num; ++i )
 	{
@@ -110,11 +113,15 @@ const root: Node = ( () =>
 				[ w, h ],
 				[ r, g, b, 1.0 ]
 			) );
+
+			++count;
 		}
 	}
 
+	console.log ( `Creating ${count} quads took ${Date.now() - start} ms` );
+
 	return group;
-} ) ();
+};
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -157,26 +164,37 @@ export function Viewer ( { style }: IViewerProps )
 
 			await Device.init();
 
-			if ( !Device.instance )
+			void Device.instance.device.lost.then ( ( { reason, message }: GPUDeviceLostInfo ) =>
 			{
-				throw new Error ( "Invalid device" );
-			}
-
-			void Device.instance.device.lost.then ( ( { reason }: GPUDeviceLostInfo ) =>
-			{
-				console.log ( "Context lost because: ", reason );
+				console.log ( `Context lost, reason: ${reason}, message: ${message}` );
 			} );
 
+			console.log ( `Singleton device ${Device.instance.id} initialized` );
+
 			const viewer = new InternalViewer ( { canvas: canvas.current } );
-			viewer.scene = root;
+			viewer.scene = buildScene();
 			setViewer ( viewer );
 
-			console.log ( "Internal viewer created and configured" );
+			console.log ( `Internal viewer ${viewer.id} created and configured` );
 		} ) ();
 
 		return ( () =>
 		{
 			console.log ( "Viewer component unmounted" );
+
+			setViewer ( ( current: ( InternalViewer | null ) ) =>
+			{
+				if ( current )
+				{
+					console.log ( `Destroying internal viewer ${current.id}` );
+					current.destroy();
+				}
+				return null;
+			} );
+
+			Device.destroy();
+
+			console.log ( "Singleton device destroyed" );
 		} );
 	},
 	[] );
