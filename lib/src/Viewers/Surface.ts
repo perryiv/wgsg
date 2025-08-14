@@ -76,16 +76,17 @@ interface IVisitors
 
 export class Surface extends Base
 {
-	#canvas: HTMLCanvasElement;
-	#context: GPUCanvasContext;
+	#canvas: ( HTMLCanvasElement | null ) = null;
+	#context: ( GPUCanvasContext | null ) = null;
+	#observer: ( ResizeObserver | null ) = null;
 	#viewport: IViewport = { x: 0, y: 0, width: 0, height: 0 };
 	#scene: ( Node | null ) = null;
-	#projection: Projection = new Perspective();
+	#projection: ( Projection | null ) = new Perspective();
 	#handles: ITimeoutHandles = { render: 0 };
 	#frame: IFrameInfo = { count: 0, start: 0 };
 	#visitors: ( IVisitors | null ) = null;
-	#root = new Root();
-	#defaultState: State = new State();
+	#root: Root = new Root();
+	#defaultState: ( State | null ) = null;
 	#clearColor: IVector4 = [ 0.0, 0.0, 0.0, 0.0 ]; // Transparent black.
 
 	/**
@@ -121,7 +122,7 @@ export class Surface extends Base
 		const root = this.#root;
 
 		// Set the default state's properties.
-		const defaultState = this.#defaultState;
+		const defaultState = new State();
 		defaultState.name = `Default state for ${this.getClassName()} ${this.id}`;
 		defaultState.shader = new TriangleSolidColor();
 		defaultState.apply = this.defaultApplyFunction.bind ( this );
@@ -131,7 +132,6 @@ export class Surface extends Base
 		const update = new UpdateVisitor();
 		const cull = new CullVisitor ( { root, defaultState } );
 		const draw = new DrawVisitor ( { context } );
-		this.#visitors = { update, cull, draw };
 
 		// Observe changes to the canvas size.
 		// https://webgpufundamentals.org/webgpu/lessons/webgpu-fundamentals.html#a-resizing
@@ -141,7 +141,10 @@ export class Surface extends Base
 		// Set our members.
 		this.#canvas = canvas;
 		this.#context = context;
+		this.#observer = observer;
 		this.#viewport = { x: 0, y: 0, width, height };
+		this.#defaultState = defaultState;
+		this.#visitors = { update, cull, draw };
 	}
 
 	/**
@@ -151,6 +154,43 @@ export class Surface extends Base
 	public override getClassName() : string
 	{
 		return "Viewers.Surface";
+	}
+
+	/**
+	 * Destroy the surface.
+	 */
+	public destroy() : void
+	{
+		// Stop any scheduled rendering.
+		this.cancelRender();
+
+		// Disconnect the resize observer.
+		const observer = this.#observer;
+		if ( observer )
+		{
+			observer.disconnect();
+		}
+
+		// Clean up resources.
+		this.#canvas = null;
+		this.#context = null;
+		this.#observer = null;
+		this.#viewport = { x: 0, y: 0, width: 0, height: 0 };
+		this.#scene = null;
+		this.#projection = null;
+		this.#handles = { render: 0 };
+		this.#visitors = null;
+		this.#root.clear();
+		this.#defaultState = null;
+	}
+
+	/**
+	 * Has the surface been destroyed?
+	 * @returns {boolean} True if the surface has been destroyed, false otherwise.
+	 */
+	public isDestroyed() : boolean
+	{
+		return ( null === this.#defaultState );
 	}
 
 	/**
@@ -205,7 +245,7 @@ export class Surface extends Base
 		this.size = { width, height };
 
 		// Set the projection's viewport.
-		this.projection.viewport = { ...this.#viewport };
+		this.projection.viewport = { ...this.viewport };
 
 		// Request a render in the near future.
 		this.requestRender();
@@ -436,7 +476,12 @@ export class Surface extends Base
 	 */
 	public get projection () : Projection
 	{
-		return this.#projection;
+		const projection = this.#projection;
+		if ( !projection )
+		{
+			throw new Error ( `Invalid projection in ${this.type} ${this.id}` );
+		}
+		return projection;
 	}
 
 	/**
@@ -638,7 +683,7 @@ export class Surface extends Base
 		// Note: It probably already does.
 		cv.root = this.#root;
 		cv.defaultState = this.defaultState;
-		cv.projMatrix = [ ...this.#projection.matrix ];
+		cv.projMatrix = [ ...this.projection.matrix ];
 
 		// Tell the visitor that it should return to its initial state.
 		// This will clear the layers.
@@ -709,6 +754,12 @@ export class Surface extends Base
 		// Cancel any pending renders that we might have.
 		this.cancelRender();
 
+		// We're done if we've been destroyed.
+		if ( true === this.isDestroyed() )
+		{
+			return;
+		}
+
 		// Schedule another one.
 		const handle = requestAnimationFrame ( () =>
 		{
@@ -722,8 +773,14 @@ export class Surface extends Base
 	/**
 	 * Render immediately.
 	 */
-	public render ()
+	protected render ()
 	{
+		// Do nothing if we've been destroyed.
+		if ( true === this.isDestroyed() )
+		{
+			return;
+		}
+
 		// Initialize the frame information.
 		this.#frame = {
 			start: performance.now(),
@@ -742,6 +799,6 @@ export class Surface extends Base
 		// Finish the frame.
 		this.#frame.end = performance.now();
 
-		console.log ( `Rendering frame ${this.#frame.count} took ${this.#frame.end - this.#frame.start} milliseconds` );
+		console.log ( `${this.type} ${this.id} rendering frame ${this.#frame.count} took ${this.#frame.end - this.#frame.start} milliseconds` );
 	}
 }
