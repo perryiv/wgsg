@@ -279,4 +279,21 @@ export class State extends Base
 	{
 		this.#bin = bin;
 	}
+
+	/**
+	 * Configure the render pass.
+	 * @param {GPURenderPassEncoder} pass - The render pass encoder.
+	 */
+	public configureRenderPass ( pass: GPURenderPassEncoder ) : void
+	{
+		const { shader } = this;
+
+		if ( !shader )
+		{
+			throw new Error ( `State ${this.type} ${this.id} has invalid shader when configuring render pass` );
+		}
+
+		// Configure the render pass.
+		shader.configureRenderPass ( pass );
+	}
 }

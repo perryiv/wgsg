@@ -154,7 +154,7 @@ export class TriangleSolidColor extends BaseClass
 
 		// Make the pipeline.
 		const pipeline = device.createRenderPipeline ( {
-			label: `Render pass for shader ${this.type}`,
+			label: `Render pipeline for shader ${this.type}`,
 			layout: "auto",
 			vertex: {
 				module: this.module,

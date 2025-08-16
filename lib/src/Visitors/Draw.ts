@@ -266,18 +266,8 @@ export class Draw extends BaseClass
 			throw new Error ( `Invalid render pass in ${this.type} ${this.id}` );
 		}
 
-		// Shortcuts.
-		const { state } = pipeline;
-		const { shader } = state;
-
-		// Make sure there is a shader.
-		if ( !shader )
-		{
-			throw new Error ( "Pipeline has invalid shader" );
-		}
-
 		// Configure the render pass.
-		shader.configureRenderPass ( pass );
+		pipeline.configureRenderPass ( pass );
 
 		// Draw the projection matrix groups.
 		pipeline.forEachProjMatrix ( ( projMatrix: ProjMatrix ) =>

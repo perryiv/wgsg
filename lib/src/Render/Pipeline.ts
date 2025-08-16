@@ -108,4 +108,22 @@ export class Pipeline extends BaseClass
 		}
 		return state;
 	}
+
+
+	/**
+	 * Configure the render pass.
+	 * @param {GPURenderPassEncoder} pass - The render pass encoder.
+	 */
+	public configureRenderPass ( pass: GPURenderPassEncoder ) : void
+	{
+		const { state } = this;
+
+		if ( !state )
+		{
+			throw new Error ( `Pipeline ${this.type} ${this.id} has invalid state when configuring render pass` );
+		}
+
+		// Configure the render pass.
+		state.configureRenderPass ( pass );
+	}
 }
