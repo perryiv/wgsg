@@ -85,6 +85,15 @@ export class TriangleSolidColor extends BaseClass
 	}
 
 	/**
+	 * Return the color.
+	 * @returns {IVector4} The color.
+	 */
+	public get color () : IVector4
+	{
+		return [ ...this.#color ];
+	}
+
+	/**
 	 * Set the color.
 	 * @param {IVector4} color The color to use.
 	 */
@@ -92,15 +101,7 @@ export class TriangleSolidColor extends BaseClass
 	{
 		vec4.copy ( this.#color, color );
 		this.#buffer = null;
-	}
-
-	/**
-	 * Return the color.
-	 * @returns {IVector4} The color.
-	 */
-	public get color () : IVector4
-	{
-		return [ ...this.#color ];
+		this.#bindGroup = null;
 	}
 
 	/**

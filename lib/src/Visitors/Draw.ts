@@ -204,6 +204,8 @@ export class Draw extends BaseClass
 		} );
 		this.#renderPassEncoder = pass;
 
+		console.log ( `Render tree root ${root.id} has ${root.numLayers} layers` );
+
 		// Iterate over the layers in order.
 		root.forEachLayer ( ( layer: Layer ) =>
 		{
@@ -231,6 +233,8 @@ export class Draw extends BaseClass
 	 */
 	protected drawLayer ( layer: Layer ) : void
 	{
+		console.log ( `Layer ${layer.id} has ${layer.numBins} bins` );
+
 		// Draw the bins.
 		layer.forEachBin ( ( bin: Bin ) =>
 		{
@@ -244,6 +248,8 @@ export class Draw extends BaseClass
 	 */
 	protected drawBin ( bin: Bin ) : void
 	{
+		console.log ( `Bin ${bin.id} has ${bin.numPipelines} pipelines` );
+
 		// Draw the pipelines.
 		bin.forEachPipeline ( ( pipeline: Pipeline ) =>
 		{
@@ -269,6 +275,8 @@ export class Draw extends BaseClass
 		// Configure the render pass.
 		pipeline.configureRenderPass ( pass );
 
+		console.log ( `Pipeline ${pipeline.id} has ${pipeline.numProjMatrices} projection matrices` );
+
 		// Draw the projection matrix groups.
 		pipeline.forEachProjMatrix ( ( projMatrix: ProjMatrix ) =>
 		{
@@ -284,6 +292,11 @@ export class Draw extends BaseClass
 	{
 		// This is now the current projection matrix.
 		mat4.copy ( this.#projMatrix, projMatrix.matrix );
+
+		// Configure the render pass.
+		projMatrix.configureRenderPass ( pass );
+
+		console.log ( `ProjMatrix ${projMatrix.id} has ${projMatrix.numModelMatrices} model matrices` );
 
 		// Draw the model matrix groups.
 		projMatrix.forEachModelMatrix ( ( modelMatrix: ModelMatrix ) =>
@@ -301,12 +314,29 @@ export class Draw extends BaseClass
 		// This is now the current model matrix.
 		mat4.copy ( this.#modelMatrix, modelMatrix.matrix );
 
+		// Configure the render pass.
+		modelMatrix.configureRenderPass ( pass );
+
+		console.log ( `ModelMatrix ${modelMatrix.id} has ${modelMatrix.numShapes} shapes` );
+
 		// Draw the shapes.
 		modelMatrix.forEachShape ( ( shape: Shape ) =>
 		{
 			// The shape decides which function to call in order to draw itself.
 			shape.accept ( this );
 		} );
+	}
+
+	/**
+	 * Draw the shape.
+	 * @param {Shape} shape - The shape to draw.
+	 */
+	protected drawShape ( shape: Shape ) : void
+	{
+		console.log ( `Drawing ${shape.type} ${shape.id}` );
+
+		// The shape decides which function to call in order to draw itself.
+		shape.accept ( this );
 	}
 
 	/**

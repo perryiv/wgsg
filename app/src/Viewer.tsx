@@ -1,4 +1,3 @@
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (c) 2025, Perry L Miller IV
@@ -19,11 +18,9 @@ import {
 	Geometry,
 	Group,
 	Indexed,
+	Manager as ShaderManager,
 	Node,
-	Sphere,
 	State,
-	Transform,
-	TriangleSolidColor,
 	type IVector2,
 	type IVector3,
 	type IVector4,
@@ -79,8 +76,11 @@ const makeQuad = ( origin: IVector3, size: IVector2, color: IVector4 ) =>
 			]
 		} ),
 		state: new State ( {
-			shader: new TriangleSolidColor ( {
-				color
+			shader: ShaderManager.instance.get ( "TriangleSolidColor" ),
+			apply: ( ( { pass, shader } ) =>
+			{
+				shader.color = color;
+				pass.setBindGroup ( 0, shader.bindGroup );
 			} )
 		} )
 	} );
@@ -90,7 +90,7 @@ const buildScene = () : Node =>
 {
 	const group = new Group();
 
-	const num = 32;
+	const num = 2;
 	const w = 2.0 / num;
 	const h = 2.0 / num;
 

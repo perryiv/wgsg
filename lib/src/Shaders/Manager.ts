@@ -63,7 +63,7 @@ export class Manager extends Base
 	 * Static method to return the singleton instance of the shader manager.
 	 * @returns {Manager} The shader manager instance.
 	 */
-	public static get instance123() : Manager
+	public static get instance() : Manager
 	{
 		if ( !manager )
 		{
