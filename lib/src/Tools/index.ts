@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 export * from "./Bits";
+export * from "./Color";
 export * from "./Constants";
 export * from "./Device";
 export * from "./Errors";
