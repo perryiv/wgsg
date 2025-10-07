@@ -12,10 +12,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Device, IDENTITY_MATRIX } from "../Tools";
 import { IMatrix44, IVector4 } from "../Types";
 import { mat4, vec4 } from "gl-matrix";
 import { Visitor as BaseClass } from "./Visitor";
+import {
+	Device,
+	IDENTITY_MATRIX,
+	preMultiplyColor,
+} from "../Tools";
 import {
 	Arrays,
 	Geometry,
@@ -161,14 +165,7 @@ export class Draw extends BaseClass
 	 */
 	public get preMultipliedClearColor () : IVector4
 	{
-		const c = this.#clearColor;
-		const a = c[3];
-		return [
-			c[0] * a, // Red
-			c[1] * a, // Green
-			c[2] * a, // Blue
-			a         // Alpha
-		];
+		return preMultiplyColor ( this.#clearColor );
 	}
 
 	/**
