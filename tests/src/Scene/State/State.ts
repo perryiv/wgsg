@@ -18,7 +18,7 @@ import {
 	defaultResetFunction,
 	Device,
 	State,
-	TriangleSolidColor,
+	TrianglesSolidColor,
 	type IStateApplyFunction,
 	type IStateResetFunction,
 } from "wgsg-lib";
@@ -73,7 +73,7 @@ export function test ()
 				console.log ( "Custom reset function called." );
 			};
 
-			const shader = new TriangleSolidColor();
+			const shader = TrianglesSolidColor.instance;
 
 			const state = new State();
 			state.name = "test_state";
@@ -85,7 +85,7 @@ export function test ()
 
 			expect ( state.name ).to.equal ( "test_state" );
 			expect ( state.shader ).to.equal ( shader );
-			expect ( state.shader.type ).to.equal ( "Shaders.TriangleSolidColor" );
+			expect ( state.shader.type ).to.equal ( "Shaders.TrianglesSolidColor" );
 			expect ( state.layer ).to.equal ( 1 );
 			expect ( state.bin ).to.equal ( 2 );
 			expect ( state.apply ).to.equal ( localApplyFunction );
@@ -94,7 +94,7 @@ export function test ()
 
 		it ( "Should be able to construct with input", function ()
 		{
-			const shader = new TriangleSolidColor();
+			const shader = TrianglesSolidColor.instance;
 			const state = new State ( {
 				name: "test_state",
 				shader,
@@ -102,7 +102,7 @@ export function test ()
 				bin: 2
 			} );
 			expect ( state.name ).to.equal ( "test_state" );
-			expect ( shader.type ).to.equal ( "Shaders.TriangleSolidColor" );
+			expect ( shader.type ).to.equal ( "Shaders.TrianglesSolidColor" );
 			expect ( state.shader ).to.equal ( shader );
 			expect ( state.layer ).to.equal ( 1 );
 			expect ( state.bin ).to.equal ( 2 );

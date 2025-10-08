@@ -12,9 +12,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { test as testShaderManager } from "./Manager";
+import { test as testShaders } from "./Shaders";
 
 describe ( "Shaders", function ()
 {
-	testShaderManager();
+	testShaders();
 } );

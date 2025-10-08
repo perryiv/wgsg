@@ -18,14 +18,17 @@ import {
 	Geometry,
 	Group,
 	Indexed,
-	Manager as ShaderManager,
 	Node,
 	State,
-	type IVector2,
-	type IVector3,
-	type IVector4,
+	TrianglesSolidColor,
 	Viewer as InternalViewer,
 } from "wgsg-lib";
+import type {
+	IVector2,
+	IVector3,
+	IVector4,
+} from "wgsg-lib";
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -61,6 +64,7 @@ import {
 
 const makeQuad = ( origin: IVector3, size: IVector2, color: IVector4 ) =>
 {
+	const shader = TrianglesSolidColor.instance;
 	return new Geometry ( {
 		points: [
 			origin[0],           origin[1],           origin[2],
@@ -76,11 +80,11 @@ const makeQuad = ( origin: IVector3, size: IVector2, color: IVector4 ) =>
 			]
 		} ),
 		state: new State ( {
-			shader: ShaderManager.instance.get ( "TriangleSolidColor" ),
-			apply: ( ( { pass, shader } ) =>
+			shader,
+			apply: ( () =>
 			{
 				shader.color = color;
-				pass.setBindGroup ( 0, shader.bindGroup );
+				// pass.setBindGroup ( 0, shader.bindGroup );
 			} )
 		} )
 	} );

@@ -64,6 +64,15 @@ export abstract class ShaderBase extends Base
 	}
 
 	/**
+	 * Destroy this instance.
+	 */
+	public destroy() : void
+	{
+		this.#module = null;
+		this.#pipeline = null;
+	}
+
+	/**
 	 * Get the shader code.
 	 * @returns {string} The shader code.
 	 */

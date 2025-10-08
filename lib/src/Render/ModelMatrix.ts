@@ -86,4 +86,14 @@ export class ModelMatrix extends BaseClass
 	{
 		return this.#shapes.length;
 	}
+
+	/**
+	 * Configure the render pass.
+	 * @param {GPURenderPassEncoder} pass - The render pass encoder.
+	 */
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	public configureRenderPass ( pass: GPURenderPassEncoder ) : void
+	// eslint-disable-next-line @typescript-eslint/no-empty-function
+	{
+	}
 }

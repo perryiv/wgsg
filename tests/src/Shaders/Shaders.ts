@@ -8,12 +8,12 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Test code for the shader manager.
+//	Test code for the shaders.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 import { expect } from "chai";
-import { Manager } from "wgsg-lib";
+import { TrianglesSolidColor } from "wgsg-lib";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -24,12 +24,12 @@ import { Manager } from "wgsg-lib";
 
 export function test ()
 {
-	describe ( "Manager", function ()
+	describe ( "TrianglesSolidColor", function ()
 	{
-		it ( "Should be able to get the shader manager", function ()
+		it ( "Should be able to get the shader", function ()
 		{
-			expect ( Manager.instance ).to.exist;
-			expect ( Manager.instance instanceof Manager ).to.be.true;
+			expect ( TrianglesSolidColor.instance ).to.exist;
+			expect ( TrianglesSolidColor.instance instanceof TrianglesSolidColor ).to.be.true;
 		} );
 	} );
 };

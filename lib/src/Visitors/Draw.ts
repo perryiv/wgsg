@@ -12,12 +12,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IMatrix44, IVector4 } from "../Types";
-import { mat4, vec4 } from "gl-matrix";
+import { vec4 } from "gl-matrix";
 import { Visitor as BaseClass } from "./Visitor";
+import type { IVector4 } from "../Types";
 import {
 	Device,
-	IDENTITY_MATRIX,
 	preMultiplyColor,
 } from "../Tools";
 import {
@@ -25,6 +24,7 @@ import {
 	Geometry,
 	Indexed,
 	Shape,
+	type IStateApplyInput,
 } from "../Scene";
 import {
 	Bin,
@@ -61,8 +61,6 @@ export class Draw extends BaseClass
 	#clearColor: IVector4 = [ 0.5, 0.5, 0.5, 1.0 ]; // Grey.
 	#renderPassEncoder: ( GPURenderPassEncoder | null ) = null;
 	#commandEncoder: ( GPUCommandEncoder | null ) = null;
-	#projMatrix:	IMatrix44 = [ ...IDENTITY_MATRIX ]; // Has to be a copy.
-	#modelMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ]; // Has to be a copy.
 	#geometry: ( Geometry | null ) = null;
 
 	/**
@@ -135,6 +133,34 @@ export class Draw extends BaseClass
 
 		// Return the encoder.
 		return encoder;
+	}
+
+	/**
+	 * Get the render pass encoder.
+	 * @returns {GPURenderPassEncoder} The render pass encoder.
+	 */
+	protected get renderPassEncoder () : GPURenderPassEncoder
+	{
+		// Shortcuts.
+		const pass = this.#renderPassEncoder;
+
+		// Make sure there is a render pass.
+		if ( !pass )
+		{
+			throw new Error ( `Invalid render pass in ${this.type} ${this.id}` );
+		}
+
+		// Return the render pass encoder.
+		return pass;
+	}
+
+	/**
+	 * See if there is a render pass encoder.
+	 * @returns {boolean} True if there is a render pass encoder.
+	 */
+	protected get hasRenderPassEncoder () : boolean
+	{
+		return ( !!( this.#renderPassEncoder ) );
 	}
 
 	/**
@@ -219,8 +245,6 @@ export class Draw extends BaseClass
 		// Reset these.
 		this.#renderPassEncoder = null;
 		this.#commandEncoder = null;
-		mat4.copy ( this.#projMatrix,  IDENTITY_MATRIX );
-		mat4.copy ( this.#modelMatrix, IDENTITY_MATRIX );
 		this.#geometry = null;
 	}
 
@@ -260,61 +284,60 @@ export class Draw extends BaseClass
 	 */
 	protected drawPipeline ( pipeline: Pipeline ) : void
 	{
-		// Shortcuts.
-		const pass = this.#renderPassEncoder;
-
-		// Make sure there is a render pass.
-		if ( !pass )
-		{
-			throw new Error ( `Invalid render pass in ${this.type} ${this.id}` );
-		}
-
 		// Configure the render pass.
-		pipeline.configureRenderPass ( pass );
+		pipeline.configureRenderPass ( this.renderPassEncoder );
 
 		console.log ( `Pipeline ${pipeline.id} has ${pipeline.numProjMatrices} projection matrices` );
 
 		// Draw the projection matrix groups.
 		pipeline.forEachProjMatrix ( ( projMatrix: ProjMatrix ) =>
 		{
-			this.drawProjMatrix ( projMatrix );
+			this.drawProjMatrix ( pipeline, projMatrix );
 		} );
 	}
 
 	/**
 	 * Draw the projection matrix group.
+	 * @param {Pipeline} pipeline - The pipeline to use.
 	 * @param {ProjMatrix} projMatrix - The projection matrix group to draw.
 	 */
-	protected drawProjMatrix ( projMatrix: ProjMatrix ) : void
+	protected drawProjMatrix ( pipeline: Pipeline, projMatrix: ProjMatrix ) : void
 	{
-		// This is now the current projection matrix.
-		mat4.copy ( this.#projMatrix, projMatrix.matrix );
-
 		// Configure the render pass.
-		projMatrix.configureRenderPass ( pass );
+		projMatrix.configureRenderPass ( this.renderPassEncoder );
 
 		console.log ( `ProjMatrix ${projMatrix.id} has ${projMatrix.numModelMatrices} model matrices` );
 
 		// Draw the model matrix groups.
 		projMatrix.forEachModelMatrix ( ( modelMatrix: ModelMatrix ) =>
 		{
-			this.drawModelMatrix ( modelMatrix );
+			this.drawModelMatrix ( pipeline, projMatrix, modelMatrix );
 		} );
 	}
 
 	/**
 	 * Draw the model matrix group.
+	 * @param {Pipeline} pipeline - The pipeline to use.
+	 * @param {ProjMatrix} projMatrix - The projection matrix group.
 	 * @param {ModelMatrix} modelMatrix - The model matrix group to draw.
 	 */
-	protected drawModelMatrix ( modelMatrix: ModelMatrix ) : void
+	protected drawModelMatrix ( pipeline: Pipeline, projMatrix: ProjMatrix, modelMatrix: ModelMatrix ) : void
 	{
-		// This is now the current model matrix.
-		mat4.copy ( this.#modelMatrix, modelMatrix.matrix );
-
 		// Configure the render pass.
-		modelMatrix.configureRenderPass ( pass );
+		modelMatrix.configureRenderPass ( this.renderPassEncoder );
 
 		console.log ( `ModelMatrix ${modelMatrix.id} has ${modelMatrix.numShapes} shapes` );
+
+		// Input for applying and resetting the state.
+		const input: IStateApplyInput = {
+			state: pipeline.state,
+			projMatrix: projMatrix.matrix,
+			modelMatrix: modelMatrix.matrix,
+		};
+
+		// Get and apply the state.
+		const state = pipeline.state;
+		state.doApply ( input );
 
 		// Draw the shapes.
 		modelMatrix.forEachShape ( ( shape: Shape ) =>
@@ -322,6 +345,9 @@ export class Draw extends BaseClass
 			// The shape decides which function to call in order to draw itself.
 			shape.accept ( this );
 		} );
+
+		// Reset the state.
+		state.doReset ( input );
 	}
 
 	/**
@@ -415,11 +441,7 @@ export class Draw extends BaseClass
 		}
 
 		// Get the render pass encoder.
-		const pass = this.#renderPassEncoder;
-		if ( !pass )
-		{
-			throw new Error ( "Attempting to draw indexed primitives without a render pass" );
-		}
+		const pass = this.renderPassEncoder;
 
 		// Set the points and index buffer.
 		pass.setVertexBuffer ( 0, points );

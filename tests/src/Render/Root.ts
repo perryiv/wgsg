@@ -28,7 +28,7 @@ import {
 	Shape,
 	Sphere,
 	State,
-	TriangleSolidColor,
+	TrianglesSolidColor,
 } from "wgsg-lib";
 
 
@@ -43,7 +43,7 @@ function buildScene ()
 	const root = new Group();
 	root.state = new State ( {
 		name: "State for test scene that contains four spheres",
-		shader: new TriangleSolidColor()
+		shader: TrianglesSolidColor.instance
 	} );
 	root.addChild ( new Sphere ( { center: [ 0, 0, 0 ], radius: 1 } ) );
 	root.addChild ( new Sphere ( { center: [ 2, 0, 0 ], radius: 1 } ) );
@@ -86,7 +86,7 @@ export function test ()
 			expect ( cv.defaultState.apply ).to.not.be.undefined;
 			expect ( cv.defaultState.reset ).to.not.be.undefined;
 			expect ( cv.defaultState.shader ).to.exist;
-			expect ( cv.defaultState.shader instanceof TriangleSolidColor ).to.be.true;
+			expect ( cv.defaultState.shader instanceof TrianglesSolidColor ).to.be.true;
 		} );
 
 		it ( "Can build and cull the scene", function ()

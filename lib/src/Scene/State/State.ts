@@ -19,9 +19,20 @@ import { ShaderBase } from "../../Shaders";
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	The input for the constructor.
+//	Types used below and elsewhere.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+export interface IStateApplyInput
+{
+	state: State;
+	projMatrix: IMatrix44;
+	modelMatrix: IMatrix44;
+}
+
+export type IStateResetInput = IStateApplyInput;
+export type IStateApplyFunction = ( ( input: IStateApplyInput ) => void );
+export type IStateResetFunction = ( ( input: IStateResetInput ) => void );
 
 export interface IStateConstructorInput
 {
@@ -29,16 +40,9 @@ export interface IStateConstructorInput
 	shader?: ShaderBase;
 	layer?: number;
 	bin?: number;
+	apply?: IStateApplyFunction;
+	reset?: IStateResetFunction;
 }
-export interface IStateApplyInput
-{
-	state: State;
-	projMatrix: IMatrix44;
-	modelMatrix: IMatrix44;
-}
-export type IStateResetInput = IStateApplyInput;
-export type IStateApplyFunction = ( ( input: IStateApplyInput ) => void );
-export type IStateResetFunction = ( ( input: IStateResetInput ) => void );
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -93,7 +97,7 @@ export class State extends Base
 	{
 		super();
 
-		const { name, shader, layer, bin } = ( input ?? {} );
+		const { name, shader, layer, bin, apply, reset } = ( input ?? {} );
 
 		if ( name )
 		{
@@ -115,6 +119,16 @@ export class State extends Base
 		if ( bin )
 		{
 			this.#bin = bin;
+		}
+
+		if ( apply )
+		{
+			this.#apply ??= apply;
+		}
+
+		if ( reset )
+		{
+			this.#reset = reset;
 		}
 	}
 

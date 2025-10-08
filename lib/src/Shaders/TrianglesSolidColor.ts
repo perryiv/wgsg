@@ -23,45 +23,64 @@ import code from "./TrianglesSolidColor.wgsl?raw";
 
 
 ///////////////////////////////////////////////////////////////////////////////
-//
-//	Types used below.
-//
-///////////////////////////////////////////////////////////////////////////////
-
-export interface ITriangleSolidColorShaderInput
-{
-	color?: IVector4;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
 /**
  * Class that contains the shader code.
  * @class
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class TriangleSolidColor extends BaseClass
+export class TrianglesSolidColor extends BaseClass
 {
-	#color: IVector4 = [ 0.5, 0.5, 0.5, 1.0 ];
+	static #instance: ( TrianglesSolidColor | null ) = null;
+	#color: IVector4 = [ 0.5, 0.0, 0.5, 1.0 ];
 	#buffer: ( GPUBuffer | null ) = null;
 	#bindGroup: ( GPUBindGroup | null ) = null;
 
 	/**
 	 * Construct the class.
 	 * @class
-	 * @param {ITriangleSolidColorShaderInput} input - The input for the constructor.
-	 * @param {IVector4} [input.color] - The color to use.
 	 */
-	public constructor ( input?: ITriangleSolidColorShaderInput )
+	protected constructor()
 	{
 		super ( { code: ( code as string ) } );
+	}
 
-		const { color } = ( input ? input : {} );
-
-		if ( ( color ) && ( 4 === color.length ) )
+	/**
+	 * Destroy this instance.
+	 */
+	public override destroy() : void
+	{
+		if ( this.#buffer )
 		{
-			vec4.copy ( this.#color, color );
+			this.#buffer.destroy();
+			this.#buffer = null;
+		}
+		this.#bindGroup = null;
+		super.destroy();
+	}
+
+	/**
+	 * Get the singleton instance.
+	 * @returns {TrianglesSolidColor} The singleton instance.
+	 */
+	public static get instance () : TrianglesSolidColor
+	{
+		if ( !TrianglesSolidColor.#instance )
+		{
+			TrianglesSolidColor.#instance = new TrianglesSolidColor();
+		}
+		return TrianglesSolidColor.#instance;
+	}
+
+	/**
+	 * Destroy the singleton instance.
+	 */
+	public static destroy() : void
+	{
+		if ( TrianglesSolidColor.#instance )
+		{
+			TrianglesSolidColor.#instance.destroy();
+			TrianglesSolidColor.#instance = null;
 		}
 	}
 
@@ -71,7 +90,7 @@ export class TriangleSolidColor extends BaseClass
 	 */
 	public override getClassName() : string
 	{
-		return "Shaders.TriangleSolidColor";
+		return "Shaders.TrianglesSolidColor";
 	}
 
 	/**
@@ -95,7 +114,7 @@ export class TriangleSolidColor extends BaseClass
 
 	/**
 	 * Set the color.
-	 * @param {IVector4} color The color to use.
+	 * @param {IVector4} color - The color.
 	 */
 	public set color ( color: IVector4 )
 	{

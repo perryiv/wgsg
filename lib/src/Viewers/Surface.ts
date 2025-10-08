@@ -16,7 +16,7 @@ import { Base } from "../Base/Base";
 import { clamp, Device } from "../Tools";
 import { IVector3, IVector4 } from "../Types";
 import { Perspective, ProjectionBase as Projection } from "../Projections";
-import { TriangleSolidColor } from "../Shaders";
+import { TrianglesSolidColor } from "../Shaders";
 import { vec4 } from "gl-matrix";
 import type { ISize, IViewport } from "../Types/Math";
 import {
@@ -122,15 +122,15 @@ export class Surface extends Base
 		const root = this.#root;
 
 		// Set the default state's properties.
-		const defaultState = new State();
-		defaultState.name = `Default state for ${this.getClassName()} ${this.id}`;
-		defaultState.shader = new TriangleSolidColor();
-		defaultState.apply = this.defaultApplyFunction.bind ( this );
-		defaultState.reset = this.defaultResetFunction.bind ( this );
+		const state = new State();
+		state.name = `Default state for ${this.getClassName()} ${this.id}`;
+		state.shader = TrianglesSolidColor.instance;
+		state.apply = this.defaultApplyFunction.bind ( this );
+		state.reset = this.defaultResetFunction.bind ( this );
 
 		// Now we can make the visitors.
 		const update = new UpdateVisitor();
-		const cull = new CullVisitor ( { root, defaultState } );
+		const cull = new CullVisitor ( { root, defaultState: state } );
 		const draw = new DrawVisitor ( { context } );
 
 		// Observe changes to the canvas size.
@@ -143,7 +143,7 @@ export class Surface extends Base
 		this.#context = context;
 		this.#observer = observer;
 		this.#viewport = { x: 0, y: 0, width, height };
-		this.#defaultState = defaultState;
+		this.#defaultState = state;
 		this.#visitors = { update, cull, draw };
 	}
 

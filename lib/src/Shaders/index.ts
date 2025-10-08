@@ -12,6 +12,5 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export * from "./Manager";
 export * from "./ShaderBase";
 export * from "./TrianglesSolidColor";

@@ -14,7 +14,7 @@
 
 import { Multiply } from "./Multiply";
 import { Root } from "../Render";
-import { TriangleSolidColor } from "../Shaders";
+import { TrianglesSolidColor } from "../Shaders";
 import {
 	Geometry,
 	Group,
@@ -51,7 +51,7 @@ const makeDefaultState = () : State =>
 {
 	return ( new State ( {
 		name: "Cull visitor default state",
-		shader: new TriangleSolidColor()
+		shader: TrianglesSolidColor.instance
 	} ) );
 };
 
