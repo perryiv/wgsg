@@ -123,7 +123,7 @@ export class State extends Base
 
 		if ( apply )
 		{
-			this.#apply ??= apply;
+			this.#apply = apply;
 		}
 
 		if ( reset )
