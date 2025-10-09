@@ -65,6 +65,7 @@ import type {
 const makeQuad = ( origin: IVector3, size: IVector2, color: IVector4 ) =>
 {
 	const shader = TrianglesSolidColor.instance;
+	color = [ ...color ]; // Make a copy.
 	return new Geometry ( {
 		points: [
 			origin[0],           origin[1],           origin[2],
@@ -80,11 +81,13 @@ const makeQuad = ( origin: IVector3, size: IVector2, color: IVector4 ) =>
 			]
 		} ),
 		state: new State ( {
+			// This unique name makes a pipeline for each color, and you should only have a pipeline for each shader.
+			name: `State with color [${color.join ( ", " )}]`,
 			shader,
 			apply: ( () =>
 			{
+				console.log ( `Applying state with color [${color.join ( ", " )}]` );
 				shader.color = color;
-				// pass.setBindGroup ( 0, shader.bindGroup );
 			} )
 		} )
 	} );
@@ -94,7 +97,7 @@ const buildScene = () : Node =>
 {
 	const group = new Group();
 
-	const num = 2;
+	const num = 20;
 	const w = 2.0 / num;
 	const h = 2.0 / num;
 
