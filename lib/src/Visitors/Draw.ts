@@ -12,6 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { ShaderBase } from "../Shaders";
 import { vec4 } from "gl-matrix";
 import { Visitor as BaseClass } from "./Visitor";
 import type { IVector4 } from "../Types";
@@ -24,6 +25,7 @@ import {
 	Geometry,
 	Indexed,
 	Shape,
+	State,
 	type IStateApplyInput,
 } from "../Scene";
 import {
@@ -46,6 +48,25 @@ export interface IDrawVisitorInput
 {
 	context: GPUCanvasContext;
 };
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Require a shader from the state.
+ * @param {State} state - The state to check.
+ * @returns {ShaderBase} The shader.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+const requireShader = ( state: State ) : ShaderBase =>
+{
+	const { shader } = state;
+	if ( !shader )
+	{
+		throw new Error ( `State ${state.type} ${state.id} has no shader` );
+	}
+	return shader;
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -336,8 +357,13 @@ export class Draw extends BaseClass
 		};
 
 		// Get and apply the state.
-		const state = pipeline.state;
+		const { state } = pipeline;
 		state.doApply ( input );
+
+		// Configure the render pass again because the state's apply function
+		// may have changed something.
+		const shader = requireShader ( state );
+		shader.configureRenderPass ( this.renderPassEncoder );
 
 		// Draw the shapes.
 		modelMatrix.forEachShape ( ( shape: Shape ) =>
