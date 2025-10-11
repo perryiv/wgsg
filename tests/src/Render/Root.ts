@@ -21,13 +21,14 @@ import {
 	Group,
 	IDENTITY_MATRIX,
 	Layer,
-	ModelMatrix,
+	ModelMatrixGroup,
 	Pipeline,
-	ProjMatrix,
+	ProjMatrixGroup,
 	Root,
 	Shape,
 	Sphere,
 	State,
+	StateGroup,
 	TrianglesSolidColor,
 } from "wgsg-lib";
 
@@ -116,35 +117,48 @@ export function test ()
 			expect ( bin instanceof Bin ).to.be.true;
 			expect ( bin.numPipelines ).to.be.equal ( 1 );
 
-			const pipeline = bin.getPipeline ( scene.state! );
+			const { state } = scene;
+			expect ( state ).to.exist;
+			expect ( state instanceof State ).to.be.true;
+
+			const { shader } = state!;
+			expect ( shader ).to.exist;
+			expect ( shader instanceof TrianglesSolidColor ).to.be.true;
+
+			const pipeline = bin.getPipeline ( shader! );
 			expect ( pipeline instanceof Pipeline ).to.be.true;
 			expect ( pipeline.numProjMatrices ).to.be.equal ( 1 );
 
-			const projMatrix = pipeline.getProjMatrix ( IDENTITY_MATRIX );
-			expect ( projMatrix instanceof ProjMatrix ).to.be.true;
-			expect ( projMatrix.numModelMatrices ).to.be.equal ( 1 );
-			expect ( projMatrix.matrix instanceof Array ).to.be.true;
-			expect ( projMatrix.matrix.length ).to.be.equal ( 16 );
-			expect ( projMatrix.matrix ).to.be.deep.equal ( IDENTITY_MATRIX );
+			const pmg = pipeline.getProjMatrixGroup ( IDENTITY_MATRIX );
+			expect ( pmg instanceof ProjMatrixGroup ).to.be.true;
+			expect ( pmg.numModelMatrices ).to.be.equal ( 1 );
+			expect ( pmg.matrix instanceof Array ).to.be.true;
+			expect ( pmg.matrix.length ).to.be.equal ( 16 );
+			expect ( pmg.matrix ).to.be.deep.equal ( IDENTITY_MATRIX );
 
-			const modelMatrix = projMatrix.getModelMatrix ( IDENTITY_MATRIX );
-			expect ( modelMatrix instanceof ModelMatrix ).to.be.true;
-			expect ( modelMatrix.numShapes ).to.be.equal ( 4 );
-			expect ( modelMatrix.matrix instanceof Array ).to.be.true;
-			expect ( modelMatrix.matrix.length ).to.be.equal ( 16 );
-			expect ( modelMatrix.matrix ).to.be.deep.equal ( IDENTITY_MATRIX );
+			const mmg = pmg.getModelMatrixGroup ( IDENTITY_MATRIX );
+			expect ( mmg instanceof ModelMatrixGroup ).to.be.true;
+			expect ( mmg.numStateGroups ).to.be.equal ( 1 );
+			expect ( mmg.matrix instanceof Array ).to.be.true;
+			expect ( mmg.matrix.length ).to.be.equal ( 16 );
+			expect ( mmg.matrix ).to.be.deep.equal ( IDENTITY_MATRIX );
 
-			modelMatrix.forEachShape ( ( shape: Shape, index: number ) =>
+			mmg.forEachStateGroup ( ( sg: StateGroup ) =>
 			{
-				expect ( index ).to.be.greaterThanOrEqual ( 0 );
-				expect ( index ).to.be.lessThan ( 4 );
+				expect ( sg.numShapes ).to.be.equal ( 4 );
 
-				expect ( "object" === ( typeof shape ) ).to.be.true;
-				expect ( shape instanceof Sphere ).to.be.true;
+				sg.forEachShape ( ( shape: Shape, index: number ) =>
+				{
+					expect ( index ).to.be.greaterThanOrEqual ( 0 );
+					expect ( index ).to.be.lessThan ( 4 );
 
-				const sphere = ( shape as Sphere );
-				expect ( sphere.radius ).to.be.equal ( 1 );
-				expect ( sphere.center ).to.be.deep.equal ( [ index * 2, 0, 0 ] );
+					expect ( "object" === ( typeof shape ) ).to.be.true;
+					expect ( shape instanceof Sphere ).to.be.true;
+
+					const sphere = ( shape as Sphere );
+					expect ( sphere.radius ).to.be.equal ( 1 );
+					expect ( sphere.center ).to.be.deep.equal ( [ index * 2, 0, 0 ] );
+				} );
 			} );
 		} );
 
