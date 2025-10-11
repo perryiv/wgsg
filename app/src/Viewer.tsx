@@ -81,7 +81,7 @@ const makeQuad = ( origin: IVector3, size: IVector2, color: IVector4 ) =>
 			]
 		} ),
 		state: new State ( {
-			// This unique name makes a pipeline for each color, and you should only have a pipeline for each shader.
+			// A unique name is needed for each state associated with a given shader.
 			name: `State with color [${color.join ( ", " )}]`,
 			shader,
 			apply: ( () =>
