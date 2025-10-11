@@ -14,6 +14,7 @@
 
 import { Base } from "../Base";
 import { Device } from "../Tools";
+import type { IMatrix44 } from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -134,6 +135,20 @@ export abstract class ShaderBase extends Base
 
 		return pipeline;
 	}
+
+	/**
+	 * Set the projection matrix. Overload if needed.
+	 * @param {IMatrix44} matrix - The projection matrix.
+	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-function
+	public set projMatrix ( matrix: IMatrix44 ) {}
+
+	/**
+	 * Set the model matrix. Overload if needed.
+	 * @param {IMatrix44} matrix - The model matrix.
+	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-function
+	public set modelMatrix ( matrix: IMatrix44 ) {}
 
 	/**
 	 * Get the name.

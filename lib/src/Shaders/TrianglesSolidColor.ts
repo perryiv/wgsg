@@ -255,8 +255,7 @@ export class TrianglesSolidColor extends BaseClass
 	 */
 	public configureRenderPass ( pass: GPURenderPassEncoder ) : void
 	{
-		// Set the pipeline.
-		pass.setPipeline ( this.pipeline );
+		// Note: The render-pass' pipeline should already be set.
 
 		// Set the color buffer.
 		pass.setBindGroup ( 0, this.bindGroup );

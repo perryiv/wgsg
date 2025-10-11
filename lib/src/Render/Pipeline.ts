@@ -14,8 +14,8 @@
 
 import { Base as BaseClass } from "../Base";
 import { IMatrix44 } from "../Types";
-import { ProjMatrix } from "./ProjMatrix";
-import { State } from "../Scene/State";
+import { ProjMatrixGroup } from "./ProjMatrixGroup";
+import { ShaderBase } from "../Shaders";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -24,7 +24,7 @@ import { State } from "../Scene/State";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export type IProjMatrixMap = Map < string, ProjMatrix >;
+export type IProjMatrixMap = Map < string, ProjMatrixGroup >;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -36,18 +36,18 @@ export type IProjMatrixMap = Map < string, ProjMatrix >;
 
 export class Pipeline extends BaseClass
 {
-	#state: State;
-	#projMatrixMap: IProjMatrixMap = new Map < string, ProjMatrix > ();
+	#shader: ShaderBase;
+	#projMatrixMap: IProjMatrixMap = new Map < string, ProjMatrixGroup > ();
 
 	/**
 	 * Construct the class.
 	 * @class
-	 * @param {State} state - The pipeline state.
+	 * @param {ShaderBase} shader - The pipeline shader.
 	 */
-	constructor ( state: State )
+	constructor ( shader: ShaderBase )
 	{
 		super();
-		this.#state = state;
+		this.#shader = shader;
 	}
 
 	/**
@@ -60,27 +60,45 @@ export class Pipeline extends BaseClass
 	}
 
 	/**
+	 * Set the projection matrix.
+	 * @param {IMatrix44} matrix - The projection matrix.
+	 */
+	public set projMatrix ( matrix: IMatrix44 )
+	{
+		this.shader.projMatrix = matrix;
+	}
+
+	/**
+	 * Set the model matrix.
+	 * @param {IMatrix44} matrix - The model matrix.
+	 */
+	public set modelMatrix ( matrix: IMatrix44 )
+	{
+		this.shader.modelMatrix = matrix;
+	}
+
+	/**
 	 * Get the projection matrix. Make it if we have to.
 	 * @param {IMatrix44} matrix - The projection matrix.
 	 * @returns {ProjMatrix} The projection matrix.
 	 */
-	public getProjMatrix ( matrix: IMatrix44 ) : ProjMatrix
+	public getProjMatrixGroup ( matrix: IMatrix44 ) : ProjMatrixGroup
 	{
 		const name = JSON.stringify ( matrix );
-		let projMatrix = this.#projMatrixMap.get ( name );
-		if ( !projMatrix )
+		let pmg = this.#projMatrixMap.get ( name );
+		if ( !pmg )
 		{
-			projMatrix = new ProjMatrix ( matrix );
-			this.#projMatrixMap.set ( name, projMatrix );
+			pmg = new ProjMatrixGroup ( matrix );
+			this.#projMatrixMap.set ( name, pmg );
 		}
-		return projMatrix;
+		return pmg;
 	}
 
 	/**
 	 * Call the given function for each projection matrix.
 	 * @param {Function} func - The function to call.
 	 */
-	public forEachProjMatrix ( func: ( projMatrix: ProjMatrix ) => void ) : void
+	public forEachProjMatrixGroup ( func: ( pmg: ProjMatrixGroup ) => void ) : void
 	{
 		// The order doesn't matter so we don't sort like the layers and bins.
 		this.#projMatrixMap.forEach ( func );
@@ -96,17 +114,17 @@ export class Pipeline extends BaseClass
 	}
 
 	/**
-	 * Get the state.
-	 * @returns {State} The state.
+	 * Get the shader.
+	 * @returns {ShaderBase} The shader.
 	 */
-	public get state() : State
+	public get shader() : ShaderBase
 	{
-		const state = this.#state;
-		if ( !state )
+		const shader = this.#shader;
+		if ( !shader )
 		{
-			throw new Error ( "Pipeline has invalid state" );
+			throw new Error ( "Pipeline has invalid shader" );
 		}
-		return state;
+		return shader;
 	}
 
 
@@ -116,14 +134,14 @@ export class Pipeline extends BaseClass
 	 */
 	public configureRenderPass ( pass: GPURenderPassEncoder ) : void
 	{
-		const { state } = this;
+		const { shader } = this;
 
-		if ( !state )
+		if ( !shader )
 		{
-			throw new Error ( `Pipeline ${this.type} ${this.id} has invalid state when configuring render pass` );
+			throw new Error ( `Pipeline ${this.type} ${this.id} has invalid shader when configuring render pass` );
 		}
 
 		// Configure the render pass.
-		state.configureRenderPass ( pass );
+		shader.configureRenderPass ( pass );
 	}
 }

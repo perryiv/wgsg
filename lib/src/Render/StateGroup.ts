@@ -8,38 +8,36 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Contains the model matrix and everything that gets rendered with it.
+//	Contains the state and everything that gets rendered with it.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base as BaseClass } from "../Base";
-import { IDENTITY_MATRIX } from "../Tools/Constants";
-import { mat4 } from "gl-matrix";
 import { Shape } from "../Scene/Nodes/Shapes/Shape";
-import type { IMatrix44 } from "../Types";
+import { State } from "../Scene";
 
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Class for model matrix and everything that gets rendered with it.
+ * Class for the state and everything that gets rendered with it.
  * @class
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class ModelMatrix extends BaseClass
+export class StateGroup extends BaseClass
 {
-	#matrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
+	#state: State;
 	#shapes: Shape[] = [];
 
 	/**
 	 * Construct the class.
 	 * @class
-	 * @param {IMatrix44} matrix - The model matrix.
+	 * @param {State} state - The state.
 	 */
-	constructor ( matrix: IMatrix44 )
+	constructor ( state: State )
 	{
 		super();
-		mat4.copy ( this.#matrix, matrix );
+		this.#state = state;
 	}
 
 	/**
@@ -48,20 +46,21 @@ export class ModelMatrix extends BaseClass
 	 */
 	public override getClassName() : string
 	{
-		return "Render.ModelMatrix";
+		return "Render.StateGroup";
 	}
 
 	/**
-	 * Get the matrix.
-	 * @returns {IMatrix44} The matrix.
+	 * Get the state.
+	 * @returns {State} The state.
 	 */
-	public get matrix() : IMatrix44
+	public get state() : State
 	{
-		return this.#matrix;
+		return this.#state;
 	}
 
+
 	/**
-	 * Add the shape to the model matrix.
+	 * Add the shape to the state group.
 	 * @param {Shape} shape - The shape to add.
 	 */
 	public addShape ( shape: Shape )
@@ -85,15 +84,5 @@ export class ModelMatrix extends BaseClass
 	public get numShapes() : number
 	{
 		return this.#shapes.length;
-	}
-
-	/**
-	 * Configure the render pass.
-	 * @param {GPURenderPassEncoder} pass - The render pass encoder.
-	 */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	public configureRenderPass ( pass: GPURenderPassEncoder ) : void
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	{
 	}
 }

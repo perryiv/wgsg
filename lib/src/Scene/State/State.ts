@@ -26,6 +26,7 @@ import { ShaderBase } from "../../Shaders";
 export interface IStateApplyInput
 {
 	state: State;
+	shader: ShaderBase;
 	projMatrix: IMatrix44;
 	modelMatrix: IMatrix44;
 }

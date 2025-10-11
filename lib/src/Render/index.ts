@@ -14,7 +14,8 @@
 
 export * from "./Bin";
 export * from "./Layer";
-export * from "./ModelMatrix";
+export * from "./ModelMatrixGroup";
 export * from "./Pipeline";
-export * from "./ProjMatrix";
+export * from "./ProjMatrixGroup";
 export * from "./Root";
+export * from "./StateGroup";

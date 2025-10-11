@@ -31,10 +31,11 @@ import {
 import {
 	Bin,
 	Layer,
-	ModelMatrix,
+	ModelMatrixGroup,
 	Pipeline,
-	ProjMatrix,
+	ProjMatrixGroup,
 	Root,
+	StateGroup,
 } from "../Render";
 
 
@@ -305,68 +306,91 @@ export class Draw extends BaseClass
 	 */
 	protected drawPipeline ( pipeline: Pipeline ) : void
 	{
-		// Configure the render pass.
-		pipeline.configureRenderPass ( this.renderPassEncoder );
+		// Shortcut.
+		const pass = this.renderPassEncoder;
+
+		// Set the render pass' pipeline.
+		pass.setPipeline ( pipeline.shader.pipeline );
 
 		console.log ( `Pipeline ${pipeline.id} has ${pipeline.numProjMatrices} projection matrices` );
 
 		// Draw the projection matrix groups.
-		pipeline.forEachProjMatrix ( ( projMatrix: ProjMatrix ) =>
+		pipeline.forEachProjMatrixGroup ( ( pmg: ProjMatrixGroup ) =>
 		{
-			this.drawProjMatrix ( pipeline, projMatrix );
+			this.drawProjMatrixGroup ( pipeline, pmg );
 		} );
 	}
 
 	/**
 	 * Draw the projection matrix group.
 	 * @param {Pipeline} pipeline - The pipeline to use.
-	 * @param {ProjMatrix} projMatrix - The projection matrix group to draw.
+	 * @param {ProjMatrixGroup} pmg - The projection matrix group to draw.
 	 */
-	protected drawProjMatrix ( pipeline: Pipeline, projMatrix: ProjMatrix ) : void
+	protected drawProjMatrixGroup ( pipeline: Pipeline, pmg: ProjMatrixGroup ) : void
 	{
-		// Configure the render pass.
-		projMatrix.configureRenderPass ( this.renderPassEncoder );
+		// Set the pipeline's projection matrix.
+		pipeline.projMatrix = pmg.matrix;
 
-		console.log ( `ProjMatrix ${projMatrix.id} has ${projMatrix.numModelMatrices} model matrices` );
+		console.log ( `ProjMatrix ${pmg.id} has ${pmg.numModelMatrices} model matrices` );
 
 		// Draw the model matrix groups.
-		projMatrix.forEachModelMatrix ( ( modelMatrix: ModelMatrix ) =>
+		pmg.forEachModelMatrixGroup ( ( mmg: ModelMatrixGroup ) =>
 		{
-			this.drawModelMatrix ( pipeline, projMatrix, modelMatrix );
+			this.drawModelMatrix ( pipeline, pmg, mmg );
 		} );
 	}
 
 	/**
 	 * Draw the model matrix group.
 	 * @param {Pipeline} pipeline - The pipeline to use.
-	 * @param {ProjMatrix} projMatrix - The projection matrix group.
-	 * @param {ModelMatrix} modelMatrix - The model matrix group to draw.
+	 * @param {ProjMatrix} pmg - The projection matrix group.
+	 * @param {ModelMatrix} mmg - The model matrix group to draw.
 	 */
-	protected drawModelMatrix ( pipeline: Pipeline, projMatrix: ProjMatrix, modelMatrix: ModelMatrix ) : void
+	protected drawModelMatrix ( pipeline: Pipeline, pmg: ProjMatrixGroup, mmg: ModelMatrixGroup ) : void
 	{
-		// Configure the render pass.
-		modelMatrix.configureRenderPass ( this.renderPassEncoder );
+		// Set the pipeline's model matrix.
+		pipeline.modelMatrix = mmg.matrix;
 
-		console.log ( `ModelMatrix ${modelMatrix.id} has ${modelMatrix.numShapes} shapes` );
+		console.log ( `ModelMatrix ${mmg.id} has ${mmg.numStateGroups} state groups` );
+
+		// Draw the state groups.
+		mmg.forEachStateGroup ( ( sg: StateGroup ) =>
+		{
+			this.drawStateGroup ( pipeline, pmg, mmg, sg );
+		} );
+	}
+
+	/**
+	 * Draw the state group.
+	 * @param {Pipeline} pipeline - The pipeline to use.
+	 * @param {ProjMatrixGroup} pmg - The projection matrix group.
+	 * @param {ModelMatrixGroup} mmg - The model matrix group.
+	 * @param {StateGroup} sg - The state group to draw.
+	 */
+	protected drawStateGroup ( pipeline: Pipeline, pmg: ProjMatrixGroup, mmg: ModelMatrixGroup, sg: StateGroup ) : void
+	{
+		// Shortcuts.
+		const { state } = sg;
+
+		console.log ( `State group ${sg.id} has state ${state.id} and ${sg.numShapes} shapes` );
 
 		// Input for applying and resetting the state.
 		const input: IStateApplyInput = {
-			state: pipeline.state,
-			projMatrix: projMatrix.matrix,
-			modelMatrix: modelMatrix.matrix,
+			state,
+			shader: pipeline.shader,
+			projMatrix: pmg.matrix,
+			modelMatrix: mmg.matrix,
 		};
 
-		// Get and apply the state.
-		const { state } = pipeline;
+		// Apply the state.
 		state.doApply ( input );
 
-		// Configure the render pass again because the state's apply function
-		// may have changed something.
+		// Configure the render pass now that the state has been applied.
 		const shader = requireShader ( state );
 		shader.configureRenderPass ( this.renderPassEncoder );
 
 		// Draw the shapes.
-		modelMatrix.forEachShape ( ( shape: Shape ) =>
+		sg.forEachShape ( ( shape: Shape ) =>
 		{
 			// The shape decides which function to call in order to draw itself.
 			shape.accept ( this );

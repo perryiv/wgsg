@@ -15,7 +15,7 @@
 import { Base as BaseClass } from "../Base";
 import { IDENTITY_MATRIX } from "../Tools/Constants";
 import { mat4 } from "gl-matrix";
-import { ModelMatrix } from "./ModelMatrix";
+import { ModelMatrixGroup } from "./ModelMatrixGroup";
 import type { IMatrix44 } from "../Types";
 
 
@@ -25,7 +25,7 @@ import type { IMatrix44 } from "../Types";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export type IModelMatrixMap = Map < string, ModelMatrix >;
+export type IModelMatrixMap = Map < string, ModelMatrixGroup >;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -35,10 +35,10 @@ export type IModelMatrixMap = Map < string, ModelMatrix >;
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class ProjMatrix extends BaseClass
+export class ProjMatrixGroup extends BaseClass
 {
 	#matrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
-	#modelMatrixMap: IModelMatrixMap = new Map < string, ModelMatrix > ();
+	#modelMatrixMap: IModelMatrixMap = new Map < string, ModelMatrixGroup > ();
 
 	/**
 	 * Construct the class.
@@ -57,7 +57,7 @@ export class ProjMatrix extends BaseClass
 	 */
 	public override getClassName() : string
 	{
-		return "Render.ProjMatrix";
+		return "Render.ProjMatrixGroup";
 	}
 
 	/**
@@ -72,25 +72,25 @@ export class ProjMatrix extends BaseClass
 	/**
 	 * Get the model matrix. Make it if we have to.
 	 * @param {IMatrix44} matrix - The model matrix.
-	 * @returns {ModelMatrix} The model matrix.
+	 * @returns {ModelMatrixGroup} The model matrix.
 	 */
-	public getModelMatrix ( matrix: IMatrix44 ) : ModelMatrix
+	public getModelMatrixGroup ( matrix: IMatrix44 ) : ModelMatrixGroup
 	{
 		const name = JSON.stringify ( matrix );
-		let modelMatrix = this.#modelMatrixMap.get ( name );
-		if ( !modelMatrix )
+		let mmg = this.#modelMatrixMap.get ( name );
+		if ( !mmg )
 		{
-			modelMatrix = new ModelMatrix ( matrix );
-			this.#modelMatrixMap.set ( name, modelMatrix );
+			mmg = new ModelMatrixGroup ( matrix );
+			this.#modelMatrixMap.set ( name, mmg );
 		}
-		return modelMatrix;
+		return mmg;
 	}
 
 	/**
 	 * Call the given function for each model matrix.
 	 * @param {Function} func - The function to call.
 	 */
-	public forEachModelMatrix ( func: ( modelMatrix: ModelMatrix ) => void ) : void
+	public forEachModelMatrixGroup ( func: ( mmg: ModelMatrixGroup ) => void ) : void
 	{
 		// The order doesn't matter so we don't sort like the layers and bins.
 		this.#modelMatrixMap.forEach ( func );
@@ -103,15 +103,5 @@ export class ProjMatrix extends BaseClass
 	public get numModelMatrices () : number
 	{
 		return this.#modelMatrixMap.size;
-	}
-
-	/**
-	 * Configure the render pass.
-	 * @param {GPURenderPassEncoder} pass - The render pass encoder.
-	 */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	public configureRenderPass ( pass: GPURenderPassEncoder ) : void
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	{
 	}
 }

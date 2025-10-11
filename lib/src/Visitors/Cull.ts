@@ -183,10 +183,7 @@ export class Cull extends Multiply
 	 */
 	protected alwaysSetCurrentState ( state: ( State | null ) )
 	{
-		if ( state )
-		{
-			this.#currentState = state;
-		}
+		this.#currentState = state;
 	}
 
 	/**
@@ -265,16 +262,24 @@ export class Cull extends Multiply
 		const mm = this.modelMatrix;
 		const pm = this.projMatrix;
 		const state = this.currentState;
+		const { shader } = state;
+
+		// We need a shader.
+		if ( !shader )
+		{
+			throw new Error ( `Shape ${shape.id} has no shader` );
+		}
 
 		// Get or make the containers we need.
 		const layer = root.getLayer ( state.layer );
 		const bin = layer.getBin ( state.bin );
-		const pipeline = bin.getPipeline ( state );
-		const projMatrix = pipeline.getProjMatrix ( pm );
-		const modelMatrix = projMatrix.getModelMatrix ( mm );
+		const pipeline = bin.getPipeline ( shader );
+		const pmg = pipeline.getProjMatrixGroup ( pm );
+		const mmg = pmg.getModelMatrixGroup ( mm );
+		const sg = mmg.getStateGroup ( state );
 
 		// Add our shape.
-		modelMatrix.addShape ( shape );
+		sg.addShape ( shape );
 
 		// Do this last.
 		super.visitShape ( shape );
