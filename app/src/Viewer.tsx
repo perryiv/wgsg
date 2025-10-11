@@ -86,7 +86,7 @@ const makeQuad = ( origin: IVector3, size: IVector2, color: IVector4 ) =>
 			shader,
 			apply: ( () =>
 			{
-				console.log ( `Applying state with color [${color.join ( ", " )}]` );
+				// console.log ( `Applying state with color [${color.join ( ", " )}]` );
 				shader.color = color;
 			} )
 		} )

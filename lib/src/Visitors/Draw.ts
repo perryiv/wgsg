@@ -249,7 +249,7 @@ export class Draw extends BaseClass
 		} );
 		this.#renderPassEncoder = pass;
 
-		console.log ( `Render tree root ${root.id} has ${root.numLayers} layers` );
+		// console.log ( `Render tree root ${root.id} has ${root.numLayers} layers` );
 
 		// Iterate over the layers in order.
 		root.forEachLayer ( ( layer: Layer ) =>
@@ -276,7 +276,7 @@ export class Draw extends BaseClass
 	 */
 	protected drawLayer ( layer: Layer ) : void
 	{
-		console.log ( `Layer ${layer.id} has ${layer.numBins} bins` );
+		// console.log ( `Layer ${layer.id} has ${layer.numBins} bins` );
 
 		// Draw the bins.
 		layer.forEachBin ( ( bin: Bin ) =>
@@ -291,7 +291,7 @@ export class Draw extends BaseClass
 	 */
 	protected drawBin ( bin: Bin ) : void
 	{
-		console.log ( `Bin ${bin.id} has ${bin.numPipelines} pipelines` );
+		// console.log ( `Bin ${bin.id} has ${bin.numPipelines} pipelines` );
 
 		// Draw the pipelines.
 		bin.forEachPipeline ( ( pipeline: Pipeline ) =>
@@ -312,7 +312,7 @@ export class Draw extends BaseClass
 		// Set the render pass' pipeline.
 		pass.setPipeline ( pipeline.shader.pipeline );
 
-		console.log ( `Pipeline ${pipeline.id} has ${pipeline.numProjMatrices} projection matrices` );
+		// console.log ( `Pipeline ${pipeline.id} has ${pipeline.numProjMatrices} projection matrices` );
 
 		// Draw the projection matrix groups.
 		pipeline.forEachProjMatrixGroup ( ( pmg: ProjMatrixGroup ) =>
@@ -331,7 +331,7 @@ export class Draw extends BaseClass
 		// Set the pipeline's projection matrix.
 		pipeline.projMatrix = pmg.matrix;
 
-		console.log ( `ProjMatrix ${pmg.id} has ${pmg.numModelMatrices} model matrices` );
+		// console.log ( `ProjMatrix ${pmg.id} has ${pmg.numModelMatrices} model matrices` );
 
 		// Draw the model matrix groups.
 		pmg.forEachModelMatrixGroup ( ( mmg: ModelMatrixGroup ) =>
@@ -351,7 +351,7 @@ export class Draw extends BaseClass
 		// Set the pipeline's model matrix.
 		pipeline.modelMatrix = mmg.matrix;
 
-		console.log ( `ModelMatrix ${mmg.id} has ${mmg.numStateGroups} state groups` );
+		// console.log ( `ModelMatrix ${mmg.id} has ${mmg.numStateGroups} state groups` );
 
 		// Draw the state groups.
 		mmg.forEachStateGroup ( ( sg: StateGroup ) =>
@@ -372,7 +372,7 @@ export class Draw extends BaseClass
 		// Shortcuts.
 		const { state } = sg;
 
-		console.log ( `State group ${sg.id} has state ${state.id} and ${sg.numShapes} shapes` );
+		// console.log ( `State group ${sg.id} has state ${state.id} and ${sg.numShapes} shapes` );
 
 		// Input for applying and resetting the state.
 		const input: IStateApplyInput = {
@@ -406,7 +406,7 @@ export class Draw extends BaseClass
 	 */
 	protected drawShape ( shape: Shape ) : void
 	{
-		console.log ( `Drawing ${shape.type} ${shape.id}` );
+		// console.log ( `Drawing ${shape.type} ${shape.id}` );
 
 		// The shape decides which function to call in order to draw itself.
 		shape.accept ( this );

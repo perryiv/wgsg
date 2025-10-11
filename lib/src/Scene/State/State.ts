@@ -54,9 +54,10 @@ export interface IStateConstructorInput
  */
 ///////////////////////////////////////////////////////////////////////////////
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const defaultApplyFunction: IStateApplyFunction = ( input: IStateApplyInput ) =>
 {
-	console.log ( `Default state apply function called with name: '${input.state.name}', projMatrix: ${JSON.stringify ( input.projMatrix )}, modelMatrix: ${JSON.stringify ( input.modelMatrix )}` );
+	// console.log ( `Default state apply function called with name: '${input.state.name}', projMatrix: ${JSON.stringify ( input.projMatrix )}, modelMatrix: ${JSON.stringify ( input.modelMatrix )}` );
 };
 
 
@@ -69,7 +70,7 @@ export const defaultApplyFunction: IStateApplyFunction = ( input: IStateApplyInp
 
 export const defaultResetFunction: IStateResetFunction = () =>
 {
-	console.log ( "Default state reset function called" );
+	// console.log ( "Default state reset function called" );
 };
 
 
