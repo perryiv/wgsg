@@ -18,7 +18,7 @@ struct Uniforms
 	color: vec4f,
 };
 
-@group ( 0 ) @binding ( 0 ) var<uniform> uniforms : Uniforms;
+@group ( 0 ) @binding ( 0 ) var < uniform > uniforms : Uniforms;
 
 struct VertexOut
 {
