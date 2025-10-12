@@ -32,7 +32,7 @@ import code from "./TrianglesSolidColor.wgsl?raw";
 export class TrianglesSolidColor extends BaseClass
 {
 	static #instance: ( TrianglesSolidColor | null ) = null;
-	#color: IVector4 = [ 0.5, 0.0, 0.5, 1.0 ];
+	#color: IVector4 = [ 0.5, 0.5, 0.5, 1.0 ];
 	#buffer: ( GPUBuffer | null ) = null;
 	#bindGroup: ( GPUBindGroup | null ) = null;
 
