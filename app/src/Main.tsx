@@ -12,11 +12,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { App } from "./App"
+import { App } from "./UI/App"
 import { createRoot } from "react-dom/client"
 import { CssBaseline } from "@mui/material";
 // import { StrictMode } from "react"
-import { theme } from "./Theme";
+import { theme } from "./UI/Theme";
 import { ThemeProvider } from "@mui/material/styles";
 
 
