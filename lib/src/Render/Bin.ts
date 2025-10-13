@@ -16,7 +16,7 @@
 
 import { Base as BaseClass } from "../Base";
 import { Pipeline } from "./Pipeline";
-import { ShaderBase } from "../Shaders";
+import { State } from "../Scene";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -59,18 +59,27 @@ export class Bin extends BaseClass
 
 	/**
 	 * Get the pipeline. Make it if we have to.
-	 * @param {ShaderBase} shader - The pipeline shader.
+	 * @param {State} state - The state.
 	 * @returns {Pipeline} The pipeline.
 	 */
-	public getPipeline ( shader: ShaderBase ) : Pipeline
+	public getPipeline ( state: State ) : Pipeline
 	{
-		const { name } = shader;
+		const { shader, topology } = state;
+
+		if ( !shader )
+		{
+			throw new Error ( `State '${state.name}' has invalid shader when getting pipeline` );
+		}
+
+		const name = `${shader.name}, ${topology}`;
 		let pipeline: ( Pipeline | undefined ) = this.#pipelines.get ( name );
+
 		if ( !pipeline )
 		{
-			pipeline = new Pipeline ( shader );
+			pipeline = new Pipeline ( { shader, topology } );
 			this.#pipelines.set ( name, pipeline );
 		}
+
 		return pipeline;
 	}
 

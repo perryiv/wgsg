@@ -89,6 +89,7 @@ export class State extends Base
 	#bin = 0;
 	#apply: IStateApplyFunction = defaultApplyFunction;
 	#reset: IStateResetFunction = defaultResetFunction;
+	#topology: GPUPrimitiveTopology = "triangle-list";
 
 	/**
 	 * Construct the class.
@@ -297,6 +298,24 @@ export class State extends Base
 	}
 
 	/**
+	 * Get the topology.
+	 * @returns {GPUPrimitiveTopology} The topology.
+	 */
+	public get topology () : GPUPrimitiveTopology
+	{
+		return this.#topology;
+	}
+
+	/**
+	 * Set the topology.
+	 * @param {GPUPrimitiveTopology} topology - The new topology.
+	 */
+	public set topology ( topology: GPUPrimitiveTopology )
+	{
+		this.#topology = topology;
+	}
+
+	/**
 	 * Configure the render pass.
 	 * @param {GPURenderPassEncoder} pass - The render pass encoder.
 	 */
@@ -310,6 +329,6 @@ export class State extends Base
 		}
 
 		// Configure the render pass.
-		shader.configureRenderPass ( pass );
+		shader.configureRenderPass ( pass, this.topology );
 	}
 }

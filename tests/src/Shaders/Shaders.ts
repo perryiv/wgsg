@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { expect } from "chai";
-import { TrianglesSolidColor } from "wgsg-lib";
+import { SolidColor } from "wgsg-lib";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -24,12 +24,12 @@ import { TrianglesSolidColor } from "wgsg-lib";
 
 export function test ()
 {
-	describe ( "TrianglesSolidColor", function ()
+	describe ( "SolidColor", function ()
 	{
 		it ( "Should be able to get the shader", function ()
 		{
-			expect ( TrianglesSolidColor.instance ).to.exist;
-			expect ( TrianglesSolidColor.instance instanceof TrianglesSolidColor ).to.be.true;
+			expect ( SolidColor.instance ).to.exist;
+			expect ( SolidColor.instance instanceof SolidColor ).to.be.true;
 		} );
 	} );
 };

@@ -16,13 +16,13 @@ import { mat4 } from "gl-matrix";
 import {
 	Geometry,
 	Group,
+	IDENTITY_MATRIX,
 	Indexed,
 	Node,
+	SolidColor,
+	Sphere,
 	State,
 	Transform,
-	TrianglesSolidColor,
-	IDENTITY_MATRIX,
-	Sphere,
 } from "wgsg-lib";
 import type {
 	IVector2,
@@ -71,7 +71,7 @@ export const buildSceneSpheres = () =>
 
 const makeQuad = ( origin: IVector3, size: IVector2, color: IVector4 ) =>
 {
-	const shader = TrianglesSolidColor.instance;
+	const shader = SolidColor.instance;
 	color = [ ...color ]; // Make a copy.
 	return new Geometry ( {
 		points: [

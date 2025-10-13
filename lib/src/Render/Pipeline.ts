@@ -24,6 +24,12 @@ import { ShaderBase } from "../Shaders";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+interface IPipelineInput
+{
+	shader: ShaderBase;
+	topology: GPUPrimitiveTopology;
+}
+
 export type IProjMatrixMap = Map < string, ProjMatrixGroup >;
 
 
@@ -37,6 +43,7 @@ export type IProjMatrixMap = Map < string, ProjMatrixGroup >;
 export class Pipeline extends BaseClass
 {
 	#shader: ShaderBase;
+	#topology: GPUPrimitiveTopology;
 	#projMatrixMap: IProjMatrixMap = new Map < string, ProjMatrixGroup > ();
 
 	/**
@@ -44,10 +51,11 @@ export class Pipeline extends BaseClass
 	 * @class
 	 * @param {ShaderBase} shader - The pipeline shader.
 	 */
-	constructor ( shader: ShaderBase )
+	constructor ( { shader, topology }: IPipelineInput )
 	{
 		super();
 		this.#shader = shader;
+		this.#topology = topology;
 	}
 
 	/**
@@ -127,6 +135,14 @@ export class Pipeline extends BaseClass
 		return shader;
 	}
 
+	/**
+	 * Get the topology.
+	 * @returns {GPUPrimitiveTopology} The topology.
+	 */
+	public get topology() : GPUPrimitiveTopology
+	{
+		return this.#topology;
+	}
 
 	/**
 	 * Configure the render pass.
@@ -142,6 +158,6 @@ export class Pipeline extends BaseClass
 		}
 
 		// Configure the render pass.
-		shader.configureRenderPass ( pass );
+		shader.configureRenderPass ( pass, this.topology );
 	}
 }

@@ -12,7 +12,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { buildSceneQuads } from "../Tools";
+import {
+	buildSceneQuads,
+	buildSceneSpheres,
+} from "../Tools";
 import {
 	useEffect,
 	useRef,
@@ -72,7 +75,7 @@ export function Viewer ( { style }: IViewerProps )
 			console.log ( `Singleton device ${Device.instance.id} initialized` );
 
 			const viewer = new InternalViewer ( { canvas: canvas.current } );
-			viewer.scene = buildSceneQuads();
+			viewer.scene = buildSceneSpheres();
 			setViewer ( viewer );
 
 			console.log ( `Internal viewer ${viewer.id} created and configured` );
