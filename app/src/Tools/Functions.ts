@@ -143,3 +143,44 @@ export const buildSceneQuads = () : Node =>
 
 	return group;
 };
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Make a scene used for testing.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export const buildTwoSquares = () : Node =>
+{
+	const group = new Group();
+
+	{
+		const geom = makeQuad (
+			[ -0.9, -0.9, 0.0 ],
+			[ 1.0, 1.0 ],
+			[ 1.0, 0.0, 0.0, 1.0 ]
+		);
+		group.addChild ( geom );
+	}
+	{
+		const geom = makeQuad (
+			[ -0.1, -0.1, 0.0 ],
+			[ 1.0, 1.0 ],
+			[ 0.0, 1.0, 0.0, 1.0 ]
+		);
+		const color: IVector4 = [ 0.0, 0.0, 0.0, 1.0 ];
+		geom.state = new State ( {
+			name: `State with ${color.join(", ")} lines`,
+			shader: SolidColor.instance,
+			topology: "line-list",
+			apply: ( () =>
+			{
+				SolidColor.instance.color = color;
+			} ),
+		} );
+		group.addChild ( geom );
+	}
+
+	return group;
+};
