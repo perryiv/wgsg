@@ -125,7 +125,7 @@ export function test ()
 			expect ( shader ).to.exist;
 			expect ( shader instanceof SolidColor ).to.be.true;
 
-			const pipeline = bin.getPipeline ( shader! );
+			const pipeline = bin.getPipeline ( state! );
 			expect ( pipeline instanceof Pipeline ).to.be.true;
 			expect ( pipeline.numProjMatrices ).to.be.equal ( 1 );
 
