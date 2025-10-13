@@ -250,10 +250,17 @@ export class SolidColor extends BaseClass
 			const pipeline = this.getPipeline ( topology );
 			const device = Device.instance.device;
 
+			// Make the layout and give it a name.
+			// Note: Giving the layout a name eliminated the following error:
+			// [Invalid BindGroupLayout (unlabeled)] is associated with [Device], and cannot be used with [Device].
+			const index = 0;
+			const layout = pipeline.getBindGroupLayout ( index );
+			layout.label = `Bind group layout ${index} for shader ${this.type}`;
+
 			// Make the bind group.
 			bindGroup = device.createBindGroup ( {
 				label: `Bind group for shader ${this.type}`,
-				layout: pipeline.getBindGroupLayout ( 0 ),
+				layout,
 				entries: [
 				{
 					binding: 0,
