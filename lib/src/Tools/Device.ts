@@ -86,6 +86,9 @@ export class Device extends Base
 
 		// If we get to here then set the singleton instance.
 		Device.#instance = new Device ( device );
+
+		// Set the label for debugging.
+		device.label = `Device ${Device.#instance.id}`;
 	}
 
 	/**
