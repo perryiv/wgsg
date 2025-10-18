@@ -14,7 +14,7 @@
 
 import { Multiply } from "./Multiply";
 import { Root } from "../Render";
-import { TrianglesSolidColor } from "../Shaders";
+import { SolidColor } from "../Shaders";
 import {
 	Geometry,
 	Group,
@@ -51,7 +51,7 @@ const makeDefaultState = () : State =>
 {
 	return ( new State ( {
 		name: "Cull visitor default state",
-		shader: TrianglesSolidColor.instance
+		shader: SolidColor.instance
 	} ) );
 };
 
@@ -273,7 +273,7 @@ export class Cull extends Multiply
 		// Get or make the containers we need.
 		const layer = root.getLayer ( state.layer );
 		const bin = layer.getBin ( state.bin );
-		const pipeline = bin.getPipeline ( shader );
+		const pipeline = bin.getPipeline ( state );
 		const pmg = pipeline.getProjMatrixGroup ( pm );
 		const mmg = pmg.getModelMatrixGroup ( mm );
 		const sg = mmg.getStateGroup ( state );

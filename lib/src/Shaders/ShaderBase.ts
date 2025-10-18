@@ -26,6 +26,13 @@ import type { IMatrix44 } from "../Types";
 export interface IShaderBaseInput
 {
 	code: string;
+	topology: GPUPrimitiveTopology;
+}
+
+interface IPipelineTopologyPair
+{
+	pipeline: ( GPURenderPipeline | null );
+	topology: ( GPUPrimitiveTopology | null );
 }
 
 export type IShaderFactory = ( ( this: void ) => ShaderBase );
@@ -42,7 +49,7 @@ export abstract class ShaderBase extends Base
 {
 	#code: string;
 	#module: ( GPUShaderModule | null ) = null;
-	#pipeline: ( GPURenderPipeline | null ) = null;
+	#data: IPipelineTopologyPair = { pipeline: null, topology: null };
 
 	/**
 	 * Construct the class.
@@ -70,7 +77,7 @@ export abstract class ShaderBase extends Base
 	public destroy() : void
 	{
 		this.#module = null;
-		this.#pipeline = null;
+		this.#data = { pipeline: null, topology: null };
 	}
 
 	/**
@@ -120,19 +127,24 @@ export abstract class ShaderBase extends Base
 	}
 
 	/**
-	 * Get the pipeline.
+	 * Get the pipeline. Make it if we have to.
+	 * @param {GPUPrimitiveTopology} topology - The primitive topology.
 	 * @returns {GPURenderPipeline} The render pipeline.
 	 */
-	public get pipeline() : GPURenderPipeline
+	public getPipeline ( topology: GPUPrimitiveTopology ) : GPURenderPipeline
 	{
-		let pipeline = this.#pipeline;
+		// Get the existing pipeline, if any, and the current topology.
+		let { pipeline } = this.#data;
+		const { topology: currentTopology } = this.#data;
 
-		if ( !pipeline )
+		// If there is no pipeline, or the topology has changed, make a new one.
+		if ( !pipeline || ( topology !== currentTopology ) )
 		{
-			pipeline = this.makePipeline();
-			this.#pipeline = pipeline;
+			pipeline = this.makePipeline ( topology );
+			this.#data = { pipeline, topology };
 		}
 
+		// Return the pipeline.
 		return pipeline;
 	}
 
@@ -160,11 +172,12 @@ export abstract class ShaderBase extends Base
 	 * Make the render pipeline.
 	 * @returns {GPURenderPipeline} The render pipeline.
 	 */
-	protected abstract makePipeline() : GPURenderPipeline;
+	protected abstract makePipeline ( topology: GPUPrimitiveTopology ) : GPURenderPipeline;
 
 	/**
 	 * Configure the render pass.
 	 * @param {GPURenderPassEncoder} pass - The render pass encoder.
+	 * @param {GPUPrimitiveTopology} topology - The primitive topology.
 	 */
-	public abstract configureRenderPass ( pass: GPURenderPassEncoder ) : void;
+	public abstract configureRenderPass ( pass: GPURenderPassEncoder, topology: GPUPrimitiveTopology ) : void;
 }

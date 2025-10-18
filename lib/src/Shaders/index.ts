@@ -13,4 +13,4 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 export * from "./ShaderBase";
-export * from "./TrianglesSolidColor";
+export * from "./SolidColor";

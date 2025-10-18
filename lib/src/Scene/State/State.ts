@@ -38,9 +38,10 @@ export type IStateResetFunction = ( ( input: IStateResetInput ) => void );
 export interface IStateConstructorInput
 {
 	name?: string;
-	shader?: ShaderBase;
 	layer?: number;
 	bin?: number;
+	shader?: ShaderBase;
+	topology?: GPUPrimitiveTopology;
 	apply?: IStateApplyFunction;
 	reset?: IStateResetFunction;
 }
@@ -84,9 +85,10 @@ export const defaultResetFunction: IStateResetFunction = () =>
 export class State extends Base
 {
 	#name: ( string | null ) = null;
-	#shader: ( ShaderBase | null ) = null;
 	#layer = 0;
 	#bin = 0;
+	#shader: ( ShaderBase | null ) = null;
+	#topology: GPUPrimitiveTopology = "triangle-list";
 	#apply: IStateApplyFunction = defaultApplyFunction;
 	#reset: IStateResetFunction = defaultResetFunction;
 
@@ -99,16 +101,11 @@ export class State extends Base
 	{
 		super();
 
-		const { name, shader, layer, bin, apply, reset } = ( input ?? {} );
+		const { name, layer, bin, shader, topology, apply, reset } = ( input ?? {} );
 
 		if ( name )
 		{
 			this.#name = name;
-		}
-
-		if ( shader )
-		{
-			this.#shader = shader;
 		}
 
 		// This is false when the value is zero, but it's already that.
@@ -121,6 +118,16 @@ export class State extends Base
 		if ( bin )
 		{
 			this.#bin = bin;
+		}
+
+		if ( shader )
+		{
+			this.#shader = shader;
+		}
+
+		if ( topology )
+		{
+			this.#topology = topology;
 		}
 
 		if ( apply )
@@ -297,6 +304,24 @@ export class State extends Base
 	}
 
 	/**
+	 * Get the topology.
+	 * @returns {GPUPrimitiveTopology} The topology.
+	 */
+	public get topology () : GPUPrimitiveTopology
+	{
+		return this.#topology;
+	}
+
+	/**
+	 * Set the topology.
+	 * @param {GPUPrimitiveTopology} topology - The new topology.
+	 */
+	public set topology ( topology: GPUPrimitiveTopology )
+	{
+		this.#topology = topology;
+	}
+
+	/**
 	 * Configure the render pass.
 	 * @param {GPURenderPassEncoder} pass - The render pass encoder.
 	 */
@@ -310,6 +335,6 @@ export class State extends Base
 		}
 
 		// Configure the render pass.
-		shader.configureRenderPass ( pass );
+		shader.configureRenderPass ( pass, this.topology );
 	}
 }
