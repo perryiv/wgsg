@@ -329,6 +329,21 @@ export class Geometry extends Shape
 	}
 
 	/**
+	 * Get the primitive list at the given index. It throws if it does not exist.
+	 * @param {number} index - The index.
+	 * @returns {IPrimitiveList} The primitive list at the given index.
+	 */
+	public getPrimitiveList ( index: number ) : IPrimitiveList
+	{
+		const primitives = this.primitives;
+		if ( !primitives || index < 0 || index >= primitives.length )
+		{
+			throw new Error ( `Primitive at index ${index} does not exist` );
+		}
+		return primitives[index];
+	}
+
+	/**
 	 * Get the number of points.
 	 * @returns {number} The number of points in this geometry.
 	 */
