@@ -70,10 +70,17 @@ export const buildSceneSpheres = () =>
 ///////////////////////////////////////////////////////////////////////////////
 
 const makeQuad = ( { origin, size, color, topology } :
-	{ origin: IVector3, size: IVector2, color: IVector4, topology: GPUPrimitiveTopology } ) =>
+	{ origin?: IVector3, size?: IVector2, color?: IVector4, topology?: GPUPrimitiveTopology } ) =>
 {
 	const shader = SolidColor.instance;
 
+	// Give the input default values if needed.
+	origin ??= [ 0.0, 0.0, 0.0 ];
+	size ??= [ 1.0, 1.0 ];
+	color ??= [ 0.5, 0.5, 0.5, 1.0 ];
+	topology ??= "triangle-list";
+
+	// The points are the same for both topologies.
 	const points = new Float32Array ( [
 		origin[0],           origin[1],           origin[2],
 		origin[0] + size[0], origin[1],           origin[2],
@@ -81,16 +88,19 @@ const makeQuad = ( { origin, size, color, topology } :
 		origin[0] + size[0], origin[1] + size[1], origin[2],
 	] );
 
+	// Make the indices based on the topology.
 	const indices = ( ( topology === "line-list" ) ?
 		( new Uint32Array ( [ 0, 1, 1, 3, 3, 2, 2, 0 ] ) ) :
 		( new Uint32Array ( [ 0, 1, 2, 1, 3, 2 ] ) )
 	);
 
+	// Make the primitives.
 	const primitives = new Indexed ( { mode: topology, indices } );
 
-	// Make a copy.
+	// Make a copy of the color because we capture it below.
 	color = [ ...color ];
 
+	// Make the state.
 	const state = new State ( {
 		name: `State with ${color.join(", ")} ${topology}`,
 		shader,
@@ -101,6 +111,7 @@ const makeQuad = ( { origin, size, color, topology } :
 		} )
 	} );
 
+	// Return the new geometry.
 	return new Geometry ( { points, primitives, state } );
 };
 
