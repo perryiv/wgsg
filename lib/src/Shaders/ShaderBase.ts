@@ -42,7 +42,12 @@ export abstract class ShaderBase extends Base
 {
 	#code: string;
 	#module: ( GPUShaderModule | null ) = null;
+<<<<<<< Updated upstream
 	#pipeline: ( GPURenderPipeline | null ) = null;
+=======
+	#data: IPipelineTopologyPair = { pipeline: null, topology: null };
+	#device = 0;
+>>>>>>> Stashed changes
 
 	/**
 	 * Construct the class.
@@ -70,7 +75,12 @@ export abstract class ShaderBase extends Base
 	public destroy() : void
 	{
 		this.#module = null;
+<<<<<<< Updated upstream
 		this.#pipeline = null;
+=======
+		this.#data = { pipeline: null, topology: null };
+		this.#device = 0;
+>>>>>>> Stashed changes
 	}
 
 	/**
@@ -106,7 +116,16 @@ export abstract class ShaderBase extends Base
 	 */
 	public get module() : GPUShaderModule
 	{
-		// The first time we have to make it.
+		// Did the device change?
+		const device = Device.instance.id;
+		if ( this.#device !== device )
+		{
+			this.#device = device;
+			this.#module = null;
+			this.#data = { pipeline: null, topology: null };
+		}
+
+		// Make it if we have to.
 		if ( !this.#module )
 		{
 			this.#module = Device.instance.device.createShaderModule ( {
