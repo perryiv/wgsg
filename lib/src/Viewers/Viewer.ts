@@ -44,6 +44,14 @@ export class Viewer extends Surface
 	}
 
 	/**
+	 * Destroy this instance.
+	 */
+	public override destroy() : void
+	{
+		super.destroy();
+	}
+
+	/**
 	 * Return the class name.
 	 * @returns {string} The class name.
 	 */

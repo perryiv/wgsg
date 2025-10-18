@@ -75,7 +75,7 @@ export abstract class ShaderBase extends Base
 	/**
 	 * Destroy this instance.
 	 */
-	public destroy() : void
+	public override destroy() : void
 	{
 		this.#module = null;
 		this.#data = { pipeline: null, topology: null };
