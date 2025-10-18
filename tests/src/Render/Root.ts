@@ -26,10 +26,10 @@ import {
 	ProjMatrixGroup,
 	Root,
 	Shape,
+	SolidColor,
 	Sphere,
 	State,
 	StateGroup,
-	TrianglesSolidColor,
 } from "wgsg-lib";
 
 
@@ -44,7 +44,7 @@ function buildScene ()
 	const root = new Group();
 	root.state = new State ( {
 		name: "State for test scene that contains four spheres",
-		shader: TrianglesSolidColor.instance
+		shader: SolidColor.instance
 	} );
 	root.addChild ( new Sphere ( { center: [ 0, 0, 0 ], radius: 1 } ) );
 	root.addChild ( new Sphere ( { center: [ 2, 0, 0 ], radius: 1 } ) );
@@ -87,7 +87,7 @@ export function test ()
 			expect ( cv.defaultState.apply ).to.not.be.undefined;
 			expect ( cv.defaultState.reset ).to.not.be.undefined;
 			expect ( cv.defaultState.shader ).to.exist;
-			expect ( cv.defaultState.shader instanceof TrianglesSolidColor ).to.be.true;
+			expect ( cv.defaultState.shader instanceof SolidColor ).to.be.true;
 		} );
 
 		it ( "Can build and cull the scene", function ()
@@ -123,9 +123,9 @@ export function test ()
 
 			const { shader } = state!;
 			expect ( shader ).to.exist;
-			expect ( shader instanceof TrianglesSolidColor ).to.be.true;
+			expect ( shader instanceof SolidColor ).to.be.true;
 
-			const pipeline = bin.getPipeline ( shader! );
+			const pipeline = bin.getPipeline ( state! );
 			expect ( pipeline instanceof Pipeline ).to.be.true;
 			expect ( pipeline.numProjMatrices ).to.be.equal ( 1 );
 

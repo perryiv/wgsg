@@ -19,7 +19,19 @@ import { ShaderBase as BaseClass } from "./ShaderBase";
 import { vec4 } from "gl-matrix";
 
 // @ts-expect-error TypeScript does not recognize WGSL files.
-import code from "./TrianglesSolidColor.wgsl?raw";
+import code from "./SolidColor.wgsl?raw";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Types used below.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+interface ISolidColorShaderInput
+{
+	topology?: GPUPrimitiveTopology;
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -29,20 +41,26 @@ import code from "./TrianglesSolidColor.wgsl?raw";
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class TrianglesSolidColor extends BaseClass
+export class SolidColor extends BaseClass
 {
-	static #instance: ( TrianglesSolidColor | null ) = null;
+	static #instance: ( SolidColor | null ) = null;
 	#color: IVector4 = [ 0.5, 0.5, 0.5, 1.0 ];
-	#buffer: ( GPUBuffer | null ) = null;
+	#uniforms: ( GPUBuffer | null ) = null;
 	#bindGroup: ( GPUBindGroup | null ) = null;
 
 	/**
 	 * Construct the class.
 	 * @class
+	 * @param {ISolidColorShaderInput} [input] - The input.
 	 */
-	protected constructor()
+	protected constructor ( input?: ISolidColorShaderInput )
 	{
-		super ( { code: ( code as string ) } );
+		const topology = input?.topology;
+
+		super ( {
+			code: ( code as string ),
+			topology: ( topology ? topology : "triangle-list" )
+		} );
 	}
 
 	/**
@@ -50,10 +68,10 @@ export class TrianglesSolidColor extends BaseClass
 	 */
 	public override destroy() : void
 	{
-		if ( this.#buffer )
+		if ( this.#uniforms )
 		{
-			this.#buffer.destroy();
-			this.#buffer = null;
+			this.#uniforms.destroy();
+			this.#uniforms = null;
 		}
 		this.#bindGroup = null;
 		super.destroy();
@@ -61,15 +79,15 @@ export class TrianglesSolidColor extends BaseClass
 
 	/**
 	 * Get the singleton instance.
-	 * @returns {TrianglesSolidColor} The singleton instance.
+	 * @returns {SolidColor} The singleton instance.
 	 */
-	public static get instance () : TrianglesSolidColor
+	public static get instance () : SolidColor
 	{
-		if ( !TrianglesSolidColor.#instance )
+		if ( !SolidColor.#instance )
 		{
-			TrianglesSolidColor.#instance = new TrianglesSolidColor();
+			SolidColor.#instance = new SolidColor();
 		}
-		return TrianglesSolidColor.#instance;
+		return SolidColor.#instance;
 	}
 
 	/**
@@ -77,10 +95,10 @@ export class TrianglesSolidColor extends BaseClass
 	 */
 	public static destroy() : void
 	{
-		if ( TrianglesSolidColor.#instance )
+		if ( SolidColor.#instance )
 		{
-			TrianglesSolidColor.#instance.destroy();
-			TrianglesSolidColor.#instance = null;
+			SolidColor.#instance.destroy();
+			SolidColor.#instance = null;
 		}
 	}
 
@@ -90,7 +108,7 @@ export class TrianglesSolidColor extends BaseClass
 	 */
 	public override getClassName() : string
 	{
-		return "Shaders.TrianglesSolidColor";
+		return "Shaders.SolidColor";
 	}
 
 	/**
@@ -119,7 +137,7 @@ export class TrianglesSolidColor extends BaseClass
 	public set color ( color: IVector4 )
 	{
 		vec4.copy ( this.#color, color );
-		this.#buffer = null;
+		this.#uniforms = null;
 		this.#bindGroup = null;
 	}
 
@@ -130,7 +148,7 @@ export class TrianglesSolidColor extends BaseClass
 	protected get uniforms () : GPUBuffer
 	{
 		// Shortcut
-		let buffer = this.#buffer;
+		let buffer = this.#uniforms;
 
 		// Make it if we have to.
 		if ( !buffer )
@@ -152,7 +170,7 @@ export class TrianglesSolidColor extends BaseClass
 			device.queue.writeBuffer ( buffer, 0, values );
 
 			// Set this for next time.
-			this.#buffer = buffer;
+			this.#uniforms = buffer;
 		}
 
 		// Return what we have.
@@ -161,9 +179,10 @@ export class TrianglesSolidColor extends BaseClass
 
 	/**
 	 * Make the render pipeline.
+	 * @param {GPUPrimitiveTopology} topology - The primitive topology.
 	 * @returns {GPURenderPipeline} The render pipeline.
 	 */
-	protected makePipeline() : GPURenderPipeline
+	protected makePipeline ( topology: GPUPrimitiveTopology ) : GPURenderPipeline
 	{
 		// Shortcuts
 		const { device, preferredFormat } = Device.instance;
@@ -200,7 +219,7 @@ export class TrianglesSolidColor extends BaseClass
 				} ]
 			},
 			primitive: {
-				topology: "triangle-list"
+				topology
 			},
 		} );
 
@@ -216,9 +235,10 @@ export class TrianglesSolidColor extends BaseClass
 
 	/**
 	 * Get the bind group.
+	 * @param {GPUPrimitiveTopology} topology - The primitive topology.
 	 * @returns {GPUBindGroup} The bind group.
 	 */
-	protected get bindGroup () : GPUBindGroup
+	protected getBindGroup ( topology: GPUPrimitiveTopology ) : GPUBindGroup
 	{
 		// Shortcut
 		let bindGroup = this.#bindGroup;
@@ -227,13 +247,18 @@ export class TrianglesSolidColor extends BaseClass
 		if ( !bindGroup )
 		{
 			// Shortcuts.
-			const { pipeline } = this;
+			const pipeline = this.getPipeline ( topology );
 			const device = Device.instance.device;
+
+			// Make the layout and give it a name.
+			const index = 0;
+			const layout = pipeline.getBindGroupLayout ( index );
+			layout.label = `Bind group layout ${index} for shader ${this.type}`;
 
 			// Make the bind group.
 			bindGroup = device.createBindGroup ( {
 				label: `Bind group for shader ${this.type}`,
-				layout: pipeline.getBindGroupLayout ( 0 ),
+				layout,
 				entries: [
 				{
 					binding: 0,
@@ -252,12 +277,13 @@ export class TrianglesSolidColor extends BaseClass
 	/**
 	 * Configure the render pass.
 	 * @param {GPURenderPassEncoder} pass - The render pass encoder.
+	 * @param {GPUPrimitiveTopology} topology - The primitive topology.
 	 */
-	public configureRenderPass ( pass: GPURenderPassEncoder ) : void
+	public configureRenderPass ( pass: GPURenderPassEncoder, topology: GPUPrimitiveTopology ) : void
 	{
 		// Note: The render-pass' pipeline should already be set.
 
 		// Set the color buffer.
-		pass.setBindGroup ( 0, this.bindGroup );
+		pass.setBindGroup ( 0, this.getBindGroup ( topology ) );
 	}
 }

@@ -16,13 +16,13 @@ import { mat4 } from "gl-matrix";
 import {
 	Geometry,
 	Group,
+	IDENTITY_MATRIX,
 	Indexed,
 	Node,
+	SolidColor,
+	Sphere,
 	State,
 	Transform,
-	TrianglesSolidColor,
-	IDENTITY_MATRIX,
-	Sphere,
 } from "wgsg-lib";
 import type {
 	IVector2,
@@ -69,35 +69,50 @@ export const buildSceneSpheres = () =>
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-const makeQuad = ( origin: IVector3, size: IVector2, color: IVector4 ) =>
+const makeQuad = ( { origin, size, color, topology } :
+	{ origin?: IVector3, size?: IVector2, color?: IVector4, topology?: GPUPrimitiveTopology } ) =>
 {
-	const shader = TrianglesSolidColor.instance;
-	color = [ ...color ]; // Make a copy.
-	return new Geometry ( {
-		points: [
-			origin[0],           origin[1],           origin[2],
-			origin[0] + size[0], origin[1],           origin[2],
-			origin[0],           origin[1] + size[1], origin[2],
-			origin[0] + size[0], origin[1] + size[1], origin[2],
-		],
-		primitives: new Indexed ( {
-			mode: "triangle-list",
-			indices: [
-				0, 1, 2,
-				1, 3, 2,
-			]
-		} ),
-		state: new State ( {
-			// A unique name is needed for each state associated with a given shader.
-			name: `State with color [${color.join ( ", " )}]`,
-			shader,
-			apply: ( () =>
-			{
-				// console.log ( `Applying state with color [${color.join ( ", " )}]` );
-				shader.color = color;
-			} )
+	const shader = SolidColor.instance;
+
+	// Give the input default values if needed.
+	origin ??= [ 0.0, 0.0, 0.0 ];
+	size ??= [ 1.0, 1.0 ];
+	color ??= [ 0.5, 0.5, 0.5, 1.0 ];
+	topology ??= "triangle-list";
+
+	// The points are the same for both topologies.
+	const points = new Float32Array ( [
+		origin[0],           origin[1],           origin[2],
+		origin[0] + size[0], origin[1],           origin[2],
+		origin[0],           origin[1] + size[1], origin[2],
+		origin[0] + size[0], origin[1] + size[1], origin[2],
+	] );
+
+	// Make the indices based on the topology.
+	const indices = ( ( topology === "line-list" ) ?
+		( new Uint32Array ( [ 0, 1, 1, 3, 3, 2, 2, 0 ] ) ) :
+		( new Uint32Array ( [ 0, 1, 2, 1, 3, 2 ] ) )
+	);
+
+	// Make the primitives.
+	const primitives = new Indexed ( { mode: topology, indices } );
+
+	// Make a copy of the color because we capture it below.
+	color = [ ...color ];
+
+	// Make the state.
+	const state = new State ( {
+		name: `State with ${color.join(", ")} ${topology}`,
+		shader,
+		topology,
+		apply: ( () =>
+		{
+			shader.color = color;
 		} )
 	} );
+
+	// Return the new geometry.
+	return new Geometry ( { points, primitives, state } );
 };
 
 
@@ -129,17 +144,51 @@ export const buildSceneQuads = () : Node =>
 			const g = ( 0.1 + 0.8 * Math.random() );
 			const b = ( 0.1 + 0.8 * Math.random() );
 
-			group.addChild ( makeQuad (
-				[ x, y, 0.0 ],
-				[ w, h ],
-				[ r, g, b, 1.0 ]
-			) );
+			group.addChild ( makeQuad ( {
+				origin: [ x, y, 0.0 ],
+				size: [ w, h ],
+				color: [ r, g, b, 1.0 ],
+				topology: "triangle-list"
+			} ) );
 
 			++count;
 		}
 	}
 
 	console.log ( `Creating ${count} quads took ${Date.now() - start} ms` );
+
+	return group;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Make a scene used for testing.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export const buildTwoSquares = () : Node =>
+{
+	const group = new Group();
+
+	{
+		const geom = makeQuad ( {
+			origin: [ -0.9, -0.9, 0.0 ],
+			size: [ 1.0, 1.0 ],
+			color: [ 8.0, 0.2, 0.2, 1.0 ],
+			topology: "triangle-list",
+		} );
+		group.addChild ( geom );
+	}
+	{
+		const geom = makeQuad ( {
+			origin: [ -0.1, -0.1, 0.0 ],
+			size: [ 1.0, 1.0 ],
+			color: [ 0.0, 1.0, 0.0, 1.0 ],
+			topology: "line-list",
+		} );
+		group.addChild ( geom );
+	}
 
 	return group;
 };

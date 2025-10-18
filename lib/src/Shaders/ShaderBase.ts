@@ -26,6 +26,13 @@ import type { IMatrix44 } from "../Types";
 export interface IShaderBaseInput
 {
 	code: string;
+	topology: GPUPrimitiveTopology;
+}
+
+interface IPipelineTopologyPair
+{
+	pipeline: ( GPURenderPipeline | null );
+	topology: ( GPUPrimitiveTopology | null );
 }
 
 export type IShaderFactory = ( ( this: void ) => ShaderBase );

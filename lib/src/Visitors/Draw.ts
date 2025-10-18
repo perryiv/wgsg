@@ -310,7 +310,7 @@ export class Draw extends BaseClass
 		const pass = this.renderPassEncoder;
 
 		// Set the render pass' pipeline.
-		pass.setPipeline ( pipeline.shader.pipeline );
+		pass.setPipeline ( pipeline.shader.getPipeline ( pipeline.topology ) );
 
 		// console.log ( `Pipeline ${pipeline.id} has ${pipeline.numProjMatrices} projection matrices` );
 
@@ -387,7 +387,7 @@ export class Draw extends BaseClass
 
 		// Configure the render pass now that the state has been applied.
 		const shader = requireShader ( state );
-		shader.configureRenderPass ( this.renderPassEncoder );
+		shader.configureRenderPass ( this.renderPassEncoder, pipeline.topology );
 
 		// Draw the shapes.
 		sg.forEachShape ( ( shape: Shape ) =>
