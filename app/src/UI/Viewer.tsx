@@ -96,9 +96,9 @@ export function Viewer ( { style }: IViewerProps )
 				return null;
 			} );
 
+			const id = Device.instance.id;
 			Device.destroy();
-
-			console.log ( "Singleton device destroyed" );
+			console.log ( `Singleton device ${id} destroyed` );
 		} );
 	},
 	[] );
