@@ -13,13 +13,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import {
-	buildSceneQuads,
-	buildSceneSpheres,
 	buildTwoSquares,
 } from "../Tools";
 import {
 	useEffect,
-	useId,
 	useRef,
 	useState,
 } from "react";
