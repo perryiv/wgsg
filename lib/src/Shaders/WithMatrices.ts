@@ -70,7 +70,7 @@ export abstract class WithMatrices extends BaseClass
 	 * Get the model matrix.
 	 * @returns {IMatrix44} The model matrix.
 	 */
-	protected getModelMatrix () : Readonly<IMatrix44>
+	protected getModelMatrix () : IMatrix44
 	{
 		return this.#modelMatrix;
 	}
@@ -79,7 +79,7 @@ export abstract class WithMatrices extends BaseClass
 	 * Set the model matrix.
 	 * @param {IMatrix44} matrix - The model matrix.
 	 */
-	public override set modelMatrix ( matrix: Readonly<IMatrix44> )
+	public override set modelMatrix ( matrix: IMatrix44 )
 	{
 		mat4.copy ( this.#modelMatrix, matrix );
 	}
