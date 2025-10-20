@@ -31,7 +31,7 @@ export function getNextId()
  * @param {number} dimension - The dimension of the elements (e.g., 3 for points).
  * @returns {number} The number of elements.
  */
-export function getNumElements < T extends { length: number } > ( array: ( T | null ), dimension: number ) : number
+export function getNumElements < T extends { length: Readonly<number> } > ( array: ( T | null ), dimension: Readonly<number> ) : number
 {
 	// Handle invalid array.
 	if ( !array )

@@ -44,7 +44,7 @@ export abstract class WithMatrices extends BaseClass
 	 * @class
 	 * @param {IWithMatricesInput} [input] - The input for the shader.
 	 */
-	protected constructor ( input: IWithMatricesInput )
+	protected constructor ( input: Readonly<IWithMatricesInput> )
 	{
 		super ( input );
 	}
@@ -79,7 +79,7 @@ export abstract class WithMatrices extends BaseClass
 	 * Set the model matrix.
 	 * @param {IMatrix44} matrix - The model matrix.
 	 */
-	public override set modelMatrix ( matrix: IMatrix44 )
+	public override set modelMatrix ( matrix: Readonly<IMatrix44> )
 	{
 		mat4.copy ( this.#modelMatrix, matrix );
 	}

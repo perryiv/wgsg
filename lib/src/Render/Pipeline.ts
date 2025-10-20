@@ -71,7 +71,7 @@ export class Pipeline extends BaseClass
 	 * Set the projection matrix.
 	 * @param {IMatrix44} matrix - The projection matrix.
 	 */
-	public set projMatrix ( matrix: IMatrix44 )
+	public set projMatrix ( matrix: Readonly<IMatrix44> )
 	{
 		this.shader.projMatrix = matrix;
 	}
@@ -80,7 +80,7 @@ export class Pipeline extends BaseClass
 	 * Set the model matrix.
 	 * @param {IMatrix44} matrix - The model matrix.
 	 */
-	public set modelMatrix ( matrix: IMatrix44 )
+	public set modelMatrix ( matrix: Readonly<IMatrix44> )
 	{
 		this.shader.modelMatrix = matrix;
 	}
@@ -90,7 +90,7 @@ export class Pipeline extends BaseClass
 	 * @param {IMatrix44} matrix - The projection matrix.
 	 * @returns {ProjMatrix} The projection matrix.
 	 */
-	public getProjMatrixGroup ( matrix: IMatrix44 ) : ProjMatrixGroup
+	public getProjMatrixGroup ( matrix: Readonly<IMatrix44> ) : ProjMatrixGroup
 	{
 		const name = JSON.stringify ( matrix );
 		let pmg = this.#projMatrixMap.get ( name );

@@ -66,7 +66,7 @@ export class Root extends BaseClass
 	 * @param {number} index - The layer index.
 	 * @returns {Layer} The layer.
 	 */
-	public getLayer ( index: number ) : Layer
+	public getLayer ( index: Readonly<number> ) : Layer
 	{
 		let layer: ( Layer | undefined ) = this.#layers.get ( index );
 		if ( !layer )

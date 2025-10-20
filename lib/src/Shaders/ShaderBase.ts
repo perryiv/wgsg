@@ -57,7 +57,7 @@ export abstract class ShaderBase extends Base
 	 * @class
 	 * @param {IShaderBaseInput} input - The input for the constructor.
 	 */
-	protected constructor ( { code }: IShaderBaseInput )
+	protected constructor ( { code }: Readonly<IShaderBaseInput> )
 	{
 		// Do this first.
 		super();
@@ -143,7 +143,7 @@ export abstract class ShaderBase extends Base
 	 * @param {GPUPrimitiveTopology} topology - The primitive topology.
 	 * @returns {GPURenderPipeline} The render pipeline.
 	 */
-	public getPipeline ( topology: GPUPrimitiveTopology ) : GPURenderPipeline
+	public getPipeline ( topology: Readonly<GPUPrimitiveTopology> ) : GPURenderPipeline
 	{
 		// Get the existing pipeline, if any, and the current topology.
 		let { pipeline } = this.#data;
@@ -165,13 +165,13 @@ export abstract class ShaderBase extends Base
 	 * @param {IMatrix44} matrix - The projection matrix.
 	 */
 	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	public set projMatrix ( matrix: IMatrix44 ) {}
+	public set projMatrix ( matrix: Readonly<IMatrix44> ) {}
 
 	/**
 	 * Set the model matrix. Overload if needed.
 	 * @param {IMatrix44} matrix - The model matrix.
 	 */
-	public abstract set modelMatrix ( matrix: IMatrix44 );
+	public abstract set modelMatrix ( matrix: Readonly<IMatrix44> );
 
 	/**
 	 * Get the name.
@@ -183,12 +183,12 @@ export abstract class ShaderBase extends Base
 	 * Make the render pipeline.
 	 * @returns {GPURenderPipeline} The render pipeline.
 	 */
-	protected abstract makePipeline ( topology: GPUPrimitiveTopology ) : GPURenderPipeline;
+	protected abstract makePipeline ( topology: Readonly<GPUPrimitiveTopology> ) : GPURenderPipeline;
 
 	/**
 	 * Configure the render pass.
 	 * @param {GPURenderPassEncoder} pass - The render pass encoder.
 	 * @param {GPUPrimitiveTopology} topology - The primitive topology.
 	 */
-	public abstract configureRenderPass ( pass: GPURenderPassEncoder, topology: GPUPrimitiveTopology ) : void;
+	public abstract configureRenderPass ( pass: Readonly<GPURenderPassEncoder>, topology: GPUPrimitiveTopology ) : void;
 }

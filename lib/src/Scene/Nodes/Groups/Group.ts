@@ -115,7 +115,7 @@ export class Group extends Node
 	 * Set the bounds of this node.
 	 * @param {Box | null} bounds - The new bounds of this node.
 	 */
-	protected override setBounds ( bounds: Box | null ): void
+	protected override setBounds ( bounds: Readonly<Box> | null ): void
 	{
 		// If we were given a box then clone it.
 		// Otherwise, make a new default box.
@@ -189,7 +189,7 @@ export class Group extends Node
 	 * @param {number} index - The array index of the child.
 	 * @returns {Node | null} The child node or null.
 	 */
-	public getChild ( index: number )
+	public getChild ( index: Readonly<number> )
 	{
 		// Handle invalid indices.
 		if ( ( index < 0 ) || ( index > this.size ) )
@@ -209,7 +209,7 @@ export class Group extends Node
 	 * @param {number} index - The index of the node to remove from the group.
 	 * @returns {boolean} True if it worked, otherwise false.
 	 */
-	public removeChild ( index: number ) : boolean
+	public removeChild ( index: Readonly<number> ) : boolean
 	{
 		// Get the child node at this position.
 		const child = this.getChild ( index );

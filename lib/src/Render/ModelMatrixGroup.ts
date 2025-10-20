@@ -46,7 +46,7 @@ export class ModelMatrixGroup extends BaseClass
 	 * @class
 	 * @param {IMatrix44} matrix - The model matrix.
 	 */
-	constructor ( matrix: IMatrix44 )
+	constructor ( matrix: Readonly<IMatrix44> )
 	{
 		super();
 		mat4.copy ( this.#matrix, matrix );

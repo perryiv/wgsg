@@ -59,7 +59,7 @@ export class Sphere extends Geometry
 	 * @param {number} [input.radius] - Radius of the sphere.
 	 * @param {number} [input.numSubdivisions] - Number of subdivisions for the sphere.
 	 */
-	constructor ( input?: ISphereInput )
+	constructor ( input?: Readonly<ISphereInput> )
 	{
 		super ( input );
 
@@ -72,7 +72,7 @@ export class Sphere extends Geometry
 			// If we have a valid center then set it.
 			if ( center )
 			{
-				this.center = center;
+				this.center = [ center[0], center[1], center[2] ];
 			}
 
 			// If we have a valid radius then set it.
@@ -111,7 +111,7 @@ export class Sphere extends Geometry
 	 * Set the center.
 	 * @param {IVector3} center - Center of the sphere.
 	 */
-	public set center ( center: IVector3 )
+	public set center ( center: Readonly<IVector3> )
 	{
 		vec3.copy ( this.#center, center );
 	}
@@ -129,7 +129,7 @@ export class Sphere extends Geometry
 	 * Set the radius.
 	 * @param {number} radius - Radius of the sphere.
 	 */
-	public set radius ( radius: number )
+	public set radius ( radius: Readonly<number> )
 	{
 		if ( false === Number.isFinite ( radius ) )
 		{
@@ -153,7 +153,7 @@ export class Sphere extends Geometry
 	 * Set the number of subdivisions.
 	 * @param {number} num - Number of subdivisions.
 	 */
-	public set numSubdivisions ( num: number )
+	public set numSubdivisions ( num: Readonly<number> )
 	{
 		if ( false === Number.isFinite ( num ) )
 		{

@@ -13,11 +13,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Group } from "./Group";
+import { IDENTITY_MATRIX } from "../../../Tools";
 import { IMatrix44 } from "../../../Types";
 import { isValidMatrix } from "../../../Math";
 import { mat4 } from "gl-matrix";
 import { Visitor } from "../../../Visitors/Visitor";
-import { makeIdentity } from "../../../Tools/Math";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -29,14 +29,14 @@ import { makeIdentity } from "../../../Tools/Math";
 
 export class Projection extends Group
 {
-	#matrix: IMatrix44 = makeIdentity();
+	#matrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
 
 	/**
 	 * Construct the class.
 	 * @class
 	 * @param {IMatrix44 | null | undefined} matrix - Optional matrix input.
 	 */
-	constructor ( matrix?: ( IMatrix44 | null ) )
+	constructor ( matrix?: ( Readonly<IMatrix44> | null ) )
 	{
 		// Do this first.
 		super();
@@ -79,7 +79,7 @@ export class Projection extends Group
 	 * Set the matrix.
 	 * @param {IMatrix44} matrix - The projection matrix.
 	 */
-	public set matrix ( matrix: IMatrix44 )
+	public set matrix ( matrix: Readonly<IMatrix44> )
 	{
 		// Do this to keep the TypeScript compiler happy.
 		const length: number = matrix.length;
