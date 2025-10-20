@@ -14,9 +14,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Device } from "../Tools";
-import { IVector4 } from "../Types";
-import { ShaderBase as BaseClass } from "./ShaderBase";
+import { WithMatrices as BaseClass } from "./WithMatrices";
 import { vec4 } from "gl-matrix";
+import type { IMatrix44, IVector4 } from "../Types";
 
 // @ts-expect-error TypeScript does not recognize WGSL files.
 import code from "./SolidColor.wgsl?raw";
@@ -122,6 +122,17 @@ export class SolidColor extends BaseClass
 	}
 
 	/**
+	 * Set the model matrix. Overload if needed.
+	 * @param {IMatrix44} matrix - The model matrix.
+	 */
+	public override set modelMatrix ( matrix: IMatrix44 )
+	{
+		super.modelMatrix = matrix;
+		this.#uniforms = null;
+		this.#bindGroup = null;
+	}
+
+	/**
 	 * Return the color.
 	 * @returns {IVector4} The color.
 	 */
@@ -158,16 +169,18 @@ export class SolidColor extends BaseClass
 
 			// Create the buffer.
 			buffer = device.createBuffer ( {
-				label: `Uniform buffer for shader ${this.type}`,
-				size: 16, // 4 values, 4 bytes each.
+				label: `Uniform buffer for shader ${this.type} ${this.id}`,
+				size: ( 16 + 4 ) * 4, // 4x4 matrix + 4D position vector, 4 bytes each.
 				usage: ( GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST )
 			} );
 
-			// Write the color values to a typed array.
-			const values = new Float32Array ( this.#color );
+			// Write the values to a typed array.
+			const mm = new Float32Array ( super.getModelMatrix() );
+			const color = new Float32Array ( this.#color );
 
 			// Write the typed array to the buffer.
-			device.queue.writeBuffer ( buffer, 0, values );
+			device.queue.writeBuffer ( buffer, 0, mm );
+			device.queue.writeBuffer ( buffer, mm.byteLength, color );
 
 			// Set this for next time.
 			this.#uniforms = buffer;

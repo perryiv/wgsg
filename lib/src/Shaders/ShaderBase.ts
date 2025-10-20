@@ -171,8 +171,7 @@ export abstract class ShaderBase extends Base
 	 * Set the model matrix. Overload if needed.
 	 * @param {IMatrix44} matrix - The model matrix.
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	public set modelMatrix ( matrix: IMatrix44 ) {}
+	public abstract set modelMatrix ( matrix: IMatrix44 );
 
 	/**
 	 * Get the name.

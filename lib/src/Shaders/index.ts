@@ -14,3 +14,4 @@
 
 export * from "./ShaderBase";
 export * from "./SolidColor";
+export * from "./WithMatrices";
