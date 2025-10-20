@@ -170,7 +170,7 @@ export class SolidColor extends BaseClass
 			// Create the buffer.
 			buffer = device.createBuffer ( {
 				label: `Uniform buffer for shader ${this.type} ${this.id}`,
-				size: ( 4 + 16 ) * 4, // 4x4 matrix + 4D position vector, 4 bytes each.
+				size: ( 16 + 4 ) * 4, // 4x4 matrix + 4D position vector, 4 bytes each.
 				usage: ( GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST )
 			} );
 
