@@ -25,6 +25,7 @@ import {
 	Transform,
 } from "wgsg-lib";
 import type {
+	IMatrix44,
 	IVector2,
 	IVector3,
 	IVector4,
@@ -108,6 +109,10 @@ const makeQuad = ( { origin, size, color, topology } :
 		apply: ( () =>
 		{
 			shader.color = color;
+
+			const matrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
+			mat4.translate ( matrix, IDENTITY_MATRIX, [ 0.0, 0.0, 0.0 ] );
+			shader.modelMatrix = matrix;
 		} )
 	} );
 
