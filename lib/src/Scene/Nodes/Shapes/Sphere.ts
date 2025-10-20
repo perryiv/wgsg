@@ -208,10 +208,10 @@ export class Sphere extends Geometry
 
 		// Make the points on the sphere.
 		generateUnitSphere ( ns, (
-			x1: Readonly < number >, y1: Readonly < number >, z1: Readonly < number >,
-			x2: Readonly < number >, y2: Readonly < number >, z2: Readonly < number >,
-			x3: Readonly < number >, y3: Readonly < number >, z3: Readonly < number >,
-			i1: Readonly < number >, i2: Readonly < number >, i3: Readonly < number > ) =>
+			x1: Readonly<number>, y1: Readonly<number>, z1: Readonly<number>,
+			x2: Readonly<number>, y2: Readonly<number>, z2: Readonly<number>,
+			x3: Readonly<number>, y3: Readonly<number>, z3: Readonly<number>,
+			i1: Readonly<number>, i2: Readonly<number>, i3: Readonly<number> ) =>
 		{
 			px[pc] = cx + ( x1 * r );
 			py[pc] = cy + ( y1 * r );
