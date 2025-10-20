@@ -13,9 +13,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Device, IDENTITY_MATRIX } from "../Tools";
-import { ShaderBase as BaseClass } from "./ShaderBase";
-import { mat4, vec4 } from "gl-matrix";
+import { Device } from "../Tools";
+import { WithMatrices as BaseClass } from "./WithMatrices";
+import { vec4 } from "gl-matrix";
 import type { IMatrix44, IVector4 } from "../Types";
 
 // @ts-expect-error TypeScript does not recognize WGSL files.
@@ -44,7 +44,6 @@ interface ISolidColorShaderInput
 export class SolidColor extends BaseClass
 {
 	static #instance: ( SolidColor | null ) = null;
-	#modelMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
 	#color: IVector4 = [ 0.5, 0.5, 0.5, 1.0 ];
 	#uniforms: ( GPUBuffer | null ) = null;
 	#bindGroup: ( GPUBindGroup | null ) = null;
@@ -128,7 +127,7 @@ export class SolidColor extends BaseClass
 	 */
 	public override set modelMatrix ( matrix: IMatrix44 )
 	{
-		mat4.copy ( this.#modelMatrix, matrix );
+		super.modelMatrix = matrix;
 		this.#uniforms = null;
 		this.#bindGroup = null;
 	}
@@ -176,12 +175,12 @@ export class SolidColor extends BaseClass
 			} );
 
 			// Write the values to a typed array.
-			const modelMatrix = new Float32Array ( this.#modelMatrix );
-			const colors = new Float32Array ( this.#color );
+			const mm = new Float32Array ( super.getModelMatrix() );
+			const color = new Float32Array ( this.#color );
 
 			// Write the typed array to the buffer.
-			device.queue.writeBuffer ( buffer, 0, modelMatrix );
-			device.queue.writeBuffer ( buffer, modelMatrix.byteLength, colors );
+			device.queue.writeBuffer ( buffer, 0, mm );
+			device.queue.writeBuffer ( buffer, mm.byteLength, color );
 
 			// Set this for next time.
 			this.#uniforms = buffer;
