@@ -15,10 +15,11 @@
 
 struct Uniforms
 {
+	modelMatrix: mat4x4f,
 	color: vec4f,
 };
 
-@group ( 0 ) @binding ( 0 ) var < uniform > uniforms : Uniforms;
+@group ( 0 ) @binding ( 0 ) var<uniform> uniforms : Uniforms;
 
 struct VertexOut
 {
@@ -28,7 +29,7 @@ struct VertexOut
 @vertex fn vs ( @location ( 0 ) position: vec4f ) -> VertexOut
 {
 	var output : VertexOut;
-	output.position = position;
+	output.position = uniforms.modelMatrix * position;
 	return output;
 }
 

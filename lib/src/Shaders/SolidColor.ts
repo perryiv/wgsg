@@ -13,10 +13,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Device } from "../Tools";
-import { IVector4 } from "../Types";
+import { Device, IDENTITY_MATRIX } from "../Tools";
 import { ShaderBase as BaseClass } from "./ShaderBase";
-import { vec4 } from "gl-matrix";
+import { mat4, vec4 } from "gl-matrix";
+import type { IMatrix44, IVector4 } from "../Types";
 
 // @ts-expect-error TypeScript does not recognize WGSL files.
 import code from "./SolidColor.wgsl?raw";
@@ -44,6 +44,7 @@ interface ISolidColorShaderInput
 export class SolidColor extends BaseClass
 {
 	static #instance: ( SolidColor | null ) = null;
+	#modelMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
 	#color: IVector4 = [ 0.5, 0.5, 0.5, 1.0 ];
 	#uniforms: ( GPUBuffer | null ) = null;
 	#bindGroup: ( GPUBindGroup | null ) = null;
@@ -122,6 +123,17 @@ export class SolidColor extends BaseClass
 	}
 
 	/**
+	 * Set the model matrix. Overload if needed.
+	 * @param {IMatrix44} matrix - The model matrix.
+	 */
+	public override set modelMatrix ( matrix: IMatrix44 )
+	{
+		mat4.copy ( this.#modelMatrix, matrix );
+		this.#uniforms = null;
+		this.#bindGroup = null;
+	}
+
+	/**
 	 * Return the color.
 	 * @returns {IVector4} The color.
 	 */
@@ -158,16 +170,18 @@ export class SolidColor extends BaseClass
 
 			// Create the buffer.
 			buffer = device.createBuffer ( {
-				label: `Uniform buffer for shader ${this.type}`,
-				size: 16, // 4 values, 4 bytes each.
+				label: `Uniform buffer for shader ${this.type} ${this.id}`,
+				size: ( 4 + 16 ) * 4, // 4x4 matrix + 4D position vector, 4 bytes each.
 				usage: ( GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST )
 			} );
 
-			// Write the color values to a typed array.
-			const values = new Float32Array ( this.#color );
+			// Write the values to a typed array.
+			const modelMatrix = new Float32Array ( this.#modelMatrix );
+			const colors = new Float32Array ( this.#color );
 
 			// Write the typed array to the buffer.
-			device.queue.writeBuffer ( buffer, 0, values );
+			device.queue.writeBuffer ( buffer, 0, modelMatrix );
+			device.queue.writeBuffer ( buffer, modelMatrix.byteLength, colors );
 
 			// Set this for next time.
 			this.#uniforms = buffer;
