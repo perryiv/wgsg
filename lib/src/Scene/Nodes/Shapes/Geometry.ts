@@ -160,7 +160,7 @@ export class Geometry extends Shape
 	 * Set the bounds of this node.
 	 * @param {Box | null} bounds - The new bounds of this node.
 	 */
-	protected override setBounds ( bounds: Box | null ): void
+	protected override setBounds ( bounds: Readonly<Box> | null ): void
 	{
 		// If we were given a box then clone it.
 		// Otherwise, make a new default box.
@@ -333,7 +333,7 @@ export class Geometry extends Shape
 	 * @param {number} index - The index.
 	 * @returns {IPrimitiveList} The primitive list at the given index.
 	 */
-	public getPrimitiveList ( index: number ) : IPrimitiveList
+	public getPrimitiveList ( index: Readonly<number> ) : IPrimitiveList
 	{
 		const primitives = this.primitives;
 		if ( !primitives || index < 0 || index >= primitives.length )

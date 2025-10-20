@@ -27,20 +27,20 @@ import { IVector3 } from "../Types";
 
 interface IBoxInput
 {
-	min: Readonly < IVector3 >;
-	max: Readonly < IVector3 >;
+	min: Readonly<IVector3>;
+	max: Readonly<IVector3>;
 };
 
 interface IBoxCorners
 {
-	llb: Readonly < IVector3 >; // Lower left back
-	lrb: Readonly < IVector3 >; // Lower right back
-	ulb: Readonly < IVector3 >; // Upper left back
-	urb: Readonly < IVector3 >; // Upper right back
-	llf: Readonly < IVector3 >; // Lower left front
-	lrf: Readonly < IVector3 >; // Lower right front
-	ulf: Readonly < IVector3 >; // Upper left front
-	urf: Readonly < IVector3 >; // Upper right front
+	llb: Readonly<IVector3>; // Lower left back
+	lrb: Readonly<IVector3>; // Lower right back
+	ulb: Readonly<IVector3>; // Upper left back
+	urb: Readonly<IVector3>; // Upper right back
+	llf: Readonly<IVector3>; // Lower left front
+	lrf: Readonly<IVector3>; // Lower right front
+	ulf: Readonly<IVector3>; // Upper left front
+	urf: Readonly<IVector3>; // Upper right front
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -60,7 +60,7 @@ export class Box
 	 * @param {IBoxInput} [input] - The input object containing min and max vectors.
 	 * @class
 	 */
-	constructor ( input?: Readonly < IBoxInput > )
+	constructor ( input?: Readonly<IBoxInput> )
 	{
 		if ( input )
 		{
@@ -118,7 +118,7 @@ export class Box
 	 * Set the minimum corner of the box.
 	 * @param {IVector3} v - The new minimum corner of the box.
 	 */
-	public set min ( v: Readonly < IVector3 > )
+	public set min ( v: Readonly<IVector3> )
 	{
 		vec3.copy ( this.#min, v );
 	}
@@ -136,7 +136,7 @@ export class Box
 	 * Set the maximum corner of the box.
 	 * @param {IVector3} v - The new maximum corner of the box.
 	 */
-	public set max ( v: Readonly < IVector3 > )
+	public set max ( v: Readonly<IVector3> )
 	{
 		vec3.copy ( this.#max, v );
 	}
@@ -195,7 +195,7 @@ export class Box
 	 * Grow this box so that it contains the given box.
 	 * @param {Box} box - The box to grow our box by.
 	 */
-	public growByBox ( box: Readonly < Box > ): void
+	public growByBox ( box: Readonly<Box> ): void
 	{
 		this.growByPoint ( box.min );
 		this.growByPoint ( box.max );
@@ -205,7 +205,7 @@ export class Box
 	 * Grow this box so that it contains the given point.
 	 * @param {IVector3} point - The point to grow our box by.
 	 */
-	public growByPoint ( point: Readonly < IVector3 > ): void
+	public growByPoint ( point: Readonly<IVector3> ): void
 	{
 		this.growByDimension ( point[0], 0 );
 		this.growByDimension ( point[1], 1 );
@@ -240,7 +240,7 @@ export class Box
 	 * @param {number} index - The index of the dimension to grow.
 	 * @private
 	 */
-	private growByDimension ( value: Readonly < number >, index: number ): void
+	private growByDimension ( value: Readonly<number>, index: number ): void
 	{
 		// Do both of these because if the box is invalid and it's grown by a
 		// single point, then that point is both the new min and max.
@@ -261,7 +261,7 @@ export class Box
 	 * @static
 	 * @returns {boolean} True if the boxes are equal, otherwise false.
 	 */
-	static equal ( a: Readonly < Box >, b: Readonly < Box > ): boolean
+	static equal ( a: Readonly<Box>, b: Readonly<Box> ): boolean
 	{
 		return (
 			( a.min[0] === b.min[0] ) &&
@@ -278,7 +278,7 @@ export class Box
 	 * @param {Box} box - The other box.
 	 * @returns {boolean} True if the boxes intersect, otherwise false.
 	 */
-	public intersectsBox ( box: Readonly < Box > ): boolean
+	public intersectsBox ( box: Readonly<Box> ): boolean
 	{
 		// Shortcuts to the min and max corners of the boxes.
 		const amn = this.min;
@@ -302,7 +302,7 @@ export class Box
 	 * @param {Box} box - The box to check.
 	 * @returns {boolean} True if this box contains the given box, otherwise false.
 	 */
-	public containsBox ( box: Readonly < Box > ): boolean
+	public containsBox ( box: Readonly<Box> ): boolean
 	{
 		// Shortcuts to the min and max corners of the boxes.
 		const amn = this.min;
@@ -327,7 +327,7 @@ export class Box
 	 * @param {number} radius - The radius of the sphere.
 	 * @returns {boolean} True if the box intersects the sphere, otherwise false.
 	 */
-	public intersectsSphere ( center: Readonly < IVector3 >, radius: number ): boolean
+	public intersectsSphere ( center: Readonly<IVector3>, radius: number ): boolean
 	{
 		// Shortcuts to the min and max corners of the box.
 		const mn = this.min;
@@ -351,7 +351,7 @@ export class Box
 	 * @param {number} radius - The radius of the sphere.
 	 * @returns {boolean} True if this box contains the sphere, otherwise false.
 	 */
-	public containsSphere ( center: Readonly < IVector3 >, radius: number ): boolean
+	public containsSphere ( center: Readonly<IVector3>, radius: number ): boolean
 	{
 		// Shortcuts to the min and max corners of the box.
 		const mn = this.min;
@@ -375,7 +375,7 @@ export class Box
 	 * @param {IVector3} p1 - The second point of the line.
 	 * @returns {boolean} True if the box intersects the line, otherwise false.
 	 */
-	public intersectsLine ( p0: Readonly < IVector3 >, p1: Readonly < IVector3 > ): boolean
+	public intersectsLine ( p0: Readonly<IVector3>, p1: Readonly<IVector3> ): boolean
 	{
 		// Shortcuts.
 		const min = this.min;
@@ -444,7 +444,7 @@ export class Box
 	 * @param {IVector3} point - The point to check.
 	 * @returns {boolean} True if the box contains the point, otherwise false.
 	 */
-	public containsPoint ( point: Readonly < IVector3 > ): boolean
+	public containsPoint ( point: Readonly<IVector3> ): boolean
 	{
 		const mn = this.min;
 		const mx = this.max;

@@ -45,5 +45,5 @@ export abstract class Projection extends Base
 	 * Let the projection know about the new viewport.
 	 * @param {IViewport} vp - The new viewport.
 	 */
-	public abstract set viewport ( vp: IViewport );
+	public abstract set viewport ( vp: Readonly<IViewport> );
 }

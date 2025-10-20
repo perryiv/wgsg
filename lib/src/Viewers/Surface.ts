@@ -267,28 +267,28 @@ export class Surface extends Base
 	 * Set the clear color.
 	 * @param {IVector4} color - The clear color to use.
 	 */
-	public set clearColor ( color: ( IVector3 | IVector4 ) )
+	public set clearColor ( color: ( Readonly<IVector3> | Readonly<IVector4> ) )
 	{
+		// Make a copy because we may change it.
+		let c: ( IVector3 | IVector4 ) = [ ...color ];
+
 		// If there is no alpha then add one.
-		if ( 3 === color.length )
+		if ( 3 === c.length )
 		{
-			color = [ ...color, 1.0 ]; // Add an alpha.
+			c = ( [ c[0], c[1], c[2], 1.0 ] as IVector4 ); // Add an alpha.
 		}
 
 		// When we get to here this should be true.
-		if ( 4 !== color.length )
+		if ( 4 !== c.length )
 		{
-			throw new Error ( `Invalid color array length: ${( color as [] ).length}, expected 3 or 4` );
+			throw new Error ( `Invalid color array length: ${( c as IVector4 ).length}, expected 3 or 4` );
 		}
 
-		// Make a copy because we may change it below.
-		color = [ ...color ];
-
 		// Clamp the color values to [0, 1].
-		clamp ( color, 0.0, 1.0 );
+		clamp ( c, 0.0, 1.0 );
 
 		// Now copy the values to our member.
-		vec4.copy ( this.#clearColor, color );
+		vec4.copy ( this.#clearColor, c );
 	}
 
 	/**
@@ -558,7 +558,7 @@ export class Surface extends Base
 	 * Set the surface size.
 	 * @param {ISize} size - The new size of the surface.
 	 */
-	public set size ( size: ISize )
+	public set size ( size: Readonly<ISize> )
 	{
 		const { x, y } = this.#viewport;
 		const { width, height } = size;
@@ -578,7 +578,7 @@ export class Surface extends Base
 	 * Set the surface width.
 	 * @param {number} width - The width of the surface.
 	 */
-	public set width ( width: number )
+	public set width ( width: Readonly<number> )
 	{
 		const { x, y, height } = this.#viewport;
 		this.viewport = { x, y, width, height };
@@ -597,7 +597,7 @@ export class Surface extends Base
 	 * Set the surface height.
 	 * @param {number} height - The height of the surface.
 	 */
-	public set height ( height: number )
+	public set height ( height: Readonly<number> )
 	{
 		const { x, y, width } = this.#viewport;
 		this.viewport = { x, y, width, height };
@@ -616,7 +616,7 @@ export class Surface extends Base
 	 * Set the surface viewport.
 	 * @param {IViewport} viewport - The new viewport of the surface.
 	 */
-	public set viewport ( viewport: IViewport )
+	public set viewport ( viewport: Readonly<IViewport> )
 	{
 		// Get the properties.
 		const { x, y, width, height } = viewport;

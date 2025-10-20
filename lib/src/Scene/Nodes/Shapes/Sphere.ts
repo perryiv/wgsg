@@ -59,7 +59,7 @@ export class Sphere extends Geometry
 	 * @param {number} [input.radius] - Radius of the sphere.
 	 * @param {number} [input.numSubdivisions] - Number of subdivisions for the sphere.
 	 */
-	constructor ( input?: ISphereInput )
+	constructor ( input?: Readonly<ISphereInput> )
 	{
 		super ( input );
 
@@ -72,7 +72,7 @@ export class Sphere extends Geometry
 			// If we have a valid center then set it.
 			if ( center )
 			{
-				this.center = center;
+				this.center = [ center[0], center[1], center[2] ];
 			}
 
 			// If we have a valid radius then set it.
@@ -111,7 +111,7 @@ export class Sphere extends Geometry
 	 * Set the center.
 	 * @param {IVector3} center - Center of the sphere.
 	 */
-	public set center ( center: IVector3 )
+	public set center ( center: Readonly<IVector3> )
 	{
 		vec3.copy ( this.#center, center );
 	}
@@ -129,7 +129,7 @@ export class Sphere extends Geometry
 	 * Set the radius.
 	 * @param {number} radius - Radius of the sphere.
 	 */
-	public set radius ( radius: number )
+	public set radius ( radius: Readonly<number> )
 	{
 		if ( false === Number.isFinite ( radius ) )
 		{
@@ -153,7 +153,7 @@ export class Sphere extends Geometry
 	 * Set the number of subdivisions.
 	 * @param {number} num - Number of subdivisions.
 	 */
-	public set numSubdivisions ( num: number )
+	public set numSubdivisions ( num: Readonly<number> )
 	{
 		if ( false === Number.isFinite ( num ) )
 		{
@@ -208,10 +208,10 @@ export class Sphere extends Geometry
 
 		// Make the points on the sphere.
 		generateUnitSphere ( ns, (
-			x1: Readonly < number >, y1: Readonly < number >, z1: Readonly < number >,
-			x2: Readonly < number >, y2: Readonly < number >, z2: Readonly < number >,
-			x3: Readonly < number >, y3: Readonly < number >, z3: Readonly < number >,
-			i1: Readonly < number >, i2: Readonly < number >, i3: Readonly < number > ) =>
+			x1: Readonly<number>, y1: Readonly<number>, z1: Readonly<number>,
+			x2: Readonly<number>, y2: Readonly<number>, z2: Readonly<number>,
+			x3: Readonly<number>, y3: Readonly<number>, z3: Readonly<number>,
+			i1: Readonly<number>, i2: Readonly<number>, i3: Readonly<number> ) =>
 		{
 			px[pc] = cx + ( x1 * r );
 			py[pc] = cy + ( y1 * r );

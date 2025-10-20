@@ -53,7 +53,7 @@ export class SolidColor extends BaseClass
 	 * @class
 	 * @param {ISolidColorShaderInput} [input] - The input.
 	 */
-	protected constructor ( input?: ISolidColorShaderInput )
+	protected constructor ( input?: Readonly<ISolidColorShaderInput> )
 	{
 		const topology = input?.topology;
 
@@ -125,7 +125,7 @@ export class SolidColor extends BaseClass
 	 * Set the model matrix. Overload if needed.
 	 * @param {IMatrix44} matrix - The model matrix.
 	 */
-	public override set modelMatrix ( matrix: IMatrix44 )
+	public override set modelMatrix ( matrix: Readonly<IMatrix44> )
 	{
 		super.modelMatrix = matrix;
 		this.#uniforms = null;
@@ -145,7 +145,7 @@ export class SolidColor extends BaseClass
 	 * Set the color.
 	 * @param {IVector4} color - The color.
 	 */
-	public set color ( color: IVector4 )
+	public set color ( color: Readonly<IVector4> )
 	{
 		vec4.copy ( this.#color, color );
 		this.#uniforms = null;
@@ -195,7 +195,7 @@ export class SolidColor extends BaseClass
 	 * @param {GPUPrimitiveTopology} topology - The primitive topology.
 	 * @returns {GPURenderPipeline} The render pipeline.
 	 */
-	protected makePipeline ( topology: GPUPrimitiveTopology ) : GPURenderPipeline
+	protected makePipeline ( topology: Readonly<GPUPrimitiveTopology> ) : GPURenderPipeline
 	{
 		// Shortcuts
 		const { device, preferredFormat } = Device.instance;
@@ -251,7 +251,7 @@ export class SolidColor extends BaseClass
 	 * @param {GPUPrimitiveTopology} topology - The primitive topology.
 	 * @returns {GPUBindGroup} The bind group.
 	 */
-	protected getBindGroup ( topology: GPUPrimitiveTopology ) : GPUBindGroup
+	protected getBindGroup ( topology: Readonly<GPUPrimitiveTopology> ) : GPUBindGroup
 	{
 		// Shortcut
 		let bindGroup = this.#bindGroup;
@@ -292,7 +292,7 @@ export class SolidColor extends BaseClass
 	 * @param {GPURenderPassEncoder} pass - The render pass encoder.
 	 * @param {GPUPrimitiveTopology} topology - The primitive topology.
 	 */
-	public configureRenderPass ( pass: GPURenderPassEncoder, topology: GPUPrimitiveTopology ) : void
+	public configureRenderPass ( pass: Readonly<GPURenderPassEncoder>, topology: Readonly<GPUPrimitiveTopology> ) : void
 	{
 		// Note: The render-pass' pipeline should already be set.
 

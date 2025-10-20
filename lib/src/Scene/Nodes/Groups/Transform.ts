@@ -36,7 +36,7 @@ export class Transform extends Group
 	 * @class
 	 * @param {IMatrix44 | null | undefined} matrix - Optional matrix input.
 	 */
-	constructor ( matrix?: ( IMatrix44 | null ) )
+	constructor ( matrix?: ( Readonly<IMatrix44> | null ) )
 	{
 		// Do this first.
 		super();
@@ -79,7 +79,7 @@ export class Transform extends Group
 	 * Set the matrix.
 	 * @param {IMatrix44} matrix - The transformation matrix.
 	 */
-	public set matrix ( matrix: IMatrix44 )
+	public set matrix ( matrix: Readonly<IMatrix44> )
 	{
 		// Do this to keep the TypeScript compiler happy.
 		const length: number = matrix.length;

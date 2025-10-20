@@ -90,7 +90,7 @@ export abstract class Node extends Base
 	 * @param {State | null} [input.state] - Optional state for this node.
 	 * @param {number} [input.flags] - Optional flags for this node.
 	 */
-	constructor ( input?: INodeConstructorInput )
+	constructor ( input?: Readonly<INodeConstructorInput> )
 	{
 		super();
 
@@ -171,7 +171,7 @@ export abstract class Node extends Base
 	 * @param {number} id - The id of the parent to check.
 	 * @returns {boolean} True if we have the given parent, otherwise false.
 	 */
-	public hasParent ( id: number )
+	public hasParent ( id: Readonly<number> )
 	{
 		// Do we have the parent?
 		return this.#parents.has ( id );
@@ -190,7 +190,7 @@ export abstract class Node extends Base
 	 * Set the flags.
 	 * @param {number} flags - The new flags.
 	 */
-	public set flags ( flags: number )
+	public set flags ( flags: Readonly<number> )
 	{
 		this.#flags = flags;
 	}
@@ -208,7 +208,7 @@ export abstract class Node extends Base
 	 * Set the visibility state.
 	 * @param {boolean} visible - The new visibility state.
 	 */
-	public set visible ( visible: boolean )
+	public set visible ( visible: Readonly<boolean> )
 	{
 		this.#flags = setBits ( this.#flags, Flags.VISIBLE, visible );
 	}
@@ -226,7 +226,7 @@ export abstract class Node extends Base
 	 * Set the intersectable state.
 	 * @param {boolean} intersectable - The new intersectable state.
 	 */
-	public set intersectable ( intersectable: boolean )
+	public set intersectable ( intersectable: Readonly<boolean> )
 	{
 		this.#flags = setBits ( this.#flags, Flags.INTERSECTABLE, intersectable );
 	}
@@ -244,7 +244,7 @@ export abstract class Node extends Base
 	 * Set the adds-to-bounds state.
 	 * @param {boolean} addsToBounds - The new adds-to-bounds state.
 	 */
-	public set addsToBounds ( addsToBounds: boolean )
+	public set addsToBounds ( addsToBounds: Readonly<boolean> )
 	{
 		this.#flags = setBits ( this.#flags, Flags.ADDS_TO_BOUNDS, addsToBounds );
 	}
@@ -262,7 +262,7 @@ export abstract class Node extends Base
 	 * Set the clipped state.
 	 * @param {boolean} clipped - The new clipped state.
 	 */
-	public set clipped ( clipped: boolean )
+	public set clipped ( clipped: Readonly<boolean> )
 	{
 		this.#flags = setBits ( this.#flags, Flags.CLIPPED, clipped );
 	}
@@ -280,7 +280,7 @@ export abstract class Node extends Base
 	 * Set the dirty state.
 	 * @param {boolean} dirty - The new dirty state.
 	 */
-	public set dirty ( dirty: boolean )
+	public set dirty ( dirty: Readonly<boolean> )
 	{
 		// Set our state.
 		this.#flags = setBits ( this.#flags, Flags.DIRTY, dirty );
@@ -292,7 +292,7 @@ export abstract class Node extends Base
 		}
 
 		// Tell all the parents, and their parents, all the way up.
-		this.forEachParent ( ( parent ) =>
+		this.forEachParent ( ( parent: Node ) =>
 		{
 			parent.dirty = true;
 		} );
@@ -302,7 +302,7 @@ export abstract class Node extends Base
 	 * Call the given function for each parent node.
 	 * @param {INodeParentCallback} cb - Callback function.
 	 */
-	public forEachParent ( cb: INodeParentCallback )
+	public forEachParent ( cb: INodeParentCallback ) : void
 	{
 		this.#parents.forEach ( cb );
 	}
@@ -320,7 +320,7 @@ export abstract class Node extends Base
 	 * Set the bounds of this node.
 	 * @param {Box | null} bounds - The new bounds of this node.
 	 */
-	public set bounds ( bounds: Box | null )
+	public set bounds ( bounds: Readonly<Box> | null )
 	{
 		this.setBounds ( bounds );
 	}
@@ -337,11 +337,11 @@ export abstract class Node extends Base
 	 * @abstract
 	 * @param {Box | null} bounds - The new bounds of this node.
 	 */
-	protected abstract setBounds ( _: Box | null ): void;
+	protected abstract setBounds ( _: Readonly<Box> | null ): void;
 
 	/**
 	 * Traverse this node.
 	 * @param {INodeTraverseCallback} cb - Callback function.
 	 */
-	public abstract traverse ( cb: INodeTraverseCallback ): void;
+	public abstract traverse ( cb: INodeTraverseCallback ) : void;
 }

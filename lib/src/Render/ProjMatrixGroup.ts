@@ -45,7 +45,7 @@ export class ProjMatrixGroup extends BaseClass
 	 * @class
 	 * @param {IMatrix44} matrix - The projection matrix.
 	 */
-	constructor ( matrix: IMatrix44 )
+	constructor ( matrix: Readonly<IMatrix44> )
 	{
 		super();
 		mat4.copy ( this.#matrix, matrix );
@@ -74,7 +74,7 @@ export class ProjMatrixGroup extends BaseClass
 	 * @param {IMatrix44} matrix - The model matrix.
 	 * @returns {ModelMatrixGroup} The model matrix.
 	 */
-	public getModelMatrixGroup ( matrix: IMatrix44 ) : ModelMatrixGroup
+	public getModelMatrixGroup ( matrix: Readonly<IMatrix44> ) : ModelMatrixGroup
 	{
 		const name = JSON.stringify ( matrix );
 		let mmg = this.#modelMatrixMap.get ( name );

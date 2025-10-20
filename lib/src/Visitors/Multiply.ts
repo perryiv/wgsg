@@ -63,7 +63,7 @@ export abstract class Multiply extends Visitor
 	 * Set the projection matrix.
 	 * @param {IMatrix44} matrix - The projection matrix.
 	 */
-	public set projMatrix ( matrix: IMatrix44 )
+	public set projMatrix ( matrix: Readonly<IMatrix44> )
 	{
 		// Check the input.
 		if ( !matrix )
@@ -110,12 +110,12 @@ export abstract class Multiply extends Visitor
 		const original: IMatrix44 = [ ...this.#projMatrix ];
 
 		// Set our member.
-		mat4.copy ( this.#projMatrix, proj.matrix );
+		this.projMatrix = proj.matrix;
 
 		// Now call the base class's function.
 		super.visitProjection ( proj );
 
 		// Put things back where we found them.
-		mat4.copy ( this.#projMatrix, original );
+		this.projMatrix = original;
 	}
 }

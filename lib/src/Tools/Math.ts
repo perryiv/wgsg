@@ -43,7 +43,7 @@ export const makeIdentity = () : IMatrix44 =>
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-const getClampedNumber = ( n: Readonly < number >, mn: Readonly < number >, mx: Readonly < number > ) : number =>
+const getClampedNumber = ( n: Readonly<number>, mn: Readonly<number>, mx: Readonly<number> ) : number =>
 {
 	return Math.max ( mn, Math.min ( mx, n ) );
 }
@@ -55,7 +55,7 @@ const getClampedNumber = ( n: Readonly < number >, mn: Readonly < number >, mx: 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-const clampVec2 = ( v: IVector2, mn: Readonly < number >, mx: Readonly < number > ) : void =>
+const clampVec2 = ( v: IVector2, mn: Readonly<number>, mx: Readonly<number> ) : void =>
 {
 	v[0] = getClampedNumber ( v[0], mn, mx );
 	v[1] = getClampedNumber ( v[1], mn, mx );
@@ -68,7 +68,7 @@ const clampVec2 = ( v: IVector2, mn: Readonly < number >, mx: Readonly < number 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-const clampVec3 = ( v: IVector3, mn: Readonly < number >, mx: Readonly < number > ) : void =>
+const clampVec3 = ( v: IVector3, mn: Readonly<number>, mx: Readonly<number> ) : void =>
 {
 	v[0] = getClampedNumber ( v[0], mn, mx );
 	v[1] = getClampedNumber ( v[1], mn, mx );
@@ -82,7 +82,7 @@ const clampVec3 = ( v: IVector3, mn: Readonly < number >, mx: Readonly < number 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-const clampVec4 = ( v: IVector4, mn: Readonly < number >, mx: Readonly < number > ) : void =>
+const clampVec4 = ( v: IVector4, mn: Readonly<number>, mx: Readonly<number> ) : void =>
 {
 	v[0] = getClampedNumber ( v[0], mn, mx );
 	v[1] = getClampedNumber ( v[1], mn, mx );
@@ -97,7 +97,7 @@ const clampVec4 = ( v: IVector4, mn: Readonly < number >, mx: Readonly < number 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export const clamp = ( v: IClampInputType, mn: Readonly < number >, mx: Readonly < number > ) : IClampInputType =>
+export const clamp = ( v: IClampInputType, mn: Readonly<number>, mx: Readonly<number> ) : IClampInputType =>
 {
 	if ( typeof v === "number" )
 	{

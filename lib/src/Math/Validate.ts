@@ -20,7 +20,7 @@ import { IMatrix44 } from "../Types";
  * @param {IMatrix44} m - The matrix to check.
  * @returns {boolean} True if the matrix is valid, otherwise false.
  */
-export const isValidMatrix = ( m: IMatrix44 ) =>
+export const isValidMatrix = ( m: Readonly<IMatrix44> ) =>
 {
 	// Get the array length.
 	const length: number = m.length;

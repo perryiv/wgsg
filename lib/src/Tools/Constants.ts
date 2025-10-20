@@ -21,7 +21,7 @@ import { IMatrix44 } from "../Types/Matrix";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export const IDENTITY_MATRIX: IMatrix44 = [
+export const IDENTITY_MATRIX: Readonly<IMatrix44> = [
 	1, 0, 0, 0,
 	0, 1, 0, 0,
 	0, 0, 1, 0,

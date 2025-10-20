@@ -23,7 +23,7 @@ import type { IVector4 } from "../Types";
  */
 //////////////////////////////////////////////////////////////////////////
 
-export const preMultiplyColor = ( clearColor: IVector4 ): IVector4 =>
+export const preMultiplyColor = ( clearColor: Readonly<IVector4> ): IVector4 =>
 {
 	const c = clearColor;
 	const a = c[3];

@@ -100,7 +100,7 @@ export class Orthographic extends Projection
 	 * Let the projection know about the new viewport.
 	 * @param {IViewport} vp - The new viewport.
 	 */
-	public set viewport ( vp: IViewport )
+	public set viewport ( vp: Readonly<IViewport> )
 	{
 		const { width, height } = vp;
 

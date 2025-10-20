@@ -59,7 +59,7 @@ export class Layer extends BaseClass
 	 * @param {number} id - The bin ID.
 	 * @returns {Bin} The bin.
 	 */
-	public getBin ( id: number ) : Bin
+	public getBin ( id: Readonly<number> ) : Bin
 	{
 		let bin: ( Bin | undefined ) = this.#bins.get ( id );
 		if ( !bin )

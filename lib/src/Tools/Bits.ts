@@ -25,7 +25,7 @@
  */
 //////////////////////////////////////////////////////////////////////////
 
-export function hasBits ( n: Readonly < number >, bits: Readonly < number > ) : boolean
+export function hasBits ( n: Readonly<number>, bits: Readonly<number> ) : boolean
 {
 	return ( ( n & bits ) === bits );
 }
@@ -39,7 +39,7 @@ export function hasBits ( n: Readonly < number >, bits: Readonly < number > ) : 
  */
 //////////////////////////////////////////////////////////////////////////
 
-export function addBits ( n: Readonly < number >, bits: Readonly < number > ) : number
+export function addBits ( n: Readonly<number>, bits: Readonly<number> ) : number
 {
 	return ( n | bits );
 }
@@ -53,7 +53,7 @@ export function addBits ( n: Readonly < number >, bits: Readonly < number > ) : 
  */
 //////////////////////////////////////////////////////////////////////////
 
-export function removeBits ( n: Readonly < number >, bits: Readonly < number > ) : number
+export function removeBits ( n: Readonly<number>, bits: Readonly<number> ) : number
 {
 	return ( ( n & bits ) ? ( n ^ bits ) : n );
 }
@@ -67,7 +67,7 @@ export function removeBits ( n: Readonly < number >, bits: Readonly < number > )
  */
 //////////////////////////////////////////////////////////////////////////
 
-export function toggleBits ( n: Readonly < number >, bits: Readonly < number > ) : number
+export function toggleBits ( n: Readonly<number>, bits: Readonly<number> ) : number
 {
 	return ( n ^ bits );
 }
@@ -82,7 +82,7 @@ export function toggleBits ( n: Readonly < number >, bits: Readonly < number > )
  */
 //////////////////////////////////////////////////////////////////////////
 
-export function setBits ( n: Readonly < number >, bits: Readonly < number >, state: boolean ) : number
+export function setBits ( n: Readonly<number>, bits: Readonly<number>, state: boolean ) : number
 {
 	return ( state ? ( addBits ( n, bits ) ) : ( removeBits ( n, bits ) ) );
 }
