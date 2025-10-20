@@ -36,6 +36,12 @@ export abstract class Base
 	}
 
 	/**
+	 * Destroy the class.
+	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-function
+	public destroy() : void {}
+
+	/**
 	 * Return the id.
 	 * @returns {number} The id.
 	 */

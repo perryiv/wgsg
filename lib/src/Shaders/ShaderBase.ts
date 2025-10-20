@@ -50,6 +50,7 @@ export abstract class ShaderBase extends Base
 	#code: string;
 	#module: ( GPUShaderModule | null ) = null;
 	#data: IPipelineTopologyPair = { pipeline: null, topology: null };
+	#device = 0;
 
 	/**
 	 * Construct the class.
@@ -74,10 +75,12 @@ export abstract class ShaderBase extends Base
 	/**
 	 * Destroy this instance.
 	 */
-	public destroy() : void
+	public override destroy() : void
 	{
 		this.#module = null;
 		this.#data = { pipeline: null, topology: null };
+		this.#device = 0;
+		super.destroy();
 	}
 
 	/**
@@ -113,7 +116,16 @@ export abstract class ShaderBase extends Base
 	 */
 	public get module() : GPUShaderModule
 	{
-		// The first time we have to make it.
+		// Did the device change?
+		const device = Device.instance.id;
+		if ( this.#device !== device )
+		{
+			this.#device = device;
+			this.#module = null;
+			this.#data = { pipeline: null, topology: null };
+		}
+
+		// Make it if we have to.
 		if ( !this.#module )
 		{
 			this.#module = Device.instance.device.createShaderModule ( {

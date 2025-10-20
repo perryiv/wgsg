@@ -159,7 +159,7 @@ export class Surface extends Base
 	/**
 	 * Destroy the surface.
 	 */
-	public destroy() : void
+	public override destroy() : void
 	{
 		// Stop any scheduled rendering.
 		this.cancelRender();
@@ -182,6 +182,9 @@ export class Surface extends Base
 		this.#visitors = null;
 		this.#root.clear();
 		this.#defaultState = null;
+
+		// Call this last.
+		super.destroy();
 	}
 
 	/**

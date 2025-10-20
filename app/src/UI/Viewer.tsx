@@ -13,8 +13,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import {
-	buildSceneQuads,
-	buildSceneSpheres,
 	buildTwoSquares,
 } from "../Tools";
 import {
@@ -24,6 +22,7 @@ import {
 } from "react";
 import {
 	Device,
+	getNextId,
 	Viewer as InternalViewer,
 } from "wgsg-lib";
 
@@ -49,6 +48,7 @@ export interface IViewerProps
 export function Viewer ( { style }: IViewerProps )
 {
 	// Get state.
+	const [ id, ] = useState < number > ( getNextId() );
 	const canvas = useRef < HTMLCanvasElement | null > ( null );
 	const [ , setViewer ] = useState < InternalViewer | null > ( null );
 
@@ -57,7 +57,7 @@ export function Viewer ( { style }: IViewerProps )
 	//
 	useEffect ( () =>
 	{
-		console.log ( "Viewer component mounted" );
+		console.log ( `Viewer component ${id} mounted` );
 
 		void ( async () =>
 		{
@@ -84,7 +84,7 @@ export function Viewer ( { style }: IViewerProps )
 
 		return ( () =>
 		{
-			console.log ( "Viewer component unmounted" );
+			console.log ( `Viewer component ${id} unmounted` );
 
 			setViewer ( ( current: ( InternalViewer | null ) ) =>
 			{
@@ -96,9 +96,9 @@ export function Viewer ( { style }: IViewerProps )
 				return null;
 			} );
 
+			const device = Device.instance.id;
 			Device.destroy();
-
-			console.log ( "Singleton device destroyed" );
+			console.log ( `Singleton device ${device} destroyed` );
 		} );
 	},
 	[] );
