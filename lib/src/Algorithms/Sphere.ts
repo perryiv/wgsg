@@ -50,11 +50,11 @@ type ISubDivideCallback = ( (
 ///////////////////////////////////////////////////////////////////////////////
 
 function subdivide (
-	x1: number, y1: number, z1: number,
-	x2: number, y2: number, z2: number,
-	x3: number, y3: number, z3: number,
+	x1: Readonly<number>, y1: Readonly<number>, z1: Readonly<number>,
+	x2: Readonly<number>, y2: Readonly<number>, z2: Readonly<number>,
+	x3: Readonly<number>, y3: Readonly<number>, z3: Readonly<number>,
 	numPoints: { value: number },
-	depth: number,
+	depth: Readonly<number>,
 	fun: ISubDivideCallback ): void
 {
 	// If we are at the requested depth ...
@@ -136,7 +136,7 @@ function subdivide (
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const generateUnitSphere = ( n: number, fun: ISubDivideCallback ) =>
+export const generateUnitSphere = ( n: Readonly<number>, fun: ISubDivideCallback ) =>
 {
   // Handle invalid callback.
   if ( !fun )
@@ -191,7 +191,7 @@ export const generateUnitSphere = ( n: number, fun: ISubDivideCallback ) =>
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const estimateSphereSizes = ( n: number ) : { numPoints: number, numIndices: number } =>
+export const estimateSphereSizes = ( n: Readonly<number> ) : { numPoints: number, numIndices: number } =>
 {
   // Check input.
   if ( n < 0 )

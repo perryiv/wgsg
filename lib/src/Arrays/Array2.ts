@@ -48,7 +48,7 @@ export class Array2 extends ArrayBase
 	 * Check the values. It will throw if there is a problem
 	 * @param {ArrayType1D} values - Values for this array.
 	 */
-	protected override check ( values: ArrayType1D ) : void
+	protected override check ( values: Readonly<ArrayType1D> ) : void
 	{
 		if ( 0 !== ( values.length % 2 ) )
 		{
@@ -103,7 +103,7 @@ export class Array2 extends ArrayBase
 	 * @param {number} index - The index of the vector.
 	 * @returns {IVector2} The 2D vector at the given index.
 	 */
-	public getVector ( index: number ) : IVector2
+	public getVector ( index: Readonly<number> ) : IVector2
 	{
 		return [
 			this.x0[index],
@@ -116,7 +116,7 @@ export class Array2 extends ArrayBase
 	 * @param {number} index - The index of the vector.
 	 * @param {IVector2} vector - The 2D vector to set.
 	 */
-	public setVector ( index: number, vector: IVector2 ) : void
+	public setVector ( index: Readonly<number>, vector: Readonly<IVector2> ) : void
 	{
 		this.x0[index] = vector[0];
 		this.x1[index] = vector[1];

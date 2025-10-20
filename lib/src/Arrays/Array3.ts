@@ -48,7 +48,7 @@ export class Array3 extends ArrayBase
 	 * Check the values. It will throw if there is a problem
 	 * @param {ArrayType1D} values - Values for this array.
 	 */
-	protected override check ( values: ArrayType1D ) : void
+	protected override check ( values: Readonly<ArrayType1D> ) : void
 	{
 		if ( 0 !== ( values.length % 3 ) )
 		{
@@ -121,7 +121,7 @@ export class Array3 extends ArrayBase
 	 * @param {number} index - The index of the vector.
 	 * @returns {IVector3} The 3D vector at the given index.
 	 */
-	public getVector ( index: number ) : IVector3
+	public getVector ( index: Readonly<number> ) : IVector3
 	{
 		return [
 			this.x0[index],
@@ -135,7 +135,7 @@ export class Array3 extends ArrayBase
 	 * @param {number} index - The index of the vector.
 	 * @param {IVector3} vector - The 3D vector to set.
 	 */
-	public setVector ( index: number, vector: IVector3 ) : void
+	public setVector ( index: Readonly<number>, vector: Readonly<IVector3> ) : void
 	{
 		this.x0[index] = vector[0];
 		this.x1[index] = vector[1];

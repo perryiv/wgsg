@@ -80,7 +80,7 @@ export class Perspective extends Projection
 	 * properties can be missing. However, if they are included then they have
 	 * to be valid. Otherwise, an exception is thrown.
 	 */
-	public setFrom ( input: IPerspectiveData )
+	public setFrom ( input: Readonly<IPerspectiveData> )
 	{
 		// Handle no input.
 		if ( !input )
@@ -189,7 +189,7 @@ export class Perspective extends Projection
 	 * Set the field-of-view.
 	 * @param {number} fov - The field-of-view.
 	 */
-	public set fov ( fov: number )
+	public set fov ( fov: Readonly<number> )
 	{
 		if ( false === isPositiveFiniteNumber ( fov ) )
 		{
@@ -212,7 +212,7 @@ export class Perspective extends Projection
 	 * Set the aspect ratio.
 	 * @param {number} aspect - The aspect ratio.
 	 */
-	public set aspect ( aspect: number )
+	public set aspect ( aspect: Readonly<number> )
 	{
 		if ( false === isPositiveFiniteNumber ( aspect ) )
 		{
@@ -235,7 +235,7 @@ export class Perspective extends Projection
 	 * Set the near distance.
 	 * @param {number} near - The near distance.
 	 */
-	public set near ( near: number )
+	public set near ( near: Readonly<number> )
 	{
 		if ( false === isPositiveFiniteNumber ( near ) )
 		{
@@ -258,7 +258,7 @@ export class Perspective extends Projection
 	 * Set the far distance.
 	 * @param {number} far - The far distance.
 	 */
-	public set far ( far: number )
+	public set far ( far: Readonly<number> )
 	{
 		if ( false === isPositiveFiniteNumber ( far ) )
 		{
@@ -272,7 +272,7 @@ export class Perspective extends Projection
 	 * Let the projection know about the new viewport.
 	 * @param {IViewport} vp - The new viewport.
 	 */
-	public set viewport ( vp: IViewport )
+	public set viewport ( vp: Readonly<IViewport> )
 	{
 		const { width, height } = vp;
 

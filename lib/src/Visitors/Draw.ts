@@ -198,7 +198,7 @@ export class Draw extends BaseClass
 	 * Set the clear color.
 	 * @param {IVector4} color - The clear color to use.
 	 */
-	public set clearColor ( color: IVector4 )
+	public set clearColor ( color: Readonly<IVector4> )
 	{
 		if ( 4 !== color.length )
 		{

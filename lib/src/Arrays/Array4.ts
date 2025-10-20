@@ -48,7 +48,7 @@ export class Array4 extends ArrayBase
 	 * Check the values. It will throw if there is a problem
 	 * @param {ArrayType1D} values - Values for this array.
 	 */
-	protected override check ( values: ArrayType1D ) : void
+	protected override check ( values: Readonly<ArrayType1D> ) : void
 	{
 		if ( 0 !== ( values.length % 4 ) )
 		{
@@ -139,7 +139,7 @@ export class Array4 extends ArrayBase
 	 * @param {number} index - The index of the vector.
 	 * @returns {IVector4} The 4D vector at the given index.
 	 */
-	public getVector ( index: number ) : IVector4
+	public getVector ( index: Readonly<number> ) : IVector4
 	{
 		return [
 			this.x0[index],
@@ -154,7 +154,7 @@ export class Array4 extends ArrayBase
 	 * @param {number} index - The index of the vector.
 	 * @param {IVector4} vector - The 4D vector to set.
 	 */
-	public setVector ( index: number, vector: IVector4 ) : void
+	public setVector ( index: Readonly<number>, vector: Readonly<IVector4> ) : void
 	{
 		this.x0[index] = vector[0];
 		this.x1[index] = vector[1];
