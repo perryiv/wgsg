@@ -25,7 +25,6 @@ import {
 	Transform,
 } from "wgsg-lib";
 import type {
-	IMatrix44,
 	IVector2,
 	IVector3,
 	IVector4,
@@ -109,10 +108,6 @@ const makeQuad = ( { origin, size, color, topology } :
 		apply: ( () =>
 		{
 			shader.color = color;
-
-			const matrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
-			mat4.translate ( matrix, IDENTITY_MATRIX, [ 0.0, 0.0, 0.0 ] );
-			shader.modelMatrix = matrix;
 		} )
 	} );
 
@@ -176,24 +171,19 @@ export const buildTwoSquares = () : Node =>
 {
 	const group = new Group();
 
-	{
-		const geom = makeQuad ( {
-			origin: [ -0.9, -0.9, 0.0 ],
-			size: [ 1.0, 1.0 ],
-			color: [ 8.0, 0.2, 0.2, 1.0 ],
-			topology: "triangle-list",
-		} );
-		group.addChild ( geom );
-	}
-	{
-		const geom = makeQuad ( {
-			origin: [ -0.1, -0.1, 0.0 ],
-			size: [ 1.0, 1.0 ],
-			color: [ 0.0, 1.0, 0.0, 1.0 ],
-			topology: "line-list",
-		} );
-		group.addChild ( geom );
-	}
+	group.addChild ( makeQuad ( {
+		origin: [ -0.9, -0.9, 0.0 ],
+		size: [ 1.0, 1.0 ],
+		color: [ 8.0, 0.2, 0.2, 1.0 ],
+		topology: "triangle-list",
+	} ) );
+
+	group.addChild ( makeQuad ( {
+		origin: [ -0.1, -0.1, 0.0 ],
+		size: [ 1.0, 1.0 ],
+		color: [ 0.0, 1.0, 0.0, 1.0 ],
+		topology: "line-list",
+	} ) );
 
 	return group;
 };

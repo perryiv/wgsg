@@ -80,6 +80,7 @@ const requireShader = ( state: State ) : ShaderBase =>
 export class Draw extends BaseClass
 {
 	#context: GPUCanvasContext;
+	#depthTexture: ( GPUTexture | null ) = null;
 	#clearColor: IVector4 = [ 0.5, 0.5, 0.5, 1.0 ]; // Grey.
 	#renderPassEncoder: ( GPURenderPassEncoder | null ) = null;
 	#commandEncoder: ( GPUCommandEncoder | null ) = null;
@@ -217,6 +218,42 @@ export class Draw extends BaseClass
 	}
 
 	/**
+	 * Get or make the depth texture.
+	 * @param {GPUTexture} reference - The reference texture to match size.
+	 * @returns {GPUTexture} The depth texture.
+	 */
+	protected getDepthTexture ( reference: GPUTexture ) : GPUTexture
+	{
+		// Shortcuts.
+		const device = Device.instance.device;
+		const { width, height } = reference;
+		let dt = this.#depthTexture;
+
+		// See if we need to make a new one.
+		if ( !dt || ( ( dt.width !== width ) || ( dt.height !== height ) ) )
+		{
+			// Destroy the old one.
+			if ( dt )
+			{
+				dt.destroy();
+			}
+
+			// Make the new one.
+			dt = device.createTexture ( {
+				size: [ width, height ],
+				format: "depth24plus",
+				usage: GPUTextureUsage.RENDER_ATTACHMENT,
+			} );
+
+			// Save it.
+			this.#depthTexture = dt;
+		}
+
+		// Return the depth texture.
+		return dt;
+	}
+
+	/**
 	 * Draw the render graph.
 	 * @param {IRoot} root - The root of the render graph.
 	 */
@@ -232,20 +269,27 @@ export class Draw extends BaseClass
 		this.#commandEncoder = encoder;
 
 		// Shortcuts.
-		const context = this.context;
-		const texture = context.getCurrentTexture();
-		const view = texture.createView();
-		const clearValue = this.preMultipliedClearColor;
-		const loadOp: GPULoadOp = "clear";
-		const storeOp: GPUStoreOp = "store";
+		const canvasTexture = this.context.getCurrentTexture();
+		const depthTexture = this.getDepthTexture ( canvasTexture );
 
 		// For debugging.
-		texture.label = `Texture for ${this.type} ${this.id}`;
+		canvasTexture.label = `Texture for ${this.type} ${this.id}`;
 
 		// Make the render pass encoder.
 		const pass = this.commandEncoder.beginRenderPass ( {
 			label: `Render pass for ${this.type} ${this.id}`,
-			colorAttachments: [ { view, clearValue, loadOp, storeOp } ]
+			colorAttachments: [ {
+				view: canvasTexture.createView(),
+				clearValue: this.preMultipliedClearColor,
+				loadOp: "clear",
+				storeOp: "store"
+			} ],
+			depthStencilAttachment: {
+				view: depthTexture.createView(),
+				depthClearValue: 1.0,
+				depthLoadOp: 'clear',
+				depthStoreOp: 'store',
+			},
 		} );
 		this.#renderPassEncoder = pass;
 

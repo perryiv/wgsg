@@ -234,6 +234,11 @@ export class SolidColor extends BaseClass
 			primitive: {
 				topology
 			},
+			depthStencil: {
+				depthWriteEnabled: true,
+				depthCompare: "less",
+				format: "depth24plus",
+			},
 		} );
 
 		// Do not return an invalid pipeline.
