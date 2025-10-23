@@ -136,7 +136,7 @@ export class Perspective extends Projection
 		// Make sure near is closer than far.
 		if ( far <= near )
 		{
-			throw new Error ( `Invalid distances when setting perspective members, near: ${near}, far: ${far}` );
+			throw new Error ( `Invalid distances when setting perspective projection members, near: ${near}, far: ${far}` );
 		}
 
 		// If we get to here then set all the values.
@@ -163,13 +163,13 @@ export class Perspective extends Projection
 		// Make sure near is closer than far.
 		if ( near >= far )
 		{
-			throw new Error ( `Invalid distances when making perspective matrix, near: ${near}, far: ${far}` );
+			throw new Error ( `Invalid distances when making perspective projection matrix, near: ${near}, far: ${far}` );
 		}
 
 		// Initialize the answer.
 		const answer: IMatrix44 = makeIdentity();
 
-		// Write the perspective matrix to the answer.
+		// Write the projection matrix to the answer.
 		mat4.perspective ( answer, fov, aspect, near, far );
 
 		// Return the new matrix.

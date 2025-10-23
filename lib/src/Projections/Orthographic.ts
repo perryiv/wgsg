@@ -71,25 +71,25 @@ export class Orthographic extends Projection
 		// Make sure near is closer than far.
 		if ( near >= far )
 		{
-			throw new Error ( `Invalid distances when making perspective matrix, near: ${near}, far: ${far}` );
+			throw new Error ( `Invalid distances when making orthographic projection matrix, near: ${near}, far: ${far}` );
 		}
 
 		// Make sure top is above bottom.
 		if ( bottom >= top )
 		{
-			throw new Error ( `Invalid vertical bounds when making perspective matrix, top: ${top}, bottom: ${bottom}` );
+			throw new Error ( `Invalid vertical bounds when making orthographic projection matrix, top: ${top}, bottom: ${bottom}` );
 		}
 
 		// Make sure left is before right.
 		if ( left >= right )
 		{
-			throw new Error ( `Invalid horizontal bounds when making perspective matrix, left: ${left}, right: ${right}` );
+			throw new Error ( `Invalid horizontal bounds when making orthographic projection matrix, left: ${left}, right: ${right}` );
 		}
 
 		// Initialize the answer.
 		const answer: IMatrix44 = makeIdentity();
 
-		// Write the perspective matrix to the answer.
+		// Write the projection matrix to the answer.
 		mat4.ortho ( answer, left, right, bottom, top, near, far );
 
 		// Return the new matrix.
