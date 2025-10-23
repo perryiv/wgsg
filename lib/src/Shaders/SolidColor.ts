@@ -170,17 +170,20 @@ export class SolidColor extends BaseClass
 			// Create the buffer.
 			buffer = device.createBuffer ( {
 				label: `Uniform buffer for shader ${this.type} ${this.id}`,
-				size: ( 16 + 4 ) * 4, // 4x4 matrix + 4D position vector, 4 bytes each.
+				size: ( 16 + 16 + 4 ) * 4, // Two 4x4 matrices + 4D position vector, 4 bytes each.
 				usage: ( GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST )
 			} );
 
 			// Write the values to a typed array.
+			const pm = new Float32Array ( super.getProjMatrix() );
 			const mm = new Float32Array ( super.getModelMatrix() );
 			const color = new Float32Array ( this.#color );
 
 			// Write the typed array to the buffer.
-			device.queue.writeBuffer ( buffer, 0, mm );
-			device.queue.writeBuffer ( buffer, mm.byteLength, color );
+			let offset = 0;
+			device.queue.writeBuffer ( buffer, offset, pm ); offset += pm.byteLength;
+			device.queue.writeBuffer ( buffer, offset, mm ); offset += mm.byteLength;
+			device.queue.writeBuffer ( buffer, offset, color );
 
 			// Set this for next time.
 			this.#uniforms = buffer;
