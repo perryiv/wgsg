@@ -350,11 +350,12 @@ export class Draw extends BaseClass
 	 */
 	protected drawPipeline ( pipeline: Pipeline ) : void
 	{
-		// Shortcut.
+		// Shortcuts.
 		const pass = this.renderPassEncoder;
+		const { shader, topology } = pipeline;
 
 		// Set the render pass' pipeline.
-		pass.setPipeline ( pipeline.shader.getPipeline ( pipeline.topology ) );
+		pass.setPipeline ( shader.getPipeline ( topology ) );
 
 		// console.log ( `Pipeline ${pipeline.id} has ${pipeline.numProjMatrices} projection matrices` );
 

@@ -8,8 +8,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Shader class that renders a solid color.
-//	https://stackoverflow.com/questions/71535213/a-way-to-load-wglsl-files-in-typescript-files-using-esbuild
+//	Shader class that handles the projection and model matrices.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -37,6 +36,7 @@ export type IWithMatricesInput = IShaderBaseInput;
 
 export abstract class WithMatrices extends BaseClass
 {
+	#projMatrix:  IMatrix44 = [ ...IDENTITY_MATRIX ];
 	#modelMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
 
 	/**
@@ -64,6 +64,24 @@ export abstract class WithMatrices extends BaseClass
 	public override getClassName() : string
 	{
 		return "Shaders.WithMatrices";
+	}
+
+	/**
+	 * Get the projection matrix.
+	 * @returns {IMatrix44} The projection matrix.
+	 */
+	protected getProjMatrix () : IMatrix44
+	{
+		return this.#projMatrix;
+	}
+
+	/**
+	 * Set the projection matrix.
+	 * @param {IMatrix44} matrix - The projection matrix.
+	 */
+	public override set projMatrix ( matrix: Readonly<IMatrix44> )
+	{
+		mat4.copy ( this.#projMatrix, matrix );
 	}
 
 	/**

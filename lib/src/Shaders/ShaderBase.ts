@@ -164,8 +164,7 @@ export abstract class ShaderBase extends Base
 	 * Set the projection matrix. Overload if needed.
 	 * @param {IMatrix44} matrix - The projection matrix.
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	public set projMatrix ( matrix: Readonly<IMatrix44> ) {}
+	public abstract set projMatrix ( matrix: Readonly<IMatrix44> );
 
 	/**
 	 * Set the model matrix. Overload if needed.

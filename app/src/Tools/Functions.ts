@@ -172,16 +172,16 @@ export const buildTwoSquares = () : Node =>
 	const group = new Group();
 
 	group.addChild ( makeQuad ( {
-		origin: [ -0.9, -0.9, 0.0 ],
+		origin: [ -0.9, -0.9, -2.0 ],
 		size: [ 1.0, 1.0 ],
 		color: [ 8.0, 0.2, 0.2, 1.0 ],
 		topology: "triangle-list",
 	} ) );
 
 	group.addChild ( makeQuad ( {
-		origin: [ -0.1, -0.1, 0.0 ],
+		origin: [ -0.1, -0.1, -2.0 ],
 		size: [ 1.0, 1.0 ],
-		color: [ 0.0, 1.0, 0.0, 1.0 ],
+		color: [ 0.2, 0.8, 0.2, 1.0 ],
 		topology: "line-list",
 	} ) );
 
