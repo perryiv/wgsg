@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { mat4, vec4 } from "gl-matrix";
+import { mat4 } from "gl-matrix";
 import {
 	DEG_TO_RAD,
 	Geometry,

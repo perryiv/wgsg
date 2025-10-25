@@ -135,43 +135,46 @@ export const clamp = ( v: IClampInputType, mn: Readonly<number>, mx: Readonly<nu
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * Normalize a 2D vector.
- * @param {IVector2} v - The vector to normalize.
+ * @param {IVector2} input - The vector to normalize.
  * @returns {IVector2} The normalized vector.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const normalizeVec2 = ( v: IVector2 ) : IVector2 =>
+export const normalizeVec2 = ( input: Readonly<IVector2> ) : IVector2 =>
 {
-	vec2.normalize ( v, v );
-	return v;
+	const answer: IVector2 = [ 0, 0 ];
+	vec2.normalize ( answer, input );
+	return answer;
 };
 
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * Normalize a 3D vector.
- * @param {IVector3} v - The vector to normalize.
+ * @param {IVector3} input - The vector to normalize.
  * @returns {IVector3} The normalized vector.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const normalizeVec3 = ( v: IVector3 ) : IVector3 =>
+export const normalizeVec3 = ( input: Readonly<IVector3> ) : IVector3 =>
 {
-	vec3.normalize ( v, v );
-	return v;
+	const answer: IVector3 = [ 0, 0, 0 ];
+	vec3.normalize ( answer, input );
+	return answer;
 };
 
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * Normalize a 4D vector.
- * @param {IVector4} v - The vector to normalize.
+ * @param {IVector4} input - The vector to normalize.
  * @returns {IVector4} The normalized vector.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const normalizeVec4 = ( v: IVector4 ) : IVector4 =>
+export const normalizeVec4 = ( input: Readonly<IVector4> ) : IVector4 =>
 {
-	vec4.normalize ( v, v );
-	return v;
+	const answer: IVector4 = [ 0, 0, 0, 0 ];
+	vec4.normalize ( answer, input );
+	return answer;
 };
