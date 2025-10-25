@@ -12,13 +12,15 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { mat4 } from "gl-matrix";
+import { mat4, vec4 } from "gl-matrix";
 import {
+	DEG_TO_RAD,
 	Geometry,
 	Group,
 	IDENTITY_MATRIX,
 	Indexed,
 	Node,
+	normalizeVec3 as normalize,
 	SolidColor,
 	Sphere,
 	State,
@@ -297,10 +299,30 @@ export const buildSceneTwoSquares = () : Node =>
 
 export const buildSceneBox = () : Node =>
 {
-	return makeBox ( {
-		center: [ 0.0, 0.0, -3.0 ],
+	const tr = new Transform();
+
+	mat4.translate ( tr.matrix, tr.matrix, [ 0.0, 0.0, -3.0 ] );
+
+	mat4.rotate (
+		tr.matrix,
+		tr.matrix,
+		( 15 * DEG_TO_RAD ),
+		normalize ( [ 1, 0, 0 ] )
+	);
+
+	mat4.rotate (
+		tr.matrix,
+		tr.matrix,
+		( -30 * DEG_TO_RAD ),
+		normalize ( [ 0, 1, 0 ] )
+	);
+
+	tr.addChild ( makeBox ( {
+		center: [ 0.0, 0.0, 0.0 ],
 		size: [ 1.0, 1.0, 1.0 ],
 		color: [ 8.0, 0.2, 0.2, 1.0 ],
 		topology: "line-list",
-	} );
+	} ) );
+
+	return tr;
 };
