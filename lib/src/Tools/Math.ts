@@ -12,8 +12,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IMatrix44, IVector2, IVector3, IVector4 } from "../Types";
 import { IDENTITY_MATRIX } from "./Constants";
+import { vec2, vec3, vec4 } from "gl-matrix";
+import type {
+	IMatrix44,
+	IVector2,
+	IVector3,
+	IVector4,
+} from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -124,3 +130,48 @@ export const clamp = ( v: IClampInputType, mn: Readonly<number>, mx: Readonly<nu
 
 	throw new Error ( "Invalid input type for clamp function" );
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Normalize a 2D vector.
+ * @param {IVector2} v - The vector to normalize.
+ * @returns {IVector2} The normalized vector.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export const normalizeVec2 = ( v: IVector2 ) : IVector2 =>
+{
+	vec2.normalize ( v, v );
+	return v;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Normalize a 3D vector.
+ * @param {IVector3} v - The vector to normalize.
+ * @returns {IVector3} The normalized vector.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export const normalizeVec3 = ( v: IVector3 ) : IVector3 =>
+{
+	vec3.normalize ( v, v );
+	return v;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Normalize a 4D vector.
+ * @param {IVector4} v - The vector to normalize.
+ * @returns {IVector4} The normalized vector.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export const normalizeVec4 = ( v: IVector4 ) : IVector4 =>
+{
+	vec4.normalize ( v, v );
+	return v;
+};
