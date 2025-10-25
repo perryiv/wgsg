@@ -33,6 +33,31 @@ import type {
 
 ///////////////////////////////////////////////////////////////////////////////
 //
+//	Make a state object with solid color.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export const makeSolidColorState = ( { color, shader, topology } :
+	{ color: IVector4, shader: SolidColor, topology: GPUPrimitiveTopology } ) : State =>
+{
+	// Make a copy of the color because we capture it below.
+	color = [ color[0], color[1], color[2], color[3] ];
+
+	// Make the state.
+	return new State ( {
+		name: `State with ${color.join(", ")} ${topology}`,
+		shader,
+		topology,
+		apply: ( () =>
+		{
+			shader.color = color;
+		} )
+	} );
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
 //	Make a scene used for testing.
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -77,7 +102,6 @@ const makeQuad = ( { origin, size, color, topology } :
 	// Give the input default values if needed.
 	origin ??= [ 0.0, 0.0, 0.0 ];
 	size ??= [ 1.0, 1.0 ];
-	color ??= [ 0.5, 0.5, 0.5, 1.0 ];
 	topology ??= "triangle-list";
 
 	// The points are the same for both topologies.
@@ -97,22 +121,98 @@ const makeQuad = ( { origin, size, color, topology } :
 	// Make the primitives.
 	const primitives = new Indexed ( { mode: topology, indices } );
 
-	// Make a copy of the color because we capture it below.
-	color = [ ...color ];
+	// Make the new geometry.
+	const geom = new Geometry ( { points, primitives } );
 
-	// Make the state.
-	const state = new State ( {
-		name: `State with ${color.join(", ")} ${topology}`,
-		shader,
-		topology,
-		apply: ( () =>
-		{
-			shader.color = color;
-		} )
-	} );
+	// Were we given a color?
+	if ( color )
+	{
+		geom.state = makeSolidColorState ( { color, shader, topology } );
+	}
 
 	// Return the new geometry.
-	return new Geometry ( { points, primitives, state } );
+	return geom;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Make the corners of a box.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export const makeCorners = ( { center, size } : { center?: IVector3, size?: IVector3 } ) : Float32Array =>
+{
+	// Give the input default values if needed.
+	center ??= [ 0.0, 0.0, 0.0 ];
+	size ??= [ 1.0, 1.0, 1.0 ];
+
+	// Half the size.
+	const hs = [ ( size[0] * 0.5 ), ( size[1] * 0.5 ), ( size[2] * 0.5 ) ];
+
+	// The extreme values.
+	const xMin = ( center[0] - hs[0] );
+	const xMax = ( center[0] + hs[0] );
+	const yMin = ( center[1] - hs[1] );
+	const yMax = ( center[1] + hs[1] );
+	const zMin = ( center[2] - hs[2] );
+	const zMax = ( center[2] + hs[2] );
+
+	// The points are the corners.
+	return new Float32Array ( [
+		xMin, yMin, zMin,
+		xMax, yMin, zMin,
+		xMin, yMax, zMin,
+		xMax, yMax, zMin,
+		xMin, yMin, zMax,
+		xMax, yMin, zMax,
+		xMin, yMax, zMax,
+		xMax, yMax, zMax,
+	] );
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Make a scene used for testing.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+const makeBox = ( { center, size, color, topology } :
+	{ center?: IVector3, size?: IVector3, color?: IVector4, topology?: GPUPrimitiveTopology } ) =>
+{
+	const shader = SolidColor.instance;
+
+	// Give the input default values if needed.
+	topology ??= "triangle-list";
+
+	// The points are the same for both topologies.
+	const points = makeCorners ( { center, size } );
+
+	// Make the indices based on the topology.
+	const indices = ( ( topology === "line-list" ) ?
+		( new Uint32Array ( [
+				0, 1, 1, 3, 3, 2, 2, 0,
+				0, 4, 1, 5, 3, 7, 2, 6,
+				4, 5, 5, 7, 7, 6, 6, 4
+			] ) ) :
+		( new Uint32Array ( [ 0, 1, 2, 1, 3, 2 ] ) )
+	);
+
+	// Make the primitives.
+	const primitives = new Indexed ( { mode: topology, indices } );
+
+	// Make the new geometry.
+	const geom = new Geometry ( { points, primitives } );
+
+	// Were we given a color?
+	if ( color )
+	{
+		geom.state = makeSolidColorState ( { color, shader, topology } );
+	}
+
+	// Return the new geometry.
+	return geom;
 };
 
 
@@ -167,7 +267,7 @@ export const buildSceneQuads = () : Node =>
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export const buildTwoSquares = () : Node =>
+export const buildSceneTwoSquares = () : Node =>
 {
 	const group = new Group();
 
@@ -186,4 +286,21 @@ export const buildTwoSquares = () : Node =>
 	} ) );
 
 	return group;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Make a scene used for testing.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export const buildSceneBox = () : Node =>
+{
+	return makeBox ( {
+		center: [ 0.0, 0.0, -3.0 ],
+		size: [ 1.0, 1.0, 1.0 ],
+		color: [ 8.0, 0.2, 0.2, 1.0 ],
+		topology: "line-list",
+	} );
 };

@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import {
-	buildTwoSquares,
+	buildSceneBox,
 } from "../Tools";
 import {
 	useEffect,
@@ -76,7 +76,7 @@ export function Viewer ( { style }: IViewerProps )
 			console.log ( `Singleton device ${Device.instance.id} initialized` );
 
 			const viewer = new InternalViewer ( { canvas: canvas.current } );
-			viewer.scene = buildTwoSquares();
+			viewer.scene = buildSceneBox();
 			setViewer ( viewer );
 
 			console.log ( `Internal viewer ${viewer.id} created and configured` );
@@ -101,7 +101,7 @@ export function Viewer ( { style }: IViewerProps )
 			console.log ( `Singleton device ${device} destroyed` );
 		} );
 	},
-	[] );
+	[ id ] );
 
 	// console.log ( "Rendering viewer component" );
 
