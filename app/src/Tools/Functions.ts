@@ -20,7 +20,6 @@ import {
 	IDENTITY_MATRIX,
 	Indexed,
 	Node,
-	normalizeVec3 as normalize,
 	SolidColor,
 	Sphere,
 	State,
@@ -301,26 +300,14 @@ export const buildSceneBox = () : Node =>
 {
 	const tr = new Transform();
 
-	mat4.translate ( tr.matrix, tr.matrix, [ 0.0, 0.0, -3.0 ] );
-
-	mat4.rotate (
-		tr.matrix,
-		tr.matrix,
-		( 15 * DEG_TO_RAD ),
-		normalize ( [ 1, 0, 0 ] )
-	);
-
-	mat4.rotate (
-		tr.matrix,
-		tr.matrix,
-		( -30 * DEG_TO_RAD ),
-		normalize ( [ 0, 1, 0 ] )
-	);
+	tr.translate ( [ 0.0, 0.0, -3.0 ] );
+	tr.rotate ( (  15 * DEG_TO_RAD ), [ 1, 0, 0 ] );
+	tr.rotate ( ( -30 * DEG_TO_RAD ), [ 0, 1, 0 ] );
 
 	tr.addChild ( makeBox ( {
 		center: [ 0.0, 0.0, 0.0 ],
-		size: [ 1.0, 1.0, 1.0 ],
-		color: [ 8.0, 0.2, 0.2, 1.0 ],
+		size:   [ 1.0, 1.0, 1.0 ],
+		color:  [ 8.0, 0.2, 0.2, 1.0 ],
 		topology: "line-list",
 	} ) );
 
