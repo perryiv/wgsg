@@ -89,6 +89,15 @@ export class Device extends Base
 
 		// Set the label for debugging.
 		device.label = `Device ${Device.#instance.id}`;
+
+		// Handle device lost events. We don't have enough information here to
+		// rebuild everything that needs to be rebuilt, so we just destroy the
+		// singleton instance.
+		void device.lost.then ( ( { reason, message }: GPUDeviceLostInfo ) =>
+		{
+			console.log ( `Device lost, reason: ${reason}, message: ${message}` );
+			Device.destroy();
+		} );
 	}
 
 	/**
@@ -126,6 +135,15 @@ export class Device extends Base
 	{
 		const { gpu } = navigator;
 		return ( !!gpu );
+	}
+
+	/**
+	 * Is the device valid?
+	 * @returns {boolean} True if the device is valid, false otherwise.
+	 */
+	public static get valid() : boolean
+	{
+		return ( !!Device.#instance );
 	}
 
 	/**
