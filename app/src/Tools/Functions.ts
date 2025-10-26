@@ -307,7 +307,7 @@ export const buildSceneBox = () : Node =>
 	tr.addChild ( makeBox ( {
 		center: [ 0.0, 0.0, 0.0 ],
 		size:   [ 1.0, 1.0, 1.0 ],
-		color:  [ 8.0, 0.2, 0.2, 1.0 ],
+		color:  [ 0.8, 0.2, 0.2, 1.0 ],
 		topology: "line-list",
 	} ) );
 
