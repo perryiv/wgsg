@@ -62,6 +62,7 @@ export function Viewer ( { style }: IViewerProps )
 	const [ , setViewer ] = useState < InternalViewer | null > ( null );
 	const scenes = useSceneStore ( ( state ) => state.scenes );
 	const setScene = useSceneStore ( ( state ) => state.setScene );
+	const removeScene = useSceneStore ( ( state ) => state.removeScene );
 
 	//
 	// Called when the component mounts or the scenes change.
@@ -88,16 +89,24 @@ export function Viewer ( { style }: IViewerProps )
 					const visitor = new DeviceLost();
 					visitor.handle ( scene );
 				}
+				// removeScene ( SCENE_NAME );
 			} );
 
 			console.log ( `Singleton device ${Device.instance.id} initialized` );
 
-			let scene = scenes.get ( SCENE_NAME );
-			if ( !scene )
-			{
-				scene = buildSceneBox();
-				setScene ( SCENE_NAME, scene );
-			}
+			const scene = buildSceneBox();
+			setScene ( SCENE_NAME, scene );
+
+			// let scene = scenes.get ( SCENE_NAME );
+			// if ( !scene )
+			// {
+			// 	scene = buildSceneBox();
+			// 	setScene ( SCENE_NAME, scene );
+			// }
+
+			// You should have a store of viewers instead of a store of scenes.
+			// That way when this component is remounted because of a hot-module-refresh,
+			// the same viewer (with the same navigation state) will be used.
 
 			const viewer = new InternalViewer ( { canvas: canvas.current } );
 			setViewer ( viewer );
@@ -120,12 +129,15 @@ export function Viewer ( { style }: IViewerProps )
 				return null;
 			} );
 
-			const device = Device.instance.id;
+			const device = ( Device.valid ? Device.instance : null );
 			Device.destroy();
-			console.log ( `Singleton device ${device} destroyed` );
+			console.log ( ( device ) ?
+				`Singleton device ${device.id} destroyed` :
+				"Singleton device was already destroyed"
+			);
 		} );
 	},
-	[ id, scenes, setScene ] );
+	[ id, removeScene, scenes, setScene ] );
 
 	// console.log ( "Rendering viewer component" );
 
