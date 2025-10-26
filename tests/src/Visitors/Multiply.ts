@@ -42,8 +42,10 @@ class MyMultiplyVisitor extends Multiply
 		this.result.push ( [ ...this.modelMatrix ] );
 		super.visitGroup ( group );
 	}
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	public override reset() {}
+	public override reset()
+	{
+		// Do nothing.
+	}
 };
 
 

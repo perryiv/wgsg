@@ -18,8 +18,14 @@ export abstract class Singleton
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 	static #instances = new Map < Function, unknown > ();
 
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	protected constructor() {}
+	/**
+	 * Construct the class.
+	 * @protected
+	 */
+	protected constructor()
+	{
+		// Nothing to do.
+	}
 
 	/**
 	 * Get the singleton instance of the class.

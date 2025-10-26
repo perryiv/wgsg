@@ -72,6 +72,14 @@ export class Array1 < InternalArrayType extends PossibleArrayType >
 	public set values ( values: ( InternalArrayType | null ) )
 	{
 		this.#values = values;
+		this.reset();
+	}
+
+	/**
+	 * Reset the buffer.
+	 */
+	public reset() : void
+	{
 		this.#buffer = null;
 	}
 

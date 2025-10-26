@@ -72,26 +72,34 @@ export abstract class Visitor extends Base
 		this.visitGroup ( proj );
 	}
 
-	/* eslint-disable @typescript-eslint/no-empty-function */
 	/* eslint-disable @typescript-eslint/no-unused-vars */
 
 	/**
 	 * Visit the geometry.
 	 * @param {Geometry} geom - The geometry to visit.
 	 */
-	public visitGeometry ( geom: Geometry ) : void	{}
+	public visitGeometry ( geom: Geometry ) : void
+	{
+		// Nothing to do.
+	}
 
 	/**
 	 * Visit the shape.
 	 * @param {Shape} shape - The shape to visit.
 	 */
-	public visitShape ( shape: Shape ) : void	{}
+	public visitShape ( shape: Shape ) : void
+	{
+		// Nothing to do.
+	}
 
 	/**
 	 * Visit the node.
 	 * @param {Node} node - The node to visit.
 	 */
-	public visitNode ( node: Node ) : void	{}
+	public visitNode ( node: Node ) : void
+	{
+		// Nothing to do.
+	}
 
 	/**
 	 * Reset to the initial state.

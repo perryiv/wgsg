@@ -68,13 +68,22 @@ export class SolidColor extends BaseClass
 	 */
 	public override destroy() : void
 	{
+		this.reset();
+		super.destroy();
+	}
+
+	/**
+	 * Reset the shader.
+	 */
+	public override reset() : void
+	{
 		if ( this.#uniforms )
 		{
 			this.#uniforms.destroy();
 			this.#uniforms = null;
 		}
 		this.#bindGroup = null;
-		super.destroy();
+		super.reset();
 	}
 
 	/**

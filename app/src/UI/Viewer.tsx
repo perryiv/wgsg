@@ -12,9 +12,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import {
-	buildSceneBox,
-} from "../Tools";
+import { buildSceneBox } from "../Tools";
+import { useSceneStore } from "../State";
 import {
 	useEffect,
 	useRef,
@@ -22,9 +21,19 @@ import {
 } from "react";
 import {
 	Device,
+	DeviceLost,
 	getNextId,
 	Viewer as InternalViewer,
 } from "wgsg-lib";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Constants used below.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+const SCENE_NAME = "main_scene";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -51,9 +60,11 @@ export function Viewer ( { style }: IViewerProps )
 	const [ id, ] = useState < number > ( getNextId() );
 	const canvas = useRef < HTMLCanvasElement | null > ( null );
 	const [ , setViewer ] = useState < InternalViewer | null > ( null );
+	const scenes = useSceneStore ( ( state ) => state.scenes );
+	const setScene = useSceneStore ( ( state ) => state.setScene );
 
 	//
-	// Called when the component mounts.
+	// Called when the component mounts or the scenes change.
 	//
 	useEffect ( () =>
 	{
@@ -71,13 +82,26 @@ export function Viewer ( { style }: IViewerProps )
 			void Device.instance.device.lost.then ( ( { reason, message }: GPUDeviceLostInfo ) =>
 			{
 				console.log ( `Context lost, reason: ${reason}, message: ${message}` );
+				const scene = scenes.get ( SCENE_NAME );
+				if ( scene )
+				{
+					const visitor = new DeviceLost();
+					visitor.handle ( scene );
+				}
 			} );
 
 			console.log ( `Singleton device ${Device.instance.id} initialized` );
 
+			let scene = scenes.get ( SCENE_NAME );
+			if ( !scene )
+			{
+				scene = buildSceneBox();
+				setScene ( SCENE_NAME, scene );
+			}
+
 			const viewer = new InternalViewer ( { canvas: canvas.current } );
-			viewer.scene = buildSceneBox();
 			setViewer ( viewer );
+			viewer.scene = scene;
 
 			console.log ( `Internal viewer ${viewer.id} created and configured` );
 		} ) ();
@@ -101,7 +125,7 @@ export function Viewer ( { style }: IViewerProps )
 			console.log ( `Singleton device ${device} destroyed` );
 		} );
 	},
-	[ id ] );
+	[ id, scenes, setScene ] );
 
 	// console.log ( "Rendering viewer component" );
 
