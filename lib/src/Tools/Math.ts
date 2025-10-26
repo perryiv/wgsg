@@ -12,8 +12,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IMatrix44, IVector2, IVector3, IVector4 } from "../Types";
 import { IDENTITY_MATRIX } from "./Constants";
+import { vec2, vec3, vec4 } from "gl-matrix";
+import type {
+	IMatrix44,
+	IVector2,
+	IVector3,
+	IVector4,
+} from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -124,3 +130,51 @@ export const clamp = ( v: IClampInputType, mn: Readonly<number>, mx: Readonly<nu
 
 	throw new Error ( "Invalid input type for clamp function" );
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Normalize a 2D vector.
+ * @param {IVector2} input - The vector to normalize.
+ * @returns {IVector2} The normalized vector.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export const normalizeVec2 = ( input: Readonly<IVector2> ) : IVector2 =>
+{
+	const answer: IVector2 = [ 0, 0 ];
+	vec2.normalize ( answer, input );
+	return answer;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Normalize a 3D vector.
+ * @param {IVector3} input - The vector to normalize.
+ * @returns {IVector3} The normalized vector.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export const normalizeVec3 = ( input: Readonly<IVector3> ) : IVector3 =>
+{
+	const answer: IVector3 = [ 0, 0, 0 ];
+	vec3.normalize ( answer, input );
+	return answer;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Normalize a 4D vector.
+ * @param {IVector4} input - The vector to normalize.
+ * @returns {IVector4} The normalized vector.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export const normalizeVec4 = ( input: Readonly<IVector4> ) : IVector4 =>
+{
+	const answer: IVector4 = [ 0, 0, 0, 0 ];
+	vec4.normalize ( answer, input );
+	return answer;
+};

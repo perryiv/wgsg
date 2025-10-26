@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Group } from "./Group";
-import { IMatrix44 } from "../../../Types";
+import { IMatrix44, IVector3 } from "../../../Types";
 import { isValidMatrix } from "../../../Math";
 import { mat4 } from "gl-matrix";
 import { Visitor } from "../../../Visitors/Visitor";
@@ -92,6 +92,25 @@ export class Transform extends Group
 
 		// Write over the values in our existing matrix.
 		mat4.copy ( this.#matrix, matrix );
+	}
+
+	/**
+	 * Translate the matrix.
+	 * @param {IVector3} v - The translation vector.
+	 */
+	public translate ( v: Readonly<IVector3> ) : void
+	{
+		mat4.translate ( this.#matrix, this.#matrix, v );
+	}
+
+	/**
+	 * Rotate the matrix.
+	 * @param {number} angle - The rotation angle in radians.
+	 * @param {IVector3} axis - The rotation axis.
+	 */
+	public rotate ( angle: Readonly<number>, axis: Readonly<IVector3> ) : void
+	{
+		mat4.rotate ( this.#matrix, this.#matrix, angle, axis );
 	}
 
 	/**
