@@ -15,11 +15,13 @@
 import { buildSceneBox } from "../Tools";
 import { useViewerStore } from "../State";
 import {
+	useCallback,
 	useEffect,
 	useRef,
 	useState,
 } from "react";
 import {
+	DEVELOPER_BUILD,
 	Device,
 	getNextId,
 	Viewer as InternalViewer,
@@ -62,6 +64,53 @@ export function Viewer ( { style }: IViewerProps )
 	const setViewer = useViewerStore ( ( state ) => state.setViewer );
 
 	//
+	// Local function to handle initialization.
+	// This has to be async because of how the device initializes.
+	//
+	const handleInit = useCallback ( async () =>
+	{
+		// This should never happen.
+		if ( !canvas.current )
+		{
+			throw new Error ( "Invalid canvas element" );
+		}
+
+		// See if the device is valid.
+		if ( false === Device.valid )
+		{
+			// Initialize the singleton device.
+			await Device.init();
+			console.log ( `Singleton device ${Device.instance.id} initialized` );
+
+			// Handle device lost.
+			void Device.instance.device.lost.then ( ( { reason, message }: GPUDeviceLostInfo ) =>
+			{
+				console.log ( `Context lost, reason: ${reason}, message: ${message}` );
+			} );
+		}
+
+		// Try to get the viewer from the store.
+		let viewer = getViewer ( VIEWER_NAME );
+
+		// Make the viewer if we have to.
+		if ( !viewer )
+		{
+			viewer = new InternalViewer ( { canvas: canvas.current } );
+			viewer.scene = buildSceneBox();
+			setViewer ( VIEWER_NAME, viewer );
+			console.log ( `Internal viewer ${viewer.id} created and configured` );
+		}
+
+		// This is for hot-module-refresh. It will be removed in production.
+		if ( DEVELOPER_BUILD )
+		{
+			console.log ( "Setting viewer scene" );
+			viewer.scene = buildSceneBox();
+			viewer.requestRender();
+		}
+	}, [ setViewer, getViewer ] );
+
+	//
 	// Called when the component mounts.
 	//
 	useEffect ( () =>
@@ -71,48 +120,7 @@ export function Viewer ( { style }: IViewerProps )
 		// This has to be async because of the device initialization.
 		void ( async () =>
 		{
-			// This should never happen.
-			if ( !canvas.current )
-			{
-				throw new Error ( "Invalid canvas element" );
-			}
-
-			// See if the device is valid.
-			if ( false === Device.valid )
-			{
-				// Initialize the singleton device.
-				await Device.init();
-				console.log ( `Singleton device ${Device.instance.id} initialized` );
-
-				// Handle device lost.
-				void Device.instance.device.lost.then ( ( { reason, message }: GPUDeviceLostInfo ) =>
-				{
-					console.log ( `Context lost, reason: ${reason}, message: ${message}` );
-				} );
-			}
-
-			// Try to get the viewer from the store.
-			let viewer = getViewer ( VIEWER_NAME );
-
-			// Make the viewer if we have to.
-			if ( !viewer )
-			{
-				viewer = new InternalViewer ( { canvas: canvas.current } );
-				viewer.scene = buildSceneBox();
-				setViewer ( VIEWER_NAME, viewer );
-				console.log ( `Internal viewer ${viewer.id} created and configured` );
-			}
-
-			// This is for hot-module-refresh. It will be removed in production.
-			// https://vite.dev/guide/env-and-mode
-			// @ts-expect-error ignore
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-			if ( import.meta.env.DEV )
-			{
-				console.log ( "Setting viewer scene" );
-				viewer.scene = buildSceneBox();
-				viewer.requestRender();
-			}
+			await handleInit();
 		} ) ();
 
 		return ( () =>
@@ -120,7 +128,7 @@ export function Viewer ( { style }: IViewerProps )
 			console.log ( `Viewer component ${id} unmounted` );
 		} );
 	},
-	[ id, getViewer, setViewer ] );
+	[ id, handleInit ] );
 
 	console.log ( "Rendering viewer component" );
 
