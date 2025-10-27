@@ -12,17 +12,65 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-let nextId = 0;
+import { DEVELOPER_BUILD } from "./Constants";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Variables needed below.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+const devNextIds = new Map < string, number > ();
+let prodNextId = 0;
+
+
+/**
+ * Get the next ID.
+ * @param {string | undefined} key - The key for which to get the next ID.
+ * @returns {number} The next unique ID.
+ */
+function devGetNextId ( key?: string ) : number
+{
+	if ( ( !key ) || ( key.length < 1 ) )
+	{
+		throw new Error ( `Invalid key '${key}' when getting the next ID` );
+	}
+
+	if ( false === devNextIds.has ( key ) )
+	{
+		devNextIds.set ( key, 1 );
+	}
+
+	const id = devNextIds.get ( key );
+
+	if ( undefined === id )
+	{
+		throw new Error ( `Unexpected undefined ID for key: ${key}` );
+	}
+
+	devNextIds.set ( key, ( id + 1 ) );
+
+	return id;
+};
 
 
 /**
  * Get the next ID.
  * @returns {number} The next unique ID.
  */
-export function getNextId()
+function prodGetNextId () : number
 {
-	return ++nextId;
-};
+	return ( ++prodNextId );
+}
+
+
+/**
+ * Export the appropriate function based on the build type.
+ * @param {string | undefined} key - The key for which to get the next ID (developer build only).
+ * @returns {number} The next unique ID.
+ */
+export const getNextId = ( ( DEVELOPER_BUILD ) ? devGetNextId : prodGetNextId );
 
 
 /**

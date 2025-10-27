@@ -12,6 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { DEVELOPER_BUILD } from "../Tools";
 import { getNextId } from "../Tools/Functions";
 
 
@@ -24,7 +25,9 @@ import { getNextId } from "../Tools/Functions";
 
 export abstract class Base
 {
-	#id: number = getNextId();
+	// We check the build type to avoid the (possibly) expensive call to
+	// "this.type" in a production environment every time we need a new id.
+	#id: number = ( ( DEVELOPER_BUILD ) ? ( getNextId ( this.type ) ) : ( getNextId() ) );
 
 	/**
 	 * Construct the class.
