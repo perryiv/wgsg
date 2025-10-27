@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { buildSceneBox } from "../Tools";
-import { useSceneStore } from "../State";
+import { useViewerStore } from "../State";
 import {
 	useEffect,
 	useRef,
@@ -21,7 +21,6 @@ import {
 } from "react";
 import {
 	Device,
-	DeviceLost,
 	getNextId,
 	Viewer as InternalViewer,
 } from "wgsg-lib";
@@ -33,12 +32,12 @@ import {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-const SCENE_NAME = "main_scene";
+const VIEWER_NAME = "main_viewer";
 
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Viewer props.
+//	Types for the viewer props.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -59,87 +58,71 @@ export function Viewer ( { style }: IViewerProps )
 	// Get state.
 	const [ id, ] = useState < number > ( getNextId() );
 	const canvas = useRef < HTMLCanvasElement | null > ( null );
-	const [ , setViewer ] = useState < InternalViewer | null > ( null );
-	const scenes = useSceneStore ( ( state ) => state.scenes );
-	const setScene = useSceneStore ( ( state ) => state.setScene );
-	const removeScene = useSceneStore ( ( state ) => state.removeScene );
+	const getViewer = useViewerStore ( ( state ) => state.getViewer );
+	const setViewer = useViewerStore ( ( state ) => state.setViewer );
 
 	//
-	// Called when the component mounts or the scenes change.
+	// Called when the component mounts.
 	//
 	useEffect ( () =>
 	{
 		console.log ( `Viewer component ${id} mounted` );
 
+		// This has to be async because of the device initialization.
 		void ( async () =>
 		{
+			// This should never happen.
 			if ( !canvas.current )
 			{
 				throw new Error ( "Invalid canvas element" );
 			}
 
-			await Device.init();
-
-			void Device.instance.device.lost.then ( ( { reason, message }: GPUDeviceLostInfo ) =>
+			// See if the device is valid.
+			if ( false === Device.valid )
 			{
-				console.log ( `Context lost, reason: ${reason}, message: ${message}` );
-				const scene = scenes.get ( SCENE_NAME );
-				if ( scene )
+				// Initialize the singleton device.
+				await Device.init();
+				console.log ( `Singleton device ${Device.instance.id} initialized` );
+
+				// Handle device lost.
+				void Device.instance.device.lost.then ( ( { reason, message }: GPUDeviceLostInfo ) =>
 				{
-					const visitor = new DeviceLost();
-					visitor.handle ( scene );
-				}
-				// removeScene ( SCENE_NAME );
-			} );
+					console.log ( `Context lost, reason: ${reason}, message: ${message}` );
+				} );
+			}
 
-			console.log ( `Singleton device ${Device.instance.id} initialized` );
+			// Try to get the viewer from the store.
+			let viewer = getViewer ( VIEWER_NAME );
 
-			const scene = buildSceneBox();
-			setScene ( SCENE_NAME, scene );
+			// Make the viewer if we have to.
+			if ( !viewer )
+			{
+				viewer = new InternalViewer ( { canvas: canvas.current } );
+				viewer.scene = buildSceneBox();
+				setViewer ( VIEWER_NAME, viewer );
+				console.log ( `Internal viewer ${viewer.id} created and configured` );
+			}
 
-			// let scene = scenes.get ( SCENE_NAME );
-			// if ( !scene )
-			// {
-			// 	scene = buildSceneBox();
-			// 	setScene ( SCENE_NAME, scene );
-			// }
-
-			// You should have a store of viewers instead of a store of scenes.
-			// That way when this component is remounted because of a hot-module-refresh,
-			// the same viewer (with the same navigation state) will be used.
-
-			const viewer = new InternalViewer ( { canvas: canvas.current } );
-			setViewer ( viewer );
-			viewer.scene = scene;
-
-			console.log ( `Internal viewer ${viewer.id} created and configured` );
+			// This is for hot-module-refresh. It will be removed in production.
+			// https://vite.dev/guide/env-and-mode
+			// @ts-expect-error ignore
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+			if ( import.meta.env.DEV )
+			{
+				console.log ( "Setting viewer scene" );
+				viewer.scene = buildSceneBox();
+				viewer.requestRender();
+			}
 		} ) ();
 
 		return ( () =>
 		{
 			console.log ( `Viewer component ${id} unmounted` );
-
-			setViewer ( ( current: ( InternalViewer | null ) ) =>
-			{
-				if ( current )
-				{
-					console.log ( `Destroying internal viewer ${current.id}` );
-					current.destroy();
-				}
-				return null;
-			} );
-
-			const device = ( Device.valid ? Device.instance : null );
-			Device.destroy();
-			console.log ( ( device ) ?
-				`Singleton device ${device.id} destroyed` :
-				"Singleton device was already destroyed"
-			);
 		} );
 	},
-	[ id, removeScene, scenes, setScene ] );
+	[ id, getViewer, setViewer ] );
 
-	// console.log ( "Rendering viewer component" );
+	console.log ( "Rendering viewer component" );
 
 	//
 	// Render the components.
