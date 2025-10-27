@@ -23,6 +23,7 @@ import {
 import {
 	DEVELOPER_BUILD,
 	Device,
+	DeviceLost,
 	getNextId,
 	Viewer as InternalViewer,
 } from "wgsg-lib";
@@ -64,29 +65,60 @@ export function Viewer ( { style }: IViewerProps )
 	const setViewer = useViewerStore ( ( state ) => state.setViewer );
 
 	//
-	// Local function to handle initialization.
-	// This has to be async because of how the device initializes.
+	// Handle lost device.
 	//
-	const handleInit = useCallback ( async () =>
+	const handleLostDevice = useCallback ( () =>
+	{
+		// Get the scene.
+		const viewer = getViewer ( VIEWER_NAME );
+		const scene = viewer ? viewer.scene : null;
+
+		// Handle no scene.
+		if ( !scene )
+		{
+			return;
+		}
+
+		// Visit the scene.
+		const visitor = new DeviceLost();
+		visitor.handle ( scene );
+	},
+	[ getViewer ] );
+
+	//
+	// Initialize the device.
+	//
+	const initDevice = useCallback ( async () =>
+	{
+		// Do nothing if the device is valid.
+		if ( true === Device.valid )
+		{
+			return;
+		}
+
+		// Initialize the singleton device.
+		await Device.init();
+		console.log ( `Singleton device ${Device.instance.id} initialized` );
+
+		// Handle device lost.
+		void Device.instance.device.lost.then ( async ( { reason, message }: GPUDeviceLostInfo ) =>
+		{
+			console.log ( `Context lost, reason: ${reason}, message: ${message}` );
+			await initDevice();
+			handleLostDevice();
+		} );
+	},
+	[ handleLostDevice ] );
+
+	//
+	// Handle getting or creating the viewer.
+	//
+	const getOrCreateViewer = useCallback ( () =>
 	{
 		// This should never happen.
 		if ( !canvas.current )
 		{
 			throw new Error ( "Invalid canvas element" );
-		}
-
-		// See if the device is valid.
-		if ( false === Device.valid )
-		{
-			// Initialize the singleton device.
-			await Device.init();
-			console.log ( `Singleton device ${Device.instance.id} initialized` );
-
-			// Handle device lost.
-			void Device.instance.device.lost.then ( ( { reason, message }: GPUDeviceLostInfo ) =>
-			{
-				console.log ( `Context lost, reason: ${reason}, message: ${message}` );
-			} );
 		}
 
 		// Try to get the viewer from the store.
@@ -101,6 +133,24 @@ export function Viewer ( { style }: IViewerProps )
 			console.log ( `Internal viewer ${viewer.id} created and configured` );
 		}
 
+		// Return the viewer.
+		return viewer;
+	},
+	[ getViewer, setViewer ] );
+
+	//
+	// Local function to handle initialization.
+	// This has to be async because of how the device initializes.
+	//
+	const handleInit = useCallback ( async () =>
+	{
+		// See if the device is valid.
+		await initDevice();
+
+		// Get the viewer or make it if we have to.
+		const viewer = getOrCreateViewer();
+		viewer.scene = buildSceneBox();
+
 		// This is for hot-module-refresh. It will be removed in production.
 		if ( DEVELOPER_BUILD )
 		{
@@ -108,7 +158,7 @@ export function Viewer ( { style }: IViewerProps )
 			viewer.scene = buildSceneBox();
 			viewer.requestRender();
 		}
-	}, [ setViewer, getViewer ] );
+	}, [ getOrCreateViewer, initDevice ] );
 
 	//
 	// Called when the component mounts.
