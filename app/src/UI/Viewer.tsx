@@ -48,7 +48,7 @@ export interface IViewerProps
 export function Viewer ( { style }: IViewerProps )
 {
 	// Get state.
-	const [ id, ] = useState < number > ( getNextId() );
+	const [ id, ] = useState < number > ( getNextId ( "Viewer Component" ) );
 	const canvas = useRef < HTMLCanvasElement | null > ( null );
 	const [ , setViewer ] = useState < InternalViewer | null > ( null );
 

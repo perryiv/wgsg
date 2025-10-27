@@ -28,12 +28,13 @@ export function test ()
 	{
 		it ( "Get the next id a few times", function ()
 		{
-			const id = getNextId();
-			expect ( id ).to.equal ( 3 ); // Change this number as needed.
+			const key = "some_id_key";
+			const id = getNextId ( key );
+			expect ( id ).to.equal ( 1 ); // Change this number as needed.
 			expect ( typeof id ).to.equal ( "number" );
 			for ( let i = 1; i < 11; ++i )
 			{
-				expect ( getNextId() ).to.equal ( id + i );
+				expect ( getNextId ( key ) ).to.equal ( id + i );
 			}
 		} );
 	} );

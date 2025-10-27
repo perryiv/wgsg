@@ -46,7 +46,7 @@ export function test ()
 			expect ( Device.instance ).to.exist;
 			expect ( Device.instance instanceof Device ).to.be.true;
 
-			const id = getNextId();
+			const id = getNextId ( "Viewers.Surface" );
 			const canvas = document.createElement ( "canvas" );
 			const surface = new Surface ( { canvas } );
 
