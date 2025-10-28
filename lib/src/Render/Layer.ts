@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base as BaseClass } from "../Base";
+import { IRenderGraphInfo } from "../Types";
 import { Bin } from "./Bin";
 
 
@@ -56,16 +57,18 @@ export class Layer extends BaseClass
 
 	/**
 	 * Get the bin. Make it if we have to.
+	 * @param {IRenderGraphInfo} info - The render graph info.
 	 * @param {number} id - The bin ID.
 	 * @returns {Bin} The bin.
 	 */
-	public getBin ( id: Readonly<number> ) : Bin
+	public getBin ( info: IRenderGraphInfo, id: Readonly<number> ) : Bin
 	{
 		let bin: ( Bin | undefined ) = this.#bins.get ( id );
 		if ( !bin )
 		{
 			bin = new Bin ();
 			this.#bins.set ( id, bin );
+			info.numBins++;
 		}
 		return bin;
 	}

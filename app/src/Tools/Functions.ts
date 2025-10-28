@@ -227,7 +227,7 @@ export const buildSceneQuads = () : Node =>
 {
 	const group = new Group();
 
-	const num = 20;
+	const num = 50;
 	const w = 2.0 / num;
 	const h = 2.0 / num;
 
@@ -246,7 +246,7 @@ export const buildSceneQuads = () : Node =>
 			const b = ( 0.1 + 0.8 * Math.random() );
 
 			group.addChild ( makeQuad ( {
-				origin: [ x, y, 0.0 ],
+				origin: [ x, y, -2.0 ],
 				size: [ w, h ],
 				color: [ r, g, b, 1.0 ],
 				topology: "triangle-list"

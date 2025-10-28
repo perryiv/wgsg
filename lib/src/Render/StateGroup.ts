@@ -15,6 +15,7 @@
 import { Base as BaseClass } from "../Base";
 import { Shape } from "../Scene/Nodes/Shapes/Shape";
 import { State } from "../Scene";
+import type { IRenderGraphInfo } from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -61,11 +62,13 @@ export class StateGroup extends BaseClass
 
 	/**
 	 * Add the shape to the state group.
+	 * @param {IRenderGraphInfo} info - The render graph info.
 	 * @param {Shape} shape - The shape to add.
 	 */
-	public addShape ( shape: Shape )
+	public addShape ( info: IRenderGraphInfo, shape: Shape )
 	{
 		this.#shapes.push ( shape );
+		info.numShapes++;
 	}
 
 	/**

@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { buildSceneBox } from "../Tools";
+import { buildSceneQuads } from "../Tools";
 import { useViewerStore } from "../State";
 import {
 	useCallback,
@@ -63,6 +63,15 @@ export function Viewer ( { style }: IViewerProps )
 	const canvas = useRef < HTMLCanvasElement | null > ( null );
 	const getViewer = useViewerStore ( ( state ) => state.getViewer );
 	const setViewer = useViewerStore ( ( state ) => state.setViewer );
+
+	//
+	// Build the test scene.
+	//
+	const buildTestScene = useCallback ( () =>
+	{
+		return buildSceneQuads();
+	},
+	[] );
 
 	//
 	// Handle when the device is lost.
@@ -147,7 +156,7 @@ export function Viewer ( { style }: IViewerProps )
 		if ( !viewer )
 		{
 			viewer = new InternalViewer ( { canvas: canvas.current } );
-			viewer.scene = buildSceneBox();
+			viewer.scene = buildTestScene();
 			setViewer ( VIEWER_NAME, viewer );
 			console.log ( `Internal viewer ${viewer.id} created and configured` );
 		}
@@ -155,7 +164,7 @@ export function Viewer ( { style }: IViewerProps )
 		// Return the viewer.
 		return viewer;
 	},
-	[ getViewer, setViewer ] );
+	[ buildTestScene, getViewer, setViewer ] );
 
 	//
 	// Local function to handle initialization.
@@ -173,10 +182,10 @@ export function Viewer ( { style }: IViewerProps )
 		if ( DEVELOPER_BUILD )
 		{
 			console.log ( "Building new scene for viewer" );
-			viewer.scene = buildSceneBox();
+			viewer.scene = buildTestScene();
 			viewer.requestRender();
 		}
-	}, [ getOrCreateViewer, initDevice ] );
+	}, [ buildTestScene, getOrCreateViewer, initDevice ] );
 
 	//
 	// Called when the component mounts.

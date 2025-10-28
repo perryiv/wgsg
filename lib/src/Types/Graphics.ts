@@ -19,3 +19,14 @@ export interface IDeviceOptions
 }
 
 export type ITextureFormat = GPUTextureFormat;
+
+export interface IRenderGraphInfo
+{
+	numLayers: number;
+	numBins: number;
+	numPipelines: number;
+	numProjMatrixGroups: number;
+	numModelMatrixGroups: number;
+	numStateGroups: number;
+	numShapes: number;
+}

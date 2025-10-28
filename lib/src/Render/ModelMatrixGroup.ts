@@ -17,7 +17,7 @@ import { IDENTITY_MATRIX } from "../Tools/Constants";
 import { mat4 } from "gl-matrix";
 import { State } from "../Scene";
 import { StateGroup } from "./StateGroup";
-import type { IMatrix44 } from "../Types";
+import type { IMatrix44, IRenderGraphInfo } from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -72,10 +72,11 @@ export class ModelMatrixGroup extends BaseClass
 
 	/**
 	 * Get the state group. Make it if we have to.
+	 * @param {IRenderGraphInfo} info - The render graph info.
 	 * @param {State} state - The state.
 	 * @returns {StateGroup} The state group.
 	 */
-	public getStateGroup ( state: State ) : StateGroup
+	public getStateGroup ( info: IRenderGraphInfo, state: State ) : StateGroup
 	{
 		// Two states with the same name become one state group in the map.
 		const { name } = state;
@@ -84,6 +85,7 @@ export class ModelMatrixGroup extends BaseClass
 		{
 			sg = new StateGroup ( state );
 			this.#stateGroupMap.set ( name, sg );
+			info.numStateGroups++;
 		}
 		return sg;
 	}

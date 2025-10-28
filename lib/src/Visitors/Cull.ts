@@ -8,13 +8,14 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Cull visitor class. It constructs a render graph when visiting scene.
+//	Cull visitor class makes a render graph when visiting the scene.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Multiply } from "./Multiply";
 import { Root } from "../Render";
 import { SolidColor } from "../Shaders";
+import type { IRenderGraphInfo } from "../Types";
 import {
 	Geometry,
 	Group,
@@ -27,10 +28,9 @@ import {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-/**
- * Input for the cull visitor constructor.
- * @interface
- */
+//
+//	Types used below.
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 interface ICullVisitorInput
@@ -38,6 +38,46 @@ interface ICullVisitorInput
 	root?: Root,
 	defaultState?: State
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Make the default render graph info.
+ * @returns {IRenderGraphInfo} The default render graph info.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+const makeDefaultRenderGraphInfo = () : IRenderGraphInfo =>
+{
+	return {
+		numLayers: 0,
+		numBins: 0,
+		numPipelines: 0,
+		numProjMatrixGroups: 0,
+		numModelMatrixGroups: 0,
+		numStateGroups: 0,
+		numShapes: 0
+	};
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Reset the render graph info.
+ * @param {IRenderGraphInfo} info - The render graph info.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+const resetRenderGraphInfo = ( info: IRenderGraphInfo ) : void =>
+{
+	info.numLayers = 0;
+	info.numBins = 0;
+	info.numPipelines = 0;
+	info.numProjMatrixGroups = 0;
+	info.numModelMatrixGroups = 0;
+	info.numStateGroups = 0;
+	info.numShapes = 0;
+};
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -68,6 +108,7 @@ export class Cull extends Multiply
 	#root: Root;
 	#defaultState: State;
 	#currentState: ( State | null ) = null;
+	#info: IRenderGraphInfo = makeDefaultRenderGraphInfo();
 
 	/**
 	 * Construct the class.
@@ -122,6 +163,14 @@ export class Cull extends Multiply
 			throw new Error ( "Setting invalid render graph root" );
 		}
 		this.#root = root;
+	}
+
+	/*
+	 * Get the numbers of the various objects in the render graph.
+	 */
+	public get renderGraphInfo () : IRenderGraphInfo
+	{
+		return this.#info;
 	}
 
 	/**
@@ -263,6 +312,7 @@ export class Cull extends Multiply
 		const pm = this.projMatrix;
 		const state = this.currentState;
 		const { shader } = state;
+		const info = this.#info;
 
 		// We need a shader.
 		if ( !shader )
@@ -271,15 +321,15 @@ export class Cull extends Multiply
 		}
 
 		// Get or make the containers we need.
-		const layer = root.getLayer ( state.layer );
-		const bin = layer.getBin ( state.bin );
-		const pipeline = bin.getPipeline ( state );
-		const pmg = pipeline.getProjMatrixGroup ( pm );
-		const mmg = pmg.getModelMatrixGroup ( mm );
-		const sg = mmg.getStateGroup ( state );
+		const layer = root.getLayer ( info, state.layer );
+		const bin = layer.getBin ( info, state.bin );
+		const pipeline = bin.getPipeline ( info, state );
+		const pmg = pipeline.getProjMatrixGroup ( info, pm );
+		const mmg = pmg.getModelMatrixGroup ( info, mm );
+		const sg = mmg.getStateGroup ( info, state );
 
 		// Add our shape.
-		sg.addShape ( shape );
+		sg.addShape ( info, shape );
 
 		// Do this last.
 		super.visitShape ( shape );
@@ -303,5 +353,7 @@ export class Cull extends Multiply
 	public override reset() : void
 	{
 		this.root.clear();
+		resetRenderGraphInfo ( this.#info );
+		this.#currentState = null;
 	}
 }

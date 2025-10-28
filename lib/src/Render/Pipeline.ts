@@ -13,9 +13,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base as BaseClass } from "../Base";
-import { IMatrix44 } from "../Types";
 import { ProjMatrixGroup } from "./ProjMatrixGroup";
 import { ShaderBase } from "../Shaders";
+import type { IMatrix44, IRenderGraphInfo } from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -87,10 +87,11 @@ export class Pipeline extends BaseClass
 
 	/**
 	 * Get the projection matrix. Make it if we have to.
+	 * @param {IRenderGraphInfo} info - The render graph info.
 	 * @param {IMatrix44} matrix - The projection matrix.
 	 * @returns {ProjMatrix} The projection matrix.
 	 */
-	public getProjMatrixGroup ( matrix: Readonly<IMatrix44> ) : ProjMatrixGroup
+	public getProjMatrixGroup ( info: IRenderGraphInfo, matrix: Readonly<IMatrix44> ) : ProjMatrixGroup
 	{
 		const name = JSON.stringify ( matrix );
 		let pmg = this.#projMatrixMap.get ( name );
@@ -98,6 +99,7 @@ export class Pipeline extends BaseClass
 		{
 			pmg = new ProjMatrixGroup ( matrix );
 			this.#projMatrixMap.set ( name, pmg );
+			info.numProjMatrixGroups++;
 		}
 		return pmg;
 	}
