@@ -65,13 +65,24 @@ export function Viewer ( { style }: IViewerProps )
 	const setViewer = useViewerStore ( ( state ) => state.setViewer );
 
 	//
-	// Handle lost device.
+	// Handle when the device is lost.
 	//
-	const handleLostDevice = useCallback ( () =>
+	const handleDeviceLost = useCallback ( () =>
 	{
-		// Get the scene.
+		// Get the viewer.
 		const viewer = getViewer ( VIEWER_NAME );
-		const scene = viewer ? viewer.scene : null;
+
+		// Handle no viewer.
+		if ( !viewer )
+		{
+			return;
+		}
+
+		// Tell the viewer to handle the lost device.
+		viewer.handleDeviceLost();
+
+		// Get the scene.
+		const { scene } = viewer;
 
 		// Handle no scene.
 		if ( !scene )
@@ -82,6 +93,9 @@ export function Viewer ( { style }: IViewerProps )
 		// Visit the scene.
 		const visitor = new DeviceLost();
 		visitor.handle ( scene );
+
+		// Render again so that we see the rebuilt scene.
+		viewer.requestRender();
 	},
 	[ getViewer ] );
 
@@ -101,14 +115,19 @@ export function Viewer ( { style }: IViewerProps )
 		console.log ( `Singleton device ${Device.instance.id} initialized` );
 
 		// Handle device lost.
-		void Device.instance.device.lost.then ( async ( { reason, message }: GPUDeviceLostInfo ) =>
+		void Device.instance.device.lost.then ( async () =>
 		{
-			console.log ( `Context lost, reason: ${reason}, message: ${message}` );
+			// It's probably already destroyed but make sure.
+			Device.destroy();
+
+			// Make it again.
 			await initDevice();
-			handleLostDevice();
+
+			// This will rebuild the resources.
+			handleDeviceLost();
 		} );
 	},
-	[ handleLostDevice ] );
+	[ handleDeviceLost ] );
 
 	//
 	// Handle getting or creating the viewer.
@@ -144,17 +163,16 @@ export function Viewer ( { style }: IViewerProps )
 	//
 	const handleInit = useCallback ( async () =>
 	{
-		// See if the device is valid.
+		// Initialize the device if needed.
 		await initDevice();
 
 		// Get the viewer or make it if we have to.
 		const viewer = getOrCreateViewer();
-		viewer.scene = buildSceneBox();
 
 		// This is for hot-module-refresh. It will be removed in production.
 		if ( DEVELOPER_BUILD )
 		{
-			console.log ( "Setting viewer scene" );
+			console.log ( "Building new scene for viewer" );
 			viewer.scene = buildSceneBox();
 			viewer.requestRender();
 		}
