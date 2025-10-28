@@ -17,6 +17,7 @@
 import { Base as BaseClass } from "../Base";
 import { Pipeline } from "./Pipeline";
 import { State } from "../Scene";
+import { IRenderGraphInfo } from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -59,10 +60,11 @@ export class Bin extends BaseClass
 
 	/**
 	 * Get the pipeline. Make it if we have to.
+	 * @param {IRenderGraphInfo} info - The render graph info.
 	 * @param {State} state - The state.
 	 * @returns {Pipeline} The pipeline.
 	 */
-	public getPipeline ( state: State ) : Pipeline
+	public getPipeline ( info: IRenderGraphInfo, state: State ) : Pipeline
 	{
 		const { shader, topology } = state;
 
@@ -78,6 +80,7 @@ export class Bin extends BaseClass
 		{
 			pipeline = new Pipeline ( { shader, topology } );
 			this.#pipelines.set ( name, pipeline );
+			info.numPipelines++;
 		}
 
 		return pipeline;

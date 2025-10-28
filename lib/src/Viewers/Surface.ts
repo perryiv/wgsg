@@ -818,6 +818,6 @@ export class Surface extends Base
 		// Finish the frame.
 		this.#frame.end = performance.now();
 
-		console.log ( `${this.type} ${this.id} rendering frame ${this.#frame.count} took ${this.#frame.end - this.#frame.start} milliseconds` );
+		console.log ( `${this.type} ${this.id} rendering, frame: ${this.#frame.count}, milliseconds: ${this.#frame.end - this.#frame.start}, info:`, this.cullVisitor.renderGraphInfo );
 	}
 }

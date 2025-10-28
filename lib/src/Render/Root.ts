@@ -14,6 +14,7 @@
 
 import { Base as BaseClass } from "../Base";
 import { Layer } from "./Layer";
+import type { IRenderGraphInfo } from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -63,16 +64,18 @@ export class Root extends BaseClass
 	
 	/**
 	 * Get the layer. Make it if we have to.
+	 * @param {IRenderGraphInfo} info - The render graph info.
 	 * @param {number} index - The layer index.
 	 * @returns {Layer} The layer.
 	 */
-	public getLayer ( index: Readonly<number> ) : Layer
+	public getLayer ( info: IRenderGraphInfo, index: Readonly<number> ) : Layer
 	{
 		let layer: ( Layer | undefined ) = this.#layers.get ( index );
 		if ( !layer )
 		{
 			layer = new Layer ();
 			this.#layers.set ( index, layer );
+			info.numLayers++;
 		}
 		return layer;
 	}

@@ -16,7 +16,7 @@ import { Base as BaseClass } from "../Base";
 import { IDENTITY_MATRIX } from "../Tools/Constants";
 import { mat4 } from "gl-matrix";
 import { ModelMatrixGroup } from "./ModelMatrixGroup";
-import type { IMatrix44 } from "../Types";
+import type { IMatrix44, IRenderGraphInfo } from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -71,10 +71,11 @@ export class ProjMatrixGroup extends BaseClass
 
 	/**
 	 * Get the model matrix. Make it if we have to.
+	 * @param {IRenderGraphInfo} info - The render graph info.
 	 * @param {IMatrix44} matrix - The model matrix.
 	 * @returns {ModelMatrixGroup} The model matrix.
 	 */
-	public getModelMatrixGroup ( matrix: Readonly<IMatrix44> ) : ModelMatrixGroup
+	public getModelMatrixGroup ( info: IRenderGraphInfo, matrix: Readonly<IMatrix44> ) : ModelMatrixGroup
 	{
 		const name = JSON.stringify ( matrix );
 		let mmg = this.#modelMatrixMap.get ( name );
@@ -82,6 +83,7 @@ export class ProjMatrixGroup extends BaseClass
 		{
 			mmg = new ModelMatrixGroup ( matrix );
 			this.#modelMatrixMap.set ( name, mmg );
+			info.numModelMatrixGroups++;
 		}
 		return mmg;
 	}
