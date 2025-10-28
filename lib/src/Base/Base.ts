@@ -34,15 +34,17 @@ export abstract class Base
 	 * @class
 	 */
 	constructor()
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
 	{
+		// Nothing to do.
 	}
 
 	/**
 	 * Destroy the class.
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	public destroy() : void {}
+	public destroy() : void
+	{
+		// Nothing to do.
+	}
 
 	/**
 	 * Return the id.

@@ -74,6 +74,14 @@ export class Arrays extends BaseClass
 	}
 
 	/**
+	 * Reset the indexed primitive list.
+	 */
+	public override reset() : void
+	{
+		super.reset();
+	}
+
+	/**
 	 * Accept the draw-visitor.
 	 * @param {DrawVisitor} visitor - The visitor object.
 	 */

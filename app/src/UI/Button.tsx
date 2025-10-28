@@ -8,52 +8,57 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Test code for the visitor classes.
+//	Button component.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { expect } from "chai";
-import { Visitor } from "wgsg-lib";
+import { MouseEvent, useCallback } from "react";
 
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Used below.
+//	Types used below.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-class MyConcreteVisitor extends Visitor
+type ButtonClickEvent = MouseEvent<HTMLAnchorElement>;
+
+export interface IButtonProps
 {
-	public override getClassName() : string
-	{
-		return "MyConcreteVisitor";
-	}
-	public override reset()
-	{
-		// Nothing to do.
-	}
-};
+	label: string;
+	onClick?: ( event: ButtonClickEvent ) => void;
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Test the code.
+//	Button component.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export function test ()
+export function Button ( props: IButtonProps )
 {
-	describe ( "Visitor", function ()
+	// Get input.
+	const { label, onClick } = props;
+
+	//
+	// Handle the click.
+	//
+	const handleClick = useCallback ( ( event: ButtonClickEvent ) =>
 	{
-		it ( "Can inherit from the base visitor class", function ()
+		if ( onClick )
 		{
-			const a = new MyConcreteVisitor();
-			expect ( a instanceof Visitor ).to.be.true;
-			expect ( a.type ).to.be.equal ( a.getClassName() );
-			expect ( a.type ).to.be.equal ( "MyConcreteVisitor" );
-			expect ( a.id ).to.exist;
-			expect ( typeof a.id ).to.be.equal ( "number" );
-			expect ( a.id ).to.be.greaterThan ( 0 );
-		} );
-	} );
-};
+			onClick ( event );
+		}
+	},
+	[ onClick ] );
+
+	//
+	// Render the components.
+	//
+	return (
+		<div>
+			<a onClick = { handleClick } > { label } </a>
+		</div>
+	);
+}

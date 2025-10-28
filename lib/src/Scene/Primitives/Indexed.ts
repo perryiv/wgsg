@@ -75,6 +75,15 @@ export class Indexed extends BaseClass
 	}
 
 	/**
+	 * Reset the indexed primitive list.
+	 */
+	public override reset() : void
+	{
+		this.#indices?.reset();
+		super.reset();
+	}
+
+	/**
 	 * Accept the draw-visitor.
 	 * @param {DrawVisitor} visitor - The visitor object.
 	 */

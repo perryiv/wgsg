@@ -58,6 +58,14 @@ export abstract class Base extends BaseClass
 	}
 
 	/**
+	 * Reset the primitive list.
+	 */
+	public reset() : void
+	{
+		// Do nothing here.
+	}
+
+	/**
 	 * Get the mode.
 	 * @returns {GPUPrimitiveTopology} The mode.
 	 */

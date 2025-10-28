@@ -77,10 +77,18 @@ export abstract class ShaderBase extends Base
 	 */
 	public override destroy() : void
 	{
+		this.reset();
+		super.destroy();
+	}
+
+	/**
+	 * Reset the shader.
+	 */
+	public reset() : void
+	{
 		this.#module = null;
 		this.#data = { pipeline: null, topology: null };
 		this.#device = 0;
-		super.destroy();
 	}
 
 	/**

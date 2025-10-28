@@ -32,6 +32,7 @@ export const DEG_TO_RAD = ( Math.PI / 180 );
 export const RAD_TO_DEG = ( 180 / Math.PI );
 
 // Vite's import.meta.env doesn't have types so cast it.
+// https://vite.dev/guide/env-and-mode
 const VITE_ENVIRONMENT_VARIABLES = ( ( import.meta as unknown as { env?: { DEV?: boolean } } ).env ?? {} );
 
 export const DEVELOPER_BUILD = !!( VITE_ENVIRONMENT_VARIABLES.DEV );
