@@ -40,11 +40,7 @@ import {
 
 export interface ISurfaceConstructor
 {
-	// These two are needed.
 	canvas: HTMLCanvasElement;
-
-	// The user can configure this if desired.
-	context?: ( GPUCanvasContext | null );
 }
 
 export interface ITimeoutHandles
@@ -63,7 +59,7 @@ interface IVisitors
 {
 	update: UpdateVisitor;
 	cull: CullVisitor;
-	draw: DrawVisitor;
+	draw: ( DrawVisitor | null );
 }
 
 
@@ -94,7 +90,7 @@ export class Surface extends Base
 	 * @class
 	 * @param {ISurfaceConstructor} input - The constructor input object.
 	 */
-	constructor ( { canvas, context } : ISurfaceConstructor )
+	constructor ( { canvas } : ISurfaceConstructor )
 	{
 		// Call this first.
 		super();
@@ -103,18 +99,6 @@ export class Surface extends Base
 		if ( !canvas )
 		{
 			throw new Error ( "Invalid canvas when constructing a surface" );
-		}
-
-		// This one is optional. Make it if we have to.
-		if ( !context )
-		{
-			context = Device.instance.getConfiguredContext ( canvas );
-		}
-
-		// This should be valid when we get to here.
-		if ( !context )
-		{
-			throw new Error ( "Failed to get rendering context for canvas when constructing a surface" );
 		}
 
 		// Shortcuts.
@@ -131,7 +115,6 @@ export class Surface extends Base
 		// Now we can make the visitors.
 		const update = new UpdateVisitor();
 		const cull = new CullVisitor ( { root, defaultState: state } );
-		const draw = new DrawVisitor ( { context } );
 
 		// Observe changes to the canvas size.
 		// https://webgpufundamentals.org/webgpu/lessons/webgpu-fundamentals.html#a-resizing
@@ -140,11 +123,13 @@ export class Surface extends Base
 
 		// Set our members.
 		this.#canvas = canvas;
-		this.#context = context;
 		this.#observer = observer;
 		this.#viewport = { x: 0, y: 0, width, height };
 		this.#defaultState = state;
-		this.#visitors = { update, cull, draw };
+		this.#visitors = { update, cull, draw: null };
+
+		// This will make the context and draw visitor.
+		this.handleDeviceLost();
 	}
 
 	/**
@@ -194,6 +179,37 @@ export class Surface extends Base
 	public isDestroyed() : boolean
 	{
 		return ( null === this.#defaultState );
+	}
+
+	/**
+	 * Handle when the device is lost.
+	 */
+	public handleDeviceLost () : void
+	{
+		// Get the context from the canvas using the new device.
+		const context = Device.instance.getConfiguredContext ( this.canvas );
+
+		// This should be valid when we get to here.
+		if ( !context )
+		{
+			throw new Error ( "Failed to get rendering context for canvas when constructing a surface" );
+		}
+
+		// Make the draw visitor.
+		const draw = new DrawVisitor ( { context } );
+
+		// Shortcut.
+		const visitors = this.#visitors;
+
+		// This should not happen.
+		if ( !visitors )
+		{
+			throw new Error ( "Invalid visitors object in surface class" );
+		}
+
+		// Set our members.
+		this.#context = context;
+		visitors.draw = draw;
 	}
 
 	/**
