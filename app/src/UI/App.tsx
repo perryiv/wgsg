@@ -14,6 +14,9 @@
 
 import { useEffect } from "react";
 import { Viewer } from "./Viewer";
+import { Panel } from "./Panel";
+import { Button } from "./Button";
+import { Device } from "wgsg-lib";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -24,6 +27,14 @@ import { Viewer } from "./Viewer";
 
 export function App()
 {
+	//
+	// Handle simulation of device lost.
+	//
+	const handleSimulateDeviceLost = () =>
+	{
+		Device.destroy();
+	};
+
 	//
 	// Called when the component mounts.
 	//
@@ -51,6 +62,12 @@ export function App()
 				background: "linear-gradient(#DDEEFF,#778899)"
 			} }
 		>
+			<Panel>
+				<Button
+					label = "Simulate device lost"
+					onClick = { handleSimulateDeviceLost }
+				/>
+			</Panel>
 			<Viewer
 				style = { {
 					width: "100vw",
