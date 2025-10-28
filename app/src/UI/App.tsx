@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { Viewer } from "./Viewer";
 import { Panel } from "./Panel";
 import { Button } from "./Button";
@@ -28,12 +28,17 @@ import { Device } from "wgsg-lib";
 export function App()
 {
 	//
-	// Handle simulation of device lost.
+	// Simulate a lost device.
 	//
-	const handleSimulateDeviceLost = () =>
+	const handleSimulateDeviceLost = useCallback ( () =>
 	{
+		// This is a reasonably good test.
 		Device.destroy();
-	};
+
+		// For a better test, use "about:gpucrash" as described here:
+		// https://toji.dev/webgpu-best-practices/device-loss.html
+	},
+	[] );
 
 	//
 	// Called when the component mounts.
