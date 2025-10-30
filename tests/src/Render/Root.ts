@@ -109,11 +109,14 @@ export function test ()
 
 			expect ( root.numLayers ).to.be.equal ( 1 );
 
-			const layer = root.getLayer ( 0 );
+			cv = cv!;
+			const info = cv?.renderGraphInfo;
+
+			const layer = root.getLayer ( info, 0 );
 			expect ( layer instanceof Layer ).to.be.true;
 			expect ( layer.numBins ).to.be.equal ( 1 );
 
-			const bin = layer.getBin ( 0 );
+			const bin = layer.getBin ( info, 0 );
 			expect ( bin instanceof Bin ).to.be.true;
 			expect ( bin.numPipelines ).to.be.equal ( 1 );
 
@@ -125,18 +128,18 @@ export function test ()
 			expect ( shader ).to.exist;
 			expect ( shader instanceof SolidColor ).to.be.true;
 
-			const pipeline = bin.getPipeline ( state! );
+			const pipeline = bin.getPipeline ( info, state! );
 			expect ( pipeline instanceof Pipeline ).to.be.true;
 			expect ( pipeline.numProjMatrices ).to.be.equal ( 1 );
 
-			const pmg = pipeline.getProjMatrixGroup ( IDENTITY_MATRIX );
+			const pmg = pipeline.getProjMatrixGroup ( info, IDENTITY_MATRIX );
 			expect ( pmg instanceof ProjMatrixGroup ).to.be.true;
 			expect ( pmg.numModelMatrices ).to.be.equal ( 1 );
 			expect ( pmg.matrix instanceof Array ).to.be.true;
 			expect ( pmg.matrix.length ).to.be.equal ( 16 );
 			expect ( pmg.matrix ).to.be.deep.equal ( IDENTITY_MATRIX );
 
-			const mmg = pmg.getModelMatrixGroup ( IDENTITY_MATRIX );
+			const mmg = pmg.getModelMatrixGroup ( info, IDENTITY_MATRIX );
 			expect ( mmg instanceof ModelMatrixGroup ).to.be.true;
 			expect ( mmg.numStateGroups ).to.be.equal ( 1 );
 			expect ( mmg.matrix instanceof Array ).to.be.true;

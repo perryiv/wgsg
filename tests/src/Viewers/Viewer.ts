@@ -70,7 +70,7 @@ export function test ()
 		{
 			const canvas = document.createElement ( "canvas" );
 			const context = Device.instance.getConfiguredContext ( canvas );
-			const viewer = new Viewer ( { canvas, context } );
+			const viewer = new Viewer ( { canvas } );
 
 			expect ( viewer ).to.exist;
 			expect ( viewer instanceof Viewer ).to.be.true;
