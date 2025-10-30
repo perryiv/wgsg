@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base } from "../Base/Base";
-import { clamp, Device } from "../Tools";
+import { clamp, DEVELOPER_BUILD, Device } from "../Tools";
 import { IVector3, IVector4 } from "../Types";
 import { Perspective, ProjectionBase as Projection } from "../Projections";
 import { SolidColor } from "../Shaders";
@@ -818,6 +818,22 @@ export class Surface extends Base
 		// Finish the frame.
 		this.#frame.end = performance.now();
 
-		console.log ( `${this.type} ${this.id} rendering, frame: ${this.#frame.count}, milliseconds: ${this.#frame.end - this.#frame.start}, info:`, this.cullVisitor.renderGraphInfo );
+		// Performance info.
+		if ( DEVELOPER_BUILD )
+		{
+			const rgi = this.cullVisitor.renderGraphInfo
+			const info = `
+				frame: ${this.#frame.count},
+				time: ${( this.#frame.end - this.#frame.start )} ms,
+				layers: ${rgi.numLayers},
+				bins: ${rgi.numBins},
+				pipelines: ${rgi.numPipelines},
+				projections: ${rgi.numProjMatrixGroups},
+				model matrices: ${rgi.numModelMatrixGroups},
+				states: ${rgi.numStateGroups},
+				shapes: ${rgi.numShapes}
+			`.trim().replace ( /\s+/g, " " );
+			console.log ( `${this.type} ${this.id} rendering, ${JSON.stringify ( info ) }` );
+		}
 	}
 }
