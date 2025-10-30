@@ -12,7 +12,16 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { MouseEvent, useCallback } from "react";
+import {
+	MouseEvent,
+	ReactNode,
+	useCallback,
+	CSSProperties,
+} from "react";
+import {
+	Button as MUIButton,
+	useTheme,
+} from "@mui/material";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -21,11 +30,12 @@ import { MouseEvent, useCallback } from "react";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-type ButtonClickEvent = MouseEvent<HTMLAnchorElement>;
+type ButtonClickEvent = MouseEvent<HTMLButtonElement>;
 
 export interface IButtonProps
 {
-	label: string;
+	style?: CSSProperties;
+	children: ReactNode;
 	onClick?: ( event: ButtonClickEvent ) => void;
 }
 
@@ -39,7 +49,10 @@ export interface IButtonProps
 export function Button ( props: IButtonProps )
 {
 	// Get input.
-	const { label, onClick } = props;
+	const { style, children, onClick } = props;
+
+	// Get the application state.
+	const { palette } = useTheme();
 
 	//
 	// Handle the click.
@@ -57,8 +70,18 @@ export function Button ( props: IButtonProps )
 	// Render the components.
 	//
 	return (
-		<div>
-			<a onClick = { handleClick } > { label } </a>
-		</div>
+		<MUIButton
+			sx = { {
+				textTransform: "none",
+				padding: "1px 6px",
+				":hover": {
+					color: palette.secondary.main,
+				},
+				...style,
+			} }
+			onClick = { handleClick }
+		>
+			{ children }
+		</MUIButton>
 	);
 }

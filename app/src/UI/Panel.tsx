@@ -12,7 +12,28 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { ReactElement, useEffect } from "react";
+import {
+	CSSProperties,
+	ReactNode,
+	useEffect,
+} from "react";
+import {
+	Paper,
+	useTheme,
+} from "@mui/material";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Types used below.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export interface IPanelProps
+{
+	style?: CSSProperties;
+	children?: ReactNode;
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -21,8 +42,14 @@ import { ReactElement, useEffect } from "react";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export function Panel ( { children } : { children?: ReactElement } )
+export function Panel ( props: IPanelProps )
 {
+	// Get input.
+	const { style, children } = props;
+
+	// Get the application state.
+	const { palette } = useTheme();
+
 	//
 	// Called when the component mounts.
 	//
@@ -41,19 +68,20 @@ export function Panel ( { children } : { children?: ReactElement } )
 	// Render the components.
 	//
 	return (
-		<div
+		<Paper
 			style = { {
 				position: "absolute",
 				top: 10,
 				left: 10,
-				fontSize: "14px",
-				backgroundColor: "rgba(255,255,255,0.7)",
 				padding: "4px",
-				borderRadius: "4px",
 				userSelect: "none",
+				background: palette.background.paper,
+				opacity: 0.6,
+				...style,
 			} }
+			elevation = { 0 }
 		>
 			{ children }
-		</div>
+		</Paper>
 	);
 }

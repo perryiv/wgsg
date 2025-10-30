@@ -15,8 +15,8 @@
 import { useCallback, useEffect } from "react";
 import { Viewer } from "./Viewer";
 import { Panel } from "./Panel";
-import { Button } from "./Button";
 import { Device } from "wgsg-lib";
+import { Button } from "./Button";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -68,10 +68,9 @@ export function App()
 			} }
 		>
 			<Panel>
-				<Button
-					label = "Simulate device lost"
-					onClick = { handleSimulateDeviceLost }
-				/>
+				<Button onClick = { handleSimulateDeviceLost } >
+					Simulate device lost
+				</Button>
 			</Panel>
 			<Viewer
 				style = { {
