@@ -70,7 +70,7 @@ export function test ()
 		{
 			const canvas = document.createElement ( "canvas" );
 			const context = Device.instance.getConfiguredContext ( canvas );
-			const surface = new Surface ( { canvas, context } );
+			const surface = new Surface ( { canvas } );
 
 			expect ( surface ).to.exist;
 			expect ( surface instanceof Surface ).to.be.true;
