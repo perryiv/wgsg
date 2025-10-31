@@ -31,6 +31,9 @@ import {
 
 export class DeviceLost extends Visitor
 {
+	#states = new Set < number > ();
+	#shaders = new Set < number > ();
+
 	/**
 	 * Construct the class.
 	 * @class
@@ -96,14 +99,28 @@ export class DeviceLost extends Visitor
 	 */
 	public override visitShape ( shape: Shape ) : void
 	{
+		// Shortcuts.
+		const states = this.#states;
+		const shaders = this.#shaders;
+
 		// Get the state.
 		const state = shape.state;
-		if ( state )
+
+		// There has to be a valid state that we have not seen before.
+		if ( ( state ) && ( false === states.has ( state.id ) ) )
 		{
+			// Set this for next time.
+			states.add ( state.id );
+
 			// Get the shader.
 			const shader = state.shader;
-			if ( shader )
+
+			// There has to be a valid shader that we have not seen before.
+			if ( ( shader ) && ( false === shaders.has ( shader.id ) ) )
 			{
+				// Set this for next time.
+				shaders.add ( shader.id );
+
 				// Reset the shader. It will rebuild later when needed.
 				shader.reset();
 				console.log ( `Reset shader ${shader.id} module after device was lost` );
@@ -119,6 +136,7 @@ export class DeviceLost extends Visitor
 	 */
 	public override reset() : void
 	{
-		// Do nothing.
+		this.#states.clear();
+		this.#shaders.clear();
 	}
 }
