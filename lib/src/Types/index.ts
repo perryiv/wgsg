@@ -15,4 +15,5 @@
 export * from "./Graphics";
 export * from "./Math";
 export * from "./Matrix";
+export * from "./Mouse";
 export * from "./Vector";

@@ -8,36 +8,23 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Base navigator class.
+//	Types related to the mouse state.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { BaseHandler as BaseClass } from "../Events/Handlers/BaseHandler";
-import type { IMatrix44 } from "../Types";
+import { IVector2 } from "./Vector";
 
 
 ///////////////////////////////////////////////////////////////////////////////
-/**
- * Base navigator class.
- * @abstract
- * @class
- */
+//
+//	Mouse state.
+//
 ///////////////////////////////////////////////////////////////////////////////
 
-export abstract class NavBase extends BaseClass
+export interface IMouseData
 {
-	/**
-	 * Construct the class.
-	 * @class
-	 */
-	protected constructor ()
-	{
-		super();
-	}
-
-	/**
-	 * Get the model matrix.
-	 * @returns The model matrix.
-	 */
-	public abstract get matrix () : IMatrix44;
+	current:  ( IVector2 | null );
+	previous: ( IVector2 | null );
+	event?: ( MouseEvent | null );
+	requestRender: ( () => void );
 }

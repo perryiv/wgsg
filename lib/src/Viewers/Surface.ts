@@ -821,10 +821,11 @@ export class Surface extends Base
 		// Performance info.
 		if ( DEVELOPER_BUILD )
 		{
+			const name = `${this.type} ${this.id}`;
 			const rgi = this.cullVisitor.renderGraphInfo
 			const info = `
 				frame: ${this.#frame.count},
-				time: ${( this.#frame.end - this.#frame.start )} ms,
+				time: ${( this.#frame.end - this.#frame.start ).toFixed ( 4 )} ms,
 				layers: ${rgi.numLayers},
 				bins: ${rgi.numBins},
 				pipelines: ${rgi.numPipelines},
@@ -833,7 +834,7 @@ export class Surface extends Base
 				states: ${rgi.numStateGroups},
 				shapes: ${rgi.numShapes}
 			`.trim().replace ( /\s+/g, " " );
-			console.log ( `${this.type} ${this.id} rendering, ${JSON.stringify ( info ) }` );
+			console.log ( `${name} rendering, ${JSON.stringify ( info ) }` );
 		}
 	}
 }

@@ -156,7 +156,7 @@ export function Viewer ( { style }: IViewerProps )
 		if ( !viewer )
 		{
 			viewer = new InternalViewer ( { canvas: canvas.current } );
-			viewer.scene = buildTestScene();
+			viewer.modelScene = buildTestScene();
 			setViewer ( VIEWER_NAME, viewer );
 			console.log ( `Internal viewer ${viewer.id} created and configured` );
 		}
@@ -182,7 +182,7 @@ export function Viewer ( { style }: IViewerProps )
 		if ( DEVELOPER_BUILD )
 		{
 			console.log ( "Building new scene for viewer" );
-			viewer.scene = buildTestScene();
+			viewer.modelScene = buildTestScene();
 			viewer.requestRender();
 		}
 	}, [ buildTestScene, getOrCreateViewer, initDevice ] );

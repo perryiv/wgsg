@@ -72,15 +72,12 @@ export abstract class Visitor extends Base
 		this.visitGroup ( proj );
 	}
 
-	/* eslint-disable @typescript-eslint/no-unused-vars */
-
 	/**
 	 * Visit the geometry.
 	 * @param {Geometry} geom - The geometry to visit.
 	 */
 	public visitGeometry ( geom: Geometry ) : void
 	{
-		// Nothing to do.
 	}
 
 	/**
@@ -89,7 +86,6 @@ export abstract class Visitor extends Base
 	 */
 	public visitShape ( shape: Shape ) : void
 	{
-		// Nothing to do.
 	}
 
 	/**
@@ -98,7 +94,6 @@ export abstract class Visitor extends Base
 	 */
 	public visitNode ( node: Node ) : void
 	{
-		// Nothing to do.
 	}
 
 	/**

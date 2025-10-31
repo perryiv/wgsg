@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base as BaseClass } from "../../Base";
+import { IMouseData } from "../../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -35,23 +36,58 @@ export abstract class BaseHandler extends BaseClass
 	}
 
 	/**
-	 * Handle mouse down event.
-	 * @param {MouseEvent} event - The mouse down event.
-	 * @abstract
+	 * Handle mouse down data.
+	 * @param {IMouseData} data - The mouse down data.
 	 */
-	public abstract mouseDown ( event: MouseEvent ) : void;
+	public mouseDown ( data: IMouseData ) : void
+	{
+	}
 
 	/**
-	 * Handle mouse move event.
-	 * @param {MouseEvent} event - The mouse move event.
-	 * @abstract
+	 * Handle mouse move data.
+	 * @param {IMouseData} data - The mouse move data.
 	 */
-	public abstract mouseMove ( event: MouseEvent ) : void;
+	public mouseMove ( data: IMouseData ) : void
+	{
+	}
 
 	/**
-	 * Handle mouse up event.
-	 * @param {MouseEvent} event - The mouse up event.
-	 * @abstract
+	 * Handle mouse drag data.
+	 * @param {IMouseData} data - The mouse drag data.
 	 */
-	public abstract mouseUp ( event: MouseEvent ) : void;
+	public mouseDrag ( data: IMouseData ) : void
+	{
+	}
+
+	/**
+	 * Handle mouse up data.
+	 * @param {IMouseData} data - The mouse up data.
+	 */
+	public mouseUp ( data: IMouseData ) : void
+	{
+	}
+
+	/**
+	 * Handle mouse out data.
+	 * @param {IMouseData} data - The mouse out data.
+	 */
+	public mouseOut ( data: IMouseData ) : void
+	{
+	}
+
+	/**
+	 * Handle mouse in data.
+	 * @param {IMouseData} data - The mouse in data.
+	 */
+	public mouseIn ( data: IMouseData ) : void
+	{
+	}
+
+	/**
+	 * Handle mouse context menu data.
+	 * @param {IMouseData} data - The mouse context menu data.
+	 */
+	public mouseContextMenu ( data: IMouseData ) : void
+	{
+	}
 }
