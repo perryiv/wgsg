@@ -25,6 +25,8 @@ export interface IMouseData
 {
 	current:  ( IVector2 | null );
 	previous: ( IVector2 | null );
+	pressed:  ( IVector2 | null );
+	released: ( IVector2 | null );
 	event?: ( MouseEvent | null );
 	requestRender: ( () => void );
 }

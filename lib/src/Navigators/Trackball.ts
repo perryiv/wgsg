@@ -14,12 +14,13 @@
 
 import { IDENTITY_MATRIX } from "../Tools";
 import { isFiniteNumber } from "../Math";
-import { mat4, quat, vec3, vec4 } from "gl-matrix";
+import { mat4, quat, vec2, vec3, vec4 } from "gl-matrix";
 import { NavBase as BaseClass } from "./NavBase";
 import { Node } from "../Scene";
 import type {
 	IMatrix44,
 	IMouseData,
+	IVector2,
 	IVector3,
 	IVector4
 } from "../Types";
@@ -112,8 +113,9 @@ export class Trackball extends BaseClass
 
 		// Multiply everything together in the correct order.
 		const answer: IMatrix44 = [ ...IDENTITY_MATRIX ];
-		mat4.multiply ( answer, tm, rm );
 		mat4.multiply ( answer, answer, dm );
+		mat4.multiply ( answer, answer, rm );
+		mat4.multiply ( answer, answer, tm );
 
 		// Return the answer.
 		return answer;
@@ -207,7 +209,15 @@ export class Trackball extends BaseClass
 					throw new Error ( "An angle in radians is required when rotating about an axis" );
 				}
 
-				return;
+				const dr: IVector4 = [ 0, 0, 0, 1 ]; // Delta rotation.
+				quat.setAxisAngle ( dr, input, radians! );
+
+				const nr: IVector4 = [ 0, 0, 0, 1 ]; // New rotation.
+				quat.multiply ( nr, this.rotation, dr );
+				quat.normalize ( nr, nr );
+
+				this.rotation = nr;
+				break;
 			}
 			case 4:
 			{
@@ -215,6 +225,7 @@ export class Trackball extends BaseClass
 				quat.normalize ( input, input );
 				quat.multiply ( answer, this.rotation, input );
 				quat.normalize ( answer, answer );
+
 				this.rotation = answer;
 				break;
 			}
@@ -263,27 +274,39 @@ export class Trackball extends BaseClass
 	 * Handle mouse drag event.
 	 * @param {IMouseData} data - The mouse drag data.
 	 */
-	public override mouseDrag ( { event, requestRender }: IMouseData ) : void
+	public override mouseDrag ( data: IMouseData ) : void
 	{
+		const {
+			current: cm,
+			previous: pm,
+			event,
+			requestRender
+		} = data;
+
+		if ( !cm || !pm )
+		{
+			return;
+		}
+
 		switch ( event?.buttons )
 		{
 			case 1: // Left button.
 			{
-				this.rotate ( [ 0, 1, 10, 1 ] );
+				const dir: IVector2 = [ 0, 0 ];
+				vec2.rotate ( dir, cm, pm, ( Math.PI * 0.5 ) );
+				vec2.normalize ( dir, dir );
+				this.rotate ( [ dir[0], dir[1], 0.0 ], 0.01 );
 				requestRender();
-				console.log ( "Mouse drag (left):", event );
 				break;
 			}
 
 			case 2: // Right button.
 			{
-				console.log ( "Mouse drag (right):", event );
 				break;
 			}
 
 			case 4: // Middle button.
 			{
-				console.log ( "Mouse drag (middle):", event );
 				break;
 			}
 		}

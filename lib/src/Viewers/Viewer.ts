@@ -49,9 +49,11 @@ interface IViewerSceneBranches
 function makeMouseData ( viewer: Viewer ) : IMouseData
 {
 	return {
-		current: null,
+		current:  null,
 		previous: null,
-		event: null,
+		pressed:  null,
+		released: null,
+		event:    null,
 		requestRender: ( () => { viewer.requestRender() } )
 	};
 }
@@ -179,11 +181,11 @@ export class Viewer extends Surface
 
 	/**
 	 * Set the current mouse position.
-	 * @param {IVector2 | null} pos - The current mouse position.
+	 * @param {IVector2 | null} pt - The current mouse position.
 	 */
-	public set mouseCurrent( pos: ( IVector2 | null ) )
+	public set mouseCurrent ( pt: ( IVector2 | null ) )
 	{
-		this.#mouse.current = pos;
+		this.#mouse.current = ( pt ? [ pt[0], pt[1] ] : null );
 	}
 
 	/**
@@ -197,11 +199,47 @@ export class Viewer extends Surface
 
 	/**
 	 * Set the previous mouse position.
-	 * @param {IVector2 | null} pos - The previous mouse position.
+	 * @param {IVector2 | null} pt - The previous mouse position.
 	 */
-	public set mousePrevious( pos: ( IVector2 | null ) )
+	public set mousePrevious ( pt: ( IVector2 | null ) )
 	{
-		this.#mouse.previous = pos;
+		this.#mouse.previous = ( pt ? [ pt[0], pt[1] ] : null );
+	}
+
+	/**
+	 * Get the mouse coordinate when the button was pressed.
+	 * @returns {IVector2 | null} The mouse coordinate when the button was pressed.
+	 */
+	public get mousePressed() : ( IVector2 | null )
+	{
+		return this.#mouse.pressed;
+	}
+
+	/**
+	 * Set the mouse coordinate when the button was pressed.
+	 * @param {IVector2 | null} pt - The mouse coordinate when the button was pressed.
+	 */
+	public set mousePressed ( pt: ( IVector2 | null ) )
+	{
+		this.#mouse.pressed = ( pt ? [ pt[0], pt[1] ] : null );
+	}
+
+	/**
+	 * Get the mouse coordinate when the button was released.
+	 * @returns {IVector2 | null} The mouse coordinate when the button was released.
+	 */
+	public get mouseReleased() : ( IVector2 | null )
+	{
+		return this.#mouse.released;
+	}
+
+	/**
+	 * Set the mouse coordinate when the button was released.
+	 * @param {IVector2 | null} pt - The mouse coordinate when the button was released.
+	 */
+	public set mouseReleased ( pt: ( IVector2 | null ) )
+	{
+		this.#mouse.released = ( pt ? [ pt[0], pt[1] ] : null );
 	}
 
 	/**
@@ -295,14 +333,23 @@ export class Viewer extends Surface
 	 */
 	private makeMouseData ( event?: MouseEvent ) : IMouseData
 	{
-		let current = this.mouseCurrent;
+		let current  = this.mouseCurrent;
 		let previous = this.mousePrevious;
+		let pressed  = this.mousePressed;
+		let released = this.mouseReleased;
 
 		current  = ( current  ? [ ...current  ] : null );
 		previous = ( previous ? [ ...previous ] : null );
+		pressed  = ( pressed  ? [ ...pressed  ] : null );
+		released = ( released ? [ ...released ] : null );
 
 		const requestRender = this.requestRender.bind ( this );
-		return { event, current, previous, requestRender };
+
+		return {
+			current, previous,
+			pressed, released,
+			event, requestRender
+		};
 	}
 
 	/**
@@ -312,8 +359,16 @@ export class Viewer extends Surface
 	public mouseDown ( event: MouseEvent ) : void
 	{
 		event.preventDefault();
+
+		this.mousePrevious = this.mouseCurrent;
+		this.mouseCurrent = [ event.clientX, event.clientY ];
+
+		this.mouseReleased = null;
+		this.mousePressed = [ event.clientX, event.clientY ];
+
 		const handler = this.eventHandlerOrNavigator;
 		const data = this.makeMouseData ( event );
+
 		handler.mouseDown ( data );
 	}
 
@@ -324,9 +379,15 @@ export class Viewer extends Surface
 	public mouseMove ( event: MouseEvent ) : void
 	{
 		event.preventDefault();
+
+		this.mousePrevious = this.mouseCurrent;
+		this.mouseCurrent = [ event.clientX, event.clientY ];
+
 		const handler = this.eventHandlerOrNavigator;
 		const data = this.makeMouseData ( event )
+
 		handler.mouseMove ( data );
+
 		if ( event.buttons )
 		{
 			handler.mouseDrag ( data );
@@ -340,9 +401,20 @@ export class Viewer extends Surface
 	public mouseUp ( event: MouseEvent ) : void
 	{
 		event.preventDefault();
+
+		this.mousePrevious = this.mouseCurrent;
+		this.mouseCurrent = [ event.clientX, event.clientY ];
+
+		this.mouseReleased = [ event.clientX, event.clientY ];
+
 		const handler = this.eventHandlerOrNavigator;
 		const data = this.makeMouseData ( event );
+
 		handler.mouseUp ( data );
+
+		// Reset these now that they've been used.
+		this.mousePressed = null;
+		this.mouseReleased = null;
 	}
 
 	/**
@@ -352,8 +424,13 @@ export class Viewer extends Surface
 	public mouseOut ( event: MouseEvent ) : void
 	{
 		event.preventDefault();
+
+		this.mouseCurrent = null;
+		this.mousePrevious = null;
+
 		const handler = this.eventHandlerOrNavigator;
 		const data = this.makeMouseData ( event );
+
 		handler.mouseOut ( data );
 	}
 
@@ -364,8 +441,13 @@ export class Viewer extends Surface
 	public mouseIn ( event: MouseEvent ) : void
 	{
 		event.preventDefault();
+
+		this.mouseCurrent = [ event.clientX, event.clientY ];
+		this.mousePrevious = null;
+
 		const handler = this.eventHandlerOrNavigator;
 		const data = this.makeMouseData ( event );
+
 		handler.mouseIn ( data );
 	}
 
@@ -376,8 +458,10 @@ export class Viewer extends Surface
 	public mouseContextMenu ( event: MouseEvent ) : void
 	{
 		event.preventDefault();
+
 		const handler = this.eventHandlerOrNavigator;
 		const data = this.makeMouseData ( event );
+
 		handler.mouseContextMenu ( data );
 	}
 
