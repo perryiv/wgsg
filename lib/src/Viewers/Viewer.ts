@@ -29,6 +29,55 @@ export type IViewerConstructor = ISurfaceConstructor;
 
 type IEventHandlerStack = BaseHandler[];
 
+interface IViewerSceneBranches
+{
+	root: Group;
+	fixed: Group;
+	nav: Transform;
+	model: Group;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Make the default mouse data.
+ * @param {Viewer} viewer - The viewer.
+ * @returns {IMouseData} The default mouse data.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+function makeMouseData ( viewer: Viewer ) : IMouseData
+{
+	return {
+		current: null,
+		previous: null,
+		event: null,
+		requestRender: ( () => { viewer.requestRender() } )
+	};
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Make the branches.
+ * @returns {IViewerSceneBranches} The branches.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+function makeBranches() : IViewerSceneBranches
+{
+	const root = new Group();
+	const fixed = new Group();
+	const nav = new Transform();
+	const model = new Group();
+
+	root.addChild ( fixed );
+	root.addChild ( nav );
+	nav.addChild ( model );
+
+	return { root, fixed, nav, model };
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
@@ -39,20 +88,10 @@ type IEventHandlerStack = BaseHandler[];
 
 export class Viewer extends Surface
 {
-	#mouse: IMouseData = {
-		current: null,
-		previous: null,
-		event: null,
-		requestRender: ( () => { this.requestRender() } )
-	};
+	#mouse: IMouseData = makeMouseData ( this );
 	#navigator: ( NavBase | null ) = null;
 	#eventHandlers: IEventHandlerStack = [];
-	#branches = {
-		root: new Group(),
-		fixed: new Group(),
-		nav: new Transform(),
-		model: new Group(),
-	};
+	#branches: IViewerSceneBranches = makeBranches();
 
 	/**
 	 * Construct the class.
@@ -67,19 +106,15 @@ export class Viewer extends Surface
 		// Have to call the super class constructor first.
 		super ( input );
 
-		// Build the internal scene.
-		const branches = this.#branches;
-		branches.root.addChild ( branches.fixed );
-		branches.root.addChild ( branches.nav );
-		branches.nav.addChild ( branches.model );
-		super.scene = branches.root;
+		// Set the scene.
+		super.scene = this.#branches.root;
 
 		// Register the event listeners.
-		canvas.onmousedown   = this.mouseDown.bind        ( this );
-		canvas.onmousemove   = this.mouseMove.bind        ( this );
-		canvas.onmouseup     = this.mouseUp.bind          ( this );
-		canvas.onmouseleave  = this.mouseOut.bind         ( this );
-		canvas.onmouseenter  = this.mouseIn.bind          ( this );
+		canvas.onmousedown   = this.mouseDown.bind ( this );
+		canvas.onmousemove   = this.mouseMove.bind ( this );
+		canvas.onmouseup     = this.mouseUp.bind   ( this );
+		canvas.onmouseleave  = this.mouseOut.bind  ( this );
+		canvas.onmouseenter  = this.mouseIn.bind   ( this );
 		canvas.oncontextmenu = this.mouseContextMenu.bind ( this );
 	}
 
@@ -88,6 +123,18 @@ export class Viewer extends Surface
 	 */
 	public override destroy() : void
 	{
+		// Shortcut.
+		const canvas = this.canvas;
+
+		// Remove our event listeners.
+		canvas.onmousedown   = null;
+		canvas.onmousemove   = null;
+		canvas.onmouseup     = null;
+		canvas.onmouseleave  = null;
+		canvas.onmouseenter  = null;
+		canvas.oncontextmenu = null;
+
+		// Call the base class function.
 		super.destroy();
 	}
 
@@ -98,14 +145,6 @@ export class Viewer extends Surface
 	public override getClassName() : string
 	{
 		return "Viewers.Viewer";
-	}
-
-	/**
-	 * Get the scene. We overload this to prevent its use.
-	 */
-	public override get scene() : ( Node | null )
-	{
-		throw new Error ( "Use modelScene instead of scene" );
 	}
 
 	/**
@@ -183,6 +222,15 @@ export class Viewer extends Surface
 
 		// Return the navigator.
 		return n;
+	}
+
+	/**
+	 * Set the navigator so that the model is completely within the view-volume.
+	 */
+	public viewAll() : void
+	{
+		this.navigator.viewAll ( this.modelScene );
+		this.requestRender();
 	}
 
 	/**

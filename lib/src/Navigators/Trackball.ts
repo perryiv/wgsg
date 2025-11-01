@@ -16,7 +16,44 @@ import { IDENTITY_MATRIX } from "../Tools";
 import { isFiniteNumber } from "../Math";
 import { mat4, quat, vec3, vec4 } from "gl-matrix";
 import { NavBase as BaseClass } from "./NavBase";
-import type { IMatrix44, IMouseData, IVector3, IVector4 } from "../Types";
+import { Node } from "../Scene";
+import type {
+	IMatrix44,
+	IMouseData,
+	IVector3,
+	IVector4
+} from "../Types";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Types used below.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+interface ITrackballState
+{
+	center: IVector3;
+	distance: number;
+	rotation: IVector4;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Make the default trackball state.
+ * @returns {ITrackballState} The default trackball state.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+function makeDefaultTrackballState() : ITrackballState
+{
+	return {
+		center: [ 0, 0, 0 ],
+		distance: 10,
+		rotation: [ 0, 0, 0, 1 ]
+	};
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -28,11 +65,9 @@ import type { IMatrix44, IMouseData, IVector3, IVector4 } from "../Types";
 
 export class Trackball extends BaseClass
 {
-	#matrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
 	#dirty = true;
-	#center: IVector3 = [ 0, 0, 0 ];
-	#distance = 10;
-	#rotation: IVector4 = [ 0, 0, 0, 1 ];
+	#matrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
+	#state: ITrackballState = makeDefaultTrackballState();
 
 	/**
 	 * Construct the class.
@@ -59,9 +94,9 @@ export class Trackball extends BaseClass
 	protected calculateMatrix () : IMatrix44
 	{
 		// Shortcuts.
-		const c = this.#center;
-		const d = this.#distance;
-		const r = this.#rotation;
+		const c = this.#state.center;
+		const d = this.#state.distance;
+		const r = this.#state.rotation;
 
 		// The matrix that makes the center point the actual center of rotation.
 		const tm: IMatrix44 = [ ...IDENTITY_MATRIX ];
@@ -105,7 +140,7 @@ export class Trackball extends BaseClass
 	 */
 	public get center () : IVector3
 	{
-		return this.#center;
+		return this.#state.center;
 	}
 
 	/**
@@ -114,7 +149,7 @@ export class Trackball extends BaseClass
 	 */
 	public set center ( c: IVector3 )
 	{
-		vec3.copy ( this.#center, c );
+		vec3.copy ( this.#state.center, c );
 		this.#dirty = true;
 	}
 
@@ -124,7 +159,7 @@ export class Trackball extends BaseClass
 	 */
 	public get distance () : number
 	{
-		return this.#distance;
+		return this.#state.distance;
 	}
 
 	/**
@@ -133,7 +168,7 @@ export class Trackball extends BaseClass
 	 */
 	public set distance ( d: number )
 	{
-		this.#distance = d;
+		this.#state.distance = d;
 		this.#dirty = true;
 	}
 
@@ -143,7 +178,7 @@ export class Trackball extends BaseClass
 	 */
 	public get rotation () : IVector4
 	{
-		return this.#rotation;
+		return this.#state.rotation;
 	}
 
 	/**
@@ -152,7 +187,7 @@ export class Trackball extends BaseClass
 	 */
 	public set rotation ( r: IVector4 )
 	{
-		vec4.copy ( this.#rotation, r );
+		vec4.copy ( this.#state.rotation, r );
 		this.#dirty = true;
 	}
 
@@ -184,6 +219,26 @@ export class Trackball extends BaseClass
 				break;
 			}
 		}
+	}
+
+	/**
+	 * Reset the navigator to its default state.
+	 */
+	public override reset() : void
+	{
+		this.#state = makeDefaultTrackballState();
+		this.#dirty = true;
+	}
+
+	/**
+	 * Set the navigator so that the model is completely within the view-volume.
+	 * If the given model is null then reset the navigator to its default state.
+	 * @param {Node | null} model - The model node.
+	 */
+	public override viewAll ( model: Node | null ) : void
+	{
+		// For now just reset to the default state.
+		this.reset();
 	}
 
 	/**

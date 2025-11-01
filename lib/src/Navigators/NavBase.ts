@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { BaseHandler as BaseClass } from "../Events/Handlers/BaseHandler";
+import { Node } from "../Scene";
 import type { IMatrix44 } from "../Types";
 
 
@@ -40,4 +41,16 @@ export abstract class NavBase extends BaseClass
 	 * @returns The model matrix.
 	 */
 	public abstract get matrix () : IMatrix44;
+
+	/**
+	 * Reset the navigator to its default state.
+	 */
+	public abstract reset() : void;
+
+	/**
+	 * Set the navigator so that the model is completely within the view-volume.
+	 * If the given model is null then reset the navigator to its default state.
+	 * @param {Node | null} model - The model node.
+	 */
+	public abstract viewAll ( model: Node | null ) : void;
 }
