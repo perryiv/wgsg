@@ -12,11 +12,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { useCallback, useEffect } from "react";
-import { Viewer } from "./Viewer";
-import { Panel } from "./Panel";
-import { Device } from "wgsg-lib";
 import { Button } from "./Button";
+import { Device } from "wgsg-lib";
+import { Panel } from "./Panel";
+import { useCallback, useEffect } from "react";
+import { useViewerStore } from "../State";
+import { Viewer, VIEWER_NAME } from "./Viewer";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -27,6 +28,43 @@ import { Button } from "./Button";
 
 export function App()
 {
+	// Get state.
+	const getViewer = useViewerStore ( ( state ) => state.getViewer );
+
+	//
+	// Get the viewer or throw an execption.
+	//
+	const getViewerOrThrow = useCallback ( () =>
+	{
+		const viewer = getViewer ( VIEWER_NAME );
+		if ( !viewer )
+		{
+			throw new Error ( `No viewer with name: ${VIEWER_NAME}` );
+		}
+		return viewer;
+	},
+	[ getViewer ] );
+
+	//
+	// Render the 3D viewer.
+	//
+	const handleViewerRender = useCallback ( () =>
+	{
+		const viewer = getViewerOrThrow();
+		viewer.requestRender();
+	},
+	[ getViewerOrThrow ] );
+
+	//
+	// Reset the viewer's camera.
+	//
+	const handleViewerReset = useCallback ( () =>
+	{
+		const viewer = getViewerOrThrow();
+		viewer.viewAll();
+	},
+	[ getViewerOrThrow ] );
+
 	//
 	// Simulate a lost device.
 	//
@@ -68,9 +106,23 @@ export function App()
 			} }
 		>
 			<Panel>
-				<Button onClick = { handleSimulateDeviceLost } >
-					Simulate device lost
-				</Button>
+				<div
+					style = { {
+						display: "flex",
+						flexDirection: "column",
+						alignItems: "flex-start",
+					} }
+				>
+					<Button onClick = { handleViewerReset } >
+						Reset navigation
+					</Button>
+					<Button onClick = { handleViewerRender } >
+						Render viewer
+					</Button>
+					<Button onClick = { handleSimulateDeviceLost } >
+						Simulate device lost
+					</Button>
+				</div>
 			</Panel>
 			<Viewer
 				style = { {
