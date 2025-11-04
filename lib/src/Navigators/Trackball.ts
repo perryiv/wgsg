@@ -12,11 +12,15 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IDENTITY_MATRIX } from "../Tools";
 import { isFiniteNumber } from "../Math";
 import { mat4, quat, vec2, vec3, vec4 } from "gl-matrix";
 import { NavBase as BaseClass } from "./NavBase";
 import { Node } from "../Scene";
+import {
+	IDENTITY_MATRIX,
+	normalizeQuat,
+	normalizeVec3,
+} from "../Tools";
 import type {
 	IMatrix44,
 	IMouseData,
@@ -198,7 +202,7 @@ export class Trackball extends BaseClass
 	 * @param {IVector3 | IVector4} input - The rotation axis or quaternion.
 	 * @param {number} [radians] - The angle in radians required if input is a rotation axis.
 	 */
-	protected rotate ( input: ( IVector3 | IVector4 ), radians?: number ) : void
+	public rotate ( input: ( IVector3 | IVector4 ), radians?: number ) : void
 	{
 		switch ( input.length )
 		{
@@ -209,25 +213,34 @@ export class Trackball extends BaseClass
 					throw new Error ( "An angle in radians is required when rotating about an axis" );
 				}
 
-				const dr: IVector4 = [ 0, 0, 0, 1 ]; // Delta rotation.
-				quat.setAxisAngle ( dr, input, radians! );
+				radians = radians!;
+				input = normalizeVec3 ( input );
 
-				const nr: IVector4 = [ 0, 0, 0, 1 ]; // New rotation.
+				let dr: IVector4 = [ 0, 0, 0, 1 ]; // Delta rotation.
+				quat.setAxisAngle ( dr, input, radians );
+				dr = normalizeQuat ( dr );
+
+				let nr: IVector4 = [ 0, 0, 0, 1 ]; // New rotation.
 				quat.multiply ( nr, this.rotation, dr );
-				quat.normalize ( nr, nr );
+				nr = normalizeQuat ( nr );
 
 				this.rotation = nr;
 				break;
 			}
 			case 4:
 			{
-				const answer: IVector4 = [ 0, 0, 0, 1 ];
-				quat.normalize ( input, input );
+				input = normalizeQuat ( input );
+
+				let answer: IVector4 = [ 0, 0, 0, 1 ];
 				quat.multiply ( answer, this.rotation, input );
-				quat.normalize ( answer, answer );
+				answer = normalizeQuat ( answer );
 
 				this.rotation = answer;
 				break;
+			}
+			default:
+			{
+				throw new Error ( "Input must be a rotation axis (IVector3) or a quaternion (IVector4)" );
 			}
 		}
 	}
@@ -283,12 +296,12 @@ export class Trackball extends BaseClass
 			requestRender
 		} = data;
 
-		if ( !cm || !pm )
+		if ( !cm || !pm || !event )
 		{
 			return;
 		}
 
-		switch ( event?.buttons )
+		switch ( event.buttons )
 		{
 			case 1: // Left button.
 			{
