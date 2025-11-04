@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { buildSceneQuads } from "../Tools";
+import { buildSceneSphere } from "../Tools";
 import { useViewerStore } from "../State";
 import {
 	useCallback,
@@ -69,7 +69,7 @@ export function Viewer ( { style }: IViewerProps )
 	//
 	const buildTestScene = useCallback ( () =>
 	{
-		return buildSceneQuads();
+		return buildSceneSphere();
 	},
 	[] );
 
