@@ -202,8 +202,8 @@ export const estimateSphereSizes = ( n: Readonly<number> ) : { numPoints: number
   // This works out to ( 60 * ( 4 ^ n ) ).
   const numPoints = 60 * Math.pow ( 4.0, n );
 
-  // Determine the number of indices.
-  const numIndices = Math.ceil ( numPoints / 3.0 );
+  // The indices are trivial.
+  const numIndices = numPoints;
 
   // Return the numbers
   return { numPoints, numIndices };
