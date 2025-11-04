@@ -15,6 +15,7 @@
 export * from "./Algorithms";
 export * from "./Arrays";
 export * from "./Base";
+export * from "./Builders";
 export * from "./Math";
 export * from "./Projections";
 export * from "./Render"; // Exported for testing purposes.
