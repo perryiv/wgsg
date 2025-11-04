@@ -79,10 +79,10 @@ function testSphere ( numSubdivisions: number )
 	expect ( estimated.numPoints ).to.be.equal ( 60 * Math.pow ( 4, numSubdivisions ) );
 	expect ( estimated.numPoints % 3 ).to.be.equal ( 0 );
 	expect ( estimated.numIndices ).to.be.a ( "number" );
-	expect ( estimated.numIndices ).to.be.equal ( estimated.numPoints / 3 );
+	expect ( estimated.numIndices ).to.be.equal ( estimated.numPoints );
 
 	const maxIndex = estimated.numPoints - 1;
-	const indices: IVector3[] = [];
+	const indices: number[] = [];
 	const points: Map < string, number > = new Map < string, number > ();
 
 	generateUnitSphere ( numSubdivisions, ( x1: number, y1: number, z1: number, x2: number, y2: number, z2: number, x3: number, y3: number, z3: number, i1: number, i2: number, i3: number ) =>
@@ -103,7 +103,7 @@ function testSphere ( numSubdivisions: number )
 		incrementPointCount ( points, p2 );
 		incrementPointCount ( points, p3 );
 
-		indices.push ( [ i1, i2, i3 ] );
+		indices.push ( i1, i2, i3 );
 	} );
 
 	// Is our estimate correct?
