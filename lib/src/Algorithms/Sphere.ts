@@ -59,7 +59,7 @@ function subdivide (
 {
 	// If we are at the requested depth ...
 	if ( 0 === depth )
-  {
+	{
 		// Determine the indices.
 		const i1 = numPoints.value++;
 		const i2 = numPoints.value++;
@@ -69,9 +69,9 @@ function subdivide (
 		fun ( x1, y1, z1, x2, y2, z2, x3, y3, z3, i1, i2, i3 );
 	}
 
-  // Otherwise ...
-  else
-  {
+	// Otherwise ...
+	else
+	{
 		// Make three new points.
 		let x12 = x1 + x2;
 		let y12 = y1 + y2;
@@ -86,7 +86,7 @@ function subdivide (
 		// Adjust the first point.
 		let d = Math.sqrt ( x12 * x12 + y12 * y12 + z12 * z12 );
 		if ( d <= 0 )
-    {
+		{
 			throw new Error ( "Division by zero when adjusting the first point" );
 		}
 		let invd = 1.0 / d;
@@ -97,7 +97,7 @@ function subdivide (
 		// Adjust the second point.
 		d = Math.sqrt ( x23 * x23 + y23 * y23 + z23 * z23 );
 		if ( d <= 0 )
-    {
+		{
 			throw new Error ( "Division by zero when adjusting the second point" );
 		}
 		invd = 1.0 / d;
@@ -108,7 +108,7 @@ function subdivide (
 		// Adjust the third point.
 		d = Math.sqrt ( x31 * x31 + y31 * y31 + z31 * z31 );
 		if ( d <= 0 )
-    {
+		{
 			throw new Error ( "Division by zero when adjusting the third point" );
 		}
 		invd = 1.0 / d;
@@ -122,7 +122,7 @@ function subdivide (
 		subdivide ( x2,  y2,  z2, x23, y23, z23, x12, y12, z12, numPoints, depth, fun );
 		subdivide ( x3,  y3,  z3, x31, y31, z31, x23, y23, z23, numPoints, depth, fun );
 		subdivide (x12, y12, z12, x23, y23, z23, x31, y31, z31, numPoints, depth, fun );
-  }
+	}
 }
 
 
@@ -138,46 +138,46 @@ function subdivide (
 
 export const generateUnitSphere = ( n: Readonly<number>, fun: ISubDivideCallback ) =>
 {
-  // Handle invalid callback.
-  if ( !fun )
-  {
-    throw new Error ( "Invalid callback function when generating triangles for a sphere" );
-  }
+	// Handle invalid callback.
+	if ( !fun )
+	{
+		throw new Error ( "Invalid callback function when generating triangles for a sphere" );
+	}
 
-  // Check input.
-  if ( n < 0 )
-  {
-    throw new Error ( `Number of sphere subdivisions ${n} is < 0` );
-  }
+	// Check input.
+	if ( n < 0 )
+	{
+		throw new Error ( `Number of sphere subdivisions ${n} is < 0` );
+	}
 
-  // Declare these constants used in the subdivision algorithm.
-  const X = 0.5257311121191336;
-  const Z = 0.8506508083528656;
+	// Declare these constants used in the subdivision algorithm.
+	const X = 0.5257311121191336;
+	const Z = 0.8506508083528656;
 
-  // We need to count the points as we go.
-  const numPoints = { value: 0 };
+	// We need to count the points as we go.
+	const numPoints = { value: 0 };
 
-  // Call the function to subdivide.
-  subdivide ( -X,  0,  Z,  X,  0,  Z,  0,  Z,  X, numPoints, n, fun );
-  subdivide ( -X,  0,  Z,  0,  Z,  X, -Z,  X,  0, numPoints, n, fun );
-  subdivide ( -Z,  X,  0,  0,  Z,  X,  0,  Z, -X, numPoints, n, fun );
-  subdivide (  0,  Z,  X,  Z,  X,  0,  0,  Z, -X, numPoints, n, fun );
-  subdivide (  0,  Z,  X,  X,  0,  Z,  Z,  X,  0, numPoints, n, fun );
-  subdivide (  Z,  X,  0,  X,  0,  Z,  Z, -X,  0, numPoints, n, fun );
-  subdivide (  Z,  X,  0,  Z, -X,  0,  X,  0, -Z, numPoints, n, fun );
-  subdivide (  0,  Z, -X,  Z,  X,  0,  X,  0, -Z, numPoints, n, fun );
-  subdivide (  0,  Z, -X,  X,  0, -Z, -X,  0, -Z, numPoints, n, fun );
-  subdivide ( -X,  0, -Z,  X,  0, -Z,  0, -Z, -X, numPoints, n, fun );
-  subdivide (  0, -Z, -X,  X,  0, -Z,  Z, -X,  0, numPoints, n, fun );
-  subdivide (  0, -Z, -X,  Z, -X,  0,  0, -Z,  X, numPoints, n, fun );
-  subdivide (  0, -Z, -X,  0, -Z,  X, -Z, -X,  0, numPoints, n, fun );
-  subdivide ( -Z, -X,  0,  0, -Z,  X, -X,  0,  Z, numPoints, n, fun );
-  subdivide ( -X,  0,  Z,  0, -Z,  X,  X,  0,  Z, numPoints, n, fun );
-  subdivide (  0, -Z,  X,  Z, -X,  0,  X,  0,  Z, numPoints, n, fun );
-  subdivide ( -Z,  X,  0, -Z, -X,  0, -X,  0,  Z, numPoints, n, fun );
-  subdivide ( -Z,  X,  0, -X,  0, -Z, -Z, -X,  0, numPoints, n, fun );
-  subdivide ( -Z,  X,  0,  0,  Z, -X, -X,  0, -Z, numPoints, n, fun );
-  subdivide (  0, -Z, -X, -Z, -X,  0, -X,  0, -Z, numPoints, n, fun );
+	// Call the function to subdivide.
+	subdivide ( -X,  0,  Z,  X,  0,  Z,  0,  Z,  X, numPoints, n, fun );
+	subdivide ( -X,  0,  Z,  0,  Z,  X, -Z,  X,  0, numPoints, n, fun );
+	subdivide ( -Z,  X,  0,  0,  Z,  X,  0,  Z, -X, numPoints, n, fun );
+	subdivide (  0,  Z,  X,  Z,  X,  0,  0,  Z, -X, numPoints, n, fun );
+	subdivide (  0,  Z,  X,  X,  0,  Z,  Z,  X,  0, numPoints, n, fun );
+	subdivide (  Z,  X,  0,  X,  0,  Z,  Z, -X,  0, numPoints, n, fun );
+	subdivide (  Z,  X,  0,  Z, -X,  0,  X,  0, -Z, numPoints, n, fun );
+	subdivide (  0,  Z, -X,  Z,  X,  0,  X,  0, -Z, numPoints, n, fun );
+	subdivide (  0,  Z, -X,  X,  0, -Z, -X,  0, -Z, numPoints, n, fun );
+	subdivide ( -X,  0, -Z,  X,  0, -Z,  0, -Z, -X, numPoints, n, fun );
+	subdivide (  0, -Z, -X,  X,  0, -Z,  Z, -X,  0, numPoints, n, fun );
+	subdivide (  0, -Z, -X,  Z, -X,  0,  0, -Z,  X, numPoints, n, fun );
+	subdivide (  0, -Z, -X,  0, -Z,  X, -Z, -X,  0, numPoints, n, fun );
+	subdivide ( -Z, -X,  0,  0, -Z,  X, -X,  0,  Z, numPoints, n, fun );
+	subdivide ( -X,  0,  Z,  0, -Z,  X,  X,  0,  Z, numPoints, n, fun );
+	subdivide (  0, -Z,  X,  Z, -X,  0,  X,  0,  Z, numPoints, n, fun );
+	subdivide ( -Z,  X,  0, -Z, -X,  0, -X,  0,  Z, numPoints, n, fun );
+	subdivide ( -Z,  X,  0, -X,  0, -Z, -Z, -X,  0, numPoints, n, fun );
+	subdivide ( -Z,  X,  0,  0,  Z, -X, -X,  0, -Z, numPoints, n, fun );
+	subdivide (  0, -Z, -X, -Z, -X,  0, -X,  0, -Z, numPoints, n, fun );
 };
 
 
@@ -193,18 +193,18 @@ export const generateUnitSphere = ( n: Readonly<number>, fun: ISubDivideCallback
 
 export const estimateSphereSizes = ( n: Readonly<number> ) : { numPoints: number, numIndices: number } =>
 {
-  // Check input.
-  if ( n < 0 )
-  {
-    throw new Error ( `Number of sphere subdivisions ${n} is < 0` );
-  }
+	// Check input.
+	if ( n < 0 )
+	{
+		throw new Error ( `Number of sphere subdivisions ${n} is < 0` );
+	}
 
-  // This works out to ( 60 * ( 4 ^ n ) ).
-  const numPoints = 60 * Math.pow ( 4.0, n );
+	// This works out to ( 60 * ( 4 ^ n ) ).
+	const numPoints = 60 * Math.pow ( 4.0, n );
 
-  // The indices are trivial.
-  const numIndices = numPoints;
+	// The indices are trivial.
+	const numIndices = numPoints;
 
-  // Return the numbers
-  return { numPoints, numIndices };
+	// Return the numbers
+	return { numPoints, numIndices };
 };
