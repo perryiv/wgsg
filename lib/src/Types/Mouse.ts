@@ -8,16 +8,18 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Types related to the mouse state.
+//	Types related to the mouse.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { IMatrix44 } from "./Matrix";
 import { IVector2 } from "./Vector";
+import { IViewport } from "./Math";
 
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Mouse state.
+//	Types related to the mouse.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -27,6 +29,13 @@ export interface IMouseData
 	previous: ( IVector2 | null );
 	pressed:  ( IVector2 | null );
 	released: ( IVector2 | null );
-	event?: ( MouseEvent | null );
+}
+
+export interface IMouseEvent extends IMouseData
+{
+	event: MouseEvent;
+	projMatrix: IMatrix44;
+	viewMatrix: IMatrix44;
+	viewport: IViewport;
 	requestRender: ( () => void );
 }
