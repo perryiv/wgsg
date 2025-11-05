@@ -16,7 +16,8 @@ import { BaseHandler } from "../Events/Handlers/BaseHandler";
 import { Group, Node, Transform } from "../Scene";
 import { NavBase, Trackball } from "../Navigators";
 import { type ISurfaceConstructor, Surface } from "./Surface";
-import type { IMouseData, IVector2 } from "../Types";
+import type { IMatrix44, IMouseData, IMouseEvent, IVector2 } from "../Types";
+import { IDENTITY_MATRIX } from "../Tools";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -41,20 +42,17 @@ interface IViewerSceneBranches
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * Make the default mouse data.
- * @param {Viewer} viewer - The viewer.
  * @returns {IMouseData} The default mouse data.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-function makeMouseData ( viewer: Viewer ) : IMouseData
+function makeMouseData() : IMouseData
 {
 	return {
 		current:  null,
 		previous: null,
 		pressed:  null,
 		released: null,
-		event:    null,
-		requestRender: ( () => { viewer.requestRender() } )
 	};
 }
 
@@ -90,7 +88,7 @@ function makeBranches() : IViewerSceneBranches
 
 export class Viewer extends Surface
 {
-	#mouse: IMouseData = makeMouseData ( this );
+	#mouse: IMouseData = makeMouseData();
 	#navigator: ( NavBase | null ) = null;
 	#eventHandlers: IEventHandlerStack = [];
 	#branches: IViewerSceneBranches = makeBranches();
@@ -147,6 +145,15 @@ export class Viewer extends Surface
 	public override getClassName() : string
 	{
 		return "Viewers.Viewer";
+	}
+
+	/**
+	 * Get the view matrix.
+	 * @returns {IMatrix44} The view matrix.
+	 */
+	public override get viewMatrix () : IMatrix44
+	{
+		return this.navigator.matrix;
 	}
 
 	/**
@@ -327,28 +334,22 @@ export class Viewer extends Surface
 	}
 
 	/**
-	 * Make the mouse data.
-	 * @param {MouseEvent | undefined} event - The mouse event.
-	 * @returns {IMouseData} The mouse data.
+	 * Make the mouse event data.
+	 * @param {MouseEvent | undefined} event - The original mouse event.
+	 * @returns {IMouseData} The mouse event data.
 	 */
-	private makeMouseData ( event?: MouseEvent ) : IMouseData
+	private makeMouseEvent ( event: MouseEvent ) : IMouseEvent
 	{
-		let current  = this.mouseCurrent;
-		let previous = this.mousePrevious;
-		let pressed  = this.mousePressed;
-		let released = this.mouseReleased;
-
-		current  = ( current  ? [ ...current  ] : null );
-		previous = ( previous ? [ ...previous ] : null );
-		pressed  = ( pressed  ? [ ...pressed  ] : null );
-		released = ( released ? [ ...released ] : null );
-
-		const requestRender = this.requestRender.bind ( this );
-
 		return {
-			current, previous,
-			pressed, released,
-			event, requestRender
+			current:  this.mouseCurrent,
+			previous: this.mousePrevious,
+			pressed:  this.mousePressed,
+			released: this.mouseReleased,
+			event,
+			projMatrix: this.projMatrix,
+			viewMatrix: this.viewMatrix,
+			viewport:   this.viewport,
+			requestRender: this.requestRender.bind ( this ),
 		};
 	}
 
@@ -367,7 +368,7 @@ export class Viewer extends Surface
 		this.mousePressed = [ event.clientX, event.clientY ];
 
 		const handler = this.eventHandlerOrNavigator;
-		const data = this.makeMouseData ( event );
+		const data = this.makeMouseEvent ( event );
 
 		handler.mouseDown ( data );
 	}
@@ -384,7 +385,7 @@ export class Viewer extends Surface
 		this.mouseCurrent = [ event.clientX, event.clientY ];
 
 		const handler = this.eventHandlerOrNavigator;
-		const data = this.makeMouseData ( event )
+		const data = this.makeMouseEvent ( event );
 
 		handler.mouseMove ( data );
 
@@ -408,7 +409,7 @@ export class Viewer extends Surface
 		this.mouseReleased = [ event.clientX, event.clientY ];
 
 		const handler = this.eventHandlerOrNavigator;
-		const data = this.makeMouseData ( event );
+		const data = this.makeMouseEvent ( event );
 
 		handler.mouseUp ( data );
 
@@ -429,7 +430,7 @@ export class Viewer extends Surface
 		this.mousePrevious = null;
 
 		const handler = this.eventHandlerOrNavigator;
-		const data = this.makeMouseData ( event );
+		const data = this.makeMouseEvent ( event );
 
 		handler.mouseOut ( data );
 	}
@@ -446,7 +447,7 @@ export class Viewer extends Surface
 		this.mousePrevious = null;
 
 		const handler = this.eventHandlerOrNavigator;
-		const data = this.makeMouseData ( event );
+		const data = this.makeMouseEvent ( event );
 
 		handler.mouseIn ( data );
 	}
@@ -460,7 +461,7 @@ export class Viewer extends Surface
 		event.preventDefault();
 
 		const handler = this.eventHandlerOrNavigator;
-		const data = this.makeMouseData ( event );
+		const data = this.makeMouseEvent ( event );
 
 		handler.mouseContextMenu ( data );
 	}

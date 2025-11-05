@@ -20,13 +20,15 @@ import {
 	IDENTITY_MATRIX,
 	normalizeQuat,
 	normalizeVec3,
+	makeLine as makeLineUnderScreenPoint,
 } from "../Tools";
 import type {
 	IMatrix44,
-	IMouseData,
+	IMouseEvent,
 	IVector2,
 	IVector3,
-	IVector4
+	IVector4,
+	IViewport
 } from "../Types";
 
 
@@ -267,70 +269,79 @@ export class Trackball extends BaseClass
 
 	/**
 	 * Handle mouse down event.
-	 * @param {IMouseData} data - The mouse down data.
+	 * @param {IMouseEvent} event - The mouse down event.
 	 */
-	public override mouseDown ( data: IMouseData ) : void
+	public override mouseDown ( event: IMouseEvent ) : void
 	{
-		console.log ( "Mouse down:", data );
+		console.log ( "Mouse down:", event );
 	}
 
 	/**
 	 * Handle mouse move event.
-	 * @param {IMouseData} data - The mouse move data.
+	 * @param {IMouseEvent} event - The mouse move event.
 	 */
-	public override mouseMove ( data: IMouseData ) : void
+	public override mouseMove ( event: IMouseEvent ) : void
 	{
-		// console.log ( "Mouse move:", data );
+		// console.log ( "Mouse move:", event );
 	}
 
 	/**
 	 * Handle mouse drag event.
-	 * @param {IMouseData} data - The mouse drag data.
+	 * @param {IMouseEvent} event - The mouse drag event.
 	 */
-	public override mouseDrag ( data: IMouseData ) : void
+	public override mouseDrag ( event: IMouseEvent ) : void
 	{
 		const {
 			current: cm,
 			previous: pm,
-			event,
+			projMatrix,
+			viewport,
+			event: originalEvent,
 			requestRender
-		} = data;
+		} = event;
 
 		if ( !cm || !pm || !event )
 		{
 			return;
 		}
 
-		switch ( event.buttons )
+		if ( 1 !== originalEvent.buttons ) // Left mouse button only.
 		{
-			case 1: // Left button.
-			{
-				const dir: IVector2 = [ 0, 0 ];
-				vec2.rotate ( dir, cm, pm, ( Math.PI * 0.5 ) );
-				vec2.normalize ( dir, dir );
-				this.rotate ( [ dir[0], dir[1], 0.0 ], 0.01 );
-				requestRender();
-				break;
-			}
-
-			case 2: // Right button.
-			{
-				break;
-			}
-
-			case 4: // Middle button.
-			{
-				break;
-			}
+			return;
 		}
+
+		const viewMatrix: IMatrix44 = [ ...this.matrix ];
+
+		// Get the line under the current mouse position.
+		const cl = makeLineUnderScreenPoint ( {
+			screenPoint: [ cm[0], cm[1] ],
+			viewMatrix, projMatrix, viewport,
+		} );
+
+		// Get the line under the current mouse position.
+		const pl = makeLineUnderScreenPoint ( {
+			screenPoint: [ pm[0], pm[1] ],
+			viewMatrix, projMatrix, viewport,
+		} );
+
+		// Make the trackball sphere in world space.
+		const sphereCenter: IVector3 = [ 0, 0, 0 ];
+		const sphereRadius: number = this.distance * 0.5;
+
+		// Intersect the line with the trackball sphere.
+
+		// vec2.rotate ( dir, cm, pm, ( Math.PI * 0.5 ) );
+		// vec2.normalize ( dir, dir );
+		// this.rotate ( [ dir[0], dir[1], 0.0 ], 0.01 );
+		requestRender();
 	}
 
 	/**
 	 * Handle mouse up event.
-	 * @param {IMouseData} data - The mouse up data.
+	 * @param {IMouseEvent} event - The mouse up event.
 	 */
-	public override mouseUp ( data: IMouseData ) : void
+	public override mouseUp ( event: IMouseEvent ) : void
 	{
-		console.log ( "Mouse up:", data );
+		console.log ( "Mouse up:", event );
 	}
 }

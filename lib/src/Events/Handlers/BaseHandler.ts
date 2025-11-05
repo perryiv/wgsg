@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base as BaseClass } from "../../Base";
-import { IMouseData } from "../../Types";
+import { IMouseEvent } from "../../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -36,58 +36,58 @@ export abstract class BaseHandler extends BaseClass
 	}
 
 	/**
-	 * Handle mouse down data.
-	 * @param {IMouseData} data - The mouse down data.
+	 * Handle mouse down event.
+	 * @param {IMouseEvent} event - The mouse down event.
 	 */
-	public mouseDown ( data: IMouseData ) : void
+	public mouseDown ( event: IMouseEvent ) : void
 	{
 	}
 
 	/**
-	 * Handle mouse move data.
-	 * @param {IMouseData} data - The mouse move data.
+	 * Handle mouse move event.
+	 * @param {IMouseEvent} event - The mouse move event.
 	 */
-	public mouseMove ( data: IMouseData ) : void
+	public mouseMove ( event: IMouseEvent ) : void
 	{
 	}
 
 	/**
-	 * Handle mouse drag data.
-	 * @param {IMouseData} data - The mouse drag data.
+	 * Handle mouse drag event.
+	 * @param {IMouseEvent} event - The mouse drag event.
 	 */
-	public mouseDrag ( data: IMouseData ) : void
+	public mouseDrag ( event: IMouseEvent ) : void
 	{
 	}
 
 	/**
-	 * Handle mouse up data.
-	 * @param {IMouseData} data - The mouse up data.
+	 * Handle mouse up event.
+	 * @param {IMouseEvent} event - The mouse up event.
 	 */
-	public mouseUp ( data: IMouseData ) : void
+	public mouseUp ( event: IMouseEvent ) : void
 	{
 	}
 
 	/**
-	 * Handle mouse out data.
-	 * @param {IMouseData} data - The mouse out data.
+	 * Handle mouse out event.
+	 * @param {IMouseEvent} event - The mouse out event.
 	 */
-	public mouseOut ( data: IMouseData ) : void
+	public mouseOut ( event: IMouseEvent ) : void
 	{
 	}
 
 	/**
-	 * Handle mouse in data.
-	 * @param {IMouseData} data - The mouse in data.
+	 * Handle mouse in event.
+	 * @param {IMouseEvent} event - The mouse in event.
 	 */
-	public mouseIn ( data: IMouseData ) : void
+	public mouseIn ( event: IMouseEvent ) : void
 	{
 	}
 
 	/**
-	 * Handle mouse context menu data.
-	 * @param {IMouseData} data - The mouse context menu data.
+	 * Handle mouse context menu event.
+	 * @param {IMouseEvent} event - The mouse context menu event.
 	 */
-	public mouseContextMenu ( data: IMouseData ) : void
+	public mouseContextMenu ( event: IMouseEvent ) : void
 	{
 	}
 }
