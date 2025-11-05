@@ -11,15 +11,20 @@
 //
 //	3D math functions.
 //
+//	Many were copied from here and converted to TypeScript:
+//	https://github.com/perryiv/usul/blob/master/source/Usul/Math/Three.h
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 import { IDENTITY_MATRIX } from "./Constants";
+import { Line } from "../Math";
 import { mat4, vec4 } from "gl-matrix";
 import type {
 	IMatrix44,
 	IVector2,
 	IVector3,
 	IVector4,
+	IViewport,
 } from "../Types"
 
 
@@ -31,18 +36,18 @@ import type {
 
 interface IUnProjectInput
 {
-	screen: ( IVector2 | IVector3 );
-	modelMatrix: IMatrix44;
+	screenPoint: ( IVector2 | IVector3 );
+	viewMatrix: IMatrix44;
 	projMatrix: IMatrix44;
-	viewport: IVector4;
+	viewport: IViewport;
 };
 
 interface IMakeLineInput
 {
-  screen: IVector2;
-  viewMatrix: IMatrix44;
-  projMatrix: IMatrix44;
-  viewport: IVector4;
+	screenPoint: IVector2;
+	viewMatrix: IMatrix44;
+	projMatrix: IMatrix44;
+	viewport: IViewport;
 }
 
 
@@ -55,37 +60,37 @@ interface IMakeLineInput
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export function unProject ( input: IUnProjectInput ) : ( IVector3 | null )
+export function unProject ( input: Readonly<IUnProjectInput> ) : ( IVector3 | null )
 {
 	// Get input.
-	const { modelMatrix, projMatrix, viewport } = input;
-  let { screen } = input;
+	const { viewMatrix, projMatrix, viewport } = input;
+	let { screenPoint } = input;
 
-  // Handle invalid input.
-  if ( screen.length < 2 || screen.length > 3 )
-  {
-    return null;
-  }
+	// Handle invalid input.
+	if ( screenPoint.length < 2 || screenPoint.length > 3 )
+	{
+		return null;
+	}
 
-  // Handle 2D input.
-  if ( 2 === screen.length )
-  {
-    screen = [ screen[0], screen[1], 0 ];
-  }
+	// Handle 2D input.
+	if ( 2 === screenPoint.length )
+	{
+		screenPoint = [ screenPoint[0], screenPoint[1], 0 ];
+	}
 
-  // Make the homogeneous, normalized point.
+	// Make the homogeneous, normalized point.
 	// All three, x, y, and z, will be in the range [-1,1].
 	const a: IVector4 = [
-		( ( ( screen[0] - viewport[0] ) * 2 / viewport[2] ) - 1 ),
-		( ( ( screen[1] - viewport[1] ) * 2 / viewport[3] ) - 1 ),
-		( ( 2 * screen[2] ) - 1 ),
+		( ( ( screenPoint[0] - viewport.x ) * 2 / viewport.width ) - 1 ),
+		( ( ( screenPoint[1] - viewport.y ) * 2 / viewport.height ) - 1 ),
+		( ( 2 * screenPoint[2] ) - 1 ),
 		1
 	];
 
 	// Combine the view and projection matrices.
 	const m: IMatrix44 = [ ...IDENTITY_MATRIX ];
 	mat4.multiply ( m, m, projMatrix );
-	mat4.multiply ( m, m, modelMatrix );
+	mat4.multiply ( m, m, viewMatrix );
 
 	// Get the inverse and handle when it does not exist.
 	const im: IMatrix44 = [ ...IDENTITY_MATRIX ];
@@ -104,36 +109,53 @@ export function unProject ( input: IUnProjectInput ) : ( IVector3 | null )
 		return null;
 	}
 
-  // Shortcut.
-  const ib3 = ( 1 / b[3] );
+	// Shortcut.
+	const ib3 = ( 1 / b[3] );
 
-  // Return the answer.
-  return [
-    b[0] * ib3,
-    b[1] * ib3,
-    b[2] * ib3
-  ];
+	// Return the answer.
+	return [
+		b[0] * ib3,
+		b[1] * ib3,
+		b[2] * ib3
+	];
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Make a 3D line from 2D screen coordinates. The x and y arguments are window coordinates (origin top-left).
+ * Make a 3D line from 2D screen coordinates.
+ * @param {IMakeLineInput} input The input data.
+ * @returns {ILine | null} The line or null on failure.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export function makeLine ( input: IMakeLineInput ): void
+export function makeLine ( input: Readonly<IMakeLineInput> ): ( Line | null )
 {
-  const { x, y, viewMatrix, projMatrix, viewport } = input;
+	// Get the input.
+	const { screenPoint, viewMatrix, projMatrix, viewport } = input;
 
-  // Flip y because window coords typically have origin at top-left
-	const yf = viewport[3] - y;
+	// Shortcuts. Note: we flip the y direction.
+	const x = screenPoint[0];
+	const y = viewport.height - screenPoint[1];
 
-	const near = unProject([x, yf, 0], viewMatrix, projMatrix, viewport);
-	if (!near) return null;
+	// Unproject the near point.
+	const near = unProject ( { screenPoint: [ x, y, 0 ], viewMatrix, projMatrix, viewport } );
 
-	const far = unProject([x, yf, 1], viewMatrix, projMatrix, viewport);
-	if (!far) return null;
+	// Make sure it worked.
+	if ( !near )
+	{
+		return null;
+	}
 
-	return { start: near, end: far };
+	// Unproject the far point.
+	const far = unProject ( { screenPoint: [ x, y, 1 ], viewMatrix, projMatrix, viewport } );
+
+	// Make sure it worked.
+	if ( !far )
+	{
+		return null;
+	}
+
+	// Return the line.
+	return new Line ( near, far );
 }
