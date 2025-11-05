@@ -13,11 +13,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base } from "../Base/Base";
-import { clamp, DEVELOPER_BUILD, Device } from "../Tools";
-import { IVector3, IVector4 } from "../Types";
+import { clamp, DEVELOPER_BUILD, Device, IDENTITY_MATRIX } from "../Tools";
+import { IMatrix44, IVector3, IVector4 } from "../Types";
 import { Perspective, ProjectionBase as Projection } from "../Projections";
 import { SolidColor } from "../Shaders";
-import { vec4 } from "gl-matrix";
+import { mat4, vec4 } from "gl-matrix";
 import type { ISize, IViewport } from "../Types/Math";
 import {
 	Node,
@@ -520,6 +520,24 @@ export class Surface extends Base
 
 		// Set our member.
 		this.#projection = projection;
+	}
+
+	/**
+	 * Get the projection matrix.
+	 * @returns {IMatrix44} The projection matrix.
+	 */
+	public get projMatrix () : IMatrix44
+	{
+		return this.projection.matrix;
+	}
+
+	/**
+	 * Get the view matrix.
+	 * @returns {IMatrix44} The view matrix.
+	 */
+	public get viewMatrix () : IMatrix44
+	{
+		return [ ...IDENTITY_MATRIX ];
 	}
 
 	/**
