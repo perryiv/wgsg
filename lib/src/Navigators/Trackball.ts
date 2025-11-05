@@ -21,6 +21,7 @@ import {
 	normalizeQuat,
 	normalizeVec3,
 	makeLine as makeLineUnderScreenPoint,
+	discardEvent,
 } from "../Tools";
 import type {
 	IMatrix44,
@@ -28,7 +29,6 @@ import type {
 	IVector2,
 	IVector3,
 	IVector4,
-	IViewport
 } from "../Types";
 
 
@@ -263,8 +263,8 @@ export class Trackball extends BaseClass
 	 */
 	public override viewAll ( model: Node | null ) : void
 	{
-		// For now just reset to the default state.
-		this.reset();
+		void model;   // Do nothing with the function argument.
+		this.reset(); // For now just reset to the default state.
 	}
 
 	/**
@@ -274,6 +274,7 @@ export class Trackball extends BaseClass
 	public override mouseDown ( event: IMouseEvent ) : void
 	{
 		console.log ( "Mouse down:", event );
+		discardEvent ( event );
 	}
 
 	/**
@@ -283,6 +284,7 @@ export class Trackball extends BaseClass
 	public override mouseMove ( event: IMouseEvent ) : void
 	{
 		// console.log ( "Mouse move:", event );
+		discardEvent ( event );
 	}
 
 	/**
@@ -328,11 +330,18 @@ export class Trackball extends BaseClass
 		const sphereCenter: IVector3 = [ 0, 0, 0 ];
 		const sphereRadius: number = this.distance * 0.5;
 
+		// For now ...
+		void cl;
+		void pl;
+		void sphereCenter;
+		void sphereRadius;
+
 		// Intersect the line with the trackball sphere.
 
-		// vec2.rotate ( dir, cm, pm, ( Math.PI * 0.5 ) );
-		// vec2.normalize ( dir, dir );
-		// this.rotate ( [ dir[0], dir[1], 0.0 ], 0.01 );
+		const dir: IVector2 = [ 0, 0 ];
+		vec2.rotate ( dir, cm, pm, ( Math.PI * 0.5 ) );
+		vec2.normalize ( dir, dir );
+		this.rotate ( [ dir[0], dir[1], 0.0 ], 0.01 );
 		requestRender();
 	}
 

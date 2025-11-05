@@ -17,7 +17,7 @@ import { clamp, DEVELOPER_BUILD, Device, IDENTITY_MATRIX } from "../Tools";
 import { IMatrix44, IVector3, IVector4 } from "../Types";
 import { Perspective, ProjectionBase as Projection } from "../Projections";
 import { SolidColor } from "../Shaders";
-import { mat4, vec4 } from "gl-matrix";
+import { vec4 } from "gl-matrix";
 import type { ISize, IViewport } from "../Types/Math";
 import {
 	Node,

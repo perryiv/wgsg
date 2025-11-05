@@ -14,7 +14,7 @@
 
 import { IMatrix44, IViewport } from "../Types";
 import { isPositiveFiniteNumber } from "../Math";
-import { IDENTITY_MATRIX, makeIdentity } from "../Tools";
+import { IDENTITY_MATRIX } from "../Tools";
 import { mat4 } from "gl-matrix";
 import { Projection } from "./Projection";
 

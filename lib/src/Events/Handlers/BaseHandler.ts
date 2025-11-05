@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base as BaseClass } from "../../Base";
+import { discardEvent } from "../../Tools";
 import { IMouseEvent } from "../../Types";
 
 
@@ -41,6 +42,7 @@ export abstract class BaseHandler extends BaseClass
 	 */
 	public mouseDown ( event: IMouseEvent ) : void
 	{
+		discardEvent ( event );
 	}
 
 	/**
@@ -49,6 +51,7 @@ export abstract class BaseHandler extends BaseClass
 	 */
 	public mouseMove ( event: IMouseEvent ) : void
 	{
+		discardEvent ( event );
 	}
 
 	/**
@@ -57,6 +60,7 @@ export abstract class BaseHandler extends BaseClass
 	 */
 	public mouseDrag ( event: IMouseEvent ) : void
 	{
+		discardEvent ( event );
 	}
 
 	/**
@@ -65,6 +69,7 @@ export abstract class BaseHandler extends BaseClass
 	 */
 	public mouseUp ( event: IMouseEvent ) : void
 	{
+		discardEvent ( event );
 	}
 
 	/**
@@ -73,6 +78,7 @@ export abstract class BaseHandler extends BaseClass
 	 */
 	public mouseOut ( event: IMouseEvent ) : void
 	{
+		discardEvent ( event );
 	}
 
 	/**
@@ -81,6 +87,7 @@ export abstract class BaseHandler extends BaseClass
 	 */
 	public mouseIn ( event: IMouseEvent ) : void
 	{
+		discardEvent ( event );
 	}
 
 	/**
@@ -89,5 +96,6 @@ export abstract class BaseHandler extends BaseClass
 	 */
 	public mouseContextMenu ( event: IMouseEvent ) : void
 	{
+		discardEvent ( event );
 	}
 }

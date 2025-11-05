@@ -17,7 +17,6 @@ import { Group, Node, Transform } from "../Scene";
 import { NavBase, Trackball } from "../Navigators";
 import { type ISurfaceConstructor, Surface } from "./Surface";
 import type { IMatrix44, IMouseData, IMouseEvent, IVector2 } from "../Types";
-import { IDENTITY_MATRIX } from "../Tools";
 
 
 ///////////////////////////////////////////////////////////////////////////////

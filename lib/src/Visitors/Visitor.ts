@@ -78,6 +78,7 @@ export abstract class Visitor extends Base
 	 */
 	public visitGeometry ( geom: Geometry ) : void
 	{
+		void geom; // Do nothing with the function argument.
 	}
 
 	/**
@@ -86,6 +87,7 @@ export abstract class Visitor extends Base
 	 */
 	public visitShape ( shape: Shape ) : void
 	{
+		void shape; // Do nothing with the function argument.
 	}
 
 	/**
@@ -94,6 +96,7 @@ export abstract class Visitor extends Base
 	 */
 	public visitNode ( node: Node ) : void
 	{
+		void node; // Do nothing with the function argument.
 	}
 
 	/**

@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Array1, Array3 } from "../../../Arrays";
+import { Array1 } from "../../../Arrays";
 import { Geometry } from "./Geometry";
 import { Indexed } from "../../Primitives";
 import { vec3 } from "gl-matrix";

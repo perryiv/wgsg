@@ -13,8 +13,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { makeTriangleEdges } from "../Algorithms";
-import { mat4 } from "gl-matrix";
-import type { IVector3 } from "../Types";
 import {
 	Geometry,
 	Indexed
@@ -54,9 +52,6 @@ export const buildTriangleEdges = ( geom: Geometry ) : ( Geometry | null ) =>
 	{
 		return null;
 	}
-
-	// Now we know this will be an integer.
-	const numPoints = arrayLength / 3;
 
 	// Shortcut.
 	const prims = geom.primitives;

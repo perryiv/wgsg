@@ -55,9 +55,10 @@ export interface IStateConstructorInput
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const defaultApplyFunction: IStateApplyFunction = ( input: IStateApplyInput ) =>
+export const defaultApplyFunction: IStateApplyFunction = ( input: IStateApplyInput ): void =>
 {
 	// console.log ( `Default state apply function called with name: '${input.state.name}', projMatrix: ${JSON.stringify ( input.projMatrix )}, modelMatrix: ${JSON.stringify ( input.modelMatrix )}` );
+	void input; // Do nothing with the function argument.
 };
 
 
@@ -68,7 +69,7 @@ export const defaultApplyFunction: IStateApplyFunction = ( input: IStateApplyInp
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const defaultResetFunction: IStateResetFunction = () =>
+export const defaultResetFunction: IStateResetFunction = (): void =>
 {
 	// console.log ( "Default state reset function called" );
 };
