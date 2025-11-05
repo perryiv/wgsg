@@ -19,3 +19,4 @@ export * from "./Device";
 export * from "./Errors";
 export * from "./Functions";
 export * from "./Math";
+export * from "./Three";
