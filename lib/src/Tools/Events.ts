@@ -8,16 +8,21 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Export the modules in this directory.
+//	Event functions.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export * from "./Bits";
-export * from "./Color";
-export * from "./Constants";
-export * from "./Device";
-export * from "./Errors";
-export * from "./Events";
-export * from "./Functions";
-export * from "./Math";
-export * from "./Three";
+import { IMouseEvent } from "../Types";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Discard the event.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export const discardEvent = ( event: IMouseEvent ) : void =>
+{
+	// Do nothing with the function argument.
+	void event;
+};
