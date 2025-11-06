@@ -27,7 +27,7 @@ import {
 	Root,
 	Shape,
 	SolidColor,
-	Sphere,
+	SphereNode as Sphere,
 	State,
 	StateGroup,
 } from "wgsg-lib";

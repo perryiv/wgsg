@@ -22,7 +22,7 @@ import {
 	Indexed,
 	Node,
 	SolidColor,
-	Sphere,
+	SphereNode as Sphere,
 	State,
 	Transform,
 } from "wgsg-lib";
