@@ -12,10 +12,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { isFiniteNumber } from "../Math";
-import { mat4, quat, vec2, vec3, vec4 } from "gl-matrix";
+import { mat4, quat, vec3, vec4 } from "gl-matrix";
 import { NavBase as BaseClass } from "./NavBase";
 import { Node } from "../Scene";
+import {
+	intersectLineSphere,
+	isFiniteNumber,
+	Sphere,
+} from "../Math";
 import {
 	IDENTITY_MATRIX,
 	normalizeQuat,
@@ -26,7 +30,6 @@ import {
 import type {
 	IMatrix44,
 	IMouseEvent,
-	IVector2,
 	IVector3,
 	IVector4,
 } from "../Types";
@@ -293,6 +296,7 @@ export class Trackball extends BaseClass
 	 */
 	public override mouseDrag ( event: IMouseEvent ) : void
 	{
+		// Get input.
 		const {
 			current: cm,
 			previous: pm,
@@ -302,17 +306,21 @@ export class Trackball extends BaseClass
 			requestRender
 		} = event;
 
+		// Handle invalid input.
 		if ( !cm || !pm || !event )
 		{
 			return;
 		}
 
-		if ( 1 !== originalEvent.buttons ) // Left mouse button only.
+		// Left mouse button only.
+		// TODO: Make this configurable.
+		if ( 1 !== originalEvent.buttons )
 		{
 			return;
 		}
 
-		const viewMatrix: IMatrix44 = [ ...this.matrix ];
+		// Shortcut.
+		const viewMatrix = this.matrix;
 
 		// Get the line under the current mouse position.
 		const cl = makeLineUnderScreenPoint ( {
@@ -326,22 +334,79 @@ export class Trackball extends BaseClass
 			viewMatrix, projMatrix, viewport,
 		} );
 
+		// Handle invalid lines.
+		if ( ( !cl ) || ( !pl ) )
+		{
+			return;
+		}
+
+		// Normalize the lines.
+		cl.normalize();
+		pl.normalize();
+
+		// Handle invalid lines.
+		if ( ( false === cl.valid ) || ( false === pl.valid ) )
+		{
+			return;
+		}
+
+		// Shortcuts.
+		const center = this.center;
+		const distance = this.distance;
+
 		// Make the trackball sphere in world space.
-		const sphereCenter: IVector3 = [ 0, 0, 0 ];
-		const sphereRadius: number = this.distance * 0.5;
+		const sphere = new Sphere (
+			[ center[0], center[1], -distance ],
+			( distance * 0.9 ) // Slightly smaller than the distance.
+		);
 
-		// For now ...
-		void cl;
-		void pl;
-		void sphereCenter;
-		void sphereRadius;
+		// Intersect the lines with the trackball sphere.
+		const ci = intersectLineSphere ( { line: cl, sphere } );
+		const pi = intersectLineSphere ( { line: pl, sphere } );
 
-		// Intersect the line with the trackball sphere.
+		// We ignore zero or one (tangent) intersections.
+		if ( !( isFiniteNumber ( ci.u1 ) && isFiniteNumber ( ci.u2 ) &&
+						isFiniteNumber ( pi.u1 ) && isFiniteNumber ( pi.u2 ) ) )
+		{
+			return;
+		}
 
-		const dir: IVector2 = [ 0, 0 ];
-		vec2.rotate ( dir, cm, pm, ( Math.PI * 0.5 ) );
-		vec2.normalize ( dir, dir );
-		this.rotate ( [ dir[0], dir[1], 0.0 ], 0.01 );
+		// Get the smaller parameter because that is the closest intersection.
+		const uc = Math.min ( ci.u1!, ci.u2! );
+		const up = Math.min ( pi.u1!, pi.u2! );
+
+		// Get the intersection points.
+		const p0: IVector3 = pl.getPoint ( up );
+		const p1: IVector3 = cl.getPoint ( uc );
+
+		// Make the vector from the sphere center to the first intersection point.
+		const v0: IVector3 = [ 0, 0, 0 ];
+		vec3.subtract ( v0, p0, this.center );
+		normalizeVec3 ( v0 );
+
+		// Make the vector from the sphere center to the second intersection point.
+		const v1: IVector3 = [ 0, 0, 0 ];
+		vec3.subtract ( v1, p1, this.center );
+		normalizeVec3 ( v1 );
+
+		// The cross product is the axis of rotation.
+		const axis: IVector3 = [ 0, 0, 0 ];
+		vec3.cross ( axis, v1, v0 );
+		normalizeVec3 ( axis );
+
+		// The angle between the two vectors.
+		const angle = vec3.angle ( v0, v1 );
+
+		// Handle invalid angles.
+		if ( false === isFiniteNumber ( angle ) )
+		{
+			return;
+		}
+
+		// Rotate the trackball.
+		this.rotate ( axis, angle );
+
+		// Request a render.
 		requestRender();
 	}
 
