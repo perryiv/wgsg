@@ -15,11 +15,14 @@
 import { IMatrix44 } from "../Types";
 
 
+///////////////////////////////////////////////////////////////////////////////
 /**
  * See if the matrix is valid.
  * @param {IMatrix44} m - The matrix to check.
  * @returns {boolean} True if the matrix is valid, otherwise false.
  */
+///////////////////////////////////////////////////////////////////////////////
+
 export const isValidMatrix = ( m: Readonly<IMatrix44> ) =>
 {
 	// Get the array length.
@@ -49,22 +52,28 @@ export const isValidMatrix = ( m: Readonly<IMatrix44> ) =>
 }
 
 
+///////////////////////////////////////////////////////////////////////////////
 /**
  * See if the given value is a finite number.
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a number, otherwise false.
  */
+///////////////////////////////////////////////////////////////////////////////
+
 export const isFiniteNumber = ( value: unknown ) =>
 {
 	return ( Number.isFinite ( value ) );
 }
 
 
+///////////////////////////////////////////////////////////////////////////////
 /**
  * See if the given value is a positive finite number.
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a positive number, otherwise false.
  */
+///////////////////////////////////////////////////////////////////////////////
+
 export const isPositiveFiniteNumber = ( value: unknown ) =>
 {
 	if ( false == isFiniteNumber ( value ) )
