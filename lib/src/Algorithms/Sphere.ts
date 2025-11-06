@@ -21,7 +21,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-type ISubDivideCallback = ( (
+export type ISubDivideCallback = ( (
 		x1: number, y1: number, z1: number,
 		x2: number, y2: number, z2: number,
 		x3: number, y3: number, z3: number,
