@@ -170,6 +170,36 @@ export class Line
 	}
 
 	/**
+	 * Get the length of the line segment.
+	 * @returns {number} - The length of the line segment.
+	 */
+	public get length(): number
+	{
+		return vec3.distance ( this.start, this.end );
+	}
+
+	/**
+	 * Get the squared length of the line segment.
+	 * @returns {number} - The squared length of the line segment.
+	 */
+	public get lengthSquared(): number
+	{
+		return vec3.squaredDistance ( this.start, this.end );
+	}
+
+	/**
+	 * Get the point on the line at the given parameter.
+	 * @param {number} u - The parameter.
+	 * @returns {IVector3} - The point on the line.
+	 */
+	public getPoint ( u: number ): IVector3
+	{
+		const point: IVector3 = [ 0, 0, 0 ];
+		vec3.lerp ( point, this.start, this.end, u );
+		return point;
+	}
+
+	/**
 	 * See if the two lines are equal.
 	 * @param {Line} a - First line.
 	 * @param {Line} b - Second line.
