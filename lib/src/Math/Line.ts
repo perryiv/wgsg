@@ -36,7 +36,7 @@ export class Line
 	 * @param {IVector3} end - The end point.
 	 * @class
 	 */
-	constructor ( start?: IVector3, end?: IVector3 )
+	constructor ( start?: Readonly<IVector3>, end?: Readonly<IVector3> )
 	{
 		if ( start )
 		{
@@ -61,7 +61,7 @@ export class Line
 	 * Set the start point.
 	 * @param {IVector3} value - The new start point.
 	 */
-	public set start ( value: IVector3 )
+	public set start ( value: Readonly<IVector3> )
 	{
 		vec3.copy ( this.#p0, value );
 	}
@@ -79,7 +79,7 @@ export class Line
 	 * Set the end point.
 	 * @param {IVector3} value - The new end point.
 	 */
-	public set end ( value: IVector3 )
+	public set end ( value: Readonly<IVector3> )
 	{
 		vec3.copy ( this.#p1, value );
 	}
@@ -108,7 +108,7 @@ export class Line
 	 * Set the direction vector.
 	 * @param {IVector3} dir - The new direction vector.
 	 */
-	public set direction ( dir: IVector3 )
+	public set direction ( dir: Readonly<IVector3> )
 	{
 		vec3.add ( this.#p1, this.#p0, dir );
 	}
@@ -129,7 +129,7 @@ export class Line
 	 * Set this line from another line.
 	 * @param {Line} line - The line to copy from.
 	 */
-	public setFromLine ( line: Line ): void
+	public setFromLine ( line: Readonly<Line> ): void
 	{
 		const p0 = line.start;
 		const p1 = line.end;
@@ -143,7 +143,7 @@ export class Line
 	 * @param {IVector3} p0 - The start point.
 	 * @param {IVector3} p1 - The end point.
 	 */
-	public setFromPoints ( p0: IVector3, p1: IVector3 ): void
+	public setFromPoints ( p0: Readonly<IVector3>, p1: Readonly<IVector3> ): void
 	{
 		vec3.copy ( this.#p0, p0 );
 		vec3.copy ( this.#p1, p1 );
@@ -154,7 +154,7 @@ export class Line
 	 * @param {IVector3} pt - The start point.
 	 * @param {IVector3} dir - The direction vector.
 	 */
-	public setFromPointAndDirection ( pt: IVector3, dir: IVector3 ): void
+	public setFromPointAndDirection ( pt: Readonly<IVector3>, dir: Readonly<IVector3> ): void
 	{
 		vec3.copy ( this.#p0, pt );
 		vec3.add ( this.#p1, pt, dir );
@@ -175,7 +175,7 @@ export class Line
 	 * @param {Line} b - Second line.
 	 * @returns {boolean} - True if the lines are equal.
 	 */
-	public static equal ( a: Line, b: Line ): boolean
+	public static equal ( a: Readonly<Line>, b: Readonly<Line> ): boolean
 	{
 		return (
 			vec3.exactEquals ( a.start, b.start ) &&
@@ -190,7 +190,7 @@ export class Line
 	 * @param {Line} a - The input line.
 	 * @returns {Line} The transformed line.
 	 */
-	public static transform ( out: Line, m: IMatrix44, a: Line ): Line
+	public static transform ( out: Line, m: Readonly<IMatrix44>, a: Readonly<Line> ): Line
 	{
 		vec3.transformMat4 ( out.start, a.start, m );
 		vec3.transformMat4 ( out.end, a.end, m );
