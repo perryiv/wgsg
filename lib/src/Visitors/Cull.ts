@@ -193,10 +193,13 @@ export class Cull extends Multiply
 	 */
 	public set defaultState ( state: ( State | null ) )
 	{
+		// This way supports setting a breakpoint.
+		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 		if ( !state )
 		{
 			state = makeDefaultState();
 		}
+
 		this.#defaultState = state;
 	}
 
@@ -207,10 +210,14 @@ export class Cull extends Multiply
 	protected get currentState () : State
 	{
 		let state = this.#currentState;
+
+		// This way supports setting a breakpoint.
+		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 		if ( !state )
 		{
 			state = this.defaultState;
 		}
+
 		return state;
 	}
 

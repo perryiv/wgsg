@@ -59,7 +59,7 @@ export class SolidColor extends BaseClass
 
 		super ( {
 			code: ( code as string ),
-			topology: ( topology ? topology : "triangle-list" )
+			topology: ( topology ?? "triangle-list" )
 		} );
 	}
 

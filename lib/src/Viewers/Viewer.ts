@@ -304,7 +304,7 @@ export class Viewer extends Surface
 	public get eventHandlerOrNavigator() : BaseHandler
 	{
 		const handler = this.currentEventHandler;
-		return ( handler ? handler : this.navigator );
+		return ( handler ?? this.navigator );
 	}
 
 	/**
@@ -329,7 +329,7 @@ export class Viewer extends Surface
 		const handler = ( ( handlers.length > 0 ) ? handlers.pop() : null );
 
 		// Do not return undefined.
-		return ( handler ? handler : null );
+		return ( handler ?? null );
 	}
 
 	/**

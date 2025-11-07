@@ -56,7 +56,7 @@ export class Indexed extends BaseClass
 		// Call this first.
 		super ( input );
 
-		const { indices } = input || {};
+		const { indices } = ( input ?? {} );
 
 		// Is there input?
 		if ( indices )
