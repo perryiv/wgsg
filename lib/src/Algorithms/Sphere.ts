@@ -54,7 +54,7 @@ function subdivide (
 	x2: Readonly<number>, y2: Readonly<number>, z2: Readonly<number>,
 	x3: Readonly<number>, y3: Readonly<number>, z3: Readonly<number>,
 	numPoints: { value: number },
-	depth: Readonly<number>,
+	depth: number,
 	fun: ISubDivideCallback ): void
 {
 	// If we are at the requested depth ...
@@ -124,7 +124,6 @@ function subdivide (
 		subdivide (x12, y12, z12, x23, y23, z23, x31, y31, z31, numPoints, depth, fun );
 	}
 }
-
 
 
 ///////////////////////////////////////////////////////////////////////////////
