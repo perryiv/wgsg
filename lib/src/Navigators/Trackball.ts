@@ -271,6 +271,20 @@ export class Trackball extends BaseClass
 	}
 
 	/**
+	 * Make the trackball sphere in world space.
+	 * @returns {Sphere} The trackball sphere.
+	 */
+	public makeSphere () : Sphere
+	{
+		const dist = this.distance;
+		const sphere = new Sphere (
+			[ 0, 0, -dist ], // Center
+			( dist * 0.5 )   // Radius
+		);
+		return sphere;
+	}
+
+	/**
 	 * Handle mouse down event.
 	 * @param {IMouseEvent} event - The mouse down event.
 	 */
@@ -350,15 +364,8 @@ export class Trackball extends BaseClass
 			return;
 		}
 
-		// Shortcuts.
-		const center = this.center;
-		const distance = this.distance;
-
 		// Make the trackball sphere in world space.
-		const sphere = new Sphere (
-			[ center[0], center[1], -distance ],
-			( distance * 0.9 ) // Slightly smaller than the distance.
-		);
+		const sphere = this.makeSphere();
 
 		// Intersect the lines with the trackball sphere.
 		const ci = intersectLineSphere ( { line: cl, sphere } );
@@ -380,19 +387,20 @@ export class Trackball extends BaseClass
 		const p1: IVector3 = cl.getPoint ( uc );
 
 		// Make the vector from the sphere center to the first intersection point.
-		const v0: IVector3 = [ 0, 0, 0 ];
+		let v0: IVector3 = [ 0, 0, 0 ];
 		vec3.subtract ( v0, p0, this.center );
-		normalizeVec3 ( v0 );
+		v0 = normalizeVec3 ( v0 );
 
 		// Make the vector from the sphere center to the second intersection point.
-		const v1: IVector3 = [ 0, 0, 0 ];
+		let v1: IVector3 = [ 0, 0, 0 ];
 		vec3.subtract ( v1, p1, this.center );
-		normalizeVec3 ( v1 );
+		v1 = normalizeVec3 ( v1 );
 
 		// The cross product is the axis of rotation.
-		const axis: IVector3 = [ 0, 0, 0 ];
+		let axis: IVector3 = [ 0, 0, 0 ];
 		vec3.cross ( axis, v1, v0 );
-		normalizeVec3 ( axis );
+		axis = normalizeVec3 ( axis );
+		console.log ( "Axis of rotation:", axis );
 
 		// The angle between the two vectors.
 		const angle = vec3.angle ( v0, v1 );
