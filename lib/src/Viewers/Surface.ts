@@ -841,18 +841,18 @@ export class Surface extends Base
 		{
 			const name = `${this.type} ${this.id}`;
 			const rgi = this.cullVisitor.renderGraphInfo
-			const info = `
-				frame: ${this.#frame.count},
-				time: ${( this.#frame.end - this.#frame.start ).toFixed ( 4 )} ms,
-				layers: ${rgi.numLayers},
-				bins: ${rgi.numBins},
-				pipelines: ${rgi.numPipelines},
-				projections: ${rgi.numProjMatrixGroups},
-				model matrices: ${rgi.numModelMatrixGroups},
-				states: ${rgi.numStateGroups},
-				shapes: ${rgi.numShapes}
-			`.trim().replace ( /\s+/g, " " );
-			console.log ( `${name} rendering, ${JSON.stringify ( info ) }` );
+			const info = {
+				layers: rgi.numLayers,
+				bins: rgi.numBins,
+				pipelines: rgi.numPipelines,
+				projections: rgi.numProjMatrixGroups,
+				modelMatrices: rgi.numModelMatrixGroups,
+				states: rgi.numStateGroups,
+				shapes: rgi.numShapes
+			};
+			let message = `${name} rendering frame ${this.#frame.count}`;
+			message += ` in ${( this.#frame.end - this.#frame.start ).toFixed ( 4 )} ms`;
+			console.log ( message, info );
 		}
 	}
 }
