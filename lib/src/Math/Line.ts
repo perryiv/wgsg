@@ -226,4 +226,13 @@ export class Line
 		vec3.transformMat4 ( out.end, a.end, m );
 		return out;
 	}
+
+	/**
+	 * Transform the line by a matrix in place.
+	 * @param {IMatrix44} m - The transformation matrix.
+	 */
+	public transform ( m: Readonly<IMatrix44> ): void
+	{
+		Line.transform ( this, m, this );
+	}
 }
