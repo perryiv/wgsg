@@ -42,46 +42,6 @@ interface ICullVisitorInput
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Make the default render graph info.
- * @returns {IRenderGraphInfo} The default render graph info.
- */
-///////////////////////////////////////////////////////////////////////////////
-
-const makeDefaultRenderGraphInfo = () : IRenderGraphInfo =>
-{
-	return {
-		numLayers: 0,
-		numBins: 0,
-		numPipelines: 0,
-		numProjMatrixGroups: 0,
-		numModelMatrixGroups: 0,
-		numStateGroups: 0,
-		numShapes: 0
-	};
-};
-
-
-///////////////////////////////////////////////////////////////////////////////
-/**
- * Reset the render graph info.
- * @param {IRenderGraphInfo} info - The render graph info.
- */
-///////////////////////////////////////////////////////////////////////////////
-
-const resetRenderGraphInfo = ( info: IRenderGraphInfo ) : void =>
-{
-	info.numLayers = 0;
-	info.numBins = 0;
-	info.numPipelines = 0;
-	info.numProjMatrixGroups = 0;
-	info.numModelMatrixGroups = 0;
-	info.numStateGroups = 0;
-	info.numShapes = 0;
-};
-
-
-///////////////////////////////////////////////////////////////////////////////
-/**
  * Make the default state.
  * @returns {State} The default state.
  */
@@ -108,7 +68,7 @@ export class Cull extends Multiply
 	#root: Root;
 	#defaultState: State;
 	#currentState: ( State | null ) = null;
-	#info: IRenderGraphInfo = makeDefaultRenderGraphInfo();
+	#info: ( IRenderGraphInfo | null ) = null;
 
 	/**
 	 * Construct the class.
@@ -170,7 +130,21 @@ export class Cull extends Multiply
 	 */
 	public get renderGraphInfo () : IRenderGraphInfo
 	{
-		return this.#info;
+		const info = this.#info;
+		if ( !info )
+		{
+			throw new Error ( "Getting invalid render graph info" );
+		}
+		return info;
+	}
+
+	/**
+	 * Set the render graph info.
+	 * @param {IRenderGraphInfo} info - The render graph info.
+	 */
+	public set renderGraphInfo ( info: IRenderGraphInfo )
+	{
+		this.#info = info;
 	}
 
 	/**
@@ -319,7 +293,7 @@ export class Cull extends Multiply
 		const pm = this.projMatrix;
 		const state = this.currentState;
 		const { shader } = state;
-		const info = this.#info;
+		const info = this.renderGraphInfo;
 
 		// We need a shader.
 		if ( !shader )
@@ -360,7 +334,6 @@ export class Cull extends Multiply
 	public override reset() : void
 	{
 		this.root.clear();
-		resetRenderGraphInfo ( this.#info );
 		this.#currentState = null;
 	}
 }

@@ -15,8 +15,9 @@
 import { ShaderBase } from "../Shaders";
 import { vec4 } from "gl-matrix";
 import { Visitor as BaseClass } from "./Visitor";
-import type { IVector4 } from "../Types";
+import type { IRenderGraphInfo, IVector4 } from "../Types";
 import {
+	DEVELOPER_BUILD,
 	Device,
 	preMultiplyColor,
 } from "../Tools";
@@ -85,6 +86,7 @@ export class Draw extends BaseClass
 	#renderPassEncoder: ( GPURenderPassEncoder | null ) = null;
 	#commandEncoder: ( GPUCommandEncoder | null ) = null;
 	#geometry: ( Geometry | null ) = null;
+	#info: ( IRenderGraphInfo | null ) = null;
 
 	/**
 	 * Construct the class.
@@ -118,6 +120,28 @@ export class Draw extends BaseClass
 	public override getClassName() : string
 	{
 		return "Visitors.Draw";
+	}
+
+	/*
+	 * Get the numbers of the various objects in the render graph.
+	 */
+	public get renderGraphInfo () : IRenderGraphInfo
+	{
+		const info = this.#info;
+		if ( !info )
+		{
+			throw new Error ( "Getting invalid render graph info" );
+		}
+		return info;
+	}
+
+	/**
+	 * Set the render graph info.
+	 * @param {IRenderGraphInfo} info - The render graph info.
+	 */
+	public set renderGraphInfo ( info: IRenderGraphInfo )
+	{
+		this.#info = info;
 	}
 
 	/**
@@ -571,6 +595,22 @@ export class Draw extends BaseClass
 			0, // Added to each index value before indexing into the vertex buffers.
 			0  // First instance to draw.
 		);
+
+		// Performance info.
+		if ( DEVELOPER_BUILD )
+		{
+			const info = this.renderGraphInfo;
+			switch ( prims.mode )
+			{
+				case "triangle-list":
+				{
+					if ( 0 === ( numIndices % 3 ) )
+					{
+						info.numTriangles += ( numIndices / 3 );
+					}
+				}
+			}
+		}
 	}
 
 	/**

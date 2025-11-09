@@ -14,22 +14,72 @@
 
 import { Base } from "../Base/Base";
 import { clamp, DEVELOPER_BUILD, Device, IDENTITY_MATRIX } from "../Tools";
-import { IMatrix44, IVector3, IVector4 } from "../Types";
 import { Perspective, ProjectionBase as Projection } from "../Projections";
+import { Root } from "../Render";
 import { SolidColor } from "../Shaders";
 import { vec4 } from "gl-matrix";
-import type { ISize, IViewport } from "../Types/Math";
 import {
 	Node,
 	State,
 	type IStateApplyInput,
 } from "../Scene";
-import { Root } from "../Render";
 import {
 	Cull as CullVisitor,
 	Draw as DrawVisitor,
 	Update as UpdateVisitor,
 } from "../Visitors";
+import type {
+	ISize,
+	IViewport,
+	IMatrix44,
+	IRenderGraphInfo,
+	IVector3,
+	IVector4
+} from "../Types";
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Make the default render graph info.
+ * @returns {IRenderGraphInfo} The default render graph info.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+const makeDefaultRenderGraphInfo = () : IRenderGraphInfo =>
+{
+	return {
+		numLayers: 0,
+		numBins: 0,
+		numPipelines: 0,
+		numProjMatrixGroups: 0,
+		numModelMatrixGroups: 0,
+		numStateGroups: 0,
+		numShapes: 0,
+		numTriangles: 0,
+		numLines: 0
+	};
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Reset the render graph info.
+ * @param {IRenderGraphInfo} info - The render graph info.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+const resetRenderGraphInfo = ( info: IRenderGraphInfo ) : void =>
+{
+	info.numLayers = 0;
+	info.numBins = 0;
+	info.numPipelines = 0;
+	info.numProjMatrixGroups = 0;
+	info.numModelMatrixGroups = 0;
+	info.numStateGroups = 0;
+	info.numShapes = 0;
+	info.numTriangles = 0;
+	info.numLines = 0;
+};
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -84,6 +134,7 @@ export class Surface extends Base
 	#root: Root = new Root();
 	#defaultState: ( State | null ) = null;
 	#clearColor: IVector4 = [ 0.0, 0.0, 0.0, 0.0 ]; // Transparent black.
+	#info: IRenderGraphInfo = makeDefaultRenderGraphInfo();
 
 	/**
 	 * Construct the class.
@@ -115,6 +166,7 @@ export class Surface extends Base
 		// Now we can make the visitors.
 		const update = new UpdateVisitor();
 		const cull = new CullVisitor ( { root, defaultState: state } );
+		cull.renderGraphInfo = this.renderGraphInfo;
 
 		// Observe changes to the canvas size.
 		// https://webgpufundamentals.org/webgpu/lessons/webgpu-fundamentals.html#a-resizing
@@ -197,6 +249,7 @@ export class Surface extends Base
 
 		// Make the draw visitor.
 		const draw = new DrawVisitor ( { context } );
+		draw.renderGraphInfo = this.renderGraphInfo;
 
 		// Shortcut.
 		const visitors = this.#visitors;
@@ -268,6 +321,14 @@ export class Surface extends Base
 
 		// Request a render in the near future.
 		this.requestRender();
+	}
+
+	/*
+	 * Get the numbers of the various objects in the render graph.
+	 */
+	public get renderGraphInfo () : IRenderGraphInfo
+	{
+		return this.#info;
 	}
 
 	/**
@@ -824,6 +885,12 @@ export class Surface extends Base
 			count: ( this.#frame.count + 1 )
 		};
 
+		// Performance info.
+		if ( DEVELOPER_BUILD )
+		{
+			resetRenderGraphInfo ( this.#info );
+		}
+
 		// Update the scene.
 		this.update();
 
@@ -841,15 +908,17 @@ export class Surface extends Base
 		{
 			const name = `${this.type} ${this.id}`;
 			const rgi = this.cullVisitor.renderGraphInfo
-			const info = {
-				layers: rgi.numLayers,
-				bins: rgi.numBins,
-				pipelines: rgi.numPipelines,
-				projections: rgi.numProjMatrixGroups,
-				modelMatrices: rgi.numModelMatrixGroups,
-				states: rgi.numStateGroups,
-				shapes: rgi.numShapes
-			};
+			const info = [
+				{ layers: rgi.numLayers },
+				{ bins: rgi.numBins },
+				{ pipelines: rgi.numPipelines },
+				{ projections: rgi.numProjMatrixGroups },
+				{ modelMatrices: rgi.numModelMatrixGroups },
+				{ states: rgi.numStateGroups },
+				{ shapes: rgi.numShapes },
+				{ triangles: rgi.numTriangles },
+				{ lines: rgi.numLines }
+			];
 			let message = `${name} rendering frame ${this.#frame.count}`;
 			message += ` in ${( this.#frame.end - this.#frame.start ).toFixed ( 4 )} ms`;
 			console.log ( message, info );

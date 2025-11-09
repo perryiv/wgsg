@@ -29,4 +29,6 @@ export interface IRenderGraphInfo
 	numModelMatrixGroups: number;
 	numStateGroups: number;
 	numShapes: number;
+	numTriangles: number;
+	numLines: number;
 }
