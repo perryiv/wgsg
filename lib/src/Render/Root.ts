@@ -27,9 +27,10 @@ import type { IRenderGraphInfo } from "../Types";
 - Root contains map of number to Layer
 	- Layer contains map of number to RenderBin
 		- RenderBin contains map of string (state name) to Pipeline
-			- Pipeline contains Shader, GPUPipeline, and map of projection matrix (as string) to ProjMatrix
-				- ProjMatrix contains projection matrix and map of model matrix (as string) to ModelMatrix
-					- ModelMatrix contains model matrix and array of shapes
+			- Pipeline contains Shader (and our shaders are singletons), GPUPipeline, and map of projection matrix (as string) to ProjMatrixGroup
+				- ProjMatrixGroup contains projection matrix and map of model matrix (as string) to ModelMatrixGroup
+					- ModelMatrixGroup contains map of state name to StateGroup
+						- StateGroup contains state and array of shapes.
 */
 
 
