@@ -111,18 +111,18 @@ export const buildSceneSpheres = () =>
 	{
 		const tr = new Transform();
 		mat4.translate ( tr.matrix, IDENTITY_MATRIX, [ 10, 0, 0 ] );
-		tr.addChild ( new Sphere ( { center: [ 0, 0, 0 ] } ) );
-		tr.addChild ( new Sphere ( { center: [ 2, 0, 0 ] } ) );
+		tr.addChild ( new SphereNode ( { center: [ 0, 0, 0 ] } ) );
+		tr.addChild ( new SphereNode ( { center: [ 2, 0, 0 ] } ) );
 		root.addChild ( tr );
 	}
 
 	{
 		const tr = new Transform();
 		mat4.translate ( tr.matrix, IDENTITY_MATRIX, [ 0, 10, 0 ] );
-		tr.addChild ( new Sphere ( { center: [ 0, 0, 0 ] } ) );
-		tr.addChild ( new Sphere ( { center: [ 2, 0, 0 ] } ) );
-		tr.addChild ( new Sphere ( { center: [ 4, 0, 0 ] } ) );
-		tr.addChild ( new Sphere ( { center: [ 6, 0, 0 ] } ) );
+		tr.addChild ( new SphereNode ( { center: [ 0, 0, 0 ] } ) );
+		tr.addChild ( new SphereNode ( { center: [ 2, 0, 0 ] } ) );
+		tr.addChild ( new SphereNode ( { center: [ 4, 0, 0 ] } ) );
+		tr.addChild ( new SphereNode ( { center: [ 6, 0, 0 ] } ) );
 		root.addChild ( tr );
 	}
 
