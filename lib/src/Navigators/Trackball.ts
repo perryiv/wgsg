@@ -279,7 +279,7 @@ export class Trackball extends BaseClass
 		const dist = this.distance;
 		const sphere = new Sphere (
 			[ 0, 0, -dist ], // Center
-			( dist * 0.5 )   // Radius
+			( dist * 0.9 )   // Radius
 		);
 		return sphere;
 	}
@@ -337,13 +337,13 @@ export class Trackball extends BaseClass
 		const viewMatrix = this.matrix;
 
 		// Get the line under the current mouse position.
-		const cl = makeLineUnderScreenPoint ( {
+		let cl = makeLineUnderScreenPoint ( {
 			screenPoint: [ cm[0], cm[1] ],
 			viewMatrix, projMatrix, viewport,
 		} );
 
 		// Get the line under the current mouse position.
-		const pl = makeLineUnderScreenPoint ( {
+		let pl = makeLineUnderScreenPoint ( {
 			screenPoint: [ pm[0], pm[1] ],
 			viewMatrix, projMatrix, viewport,
 		} );
@@ -357,6 +357,20 @@ export class Trackball extends BaseClass
 		// Normalize the lines.
 		cl.normalize();
 		pl.normalize();
+
+		// Get the inverse of the view matrix.
+		const ivm: IMatrix44 = [ ...IDENTITY_MATRIX ];
+		mat4.invert ( ivm, viewMatrix );
+
+		// Handle no inverse.
+		if ( !ivm )
+		{
+			return;
+		}
+
+		// Put the lines in model space.
+		cl.transform ( ivm );
+		pl.transform ( ivm );
 
 		// Handle invalid lines.
 		if ( ( false === cl.valid ) || ( false === pl.valid ) )
