@@ -290,7 +290,7 @@ export class Trackball extends BaseClass
 	 */
 	public override mouseDown ( event: IMouseEvent ) : void
 	{
-		console.log ( "Mouse down:", event );
+		// console.log ( "Mouse down:", event );
 		discardEvent ( event );
 	}
 
@@ -424,6 +424,7 @@ export class Trackball extends BaseClass
 	 */
 	public override mouseUp ( event: IMouseEvent ) : void
 	{
-		console.log ( "Mouse up:", event );
+		// console.log ( "Mouse up:", event );
+		discardEvent ( event );
 	}
 }
