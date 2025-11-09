@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Array1 } from "../../../Arrays";
-import { Geometry } from "./Geometry";
+import { Geometry as BaseClass } from "./Geometry";
 import { Indexed } from "../../Primitives";
 import { vec3 } from "gl-matrix";
 import type { INodeConstructorInput } from "../Node";
@@ -45,7 +45,7 @@ export interface ISphereInput extends INodeConstructorInput
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Sphere extends Geometry
+export class Sphere extends BaseClass
 {
 	#center: IVector3 = [ 0, 0, 0 ];
 	#radius = 1.0;
