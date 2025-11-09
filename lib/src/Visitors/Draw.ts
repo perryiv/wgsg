@@ -608,6 +608,15 @@ export class Draw extends BaseClass
 					{
 						info.numTriangles += ( numIndices / 3 );
 					}
+					break;
+				}
+				case "line-list":
+				{
+					if ( 0 === ( numIndices % 2 ) )
+					{
+						info.numLines += ( numIndices / 2 );
+					}
+					break;
 				}
 			}
 		}
