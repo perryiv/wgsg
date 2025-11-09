@@ -27,7 +27,7 @@ import {
 	getNextId,
 	Trackball,
 	Viewer as InternalViewer,
-	Group,
+	Node,
 } from "wgsg-lib";
 
 
@@ -69,17 +69,17 @@ export function Viewer ( { style }: IViewerProps )
 	//
 	// Build the test scene.
 	//
-	const buildTestScene = useCallback ( () =>
+	const buildTestScene = useCallback ( () : ( Node | null ) =>
 	{
 		const viewer = getViewer ( VIEWER_NAME );
 		if ( !viewer )
 		{
-			return;
+			return null;
 		}
 		const trackball = ( viewer.navigator instanceof Trackball ) ? viewer.navigator : null;
 		if ( !trackball )
 		{
-			return;
+			return null;
 		}
 		return buildSceneSphere ( trackball.makeSphere() );
 	},
