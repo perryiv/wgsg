@@ -25,7 +25,9 @@ import {
 	Device,
 	DeviceLost,
 	getNextId,
+	Trackball,
 	Viewer as InternalViewer,
+	Group,
 } from "wgsg-lib";
 
 
@@ -69,9 +71,19 @@ export function Viewer ( { style }: IViewerProps )
 	//
 	const buildTestScene = useCallback ( () =>
 	{
-		return buildSceneSphere();
+		const viewer = getViewer ( VIEWER_NAME );
+		if ( !viewer )
+		{
+			return;
+		}
+		const trackball = ( viewer.navigator instanceof Trackball ) ? viewer.navigator : null;
+		if ( !trackball )
+		{
+			return;
+		}
+		return buildSceneSphere ( trackball.makeSphere() );
 	},
-	[] );
+	[ getViewer ] );
 
 	//
 	// Handle when the device is lost.

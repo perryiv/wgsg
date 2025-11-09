@@ -22,7 +22,8 @@ import {
 	Indexed,
 	Node,
 	SolidColor,
-	SphereNode as Sphere,
+	Sphere,
+	SphereNode,
 	State,
 	Transform,
 } from "wgsg-lib";
@@ -67,21 +68,23 @@ export const makeSolidColorState = ( { color, topology } :
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export const buildSceneSphere = () =>
+export const buildSceneSphere = ( sphere: Sphere ) =>
 {
 	const root = new Group();
 
-	const sphere = new Sphere ( {
-		center: [ 0, 0, 0 ],
+	const node = new SphereNode ( {
+		center: sphere.center,
+		radius: sphere.radius,
+		numSubdivisions: 4,
 	} );
-	sphere.state = makeSolidColorState ( {
+	node.state = makeSolidColorState ( {
 		color: [ 0.8, 0.2, 0.2, 1.0 ],
 		topology: "triangle-list"
 	} );
-	root.addChild ( sphere );
+	root.addChild ( node );
 
-	sphere.update();
-	const lines = buildTriangleEdges ( sphere );
+	node.update();
+	const lines = buildTriangleEdges ( node );
 	if ( lines )
 	{
 		lines.state = makeSolidColorState ( {
