@@ -337,13 +337,13 @@ export class Trackball extends BaseClass
 		const viewMatrix = this.matrix;
 
 		// Get the line under the current mouse position.
-		let cl = makeLineUnderScreenPoint ( {
+		const cl = makeLineUnderScreenPoint ( {
 			screenPoint: [ cm[0], cm[1] ],
 			viewMatrix, projMatrix, viewport,
 		} );
 
 		// Get the line under the current mouse position.
-		let pl = makeLineUnderScreenPoint ( {
+		const pl = makeLineUnderScreenPoint ( {
 			screenPoint: [ pm[0], pm[1] ],
 			viewMatrix, projMatrix, viewport,
 		} );
@@ -412,9 +412,9 @@ export class Trackball extends BaseClass
 
 		// The cross product is the axis of rotation.
 		let axis: IVector3 = [ 0, 0, 0 ];
-		vec3.cross ( axis, v1, v0 );
+		vec3.cross ( axis, v0, v1 );
 		axis = normalizeVec3 ( axis );
-		console.log ( "Axis of rotation:", axis );
+		// console.log ( "Axis of rotation:", axis );
 
 		// The angle between the two vectors.
 		const angle = vec3.angle ( v0, v1 );
