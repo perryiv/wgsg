@@ -8,25 +8,30 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Types related to the viewer.
+//	Types related to commands.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IMatrix44 } from "./Matrix";
-import { IViewport } from "./Math";
-import { INavigator } from "./Navigator";
+import { IViewer } from "./Viewer";
 
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Types related to the viewer.
+//	Types related to commands.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export interface IViewer
+export interface ICommand
 {
-	navigator: INavigator;
-	projMatrix: IMatrix44;
-	requestRender: ( () => void );
-	viewport: IViewport;
+	execute ( viewer: IViewer ) : void;
 }
+
+export type ICommandMap = Map < string, ICommand >;
+
+export interface IInput
+{
+	mouse: Set < number >;
+	keyboard: Set < string >;
+}
+
+export type IInputToCommandMap = Map < IInput, string >;

@@ -14,9 +14,22 @@
 
 import { BaseHandler } from "../Events/Handlers/BaseHandler";
 import { Group, Node, Transform } from "../Scene";
+import { makeCommands, makeInputToCommandMap } from "./Commands";
 import { NavBase, Trackball } from "../Navigators";
-import { type ISurfaceConstructor, Surface } from "./Surface";
-import type { IMatrix44, IMouseData, IMouseEvent, IVector2 } from "../Types";
+import {
+	type ISurfaceConstructor,
+	Surface as BaseClass,
+} from "./Surface";
+import type {
+	ICommandMap,
+	IInput,
+	IInputToCommandMap,
+	IKeyboardEvent,
+	IMatrix44,
+	IMouseData,
+	IMouseEvent,
+	IVector2,
+} from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -48,6 +61,7 @@ interface IViewerSceneBranches
 function makeMouseData() : IMouseData
 {
 	return {
+		buttonsDown: new Set < number > (),
 		current:  null,
 		previous: null,
 		pressed:  null,
@@ -85,12 +99,15 @@ function makeBranches() : IViewerSceneBranches
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Viewer extends Surface
+export class Viewer extends BaseClass
 {
 	#mouse: IMouseData = makeMouseData();
 	#navigator: ( NavBase | null ) = null;
 	#eventHandlers: IEventHandlerStack = [];
 	#branches: IViewerSceneBranches = makeBranches();
+	#keysDown: Set < string > = new Set < string > ();
+	static #commands: ICommandMap = makeCommands();
+	static #inputToCommand: IInputToCommandMap = makeInputToCommandMap();
 
 	/**
 	 * Construct the class.
@@ -111,9 +128,9 @@ export class Viewer extends Surface
 		// Register the event listeners.
 		canvas.onmousedown   = this.mouseDown.bind ( this );
 		canvas.onmousemove   = this.mouseMove.bind ( this );
-		canvas.onmouseup     = this.mouseUp.bind   ( this );
-		canvas.onmouseleave  = this.mouseOut.bind  ( this );
-		canvas.onmouseenter  = this.mouseIn.bind   ( this );
+		canvas.onmouseup     = this.mouseUp.bind ( this );
+		canvas.onmouseleave  = this.mouseOut.bind ( this );
+		canvas.onmouseenter  = this.mouseIn.bind ( this );
 		canvas.oncontextmenu = this.mouseContextMenu.bind ( this );
 	}
 
@@ -152,7 +169,7 @@ export class Viewer extends Surface
 	 */
 	public override get viewMatrix () : IMatrix44
 	{
-		return this.navigator.matrix;
+		return this.navigator.viewMatrix;
 	}
 
 	/**
@@ -176,6 +193,23 @@ export class Viewer extends Surface
 		model.addChild ( scene ); // This handles null.
 	}
 
+	/**
+	 * Get the keys that are currently down.
+	 * @returns {Set<string>} The keys that are currently down.
+	 */
+	public get keysDown() : Set < string >
+	{
+		return new Set < string > ();
+	}
+
+	/**
+	 * Get the mouse buttons that are currently down.
+	 * @returns {Set<number>} The mouse buttons that are currently down.
+	 */
+	public get mouseButtonsDown() : Set < number >
+	{
+		return this.#mouse.buttonsDown;
+	}
 	/**
 	 * Get the current mouse position.
 	 * @returns {IVector2 | null} The current mouse position.
@@ -340,6 +374,7 @@ export class Viewer extends Surface
 	private makeMouseEvent ( event: MouseEvent ) : IMouseEvent
 	{
 		return {
+			buttonsDown: this.mouseButtonsDown,
 			current:  this.mouseCurrent,
 			previous: this.mousePrevious,
 			pressed:  this.mousePressed,
@@ -348,6 +383,20 @@ export class Viewer extends Surface
 			projMatrix: this.projMatrix,
 			viewMatrix: this.viewMatrix,
 			viewport:   this.viewport,
+			requestRender: this.requestRender.bind ( this ),
+		};
+	}
+
+	/**
+	 * Make the keyboard event data.
+	 * @param {KeyboardEvent | undefined} event - The original keyboard event.
+	 * @returns {IKeyboardEvent} The keyboard event data.
+	 */
+	private makeKeyboardEvent ( event: KeyboardEvent ) : IKeyboardEvent
+	{
+		return {
+			keysDown: this.keysDown,
+			event,
 			requestRender: this.requestRender.bind ( this ),
 		};
 	}
@@ -425,6 +474,8 @@ export class Viewer extends Surface
 	{
 		event.preventDefault();
 
+		this.mouseButtonsDown.clear();
+		this.keysDown.clear();
 		this.mouseCurrent = null;
 		this.mousePrevious = null;
 
@@ -442,6 +493,8 @@ export class Viewer extends Surface
 	{
 		event.preventDefault();
 
+		this.mouseButtonsDown.clear();
+		this.keysDown.clear();
 		this.mouseCurrent = [ event.clientX, event.clientY ];
 		this.mousePrevious = null;
 
@@ -466,12 +519,75 @@ export class Viewer extends Surface
 	}
 
 	/**
+	 * Handle the key down event.
+	 * @param {KeyboardEvent} event - The key down event.
+	 */
+	public keyDown ( event: KeyboardEvent ) : void
+	{
+		event.preventDefault();
+
+		const { code } = event;
+		this.keysDown.add ( code );
+
+		const handler = this.currentEventHandler;
+
+		if ( handler )
+		{
+			const data = this.makeKeyboardEvent ( event );
+			handler.keyDown ( data );
+			return;
+		}
+
+		// Try to get the command name that goes with this input state.
+		const input: IInput = {
+			mouse: this.mouseButtonsDown,
+			keyboard: this.keysDown,
+		};
+		const name = Viewer.#inputToCommand.get ( input );
+
+		// Handle no command name.
+		if ( !name )
+		{
+			return;
+		}
+
+		// Get the command.
+		const command = Viewer.#commands.get ( name );
+
+		// Handle no command.
+		if ( !command )
+		{
+			return;
+		}
+
+		// Execute the command.
+		command.execute ( this );
+	}
+
+	/**
+	 * Handle the key up event.
+	 * @param {KeyboardEvent} event - The key up event.
+	 */
+	public keyUp ( event: KeyboardEvent ) : void
+	{
+		event.preventDefault();
+
+		const { code } = event;
+		this.keysDown.delete ( code );
+
+		const handler = this.eventHandlerOrNavigator;
+		const data = this.makeKeyboardEvent ( event );
+
+		handler.keyUp ( data );
+	}
+
+	/**
 	 * Render the scene.
 	 */
 	public override render() : void
 	{
 		// Set the transform from the navigator.
-		this.#branches.nav.matrix = this.navigator.matrix;
+		this.#branches.nav.matrix = this.navigator.viewMatrix;
 
 		// Now call the base class.
 		super.render();

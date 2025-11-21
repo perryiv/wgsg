@@ -8,25 +8,17 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Types related to the viewer.
+//	Types related to the keyboard.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IMatrix44 } from "./Matrix";
-import { IViewport } from "./Math";
-import { INavigator } from "./Navigator";
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
-//	Types related to the viewer.
-//
-///////////////////////////////////////////////////////////////////////////////
-
-export interface IViewer
+export interface IKeyboardData
 {
-	navigator: INavigator;
-	projMatrix: IMatrix44;
+	buttonsDown: Set < string >; // The set of buttons currently pressed.
+}
+
+export interface IKeyboardEvent extends IKeyboardData
+{
+	event: KeyboardEvent;
 	requestRender: ( () => void );
-	viewport: IViewport;
 }

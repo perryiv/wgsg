@@ -12,6 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { IKeyboardEvent } from "../Types/Keyboard";
 import { IMouseEvent } from "../Types";
 
 
@@ -21,7 +22,7 @@ import { IMouseEvent } from "../Types";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export const discardEvent = ( event: IMouseEvent ) : void =>
+export const discardEvent = ( event: ( IMouseEvent | IKeyboardEvent ) ) : void =>
 {
 	// Do nothing with the function argument.
 	void event;

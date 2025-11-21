@@ -8,10 +8,12 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Export the modules in this directory.
+//	Types related to mouse and keyboard input.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export * from "./Commands";
-export * from "./Surface";
-export * from "./Viewer";
+export interface IInputState
+{
+	buttonsDown: Set < number >; // The set of buttons currently pressed.
+	keysDown: Set < string >;    // The set of keys currently pressed.
+}

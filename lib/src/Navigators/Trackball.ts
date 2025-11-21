@@ -28,6 +28,7 @@ import {
 	discardEvent,
 } from "../Tools";
 import type {
+	IKeyboardEvent,
 	IMatrix44,
 	IMouseEvent,
 	IVector3,
@@ -131,10 +132,10 @@ export class Trackball extends BaseClass
 	}
 
 	/**
-	 * Get the model matrix.
-	 * @returns {IMatrix44} The model matrix.
+	 * Get the view matrix.
+	 * @returns {IMatrix44} The view matrix.
 	 */
-	public get matrix () : IMatrix44
+	public get viewMatrix () : IMatrix44
 	{
 		if ( true == this.#dirty )
 		{
@@ -285,6 +286,24 @@ export class Trackball extends BaseClass
 	}
 
 	/**
+	 * Handle key down event.
+	 * @param {IKeyboardEvent} event - The key down event.
+	 */
+	public override keyDown ( event: IKeyboardEvent ) : void
+	{
+		discardEvent ( event );
+	}
+
+	/**
+	 * Handle key up event.
+	 * @param {IKeyboardEvent} event - The key up event.
+	 */
+	public override keyUp ( event: IKeyboardEvent ) : void
+	{
+		discardEvent ( event );
+	}
+
+	/**
 	 * Handle mouse down event.
 	 * @param {IMouseEvent} event - The mouse down event.
 	 */
@@ -334,7 +353,7 @@ export class Trackball extends BaseClass
 		}
 
 		// Shortcut.
-		const viewMatrix = this.matrix;
+		const viewMatrix = this.viewMatrix;
 
 		// Get the line under the current mouse position.
 		const cl = makeLineUnderScreenPoint ( {

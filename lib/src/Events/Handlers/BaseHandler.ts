@@ -14,7 +14,7 @@
 
 import { Base as BaseClass } from "../../Base";
 import { discardEvent } from "../../Tools";
-import { IMouseEvent } from "../../Types";
+import type { IKeyboardEvent, IMouseEvent } from "../../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -95,6 +95,24 @@ export abstract class BaseHandler extends BaseClass
 	 * @param {IMouseEvent} event - The mouse context menu event.
 	 */
 	public mouseContextMenu ( event: IMouseEvent ) : void
+	{
+		discardEvent ( event );
+	}
+
+	/**
+	 * Handle key down event.
+	 * @param {IKeyboardEvent} event - The key down event.
+	 */
+	public keyDown ( event: IKeyboardEvent ) : void
+	{
+		discardEvent ( event );
+	}
+
+	/**
+	 * Handle key up event.
+	 * @param {IKeyboardEvent} event - The key up event.
+	 */
+	public keyUp ( event: IKeyboardEvent ) : void
 	{
 		discardEvent ( event );
 	}

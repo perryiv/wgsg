@@ -171,6 +171,10 @@ export function Viewer ( { style }: IViewerProps )
 			viewer.modelScene = buildTestScene();
 			setViewer ( VIEWER_NAME, viewer );
 			console.log ( `Internal viewer ${viewer.id} created and configured` );
+
+			// We have to send it the keyboard events.
+			window.addEventListener ( "keydown", viewer.keyDown.bind ( viewer ), false );
+			window.addEventListener ( "keyup",   viewer.keyUp.bind ( viewer ),   false );
 		}
 
 		// Return the viewer.

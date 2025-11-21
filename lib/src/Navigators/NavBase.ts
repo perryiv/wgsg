@@ -14,7 +14,7 @@
 
 import { BaseHandler as BaseClass } from "../Events/Handlers/BaseHandler";
 import { Node } from "../Scene";
-import type { IMatrix44 } from "../Types";
+import type { IMatrix44, IVector4 } from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -37,10 +37,16 @@ export abstract class NavBase extends BaseClass
 	}
 
 	/**
-	 * Get the model matrix.
-	 * @returns The model matrix.
+	 * Get the view matrix.
+	 * @returns The view matrix.
 	 */
-	public abstract get matrix () : IMatrix44;
+	public abstract get viewMatrix () : IMatrix44;
+
+	/**
+	 * Rotate the navigator.
+	 * @param {IVector4} r - The rotation quaternion.
+	 */
+	public abstract rotate ( r: IVector4 ) : void;
 
 	/**
 	 * Reset the navigator to its default state.

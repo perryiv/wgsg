@@ -8,35 +8,22 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Types related to the mouse.
+//	Types related to the viewer's navigator.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 import { IMatrix44 } from "./Matrix";
-import { IVector2 } from "./Vector";
-import { IViewport } from "./Math";
+import { IVector4 } from "./Vector";
 
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Types related to the mouse.
+//	Types related to the viewer's navigator.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export interface IMouseData
+export interface INavigator
 {
-	buttonsDown: Set < number >; // The set of buttons currently pressed.
-	current:  ( IVector2 | null ); // The current mouse position.
-	previous: ( IVector2 | null ); // The previous mouse position.
-	pressed:  ( IVector2 | null ); // The mouse coordinate when the button was pressed.
-	released: ( IVector2 | null ); // The mouse coordinate when the button was released.
-}
-
-export interface IMouseEvent extends IMouseData
-{
-	event: MouseEvent;
-	projMatrix: IMatrix44;
+	rotate: ( ( r: IVector4 ) => void );
 	viewMatrix: IMatrix44;
-	viewport: IViewport;
-	requestRender: ( () => void );
 }
