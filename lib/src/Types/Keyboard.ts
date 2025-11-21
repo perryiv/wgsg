@@ -14,7 +14,7 @@
 
 export interface IKeyboardData
 {
-	buttonsDown: Set < string >; // The set of buttons currently pressed.
+	keysDown: Set < string >; // The set of keys currently pressed.
 }
 
 export interface IKeyboardEvent extends IKeyboardData

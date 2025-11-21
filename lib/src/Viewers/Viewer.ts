@@ -199,7 +199,7 @@ export class Viewer extends BaseClass
 	 */
 	public get keysDown() : Set < string >
 	{
-		return new Set < string > ();
+		return this.#keysDown;
 	}
 
 	/**
