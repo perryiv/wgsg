@@ -173,8 +173,22 @@ export function Viewer ( { style }: IViewerProps )
 			console.log ( `Internal viewer ${viewer.id} created and configured` );
 
 			// We have to send it the keyboard events.
-			window.addEventListener ( "keydown", viewer.keyDown.bind ( viewer ), false );
-			window.addEventListener ( "keyup",   viewer.keyUp.bind ( viewer ),   false );
+			window.addEventListener ( "keydown", ( event: KeyboardEvent ) =>
+			{
+				if ( viewer )
+				{
+					viewer.keyDown ( event );
+				}
+			},
+			false );
+			window.addEventListener ( "keyup", ( event: KeyboardEvent ) =>
+			{
+				if ( viewer )
+				{
+					viewer.keyUp ( event );
+				}
+			},
+			false );
 		}
 
 		// Return the viewer.
