@@ -421,7 +421,7 @@ export class Viewer extends BaseClass
 
 		if ( input.buttons )
 		{
-			event.type = "mouse_drag"; // It's really the same event.
+			event.type = "mouse_drag"; // Use all the same event data.
 			handler.handleEvent ( event );
 		}
 	}

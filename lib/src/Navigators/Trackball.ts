@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { mat4, quat, vec3, vec4 } from "gl-matrix";
+import { mat4, quat, vec2, vec3, vec4 } from "gl-matrix";
 import { NavBase as BaseClass } from "./NavBase";
 import { Node } from "../Scene";
 import {
@@ -344,6 +344,12 @@ export class Trackball extends BaseClass
 		// Left mouse button only.
 		// TODO: Make this configurable.
 		if ( 1 !== originalEvent.buttons )
+		{
+			return;
+		}
+
+		// Handle zero distance drag.
+		if ( true === vec2.equals ( cm, pm ) )
 		{
 			return;
 		}
