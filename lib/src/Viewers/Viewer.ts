@@ -502,12 +502,14 @@ export class Viewer extends BaseClass
 	 */
 	public keyDown ( input: KeyboardEvent ) : void
 	{
-		input.preventDefault();
+		// Don't do this because it prevents all the normal key events,
+		// like F5 to reload the page, etc.
+		// input.preventDefault();
 
 		const { code } = input;
 		this.keysDown.add ( code );
 
-		const handler = this.currentEventHandler;
+		const handler = this.eventHandlerOrNavigator;
 
 		if ( handler )
 		{
@@ -523,8 +525,6 @@ export class Viewer extends BaseClass
 	 */
 	public keyUp ( input: KeyboardEvent ) : void
 	{
-		input.preventDefault();
-
 		const { code } = input;
 		this.keysDown.delete ( code );
 
