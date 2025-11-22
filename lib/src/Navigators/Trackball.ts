@@ -21,10 +21,11 @@ import {
 	Sphere,
 } from "../Math";
 import {
+	DEG_TO_RAD,
 	IDENTITY_MATRIX,
+	makeLine as makeLineUnderScreenPoint,
 	normalizeQuat,
 	normalizeVec3,
-	makeLine as makeLineUnderScreenPoint,
 } from "../Tools";
 import type {
 	IEvent,
@@ -293,6 +294,11 @@ export class Trackball extends BaseClass
 
 		switch ( type )
 		{
+			case "key_down":
+			{
+				this.keyDown ( event );
+				break;
+			}
 			case "mouse_drag":
 			{
 				this.mouseDrag ( event );
@@ -306,8 +312,23 @@ export class Trackball extends BaseClass
 	}
 
 	/**
+	 * Handle key down event.
+	 * @param {IEvent} event - The key down event.
+	 */
+	protected keyDown ( event: IEvent ) : void
+	{
+		const { keysDown, viewer } = event;
+
+		if ( ( 1 === keysDown.size ) && ( keysDown.has ( "ArrowRight" ) ) )
+		{
+			this.rotate ( [ 0, 1, 0 ], DEG_TO_RAD * 45 ); // Rotate right.
+			viewer.requestRender();
+		}
+	}
+
+	/**
 	 * Handle mouse drag event.
-	 * @param {IMouseEvent} event - The mouse drag event.
+	 * @param {IEvent} event - The mouse drag event.
 	 */
 	protected mouseDrag ( event: IEvent ) : void
 	{
