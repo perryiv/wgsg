@@ -28,7 +28,7 @@ export interface IStateApplyInput
 	state: State;
 	shader: ShaderBase;
 	projMatrix: IMatrix44;
-	modelMatrix: IMatrix44;
+	viewMatrix: IMatrix44;
 }
 
 export type IStateResetInput = IStateApplyInput;
@@ -57,7 +57,7 @@ export interface IStateConstructorInput
 
 export const defaultApplyFunction: IStateApplyFunction = ( input: IStateApplyInput ): void =>
 {
-	// console.log ( `Default state apply function called with name: '${input.state.name}', projMatrix: ${JSON.stringify ( input.projMatrix )}, modelMatrix: ${JSON.stringify ( input.modelMatrix )}` );
+	// console.log ( `Default state apply function called with name: '${input.state.name}', projMatrix: ${JSON.stringify ( input.projMatrix )}, viewMatrix: ${JSON.stringify ( input.viewMatrix )}` );
 	void input; // Do nothing with the function argument.
 };
 

@@ -99,7 +99,7 @@ export class Trackball extends BaseClass
 
 	/**
 	 * Calculate and return the matrix.
-	 * @returns {IMatrix44} The model matrix.
+	 * @returns {IMatrix44} The view matrix.
 	 */
 	protected calculateMatrix () : IMatrix44
 	{

@@ -52,7 +52,7 @@ const makeDefaultRenderGraphInfo = () : IRenderGraphInfo =>
 		numBins: 0,
 		numPipelines: 0,
 		numProjMatrixGroups: 0,
-		numModelMatrixGroups: 0,
+		numViewMatrixGroups: 0,
 		numStateGroups: 0,
 		numShapes: 0,
 		numTriangles: 0,
@@ -74,7 +74,7 @@ const resetRenderGraphInfo = ( info: IRenderGraphInfo ) : void =>
 	info.numBins = 0;
 	info.numPipelines = 0;
 	info.numProjMatrixGroups = 0;
-	info.numModelMatrixGroups = 0;
+	info.numViewMatrixGroups = 0;
 	info.numStateGroups = 0;
 	info.numShapes = 0;
 	info.numTriangles = 0;
@@ -913,7 +913,7 @@ export class Surface extends Base
 				{ bins: rgi.numBins },
 				{ pipelines: rgi.numPipelines },
 				{ projections: rgi.numProjMatrixGroups },
-				{ modelMatrices: rgi.numModelMatrixGroups },
+				{ viewMatrices: rgi.numViewMatrixGroups },
 				{ states: rgi.numStateGroups },
 				{ shapes: rgi.numShapes },
 				{ triangles: rgi.numTriangles },

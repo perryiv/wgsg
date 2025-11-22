@@ -77,12 +77,12 @@ export class Pipeline extends BaseClass
 	}
 
 	/**
-	 * Set the model matrix.
-	 * @param {IMatrix44} matrix - The model matrix.
+	 * Set the view matrix.
+	 * @param {IMatrix44} matrix - The view matrix.
 	 */
-	public set modelMatrix ( matrix: Readonly<IMatrix44> )
+	public set viewMatrix ( matrix: Readonly<IMatrix44> )
 	{
-		this.shader.modelMatrix = matrix;
+		this.shader.viewMatrix = matrix;
 	}
 
 	/**

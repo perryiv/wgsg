@@ -32,7 +32,7 @@ import {
 import {
 	Bin,
 	Layer,
-	ModelMatrixGroup,
+	ViewMatrixGroup,
 	Pipeline,
 	ProjMatrixGroup,
 	Root,
@@ -400,32 +400,32 @@ export class Draw extends BaseClass
 		// Set the pipeline's projection matrix.
 		pipeline.projMatrix = pmg.matrix;
 
-		// console.log ( `ProjMatrix ${pmg.id} has ${pmg.numModelMatrices} model matrices` );
+		// console.log ( `ProjMatrix ${pmg.id} has ${pmg.numViewMatrices} view matrices` );
 
-		// Draw the model matrix groups.
-		pmg.forEachModelMatrixGroup ( ( mmg: ModelMatrixGroup ) =>
+		// Draw the view matrix groups.
+		pmg.forEachViewMatrixGroup ( ( vmg: ViewMatrixGroup ) =>
 		{
-			this.drawModelMatrix ( pipeline, pmg, mmg );
+			this.drawViewMatrix ( pipeline, pmg, vmg );
 		} );
 	}
 
 	/**
-	 * Draw the model matrix group.
+	 * Draw the view matrix group.
 	 * @param {Pipeline} pipeline - The pipeline to use.
-	 * @param {ProjMatrix} pmg - The projection matrix group.
-	 * @param {ModelMatrix} mmg - The model matrix group to draw.
+	 * @param {ProjMatrixGroup} pmg - The projection matrix group.
+	 * @param {ViewMatrixGroup} vmg - The view matrix group to draw.
 	 */
-	protected drawModelMatrix ( pipeline: Pipeline, pmg: ProjMatrixGroup, mmg: ModelMatrixGroup ) : void
+	protected drawViewMatrix ( pipeline: Pipeline, pmg: ProjMatrixGroup, vmg: ViewMatrixGroup ) : void
 	{
-		// Set the pipeline's model matrix.
-		pipeline.modelMatrix = mmg.matrix;
+		// Set the pipeline's view matrix.
+		pipeline.viewMatrix = vmg.matrix;
 
-		// console.log ( `ModelMatrix ${mmg.id} has ${mmg.numStateGroups} state groups` );
+		// console.log ( `ViewMatrix ${vmg.id} has ${vmg.numStateGroups} state groups` );
 
 		// Draw the state groups.
-		mmg.forEachStateGroup ( ( sg: StateGroup ) =>
+		vmg.forEachStateGroup ( ( sg: StateGroup ) =>
 		{
-			this.drawStateGroup ( pipeline, pmg, mmg, sg );
+			this.drawStateGroup ( pipeline, pmg, vmg, sg );
 		} );
 	}
 
@@ -433,10 +433,10 @@ export class Draw extends BaseClass
 	 * Draw the state group.
 	 * @param {Pipeline} pipeline - The pipeline to use.
 	 * @param {ProjMatrixGroup} pmg - The projection matrix group.
-	 * @param {ModelMatrixGroup} mmg - The model matrix group.
+	 * @param {ViewMatrixGroup} vmg - The view matrix group.
 	 * @param {StateGroup} sg - The state group to draw.
 	 */
-	protected drawStateGroup ( pipeline: Pipeline, pmg: ProjMatrixGroup, mmg: ModelMatrixGroup, sg: StateGroup ) : void
+	protected drawStateGroup ( pipeline: Pipeline, pmg: ProjMatrixGroup, vmg: ViewMatrixGroup, sg: StateGroup ) : void
 	{
 		// Shortcuts.
 		const { state } = sg;
@@ -448,7 +448,7 @@ export class Draw extends BaseClass
 			state,
 			shader: pipeline.shader,
 			projMatrix: pmg.matrix,
-			modelMatrix: mmg.matrix,
+			viewMatrix: vmg.matrix,
 		};
 
 		// Apply the state.

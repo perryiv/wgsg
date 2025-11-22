@@ -131,12 +131,12 @@ export class SolidColor extends BaseClass
 	}
 
 	/**
-	 * Set the model matrix. Overload if needed.
-	 * @param {IMatrix44} matrix - The model matrix.
+	 * Set the view matrix. Overload if needed.
+	 * @param {IMatrix44} matrix - The view matrix.
 	 */
-	public override set modelMatrix ( matrix: Readonly<IMatrix44> )
+	public override set viewMatrix ( matrix: Readonly<IMatrix44> )
 	{
-		super.modelMatrix = matrix;
+		super.viewMatrix = matrix;
 		this.#uniforms = null;
 		this.#bindGroup = null;
 	}
@@ -185,13 +185,13 @@ export class SolidColor extends BaseClass
 
 			// Write the values to a typed array.
 			const pm = new Float32Array ( super.getProjMatrix() );
-			const mm = new Float32Array ( super.getModelMatrix() );
+			const vm = new Float32Array ( super.getViewMatrix() );
 			const color = new Float32Array ( this.#color );
 
 			// Write the typed array to the buffer.
 			let offset = 0;
 			device.queue.writeBuffer ( buffer, offset, pm ); offset += pm.byteLength;
-			device.queue.writeBuffer ( buffer, offset, mm ); offset += mm.byteLength;
+			device.queue.writeBuffer ( buffer, offset, vm ); offset += vm.byteLength;
 			device.queue.writeBuffer ( buffer, offset, color );
 
 			// Set this for next time.

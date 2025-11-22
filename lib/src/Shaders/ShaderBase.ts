@@ -175,10 +175,10 @@ export abstract class ShaderBase extends Base
 	public abstract set projMatrix ( matrix: Readonly<IMatrix44> );
 
 	/**
-	 * Set the model matrix. Overload if needed.
-	 * @param {IMatrix44} matrix - The model matrix.
+	 * Set the view matrix. Overload if needed.
+	 * @param {IMatrix44} matrix - The view matrix.
 	 */
-	public abstract set modelMatrix ( matrix: Readonly<IMatrix44> );
+	public abstract set viewMatrix ( matrix: Readonly<IMatrix44> );
 
 	/**
 	 * Get the name.

@@ -39,7 +39,7 @@ class MyMultiplyVisitor extends Multiply
 	}
 	public override visitGroup ( group: Group ): void
 	{
-		this.result.push ( [ ...this.modelMatrix ] );
+		this.result.push ( [ ...this.viewMatrix ] );
 		super.visitGroup ( group );
 	}
 	public override reset()

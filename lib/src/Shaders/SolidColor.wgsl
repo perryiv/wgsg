@@ -16,7 +16,7 @@
 struct Uniforms
 {
 	projMatrix: mat4x4f,
-	modelMatrix: mat4x4f,
+	viewMatrix: mat4x4f,
 	color: vec4f,
 };
 
@@ -30,7 +30,7 @@ struct VertexOut
 @vertex fn vs ( @location ( 0 ) position: vec4f ) -> VertexOut
 {
 	var output : VertexOut;
-	output.position = uniforms.projMatrix * uniforms.modelMatrix * position;
+	output.position = uniforms.projMatrix * uniforms.viewMatrix * position;
 	return output;
 }
 

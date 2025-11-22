@@ -21,7 +21,7 @@ import {
 	Group,
 	IDENTITY_MATRIX,
 	Layer,
-	ModelMatrixGroup,
+	ViewMatrixGroup,
 	Pipeline,
 	ProjMatrixGroup,
 	Root,
@@ -134,19 +134,19 @@ export function test ()
 
 			const pmg = pipeline.getProjMatrixGroup ( info, IDENTITY_MATRIX );
 			expect ( pmg instanceof ProjMatrixGroup ).to.be.true;
-			expect ( pmg.numModelMatrices ).to.be.equal ( 1 );
+			expect ( pmg.numViewMatrices ).to.be.equal ( 1 );
 			expect ( pmg.matrix instanceof Array ).to.be.true;
 			expect ( pmg.matrix.length ).to.be.equal ( 16 );
 			expect ( pmg.matrix ).to.be.deep.equal ( IDENTITY_MATRIX );
 
-			const mmg = pmg.getModelMatrixGroup ( info, IDENTITY_MATRIX );
-			expect ( mmg instanceof ModelMatrixGroup ).to.be.true;
-			expect ( mmg.numStateGroups ).to.be.equal ( 1 );
-			expect ( mmg.matrix instanceof Array ).to.be.true;
-			expect ( mmg.matrix.length ).to.be.equal ( 16 );
-			expect ( mmg.matrix ).to.be.deep.equal ( IDENTITY_MATRIX );
+			const vmg = pmg.getViewMatrixGroup ( info, IDENTITY_MATRIX );
+			expect ( vmg instanceof ViewMatrixGroup ).to.be.true;
+			expect ( vmg.numStateGroups ).to.be.equal ( 1 );
+			expect ( vmg.matrix instanceof Array ).to.be.true;
+			expect ( vmg.matrix.length ).to.be.equal ( 16 );
+			expect ( vmg.matrix ).to.be.deep.equal ( IDENTITY_MATRIX );
 
-			mmg.forEachStateGroup ( ( sg: StateGroup ) =>
+			vmg.forEachStateGroup ( ( sg: StateGroup ) =>
 			{
 				expect ( sg.numShapes ).to.be.equal ( 4 );
 

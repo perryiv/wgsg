@@ -26,7 +26,7 @@ export interface IRenderGraphInfo
 	numBins: number;
 	numPipelines: number;
 	numProjMatrixGroups: number;
-	numModelMatrixGroups: number;
+	numViewMatrixGroups: number;
 	numStateGroups: number;
 	numShapes: number;
 	numTriangles: number;

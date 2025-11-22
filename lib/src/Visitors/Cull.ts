@@ -289,7 +289,7 @@ export class Cull extends Multiply
 
 		// Shortcuts.
 		const root = this.root;
-		const mm = this.modelMatrix;
+		const vm = this.viewMatrix;
 		const pm = this.projMatrix;
 		const state = this.currentState;
 		const { shader } = state;
@@ -306,8 +306,8 @@ export class Cull extends Multiply
 		const bin = layer.getBin ( info, state.bin );
 		const pipeline = bin.getPipeline ( info, state );
 		const pmg = pipeline.getProjMatrixGroup ( info, pm );
-		const mmg = pmg.getModelMatrixGroup ( info, mm );
-		const sg = mmg.getStateGroup ( info, state );
+		const vmg = pmg.getViewMatrixGroup ( info, vm );
+		const sg = vmg.getStateGroup ( info, state );
 
 		// Add our shape.
 		sg.addShape ( info, shape );
