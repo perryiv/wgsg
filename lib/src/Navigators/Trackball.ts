@@ -25,12 +25,10 @@ import {
 	normalizeQuat,
 	normalizeVec3,
 	makeLine as makeLineUnderScreenPoint,
-	discardEvent,
 } from "../Tools";
 import type {
-	IKeyboardEvent,
+	IEvent,
 	IMatrix44,
-	IMouseEvent,
 	IVector3,
 	IVector4,
 } from "../Types";
@@ -286,61 +284,59 @@ export class Trackball extends BaseClass
 	}
 
 	/**
-	 * Handle key down event.
-	 * @param {IKeyboardEvent} event - The key down event.
+	 * Handle the event.
+	 * @param {IEvent} event - The event.
 	 */
-	public override keyDown ( event: IKeyboardEvent ) : void
+	public override handleEvent ( event: IEvent ) : void
 	{
-		discardEvent ( event );
-	}
+		const { type } = event;
 
-	/**
-	 * Handle key up event.
-	 * @param {IKeyboardEvent} event - The key up event.
-	 */
-	public override keyUp ( event: IKeyboardEvent ) : void
-	{
-		discardEvent ( event );
-	}
-
-	/**
-	 * Handle mouse down event.
-	 * @param {IMouseEvent} event - The mouse down event.
-	 */
-	public override mouseDown ( event: IMouseEvent ) : void
-	{
-		// console.log ( "Mouse down:", event );
-		discardEvent ( event );
-	}
-
-	/**
-	 * Handle mouse move event.
-	 * @param {IMouseEvent} event - The mouse move event.
-	 */
-	public override mouseMove ( event: IMouseEvent ) : void
-	{
-		// console.log ( "Mouse move:", event );
-		discardEvent ( event );
+		switch ( type )
+		{
+			case "mouse_drag":
+			{
+				this.mouseDrag ( event );
+				break;
+			}
+			default:
+			{
+				break;
+			}
+		}
 	}
 
 	/**
 	 * Handle mouse drag event.
 	 * @param {IMouseEvent} event - The mouse drag event.
 	 */
-	public override mouseDrag ( event: IMouseEvent ) : void
+	protected mouseDrag ( event: IEvent ) : void
 	{
 		// Get input.
 		const {
+			type,
 			current: cm,
 			previous: pm,
-			projMatrix,
-			viewport,
 			event: originalEvent,
-			requestRender
+			viewer,
 		} = event;
 
+		// Get viewer properties.
+		const { projMatrix, viewport } = viewer;
+
+		// Handle wrong event type.
+		if ( "mouse_drag" !== type )
+		{
+			return;
+		}
+
 		// Handle invalid input.
-		if ( !cm || !pm || !event )
+		if ( !cm || !pm || !originalEvent )
+		{
+			return;
+		}
+
+		// Handle wrong event type.
+		if ( false === ( originalEvent instanceof MouseEvent ) )
 		{
 			return;
 		}
@@ -448,16 +444,6 @@ export class Trackball extends BaseClass
 		this.rotate ( axis, angle );
 
 		// Request a render.
-		requestRender();
-	}
-
-	/**
-	 * Handle mouse up event.
-	 * @param {IMouseEvent} event - The mouse up event.
-	 */
-	public override mouseUp ( event: IMouseEvent ) : void
-	{
-		// console.log ( "Mouse up:", event );
-		discardEvent ( event );
+		viewer.requestRender();
 	}
 }

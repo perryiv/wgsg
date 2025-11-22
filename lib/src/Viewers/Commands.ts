@@ -18,7 +18,8 @@ import { quat, vec3 } from "gl-matrix";
 import type {
 	ICommand,
 	ICommandMap,
-	IInput,
+	ICommandMapKey,
+	ICommandName,
 	IInputToCommandMap,
 	INavigator,
 	IVector3,
@@ -173,7 +174,7 @@ export class RotateZ extends Rotate
 
 export function makeCommands() : ICommandMap
 {
-	return new Map < string, ICommand > ( [
+	return new Map < ICommandName, ICommand > ( [
 		[ "rotate_px_large", new RotateX ( DEG_TO_RAD *  45 ) ],
 		[ "rotate_py_large", new RotateY ( DEG_TO_RAD *  45 ) ],
 		[ "rotate_pz_large", new RotateZ ( DEG_TO_RAD *  45 ) ],
@@ -194,16 +195,16 @@ export function makeCommands() : ICommandMap
 /**
  * Make an input object.
  * @param {number[]} mouse The mouse buttons pressed.
- * @param {string[]} keyboard The keyboard keys pressed.
- * @returns {IInput} The input object.
+ * @param {string[]} keys The keyboard keys pressed.
+ * @returns {ICommandMapKey} The key to the map of command names.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-function makeInput ( mouse: number[], keyboard: string[] ) : IInput
+function makeInput ( mouse: number[], keys: string[] ) : ICommandMapKey
 {
 	return {
-		mouse: new Set ( mouse ),
-		keyboard: new Set ( keyboard )
+		buttonsDown: new Set ( mouse ),
+		keysDown: new Set ( keys )
 	};
 }
 
@@ -217,7 +218,7 @@ function makeInput ( mouse: number[], keyboard: string[] ) : IInput
 
 export function makeInputToCommandMap() : IInputToCommandMap
 {
-	return new Map < IInput, string > ( [
+	return new Map < ICommandMapKey, ICommandName > ( [
 		[ makeInput ( [], [ "ArrowUp" ] ),   "rotate_px_large" ],
 		[ makeInput ( [], [ "ArrowDown" ] ), "rotate_nx_large" ],
 		[ makeInput ( [], [ "ArrowLeft" ] ), "rotate_py_large" ],

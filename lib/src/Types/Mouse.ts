@@ -12,9 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IMatrix44 } from "./Matrix";
 import { IVector2 } from "./Vector";
-import { IViewport } from "./Math";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -23,20 +21,19 @@ import { IViewport } from "./Math";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export interface IMouseData
+export interface IMouseButtons
 {
 	buttonsDown: Set < number >; // The set of buttons currently pressed.
+}
+
+export interface IMouseCoordinates
+{
 	current:  ( IVector2 | null ); // The current mouse position.
 	previous: ( IVector2 | null ); // The previous mouse position.
 	pressed:  ( IVector2 | null ); // The mouse coordinate when the button was pressed.
 	released: ( IVector2 | null ); // The mouse coordinate when the button was released.
 }
 
-export interface IMouseEvent extends IMouseData
+export interface IMouseState extends IMouseButtons, IMouseCoordinates
 {
-	event: MouseEvent;
-	projMatrix: IMatrix44;
-	viewMatrix: IMatrix44;
-	viewport: IViewport;
-	requestRender: ( () => void );
 }

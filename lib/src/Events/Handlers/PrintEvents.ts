@@ -12,8 +12,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+
 import { BaseHandler as BaseClass } from "./BaseHandler";
-import type { IMouseData } from "../../Types";
+import type { IEvent } from "../../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -44,29 +45,11 @@ export class PrintEvents extends BaseClass
 	}
 
 	/**
-	 * Handle mouse down event.
-	 * @param {IMouseData} data - The mouse down data.
+	 * Handle the event.
+	 * @param {IEvent} event - The event.
 	 */
-	public override mouseDown ( data: IMouseData ) : void
+	public override handleEvent ( event: IEvent ) : void
 	{
-		console.log ( "Mouse down:", data );
-	}
-
-	/**
-	 * Handle mouse move event.
-	 * @param {IMouseData} data - The mouse move data.
-	 */
-	public override mouseMove ( data: IMouseData ) : void
-	{
-		console.log ( "Mouse move:", data );
-	}
-
-	/**
-	 * Handle mouse up event.
-	 * @param {IMouseData} data - The mouse up data.
-	 */
-	public override mouseUp ( data: IMouseData ) : void
-	{
-		console.log ( "Mouse up:", data );
+		console.log ( "Event:", event );
 	}
 }

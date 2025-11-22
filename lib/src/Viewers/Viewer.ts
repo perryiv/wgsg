@@ -22,12 +22,11 @@ import {
 } from "./Surface";
 import type {
 	ICommandMap,
-	IInput,
+	IEvent,
+	IEventType,
 	IInputToCommandMap,
-	IKeyboardEvent,
 	IMatrix44,
-	IMouseData,
-	IMouseEvent,
+	IMouseState,
 	IVector2,
 } from "../Types";
 
@@ -54,11 +53,11 @@ interface IViewerSceneBranches
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * Make the default mouse data.
- * @returns {IMouseData} The default mouse data.
+ * @returns {IMouseState} The default mouse data.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-function makeMouseData() : IMouseData
+function makeMouseData() : IMouseState
 {
 	return {
 		buttonsDown: new Set < number > (),
@@ -101,7 +100,7 @@ function makeBranches() : IViewerSceneBranches
 
 export class Viewer extends BaseClass
 {
-	#mouse: IMouseData = makeMouseData();
+	#mouse: IMouseState = makeMouseData();
 	#navigator: ( NavBase | null ) = null;
 	#eventHandlers: IEventHandlerStack = [];
 	#branches: IViewerSceneBranches = makeBranches();
@@ -367,99 +366,83 @@ export class Viewer extends BaseClass
 	}
 
 	/**
-	 * Make the mouse event data.
-	 * @param {MouseEvent | undefined} event - The original mouse event.
-	 * @returns {IMouseData} The mouse event data.
+	 * Make the event.
+	 * @param {IEventType} type - The event type.
+	 * @param {MouseEvent | KeyboardEvent} event - The original event.
+	 * @returns {IEvent} The mouse event data.
 	 */
-	private makeMouseEvent ( event: MouseEvent ) : IMouseEvent
+	private makeEvent ( type: IEventType, event: ( MouseEvent | KeyboardEvent ) ) : IEvent
 	{
 		return {
-			buttonsDown: this.mouseButtonsDown,
+			type, event, viewer: this,
+			keysDown: new Set ( this.keysDown ),
+			buttonsDown: new Set ( this.mouseButtonsDown ),
 			current:  this.mouseCurrent,
 			previous: this.mousePrevious,
 			pressed:  this.mousePressed,
 			released: this.mouseReleased,
-			event,
-			projMatrix: this.projMatrix,
-			viewMatrix: this.viewMatrix,
-			viewport:   this.viewport,
-			requestRender: this.requestRender.bind ( this ),
-		};
-	}
-
-	/**
-	 * Make the keyboard event data.
-	 * @param {KeyboardEvent | undefined} event - The original keyboard event.
-	 * @returns {IKeyboardEvent} The keyboard event data.
-	 */
-	private makeKeyboardEvent ( event: KeyboardEvent ) : IKeyboardEvent
-	{
-		return {
-			keysDown: this.keysDown,
-			event,
-			requestRender: this.requestRender.bind ( this ),
 		};
 	}
 
 	/**
 	 * Handle the mouse down event.
-	 * @param {MouseEvent} event - The mouse down event.
+	 * @param {MouseEvent} input - The mouse down event.
 	 */
-	public mouseDown ( event: MouseEvent ) : void
+	public mouseDown ( input: MouseEvent ) : void
 	{
-		event.preventDefault();
+		input.preventDefault();
 
 		this.mousePrevious = this.mouseCurrent;
-		this.mouseCurrent = [ event.clientX, event.clientY ];
+		this.mouseCurrent = [ input.clientX, input.clientY ];
 
 		this.mouseReleased = null;
-		this.mousePressed = [ event.clientX, event.clientY ];
+		this.mousePressed = [ input.clientX, input.clientY ];
 
 		const handler = this.eventHandlerOrNavigator;
-		const data = this.makeMouseEvent ( event );
+		const event = this.makeEvent ( "mouse_down", input );
 
-		handler.mouseDown ( data );
+		handler.handleEvent ( event );
 	}
 
 	/**
 	 * Handle the mouse move event.
-	 * @param {MouseEvent} event - The mouse move event.
+	 * @param {MouseEvent} input - The mouse move event.
 	 */
-	public mouseMove ( event: MouseEvent ) : void
+	public mouseMove ( input: MouseEvent ) : void
 	{
-		event.preventDefault();
+		input.preventDefault();
 
 		this.mousePrevious = this.mouseCurrent;
-		this.mouseCurrent = [ event.clientX, event.clientY ];
+		this.mouseCurrent = [ input.clientX, input.clientY ];
 
 		const handler = this.eventHandlerOrNavigator;
-		const data = this.makeMouseEvent ( event );
+		const event = this.makeEvent ( "mouse_move", input );
+		handler.handleEvent ( event );
 
-		handler.mouseMove ( data );
-
-		if ( event.buttons )
+		if ( input.buttons )
 		{
-			handler.mouseDrag ( data );
+			event.type = "mouse_drag"; // It's really the same event.
+			handler.handleEvent ( event );
 		}
 	}
 
 	/**
 	 * Handle the mouse up event.
-	 * @param {MouseEvent} event - The mouse up event.
+	 * @param {MouseEvent} input - The mouse up event.
 	 */
-	public mouseUp ( event: MouseEvent ) : void
+	public mouseUp ( input: MouseEvent ) : void
 	{
-		event.preventDefault();
+		input.preventDefault();
 
 		this.mousePrevious = this.mouseCurrent;
-		this.mouseCurrent = [ event.clientX, event.clientY ];
+		this.mouseCurrent = [ input.clientX, input.clientY ];
 
-		this.mouseReleased = [ event.clientX, event.clientY ];
+		this.mouseReleased = [ input.clientX, input.clientY ];
 
 		const handler = this.eventHandlerOrNavigator;
-		const data = this.makeMouseEvent ( event );
+		const event = this.makeEvent ( "mouse_up", input );
 
-		handler.mouseUp ( data );
+		handler.handleEvent ( event );
 
 		// Reset these now that they've been used.
 		this.mousePressed = null;
@@ -468,11 +451,11 @@ export class Viewer extends BaseClass
 
 	/**
 	 * Handle the mouse out event.
-	 * @param {MouseEvent} event - The mouse out event.
+	 * @param {MouseEvent} input - The mouse out event.
 	 */
-	public mouseOut ( event: MouseEvent ) : void
+	public mouseOut ( input: MouseEvent ) : void
 	{
-		event.preventDefault();
+		input.preventDefault();
 
 		this.mouseButtonsDown.clear();
 		this.keysDown.clear();
@@ -480,28 +463,27 @@ export class Viewer extends BaseClass
 		this.mousePrevious = null;
 
 		const handler = this.eventHandlerOrNavigator;
-		const data = this.makeMouseEvent ( event );
+		const event = this.makeEvent ( "mouse_out", input );
 
-		handler.mouseOut ( data );
+		handler.handleEvent ( event );
 	}
 
 	/**
 	 * Handle the mouse in event.
-	 * @param {MouseEvent} event - The mouse in event.
+	 * @param {MouseEvent} input - The mouse in event.
 	 */
-	public mouseIn ( event: MouseEvent ) : void
+	public mouseIn ( input: MouseEvent ) : void
 	{
-		event.preventDefault();
+		input.preventDefault();
 
 		this.mouseButtonsDown.clear();
 		this.keysDown.clear();
-		this.mouseCurrent = [ event.clientX, event.clientY ];
+		this.mouseCurrent = [ input.clientX, input.clientY ];
 		this.mousePrevious = null;
 
 		const handler = this.eventHandlerOrNavigator;
-		const data = this.makeMouseEvent ( event );
-
-		handler.mouseIn ( data );
+		const event = this.makeEvent ( "mouse_in", input );
+		handler.handleEvent ( event );
 	}
 
 	/**
@@ -510,75 +492,45 @@ export class Viewer extends BaseClass
 	 */
 	public mouseContextMenu ( event: MouseEvent ) : void
 	{
+		// Prevent the context menu from showing.
 		event.preventDefault();
-
-		const handler = this.eventHandlerOrNavigator;
-		const data = this.makeMouseEvent ( event );
-
-		handler.mouseContextMenu ( data );
 	}
 
 	/**
 	 * Handle the key down event.
-	 * @param {KeyboardEvent} event - The key down event.
+	 * @param {KeyboardEvent} input - The key down event.
 	 */
-	public keyDown ( event: KeyboardEvent ) : void
+	public keyDown ( input: KeyboardEvent ) : void
 	{
-		event.preventDefault();
+		input.preventDefault();
 
-		const { code } = event;
+		const { code } = input;
 		this.keysDown.add ( code );
 
 		const handler = this.currentEventHandler;
 
 		if ( handler )
 		{
-			const data = this.makeKeyboardEvent ( event );
-			handler.keyDown ( data );
+			const event = this.makeEvent ( "key_down", input );
+			handler.handleEvent ( event );
 			return;
 		}
-
-		// Try to get the command name that goes with this input state.
-		const input: IInput = {
-			mouse: this.mouseButtonsDown,
-			keyboard: this.keysDown,
-		};
-		const name = Viewer.#inputToCommand.get ( input );
-
-		// Handle no command name.
-		if ( !name )
-		{
-			return;
-		}
-
-		// Get the command.
-		const command = Viewer.#commands.get ( name );
-
-		// Handle no command.
-		if ( !command )
-		{
-			return;
-		}
-
-		// Execute the command.
-		command.execute ( this );
 	}
 
 	/**
 	 * Handle the key up event.
-	 * @param {KeyboardEvent} event - The key up event.
+	 * @param {KeyboardEvent} input - The key up event.
 	 */
-	public keyUp ( event: KeyboardEvent ) : void
+	public keyUp ( input: KeyboardEvent ) : void
 	{
-		event.preventDefault();
+		input.preventDefault();
 
-		const { code } = event;
+		const { code } = input;
 		this.keysDown.delete ( code );
 
 		const handler = this.eventHandlerOrNavigator;
-		const data = this.makeKeyboardEvent ( event );
-
-		handler.keyUp ( data );
+		const event = this.makeEvent ( "key_up", input );
+		handler.handleEvent ( event );
 	}
 
 	/**

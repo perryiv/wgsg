@@ -12,6 +12,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { IKeyboardState } from "./Keyboard";
+import { IMouseButtons } from "./Mouse";
 import { IViewer } from "./Viewer";
 
 
@@ -21,17 +23,28 @@ import { IViewer } from "./Viewer";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+export type ICommandName = (
+	| "rotate_px_large"
+	| "rotate_py_large"
+	| "rotate_pz_large"
+	| "rotate_px_small"
+	| "rotate_py_small"
+	| "rotate_pz_small"
+	| "rotate_nx_large"
+	| "rotate_ny_large"
+	| "rotate_nz_large"
+	| "rotate_nx_small"
+	| "rotate_ny_small"
+	| "rotate_nz_small"
+);
+
 export interface ICommand
 {
 	execute ( viewer: IViewer ) : void;
 }
 
-export type ICommandMap = Map < string, ICommand >;
+export type ICommandMap = Map < ICommandName, ICommand >;
 
-export interface IInput
-{
-	mouse: Set < number >;
-	keyboard: Set < string >;
-}
+export interface ICommandMapKey extends IMouseButtons, IKeyboardState {}
 
-export type IInputToCommandMap = Map < IInput, string >;
+export type IInputToCommandMap = Map < ICommandMapKey, ICommandName >;

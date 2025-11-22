@@ -8,25 +8,34 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Types related to the viewer.
+//	Types related to events.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IMatrix44 } from "./Matrix";
-import { IViewport } from "./Viewport";
-import { INavigator } from "./Navigator";
+import { IInputState } from "./Input";
+import { IViewer } from "./Viewer";
 
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Types related to the viewer.
+//	Types related to events.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export interface IViewer
+export type IEventType = (
+	| "mouse_down"
+	| "mouse_up"
+	| "mouse_move"
+	| "mouse_drag"
+	| "mouse_in"
+	| "mouse_out"
+	| "key_down"
+	| "key_up"
+);
+
+export interface IEvent extends IInputState
 {
-	navigator: INavigator;
-	projMatrix: IMatrix44;
-	requestRender: ( () => void );
-	viewport: IViewport;
+	event: ( KeyboardEvent | MouseEvent );
+	type: IEventType;
+	viewer: IViewer;
 }

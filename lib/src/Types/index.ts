@@ -13,12 +13,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 export * from "./Command";
+export * from "./Event";
 export * from "./Graphics";
-export * from "./InputState";
+export * from "./Input";
 export * from "./Keyboard";
-export * from "./Math";
 export * from "./Matrix";
 export * from "./Mouse";
 export * from "./Navigator";
+export * from "./Size";
 export * from "./Vector";
 export * from "./Viewer";
+export * from "./Viewport";

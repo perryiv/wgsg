@@ -12,8 +12,16 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export interface IInputState
+import { IKeyboardState } from "./Keyboard";
+import { IMouseState } from "./Mouse";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Types related to mouse and keyboard input.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export interface IInputState extends IMouseState, IKeyboardState
 {
-	buttonsDown: Set < number >; // The set of buttons currently pressed.
-	keysDown: Set < string >;    // The set of keys currently pressed.
 }
