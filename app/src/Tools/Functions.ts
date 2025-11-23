@@ -230,11 +230,18 @@ const makeBox = ( { center, size, color, topology } :
 	// Make the indices based on the topology.
 	const indices = ( ( topology === "line-list" ) ?
 		( new Uint32Array ( [
-				0, 1, 1, 3, 3, 2, 2, 0,
+				0, 1, 1, 3, 3, 2, 2, 0, // Every two numbers are a line segment.
 				0, 4, 1, 5, 3, 7, 2, 6,
 				4, 5, 5, 7, 7, 6, 6, 4
 			] ) ) :
-		( new Uint32Array ( [ 0, 1, 2, 1, 3, 2 ] ) )
+		( new Uint32Array ( [
+			0, 1, 2, 1, 3, 2, // Every three numbers are a triangle.
+			4, 6, 5, 5, 6, 7,
+			0, 2, 4, 4, 2, 6,
+			1, 5, 3, 3, 5, 7,
+			2, 3, 6, 6, 3, 7,
+			0, 4, 1, 1, 4, 5
+		] ) )
 	);
 
 	// Make the primitives.
@@ -344,20 +351,25 @@ export const buildSceneTwoSquares = () : Node =>
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export const buildSceneBox = () : Node =>
+export const buildSceneBox = ( sx = 1.0, sy = 1.0, sz = 1.0 ) : Node =>
 {
-	const tr = new Transform();
+	const group = new Group();
 
-	tr.translate ( [ 0.0, 0.0, -3.0 ] );
-	tr.rotate ( (  15 * DEG_TO_RAD ), [ 1, 0, 0 ] );
-	tr.rotate ( ( -30 * DEG_TO_RAD ), [ 0, 1, 0 ] );
-
-	tr.addChild ( makeBox ( {
+	group.addChild ( makeBox ( {
 		center: [ 0.0, 0.0, 0.0 ],
-		size:   [ 1.0, 1.0, 1.0 ],
-		color:  [ 0.8, 0.2, 0.2, 1.0 ],
+		size:   [ sx, sy, sz ],
+		color:  [ 0.0, 0.0, 0.0, 1.0 ],
 		topology: "line-list",
 	} ) );
 
-	return tr;
+	const scale = 0.98;
+
+	group.addChild ( makeBox ( {
+		center: [ 0.0, 0.0, 0.0 ],
+		size:   [ sx * scale, sy * scale, sz * scale ],
+		color:  [ 0.8, 0.2, 0.2, 1.0 ],
+		topology: "triangle-list",
+	} ) );
+
+	return group;
 };
