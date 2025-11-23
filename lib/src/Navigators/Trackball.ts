@@ -278,8 +278,8 @@ export class Trackball extends BaseClass
 	{
 		const dist = this.distance;
 		const sphere = new Sphere (
-			[ 0, 0, -dist ], // Center
-			( dist * 0.9 )   // Radius
+			[ 0, 0, 0 ], // Center
+			( dist * 0.5 )   // Radius
 		);
 		return sphere;
 	}
