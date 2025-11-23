@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { buildSceneSphere } from "../Tools";
+import { buildSceneBox } from "../Tools";
 import { useViewerStore } from "../State";
 import {
 	useCallback,
@@ -81,7 +81,8 @@ export function Viewer ( { style }: IViewerProps )
 		{
 			return null;
 		}
-		return buildSceneSphere ( trackball.makeSphere() );
+		const { radius } = trackball.makeSphere();
+		return buildSceneBox ( radius );
 	},
 	[ getViewer ] );
 
@@ -171,24 +172,6 @@ export function Viewer ( { style }: IViewerProps )
 			viewer.modelScene = buildTestScene();
 			setViewer ( VIEWER_NAME, viewer );
 			console.log ( `Internal viewer ${viewer.id} created and configured` );
-
-			// We have to send it the keyboard events.
-			window.addEventListener ( "keydown", ( event: KeyboardEvent ) =>
-			{
-				if ( viewer )
-				{
-					viewer.keyDown ( event );
-				}
-			},
-			false );
-			window.addEventListener ( "keyup", ( event: KeyboardEvent ) =>
-			{
-				if ( viewer )
-				{
-					viewer.keyUp ( event );
-				}
-			},
-			false );
 		}
 
 		// Return the viewer.
