@@ -21,7 +21,7 @@ import {
 	Group,
 	IDENTITY_MATRIX,
 	Layer,
-	ViewMatrixGroup,
+	makeRenderGraphInfo,
 	Pipeline,
 	ProjMatrixGroup,
 	Root,
@@ -30,6 +30,7 @@ import {
 	SphereNode as Sphere,
 	State,
 	StateGroup,
+	ViewMatrixGroup,
 } from "wgsg-lib";
 
 
@@ -76,6 +77,7 @@ export function test ()
 		it ( "Cull visitor has expected properties", function ()
 		{
 			cv = new CullVisitor ( { root } );
+			cv.renderGraphInfo = makeRenderGraphInfo();
 
 			expect ( cv ).to.exist;
 			expect ( cv instanceof CullVisitor ).to.be.true;
