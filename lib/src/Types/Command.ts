@@ -47,4 +47,4 @@ export type ICommandMap = Map < ICommandName, ICommand >;
 
 export interface ICommandMapKey extends IMouseButtons, IKeyboardState {}
 
-export type IInputToCommandMap = Map < ICommandMapKey, ICommandName >;
+export type IInputToCommandNameMap = Map < ICommandMapKey, ICommandName >;

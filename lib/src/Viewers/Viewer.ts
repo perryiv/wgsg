@@ -24,7 +24,7 @@ import type {
 	ICommandMap,
 	IEvent,
 	IEventType,
-	IInputToCommandMap,
+	IInputToCommandNameMap,
 	IMatrix44,
 	IMouseState,
 	IVector2,
@@ -76,7 +76,7 @@ export class Viewer extends BaseClass
 	#branches: IViewerSceneBranches = Viewer.makeBranches ( true );
 	#keysDown: Set < string > = new Set < string > ();
 	static #commands: ICommandMap = makeCommands();
-	static #inputToCommand: IInputToCommandMap = makeInputToCommandMap();
+	static #inputToCommand: IInputToCommandNameMap = makeInputToCommandMap();
 
 	/**
 	 * Construct the class.

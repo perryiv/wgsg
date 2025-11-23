@@ -20,7 +20,7 @@ import type {
 	ICommandMap,
 	ICommandMapKey,
 	ICommandName,
-	IInputToCommandMap,
+	IInputToCommandNameMap,
 	INavigator,
 	IVector3,
 	IVector4,
@@ -212,11 +212,11 @@ function makeInput ( mouse: number[], keys: string[] ) : ICommandMapKey
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * Return the map of input to command.
- * @returns {IInputToCommandMap} The input to command map.
+ * @returns {IInputToCommandNameMap} The input to command map.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export function makeInputToCommandMap() : IInputToCommandMap
+export function makeInputToCommandMap() : IInputToCommandNameMap
 {
 	return new Map < ICommandMapKey, ICommandName > ( [
 		[ makeInput ( [], [ "ArrowUp" ] ),   "rotate_px_large" ],
