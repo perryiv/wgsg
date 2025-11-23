@@ -226,7 +226,7 @@ export class Trackball extends BaseClass
 				dr = normalizeQuat ( dr );
 
 				let nr: IVector4 = [ 0, 0, 0, 1 ]; // New rotation.
-				quat.multiply ( nr, this.rotation, dr );
+				quat.multiply ( nr, dr, this.rotation ); // This order is rotation about global axes.
 				nr = normalizeQuat ( nr );
 
 				this.rotation = nr;
