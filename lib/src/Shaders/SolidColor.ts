@@ -59,7 +59,7 @@ export class SolidColor extends BaseClass
 
 		super ( {
 			code: ( code as string ),
-			topology: ( topology ? topology : "triangle-list" )
+			topology: ( topology ?? "triangle-list" )
 		} );
 	}
 
@@ -131,12 +131,21 @@ export class SolidColor extends BaseClass
 	}
 
 	/**
-	 * Set the model matrix. Overload if needed.
-	 * @param {IMatrix44} matrix - The model matrix.
+	 * Get the view matrix.
+	 * @returns {IMatrix44} The view matrix.
 	 */
-	public override set modelMatrix ( matrix: Readonly<IMatrix44> )
+	public override get viewMatrix () : Readonly<IMatrix44>
 	{
-		super.modelMatrix = matrix;
+		return super.viewMatrix;
+	}
+
+	/**
+	 * Set the view matrix. Overload if needed.
+	 * @param {IMatrix44} matrix - The view matrix.
+	 */
+	public override set viewMatrix ( matrix: Readonly<IMatrix44> )
+	{
+		super.viewMatrix = matrix;
 		this.#uniforms = null;
 		this.#bindGroup = null;
 	}
@@ -184,14 +193,14 @@ export class SolidColor extends BaseClass
 			} );
 
 			// Write the values to a typed array.
-			const pm = new Float32Array ( super.getProjMatrix() );
-			const mm = new Float32Array ( super.getModelMatrix() );
+			const pm = new Float32Array ( this.projMatrix );
+			const vm = new Float32Array ( this.viewMatrix );
 			const color = new Float32Array ( this.#color );
 
 			// Write the typed array to the buffer.
 			let offset = 0;
 			device.queue.writeBuffer ( buffer, offset, pm ); offset += pm.byteLength;
-			device.queue.writeBuffer ( buffer, offset, mm ); offset += mm.byteLength;
+			device.queue.writeBuffer ( buffer, offset, vm ); offset += vm.byteLength;
 			device.queue.writeBuffer ( buffer, offset, color );
 
 			// Set this for next time.

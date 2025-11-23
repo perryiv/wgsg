@@ -13,23 +13,29 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base } from "../Base/Base";
-import { clamp, DEVELOPER_BUILD, Device } from "../Tools";
-import { IVector3, IVector4 } from "../Types";
+import { clamp, DEVELOPER_BUILD, Device, IDENTITY_MATRIX } from "../Tools";
 import { Perspective, ProjectionBase as Projection } from "../Projections";
+import { makeRenderGraphInfo, resetRenderGraphInfo, Root } from "../Render";
 import { SolidColor } from "../Shaders";
 import { vec4 } from "gl-matrix";
-import type { ISize, IViewport } from "../Types/Math";
 import {
 	Node,
 	State,
 	type IStateApplyInput,
 } from "../Scene";
-import { Root } from "../Render";
 import {
 	Cull as CullVisitor,
 	Draw as DrawVisitor,
 	Update as UpdateVisitor,
 } from "../Visitors";
+import type {
+	ISize,
+	IViewport,
+	IMatrix44,
+	IRenderGraphInfo,
+	IVector3,
+	IVector4
+} from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -84,6 +90,7 @@ export class Surface extends Base
 	#root: Root = new Root();
 	#defaultState: ( State | null ) = null;
 	#clearColor: IVector4 = [ 0.0, 0.0, 0.0, 0.0 ]; // Transparent black.
+	#info: IRenderGraphInfo = makeRenderGraphInfo();
 
 	/**
 	 * Construct the class.
@@ -115,6 +122,7 @@ export class Surface extends Base
 		// Now we can make the visitors.
 		const update = new UpdateVisitor();
 		const cull = new CullVisitor ( { root, defaultState: state } );
+		cull.renderGraphInfo = this.renderGraphInfo;
 
 		// Observe changes to the canvas size.
 		// https://webgpufundamentals.org/webgpu/lessons/webgpu-fundamentals.html#a-resizing
@@ -197,6 +205,7 @@ export class Surface extends Base
 
 		// Make the draw visitor.
 		const draw = new DrawVisitor ( { context } );
+		draw.renderGraphInfo = this.renderGraphInfo;
 
 		// Shortcut.
 		const visitors = this.#visitors;
@@ -268,6 +277,14 @@ export class Surface extends Base
 
 		// Request a render in the near future.
 		this.requestRender();
+	}
+
+	/*
+	 * Get the numbers of the various objects in the render graph.
+	 */
+	public get renderGraphInfo () : IRenderGraphInfo
+	{
+		return this.#info;
 	}
 
 	/**
@@ -520,6 +537,24 @@ export class Surface extends Base
 
 		// Set our member.
 		this.#projection = projection;
+	}
+
+	/**
+	 * Get the projection matrix.
+	 * @returns {IMatrix44} The projection matrix.
+	 */
+	public get projMatrix () : IMatrix44
+	{
+		return this.projection.matrix;
+	}
+
+	/**
+	 * Get the view matrix.
+	 * @returns {IMatrix44} The view matrix.
+	 */
+	public get viewMatrix () : IMatrix44
+	{
+		return [ ...IDENTITY_MATRIX ];
 	}
 
 	/**
@@ -806,6 +841,12 @@ export class Surface extends Base
 			count: ( this.#frame.count + 1 )
 		};
 
+		// Performance info.
+		if ( DEVELOPER_BUILD )
+		{
+			resetRenderGraphInfo ( this.#info );
+		}
+
 		// Update the scene.
 		this.update();
 
@@ -821,19 +862,22 @@ export class Surface extends Base
 		// Performance info.
 		if ( DEVELOPER_BUILD )
 		{
+			const name = `${this.type} ${this.id}`;
 			const rgi = this.cullVisitor.renderGraphInfo
-			const info = `
-				frame: ${this.#frame.count},
-				time: ${( this.#frame.end - this.#frame.start )} ms,
-				layers: ${rgi.numLayers},
-				bins: ${rgi.numBins},
-				pipelines: ${rgi.numPipelines},
-				projections: ${rgi.numProjMatrixGroups},
-				model matrices: ${rgi.numModelMatrixGroups},
-				states: ${rgi.numStateGroups},
-				shapes: ${rgi.numShapes}
-			`.trim().replace ( /\s+/g, " " );
-			console.log ( `${this.type} ${this.id} rendering, ${JSON.stringify ( info ) }` );
+			const info = [
+				{ layers: rgi.numLayers },
+				{ bins: rgi.numBins },
+				{ pipelines: rgi.numPipelines },
+				{ projections: rgi.numProjMatrixGroups },
+				{ viewMatrices: rgi.numViewMatrixGroups },
+				{ states: rgi.numStateGroups },
+				{ shapes: rgi.numShapes },
+				{ triangles: rgi.numTriangles },
+				{ lines: rgi.numLines }
+			];
+			let message = `${name} rendering frame ${this.#frame.count}`;
+			message += ` in ${( this.#frame.end - this.#frame.start ).toFixed ( 4 )} ms`;
+			console.log ( message, info );
 		}
 	}
 }

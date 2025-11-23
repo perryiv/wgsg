@@ -65,6 +65,8 @@ export class Manager extends Base
 	 */
 	public static get instance() : Manager
 	{
+		// This way supports setting a breakpoint.
+		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 		if ( !manager )
 		{
 			manager = new Manager();

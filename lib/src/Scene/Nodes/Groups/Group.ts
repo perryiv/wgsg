@@ -139,6 +139,15 @@ export class Group extends Node
 	}
 
 	/**
+	 * Is the group empty?
+	 * @returns {boolean} True if the group is empty.
+	 */
+	public get empty() : boolean
+	{
+		return ( this.size <= 0 );
+	}
+
+	/**
 	 * Traverse this node.
 	 * @param {INodeTraverseCallback} cb - Callback function.
 	 */

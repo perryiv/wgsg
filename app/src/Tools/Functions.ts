@@ -14,6 +14,7 @@
 
 import { mat4 } from "gl-matrix";
 import {
+	buildTriangleEdges,
 	DEG_TO_RAD,
 	Geometry,
 	Group,
@@ -22,14 +23,15 @@ import {
 	Node,
 	SolidColor,
 	Sphere,
+	SphereNode,
 	State,
 	Transform,
-} from "wgsg-lib";
+} from "../wgsg";
 import type {
 	IVector2,
 	IVector3,
 	IVector4,
-} from "wgsg-lib";
+} from "../wgsg";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -38,11 +40,14 @@ import type {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export const makeSolidColorState = ( { color, shader, topology } :
-	{ color: IVector4, shader: SolidColor, topology: GPUPrimitiveTopology } ) : State =>
+export const makeSolidColorState = ( { color, topology } :
+	{ color: IVector4, topology: GPUPrimitiveTopology } ) : State =>
 {
 	// Make a copy of the color because we capture it below.
 	color = [ color[0], color[1], color[2], color[3] ];
+
+	// Shortcut.
+	const shader = SolidColor.instance;
 
 	// Make the state.
 	return new State ( {
@@ -63,6 +68,42 @@ export const makeSolidColorState = ( { color, shader, topology } :
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+export const buildSceneSphere = ( sphere: Sphere ) =>
+{
+	const root = new Group();
+
+	const node = new SphereNode ( {
+		center: sphere.center,
+		radius: sphere.radius,
+		numSubdivisions: 4,
+	} );
+	node.state = makeSolidColorState ( {
+		color: [ 0.8, 0.2, 0.2, 1.0 ],
+		topology: "triangle-list"
+	} );
+	root.addChild ( node );
+
+	node.update();
+	const lines = buildTriangleEdges ( node );
+	if ( lines )
+	{
+		lines.state = makeSolidColorState ( {
+			color: [ 0.0, 0.0, 0.0, 1.0 ],
+			topology: "line-list"
+		} );
+	}
+	root.addChild ( lines );
+
+	return root;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Make a scene used for testing.
+//
+///////////////////////////////////////////////////////////////////////////////
+
 export const buildSceneSpheres = () =>
 {
 	const root = new Group();
@@ -70,18 +111,18 @@ export const buildSceneSpheres = () =>
 	{
 		const tr = new Transform();
 		mat4.translate ( tr.matrix, IDENTITY_MATRIX, [ 10, 0, 0 ] );
-		tr.addChild ( new Sphere ( { center: [ 0, 0, 0 ] } ) );
-		tr.addChild ( new Sphere ( { center: [ 2, 0, 0 ] } ) );
+		tr.addChild ( new SphereNode ( { center: [ 0, 0, 0 ] } ) );
+		tr.addChild ( new SphereNode ( { center: [ 2, 0, 0 ] } ) );
 		root.addChild ( tr );
 	}
 
 	{
 		const tr = new Transform();
 		mat4.translate ( tr.matrix, IDENTITY_MATRIX, [ 0, 10, 0 ] );
-		tr.addChild ( new Sphere ( { center: [ 0, 0, 0 ] } ) );
-		tr.addChild ( new Sphere ( { center: [ 2, 0, 0 ] } ) );
-		tr.addChild ( new Sphere ( { center: [ 4, 0, 0 ] } ) );
-		tr.addChild ( new Sphere ( { center: [ 6, 0, 0 ] } ) );
+		tr.addChild ( new SphereNode ( { center: [ 0, 0, 0 ] } ) );
+		tr.addChild ( new SphereNode ( { center: [ 2, 0, 0 ] } ) );
+		tr.addChild ( new SphereNode ( { center: [ 4, 0, 0 ] } ) );
+		tr.addChild ( new SphereNode ( { center: [ 6, 0, 0 ] } ) );
 		root.addChild ( tr );
 	}
 
@@ -98,8 +139,6 @@ export const buildSceneSpheres = () =>
 const makeQuad = ( { origin, size, color, topology } :
 	{ origin?: IVector3, size?: IVector2, color?: IVector4, topology?: GPUPrimitiveTopology } ) =>
 {
-	const shader = SolidColor.instance;
-
 	// Give the input default values if needed.
 	origin ??= [ 0.0, 0.0, 0.0 ];
 	size ??= [ 1.0, 1.0 ];
@@ -128,7 +167,7 @@ const makeQuad = ( { origin, size, color, topology } :
 	// Were we given a color?
 	if ( color )
 	{
-		geom.state = makeSolidColorState ( { color, shader, topology } );
+		geom.state = makeSolidColorState ( { color, topology } );
 	}
 
 	// Return the new geometry.
@@ -182,8 +221,6 @@ export const makeCorners = ( { center, size } : { center?: IVector3, size?: IVec
 const makeBox = ( { center, size, color, topology } :
 	{ center?: IVector3, size?: IVector3, color?: IVector4, topology?: GPUPrimitiveTopology } ) =>
 {
-	const shader = SolidColor.instance;
-
 	// Give the input default values if needed.
 	topology ??= "triangle-list";
 
@@ -193,11 +230,18 @@ const makeBox = ( { center, size, color, topology } :
 	// Make the indices based on the topology.
 	const indices = ( ( topology === "line-list" ) ?
 		( new Uint32Array ( [
-				0, 1, 1, 3, 3, 2, 2, 0,
+				0, 1, 1, 3, 3, 2, 2, 0, // Every two numbers are a line segment.
 				0, 4, 1, 5, 3, 7, 2, 6,
 				4, 5, 5, 7, 7, 6, 6, 4
 			] ) ) :
-		( new Uint32Array ( [ 0, 1, 2, 1, 3, 2 ] ) )
+		( new Uint32Array ( [
+			0, 1, 2, 1, 3, 2, // Every three numbers are a triangle.
+			4, 6, 5, 5, 6, 7,
+			0, 2, 4, 4, 2, 6,
+			1, 5, 3, 3, 5, 7,
+			2, 3, 6, 6, 3, 7,
+			0, 4, 1, 1, 4, 5
+		] ) )
 	);
 
 	// Make the primitives.
@@ -209,7 +253,7 @@ const makeBox = ( { center, size, color, topology } :
 	// Were we given a color?
 	if ( color )
 	{
-		geom.state = makeSolidColorState ( { color, shader, topology } );
+		geom.state = makeSolidColorState ( { color, topology } );
 	}
 
 	// Return the new geometry.
@@ -245,12 +289,23 @@ export const buildSceneQuads = () : Node =>
 			const g = ( 0.1 + 0.8 * Math.random() );
 			const b = ( 0.1 + 0.8 * Math.random() );
 
-			group.addChild ( makeQuad ( {
-				origin: [ x, y, -2.0 ],
+			const quads = makeQuad ( {
+				origin: [ x, y, 0.0 ],
 				size: [ w, h ],
 				color: [ r, g, b, 1.0 ],
 				topology: "triangle-list"
-			} ) );
+			} );
+			group.addChild ( quads );
+
+			// const lines = buildTriangleEdges ( quads );
+			// if ( lines )
+			// {
+			// 	lines.state = makeSolidColorState ( {
+			// 		color: [ 0.0, 0.0, 0.0, 1.0 ],
+			// 		topology: "line-list"
+			// 	} );
+			// }
+			// group.addChild ( lines );
 
 			++count;
 		}
@@ -296,20 +351,25 @@ export const buildSceneTwoSquares = () : Node =>
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export const buildSceneBox = () : Node =>
+export const buildSceneBox = ( sx = 1.0, sy = 1.0, sz = 1.0 ) : Node =>
 {
-	const tr = new Transform();
+	const group = new Group();
 
-	tr.translate ( [ 0.0, 0.0, -3.0 ] );
-	tr.rotate ( (  15 * DEG_TO_RAD ), [ 1, 0, 0 ] );
-	tr.rotate ( ( -30 * DEG_TO_RAD ), [ 0, 1, 0 ] );
-
-	tr.addChild ( makeBox ( {
+	group.addChild ( makeBox ( {
 		center: [ 0.0, 0.0, 0.0 ],
-		size:   [ 1.0, 1.0, 1.0 ],
-		color:  [ 0.8, 0.2, 0.2, 1.0 ],
+		size:   [ sx, sy, sz ],
+		color:  [ 0.0, 0.0, 0.0, 1.0 ],
 		topology: "line-list",
 	} ) );
 
-	return tr;
+	const scale = 0.98;
+
+	group.addChild ( makeBox ( {
+		center: [ 0.0, 0.0, 0.0 ],
+		size:   [ sx * scale, sy * scale, sz * scale ],
+		color:  [ 0.8, 0.2, 0.2, 1.0 ],
+		topology: "triangle-list",
+	} ) );
+
+	return group;
 };

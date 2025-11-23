@@ -15,7 +15,7 @@
 import { Base as BaseClass } from "../Base";
 import { IDENTITY_MATRIX } from "../Tools/Constants";
 import { mat4 } from "gl-matrix";
-import { ModelMatrixGroup } from "./ModelMatrixGroup";
+import { ViewMatrixGroup } from "./ViewMatrixGroup";
 import type { IMatrix44, IRenderGraphInfo } from "../Types";
 
 
@@ -25,7 +25,7 @@ import type { IMatrix44, IRenderGraphInfo } from "../Types";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export type IModelMatrixMap = Map < string, ModelMatrixGroup >;
+export type IviewMatrixMap = Map < string, ViewMatrixGroup >;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -38,7 +38,7 @@ export type IModelMatrixMap = Map < string, ModelMatrixGroup >;
 export class ProjMatrixGroup extends BaseClass
 {
 	#matrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
-	#modelMatrixMap: IModelMatrixMap = new Map < string, ModelMatrixGroup > ();
+	#viewMatrixMap: IviewMatrixMap = new Map < string, ViewMatrixGroup > ();
 
 	/**
 	 * Construct the class.
@@ -70,40 +70,40 @@ export class ProjMatrixGroup extends BaseClass
 	}
 
 	/**
-	 * Get the model matrix. Make it if we have to.
+	 * Get the view matrix group. Make it if we have to.
 	 * @param {IRenderGraphInfo} info - The render graph info.
-	 * @param {IMatrix44} matrix - The model matrix.
-	 * @returns {ModelMatrixGroup} The model matrix.
+	 * @param {IMatrix44} matrix - The view matrix.
+	 * @returns {ViewMatrixGroup} The view matrix group.
 	 */
-	public getModelMatrixGroup ( info: IRenderGraphInfo, matrix: Readonly<IMatrix44> ) : ModelMatrixGroup
+	public getViewMatrixGroup ( info: IRenderGraphInfo, matrix: Readonly<IMatrix44> ) : ViewMatrixGroup
 	{
 		const name = JSON.stringify ( matrix );
-		let mmg = this.#modelMatrixMap.get ( name );
+		let mmg = this.#viewMatrixMap.get ( name );
 		if ( !mmg )
 		{
-			mmg = new ModelMatrixGroup ( matrix );
-			this.#modelMatrixMap.set ( name, mmg );
-			info.numModelMatrixGroups++;
+			mmg = new ViewMatrixGroup ( matrix );
+			this.#viewMatrixMap.set ( name, mmg );
+			info.numViewMatrixGroups++;
 		}
 		return mmg;
 	}
 
 	/**
-	 * Call the given function for each model matrix.
+	 * Call the given function for each view matrix group.
 	 * @param {Function} func - The function to call.
 	 */
-	public forEachModelMatrixGroup ( func: ( mmg: ModelMatrixGroup ) => void ) : void
+	public forEachViewMatrixGroup ( func: ( mmg: ViewMatrixGroup ) => void ) : void
 	{
 		// The order doesn't matter so we don't sort like the layers and bins.
-		this.#modelMatrixMap.forEach ( func );
+		this.#viewMatrixMap.forEach ( func );
 	}
 
 	/**
-	 * Get the number of model matrices.
-	 * @returns {number} The number of model matrices.
+	 * Get the number of view matrices.
+	 * @returns {number} The number of view matrices.
 	 */
-	public get numModelMatrices () : number
+	public get numViewMatrices () : number
 	{
-		return this.#modelMatrixMap.size;
+		return this.#viewMatrixMap.size;
 	}
 }

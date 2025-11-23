@@ -12,8 +12,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Array1, Array3 } from "../../../Arrays";
-import { Geometry } from "./Geometry";
+import { Array1 } from "../../../Arrays";
+import { Geometry as BaseClass } from "./Geometry";
 import { Indexed } from "../../Primitives";
 import { vec3 } from "gl-matrix";
 import type { INodeConstructorInput } from "../Node";
@@ -45,7 +45,7 @@ export interface ISphereInput extends INodeConstructorInput
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Sphere extends Geometry
+export class Sphere extends BaseClass
 {
 	#center: IVector3 = [ 0, 0, 0 ];
 	#radius = 1.0;
@@ -187,24 +187,20 @@ export class Sphere extends Geometry
 
 		// Make the arrays.
 		const indices = new Uint32Array ( numIndices );
-		const points = new Float32Array ( numPoints * 3 );
+		const points  = new Float32Array ( numPoints * 3 );
 		const normals = new Float32Array ( numPoints * 3 );
 
 		// Shortcuts.
 		const [ cx, cy, cz ] = this.center;
 		const r = this.radius;
-		const pw = new Array3 ( points );
-		const nw = new Array3 ( normals );
-		const px = pw.x0;
-		const py = pw.x1;
-		const pz = pw.x2;
-		const nx = nw.x0;
-		const ny = nw.x1;
-		const nz = nw.x2;
 
 		// Initialize the point and index count.
-		let pc = 0;
-		let ic = 0;
+		let tc = 0; // Triangle count.
+		let pc = 0; // Point count.
+		let ic = 0; // Index count.
+		let ix = 0; // For speed.
+		let iy = 0;
+		let iz = 0;
 
 		// Make the points on the sphere.
 		generateUnitSphere ( ns, (
@@ -213,29 +209,41 @@ export class Sphere extends Geometry
 			x3: Readonly<number>, y3: Readonly<number>, z3: Readonly<number>,
 			i1: Readonly<number>, i2: Readonly<number>, i3: Readonly<number> ) =>
 		{
-			px[pc] = cx + ( x1 * r );
-			py[pc] = cy + ( y1 * r );
-			pz[pc] = cz + ( z1 * r );
-			nx[pc] = x1;
-			ny[pc] = y1;
-			nz[pc] = z1;
-			++pc;
+			pc = tc * 3;
+			ix = pc + 0;
+			iy = pc + 1;
+			iz = pc + 2;
+			points [ix] = cx + ( x1 * r );
+			points [iy] = cy + ( y1 * r );
+			points [iz] = cz + ( z1 * r );
+			normals[ix] = x1;
+			normals[iy] = y1;
+			normals[iz] = z1;
+			++tc;
 
-			px[pc] = cx + ( x2 * r );
-			py[pc] = cy + ( y2 * r );
-			pz[pc] = cz + ( z2 * r );
-			nx[pc] = x2;
-			ny[pc] = y2;
-			nz[pc] = z2;
-			++pc;
+			pc = tc * 3;
+			ix = pc + 0;
+			iy = pc + 1;
+			iz = pc + 2;
+			points [ix] = cx + ( x2 * r );
+			points [iy] = cy + ( y2 * r );
+			points [iz] = cz + ( z2 * r );
+			normals[ix] = x2;
+			normals[iy] = y2;
+			normals[iz] = z2;
+			++tc;
 
-			px[pc] = cx + ( x3 * r );
-			py[pc] = cy + ( y3 * r );
-			pz[pc] = cz + ( z3 * r );
-			nx[pc] = x3;
-			ny[pc] = y3;
-			nz[pc] = z3;
-			++pc;
+			pc = tc * 3;
+			ix = pc + 0;
+			iy = pc + 1;
+			iz = pc + 2;
+			points [ix] = cx + ( x3 * r );
+			points [iy] = cy + ( y3 * r );
+			points [iz] = cz + ( z3 * r );
+			normals[ix] = x3;
+			normals[iy] = y3;
+			normals[iz] = z3;
+			++tc;
 
 			indices[ic++] = i1;
 			indices[ic++] = i2;
@@ -254,5 +262,8 @@ export class Sphere extends Geometry
 
 		// Call the base class's function.
 		super.update();
+
+		// We are no longer dirty.
+		this.dirty = false;
 	}
 }

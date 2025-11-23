@@ -14,4 +14,4 @@
 
 export * from "./Geometry";
 export * from "./Shape";
-export * from "./Sphere";
+export { Sphere as SphereNode } from "./Sphere";

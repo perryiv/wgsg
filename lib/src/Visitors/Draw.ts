@@ -15,8 +15,9 @@
 import { ShaderBase } from "../Shaders";
 import { vec4 } from "gl-matrix";
 import { Visitor as BaseClass } from "./Visitor";
-import type { IVector4 } from "../Types";
+import type { IRenderGraphInfo, IVector4 } from "../Types";
 import {
+	DEVELOPER_BUILD,
 	Device,
 	preMultiplyColor,
 } from "../Tools";
@@ -31,7 +32,7 @@ import {
 import {
 	Bin,
 	Layer,
-	ModelMatrixGroup,
+	ViewMatrixGroup,
 	Pipeline,
 	ProjMatrixGroup,
 	Root,
@@ -85,6 +86,7 @@ export class Draw extends BaseClass
 	#renderPassEncoder: ( GPURenderPassEncoder | null ) = null;
 	#commandEncoder: ( GPUCommandEncoder | null ) = null;
 	#geometry: ( Geometry | null ) = null;
+	#info: ( IRenderGraphInfo | null ) = null;
 
 	/**
 	 * Construct the class.
@@ -118,6 +120,28 @@ export class Draw extends BaseClass
 	public override getClassName() : string
 	{
 		return "Visitors.Draw";
+	}
+
+	/*
+	 * Get the numbers of the various objects in the render graph.
+	 */
+	public get renderGraphInfo () : IRenderGraphInfo
+	{
+		const info = this.#info;
+		if ( !info )
+		{
+			throw new Error ( "Getting invalid render graph info" );
+		}
+		return info;
+	}
+
+	/**
+	 * Set the render graph info.
+	 * @param {IRenderGraphInfo} info - The render graph info.
+	 */
+	public set renderGraphInfo ( info: IRenderGraphInfo )
+	{
+		this.#info = info;
 	}
 
 	/**
@@ -376,32 +400,32 @@ export class Draw extends BaseClass
 		// Set the pipeline's projection matrix.
 		pipeline.projMatrix = pmg.matrix;
 
-		// console.log ( `ProjMatrix ${pmg.id} has ${pmg.numModelMatrices} model matrices` );
+		// console.log ( `ProjMatrix ${pmg.id} has ${pmg.numViewMatrices} view matrices` );
 
-		// Draw the model matrix groups.
-		pmg.forEachModelMatrixGroup ( ( mmg: ModelMatrixGroup ) =>
+		// Draw the view matrix groups.
+		pmg.forEachViewMatrixGroup ( ( vmg: ViewMatrixGroup ) =>
 		{
-			this.drawModelMatrix ( pipeline, pmg, mmg );
+			this.drawViewMatrix ( pipeline, pmg, vmg );
 		} );
 	}
 
 	/**
-	 * Draw the model matrix group.
+	 * Draw the view matrix group.
 	 * @param {Pipeline} pipeline - The pipeline to use.
-	 * @param {ProjMatrix} pmg - The projection matrix group.
-	 * @param {ModelMatrix} mmg - The model matrix group to draw.
+	 * @param {ProjMatrixGroup} pmg - The projection matrix group.
+	 * @param {ViewMatrixGroup} vmg - The view matrix group to draw.
 	 */
-	protected drawModelMatrix ( pipeline: Pipeline, pmg: ProjMatrixGroup, mmg: ModelMatrixGroup ) : void
+	protected drawViewMatrix ( pipeline: Pipeline, pmg: ProjMatrixGroup, vmg: ViewMatrixGroup ) : void
 	{
-		// Set the pipeline's model matrix.
-		pipeline.modelMatrix = mmg.matrix;
+		// Set the pipeline's view matrix.
+		pipeline.viewMatrix = vmg.matrix;
 
-		// console.log ( `ModelMatrix ${mmg.id} has ${mmg.numStateGroups} state groups` );
+		// console.log ( `ViewMatrix ${vmg.id} has ${vmg.numStateGroups} state groups` );
 
 		// Draw the state groups.
-		mmg.forEachStateGroup ( ( sg: StateGroup ) =>
+		vmg.forEachStateGroup ( ( sg: StateGroup ) =>
 		{
-			this.drawStateGroup ( pipeline, pmg, mmg, sg );
+			this.drawStateGroup ( pipeline, pmg, vmg, sg );
 		} );
 	}
 
@@ -409,10 +433,10 @@ export class Draw extends BaseClass
 	 * Draw the state group.
 	 * @param {Pipeline} pipeline - The pipeline to use.
 	 * @param {ProjMatrixGroup} pmg - The projection matrix group.
-	 * @param {ModelMatrixGroup} mmg - The model matrix group.
+	 * @param {ViewMatrixGroup} vmg - The view matrix group.
 	 * @param {StateGroup} sg - The state group to draw.
 	 */
-	protected drawStateGroup ( pipeline: Pipeline, pmg: ProjMatrixGroup, mmg: ModelMatrixGroup, sg: StateGroup ) : void
+	protected drawStateGroup ( pipeline: Pipeline, pmg: ProjMatrixGroup, vmg: ViewMatrixGroup, sg: StateGroup ) : void
 	{
 		// Shortcuts.
 		const { state } = sg;
@@ -424,7 +448,7 @@ export class Draw extends BaseClass
 			state,
 			shader: pipeline.shader,
 			projMatrix: pmg.matrix,
-			modelMatrix: mmg.matrix,
+			viewMatrix: vmg.matrix,
 		};
 
 		// Apply the state.
@@ -571,6 +595,31 @@ export class Draw extends BaseClass
 			0, // Added to each index value before indexing into the vertex buffers.
 			0  // First instance to draw.
 		);
+
+		// Performance info.
+		if ( DEVELOPER_BUILD )
+		{
+			const info = this.renderGraphInfo;
+			switch ( prims.mode )
+			{
+				case "triangle-list":
+				{
+					if ( 0 === ( numIndices % 3 ) )
+					{
+						info.numTriangles += ( numIndices / 3 );
+					}
+					break;
+				}
+				case "line-list":
+				{
+					if ( 0 === ( numIndices % 2 ) )
+					{
+						info.numLines += ( numIndices / 2 );
+					}
+					break;
+				}
+			}
+		}
 	}
 
 	/**

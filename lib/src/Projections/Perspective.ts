@@ -14,7 +14,7 @@
 
 import { IMatrix44, IViewport } from "../Types";
 import { isPositiveFiniteNumber } from "../Math";
-import { makeIdentity } from "../Tools";
+import { IDENTITY_MATRIX } from "../Tools";
 import { mat4 } from "gl-matrix";
 import { Projection } from "./Projection";
 
@@ -167,7 +167,7 @@ export class Perspective extends Projection
 		}
 
 		// Initialize the answer.
-		const answer: IMatrix44 = makeIdentity();
+		const answer: IMatrix44 = [ ...IDENTITY_MATRIX ];
 
 		// Write the projection matrix to the answer.
 		mat4.perspective ( answer, fov, aspect, near, far );

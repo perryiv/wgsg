@@ -17,7 +17,7 @@ import {
 	Group,
 	IDENTITY_MATRIX,
 	Transform,
-} from "wgsg-lib";
+} from "../../../wgsg";
 
 
 ///////////////////////////////////////////////////////////////////////////////

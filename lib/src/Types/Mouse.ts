@@ -1,0 +1,39 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Copyright (c) 2025, Perry L Miller IV
+//	All rights reserved.
+//	MIT License: https://opensource.org/licenses/mit-license.html
+//
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Types related to the mouse.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+import { IVector2 } from "./Vector";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Types related to the mouse.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export interface IMouseButtons
+{
+	buttonsDown: Set < number >; // The set of buttons currently pressed.
+}
+
+export interface IMouseCoordinates
+{
+	current:  ( IVector2 | null ); // The current mouse position.
+	previous: ( IVector2 | null ); // The previous mouse position.
+	pressed:  ( IVector2 | null ); // The mouse coordinate when the button was pressed.
+	released: ( IVector2 | null ); // The mouse coordinate when the button was released.
+}
+
+export interface IMouseState extends IMouseButtons, IMouseCoordinates
+{
+}

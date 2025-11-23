@@ -13,13 +13,18 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { IDENTITY_MATRIX } from "./Constants";
-import { vec2, vec3, vec4 } from "gl-matrix";
 import type {
 	IMatrix44,
 	IVector2,
 	IVector3,
 	IVector4,
 } from "../Types";
+import {
+	quat,
+	vec2,
+	vec3,
+	vec4,
+} from "gl-matrix";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -176,5 +181,21 @@ export const normalizeVec4 = ( input: Readonly<IVector4> ) : IVector4 =>
 {
 	const answer: IVector4 = [ 0, 0, 0, 0 ];
 	vec4.normalize ( answer, input );
+	return answer;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Normalize a quaternion.
+ * @param {IVector4} input - The quaternion to normalize.
+ * @returns {IVector4} The normalized quaternion.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export const normalizeQuat = ( input: Readonly<IVector4> ) : IVector4 =>
+{
+	const answer: IVector4 = [ 0, 0, 0, 0 ];
+	quat.normalize ( answer, input );
 	return answer;
 };

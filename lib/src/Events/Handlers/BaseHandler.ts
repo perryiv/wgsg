@@ -13,6 +13,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base as BaseClass } from "../../Base";
+import { discardEvent } from "../../Tools";
+import type { IEvent } from "../../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -35,23 +37,11 @@ export abstract class BaseHandler extends BaseClass
 	}
 
 	/**
-	 * Handle mouse down event.
-	 * @param {MouseEvent} event - The mouse down event.
-	 * @abstract
+	 * Handle the event.
+	 * @param {IEvent} event - The event.
 	 */
-	public abstract mouseDown ( event: MouseEvent ) : void;
-
-	/**
-	 * Handle mouse move event.
-	 * @param {MouseEvent} event - The mouse move event.
-	 * @abstract
-	 */
-	public abstract mouseMove ( event: MouseEvent ) : void;
-
-	/**
-	 * Handle mouse up event.
-	 * @param {MouseEvent} event - The mouse up event.
-	 * @abstract
-	 */
-	public abstract mouseUp ( event: MouseEvent ) : void;
+	public handleEvent ( event: IEvent ) : void
+	{
+		discardEvent ( event );
+	}
 }

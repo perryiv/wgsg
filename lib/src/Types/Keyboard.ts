@@ -8,19 +8,11 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Types related to math.
+//	Types related to the keyboard.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export interface IViewport
+export interface IKeyboardState
 {
-	x: number;
-	y: number;
-	width: number;
-	height: number;
-}
-export interface ISize
-{
-	width: number;
-	height: number;
+	keysDown: Set < string >; // The set of keys currently pressed.
 }

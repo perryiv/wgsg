@@ -34,3 +34,8 @@ createRoot ( ( document.getElementById ( "root" ) )! ).render (
 		</ThemeProvider>
 	// </StrictMode>
 );
+
+// Note: When developing, StrictMode makes it mount, unmount, and mount again.
+// Because of the way the code is organized, tThis creates the singleton WebGPU
+// device, destroys it, and creates it again. Unfortunately, the singleton
+// shaders that are made with the first device all become invalid.

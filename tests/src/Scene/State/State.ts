@@ -21,7 +21,7 @@ import {
 	SolidColor,
 	type IStateApplyFunction,
 	type IStateResetFunction,
-} from "wgsg-lib";
+} from "../../wgsg";
 
 
 ///////////////////////////////////////////////////////////////////////////////

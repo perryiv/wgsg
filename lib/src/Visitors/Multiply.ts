@@ -28,8 +28,8 @@ import { Visitor } from "./Visitor";
 
 export abstract class Multiply extends Visitor
 {
-	#modelMatrix: IMatrix44 = makeIdentity(); // Has to be a copy.
-	#projMatrix:  IMatrix44 = makeIdentity(); // Has to be a copy.
+	#viewMatrix: IMatrix44 = makeIdentity(); // Has to be a copy.
+	#projMatrix: IMatrix44 = makeIdentity(); // Has to be a copy.
 
 	/**
 	 * Construct the class.
@@ -42,12 +42,12 @@ export abstract class Multiply extends Visitor
 	}
 
 	/**
-	 * Return the model matrix.
-	 * @returns {IMatrix44} The model matrix.
+	 * Return the view matrix.
+	 * @returns {IMatrix44} The view matrix.
 	 */
-	public get modelMatrix()
+	public get viewMatrix()
 	{
-		return this.#modelMatrix;
+		return this.#viewMatrix;
 	}
 
 	/**
@@ -88,16 +88,16 @@ export abstract class Multiply extends Visitor
 	public override visitTransform ( tr: Transform ) : void
 	{
 		// Make a copy of the original matrix.
-		const original: IMatrix44 = [ ...this.#modelMatrix ];
+		const original: IMatrix44 = [ ...this.#viewMatrix ];
 
 		// Multiply the original matrix by the given one and save it in our member.
-		mat4.multiply ( this.#modelMatrix, original, tr.matrix );
+		mat4.multiply ( this.#viewMatrix, original, tr.matrix );
 
 		// Now call the base class's function.
 		super.visitTransform ( tr );
 
 		// Put things back where we found them.
-		mat4.copy ( this.#modelMatrix, original );
+		mat4.copy ( this.#viewMatrix, original );
 	}
 
 	/**

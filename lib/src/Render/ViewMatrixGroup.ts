@@ -8,7 +8,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Contains the model matrix and everything that gets rendered with it.
+//	Contains the view matrix and everything that gets rendered with it.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -31,12 +31,12 @@ export type IStateGroupMap = Map < string, StateGroup >;
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Class for model matrix and everything that gets rendered with it.
+ * Class for view matrix and everything that gets rendered with it.
  * @class
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class ModelMatrixGroup extends BaseClass
+export class ViewMatrixGroup extends BaseClass
 {
 	#matrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
 	#stateGroupMap: IStateGroupMap = new Map < string, StateGroup > ();
@@ -44,7 +44,7 @@ export class ModelMatrixGroup extends BaseClass
 	/**
 	 * Construct the class.
 	 * @class
-	 * @param {IMatrix44} matrix - The model matrix.
+	 * @param {IMatrix44} matrix - The view matrix.
 	 */
 	constructor ( matrix: Readonly<IMatrix44> )
 	{
@@ -58,7 +58,7 @@ export class ModelMatrixGroup extends BaseClass
 	 */
 	public override getClassName() : string
 	{
-		return "Render.ModelMatrixGroup";
+		return "Render.ViewMatrixGroup";
 	}
 
 	/**

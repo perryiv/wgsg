@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { buildSceneQuads } from "../Tools";
+import { buildSceneBox } from "../Tools";
 import { useViewerStore } from "../State";
 import {
 	useCallback,
@@ -25,8 +25,10 @@ import {
 	Device,
 	DeviceLost,
 	getNextId,
+	Trackball,
 	Viewer as InternalViewer,
-} from "wgsg-lib";
+	Node,
+} from "../wgsg";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -35,7 +37,7 @@ import {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-const VIEWER_NAME = "main_viewer";
+export const VIEWER_NAME = "main_viewer";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -67,11 +69,22 @@ export function Viewer ( { style }: IViewerProps )
 	//
 	// Build the test scene.
 	//
-	const buildTestScene = useCallback ( () =>
+	const buildTestScene = useCallback ( () : ( Node | null ) =>
 	{
-		return buildSceneQuads();
+		const viewer = getViewer ( VIEWER_NAME );
+		if ( !viewer )
+		{
+			return null;
+		}
+		const trackball = ( viewer.navigator instanceof Trackball ) ? viewer.navigator : null;
+		if ( !trackball )
+		{
+			return null;
+		}
+		const { radius } = trackball.makeSphere();
+		return buildSceneBox ( radius );
 	},
-	[] );
+	[ getViewer ] );
 
 	//
 	// Handle when the device is lost.
@@ -156,7 +169,7 @@ export function Viewer ( { style }: IViewerProps )
 		if ( !viewer )
 		{
 			viewer = new InternalViewer ( { canvas: canvas.current } );
-			viewer.scene = buildTestScene();
+			viewer.modelScene = buildTestScene();
 			setViewer ( VIEWER_NAME, viewer );
 			console.log ( `Internal viewer ${viewer.id} created and configured` );
 		}
@@ -182,7 +195,7 @@ export function Viewer ( { style }: IViewerProps )
 		if ( DEVELOPER_BUILD )
 		{
 			console.log ( "Building new scene for viewer" );
-			viewer.scene = buildTestScene();
+			viewer.modelScene = buildTestScene();
 			viewer.requestRender();
 		}
 	}, [ buildTestScene, getOrCreateViewer, initDevice ] );

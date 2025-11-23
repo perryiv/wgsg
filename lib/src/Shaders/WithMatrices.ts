@@ -8,7 +8,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Shader class that handles the projection and model matrices.
+//	Shader class that handles the projection and view matrices.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -36,8 +36,8 @@ export type IWithMatricesInput = IShaderBaseInput;
 
 export abstract class WithMatrices extends BaseClass
 {
-	#projMatrix:  IMatrix44 = [ ...IDENTITY_MATRIX ];
-	#modelMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
+	#projMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
+	#viewMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
 
 	/**
 	 * Construct the class.
@@ -70,7 +70,7 @@ export abstract class WithMatrices extends BaseClass
 	 * Get the projection matrix.
 	 * @returns {IMatrix44} The projection matrix.
 	 */
-	protected getProjMatrix () : IMatrix44
+	public get projMatrix () : Readonly<IMatrix44>
 	{
 		return this.#projMatrix;
 	}
@@ -85,20 +85,20 @@ export abstract class WithMatrices extends BaseClass
 	}
 
 	/**
-	 * Get the model matrix.
-	 * @returns {IMatrix44} The model matrix.
+	 * Get the view matrix.
+	 * @returns {IMatrix44} The view matrix.
 	 */
-	protected getModelMatrix () : IMatrix44
+	public get viewMatrix () : Readonly<IMatrix44>
 	{
-		return this.#modelMatrix;
+		return this.#viewMatrix;
 	}
 
 	/**
-	 * Set the model matrix.
-	 * @param {IMatrix44} matrix - The model matrix.
+	 * Set the view matrix.
+	 * @param {IMatrix44} matrix - The view matrix.
 	 */
-	public override set modelMatrix ( matrix: Readonly<IMatrix44> )
+	public override set viewMatrix ( matrix: Readonly<IMatrix44> )
 	{
-		mat4.copy ( this.#modelMatrix, matrix );
+		mat4.copy ( this.#viewMatrix, matrix );
 	}
 }

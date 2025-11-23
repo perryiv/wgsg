@@ -58,7 +58,7 @@ export class Arrays extends BaseClass
 	{
 		super ( input );
 
-		const { first = 0, count = 0 } = input || {};
+		const { first = 0, count = 0 } = ( input ?? {} );
 
 		this.#first = first;
 		this.#count = count;
