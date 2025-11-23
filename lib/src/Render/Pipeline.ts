@@ -68,12 +68,30 @@ export class Pipeline extends BaseClass
 	}
 
 	/**
+	 * Get the projection matrix.
+	 * @returns {IMatrix44} The projection matrix.
+	 */
+	public get projMatrix () : Readonly<IMatrix44>
+	{
+		return this.shader.projMatrix;
+	}
+
+	/**
 	 * Set the projection matrix.
 	 * @param {IMatrix44} matrix - The projection matrix.
 	 */
 	public set projMatrix ( matrix: Readonly<IMatrix44> )
 	{
 		this.shader.projMatrix = matrix;
+	}
+
+	/**
+	 * Get the view matrix.
+	 * @returns {IMatrix44} The view matrix.
+	 */
+	public get viewMatrix () : Readonly<IMatrix44>
+	{
+		return this.shader.viewMatrix;
 	}
 
 	/**

@@ -131,6 +131,15 @@ export class SolidColor extends BaseClass
 	}
 
 	/**
+	 * Get the view matrix.
+	 * @returns {IMatrix44} The view matrix.
+	 */
+	public override get viewMatrix () : Readonly<IMatrix44>
+	{
+		return super.viewMatrix;
+	}
+
+	/**
 	 * Set the view matrix. Overload if needed.
 	 * @param {IMatrix44} matrix - The view matrix.
 	 */
@@ -184,8 +193,8 @@ export class SolidColor extends BaseClass
 			} );
 
 			// Write the values to a typed array.
-			const pm = new Float32Array ( super.getProjMatrix() );
-			const vm = new Float32Array ( super.getViewMatrix() );
+			const pm = new Float32Array ( this.projMatrix );
+			const vm = new Float32Array ( this.viewMatrix );
 			const color = new Float32Array ( this.#color );
 
 			// Write the typed array to the buffer.

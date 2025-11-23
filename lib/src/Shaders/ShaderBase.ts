@@ -169,10 +169,22 @@ export abstract class ShaderBase extends Base
 	}
 
 	/**
+	 * Get the projection matrix. Overload if needed.
+	 * @returns {IMatrix44} The projection matrix.
+	 */
+	public abstract get projMatrix () : Readonly<IMatrix44>;
+
+	/**
 	 * Set the projection matrix. Overload if needed.
 	 * @param {IMatrix44} matrix - The projection matrix.
 	 */
 	public abstract set projMatrix ( matrix: Readonly<IMatrix44> );
+
+	/**
+	 * Get the view matrix. Overload if needed.
+	 * @returns {IMatrix44} The view matrix.
+	 */
+	public abstract get viewMatrix () : Readonly<IMatrix44>;
 
 	/**
 	 * Set the view matrix. Overload if needed.
