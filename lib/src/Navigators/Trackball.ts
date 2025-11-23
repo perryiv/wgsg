@@ -319,35 +319,28 @@ export class Trackball extends BaseClass
 	{
 		const { keysDown, viewer } = event;
 
-		if ( 1 != keysDown.size )
+		const sl = keysDown.has ( "ShiftLeft" );
+		const sr = keysDown.has ( "ShiftRight" );
+		const angle = ( ( sl || sr ) ? 5 : 45 ) * DEG_TO_RAD;
+
+		if ( keysDown.has ( "ArrowUp" ) )
 		{
-			return;
+			this.rotate ( [ 1, 0, 0 ], -angle ); // Rotate up.
 		}
 
-		const key = ( ( Array.from ( keysDown ) )[0] );
-
-		switch ( key )
+		if ( keysDown.has ( "ArrowDown" ) )
 		{
-			case "ArrowUp":
-			{
-				this.rotate ( [ 1, 0, 0 ], DEG_TO_RAD * -45 ); // Rotate up.
-				break;
-			}
-			case "ArrowDown":
-			{
-				this.rotate ( [ 1, 0, 0 ], DEG_TO_RAD * 45 ); // Rotate down.
-				break;
-			}
-			case "ArrowLeft":
-			{
-				this.rotate ( [ 0, 1, 0 ], DEG_TO_RAD * -45 ); // Rotate left.
-				break;
-			}
-			case "ArrowRight":
-			{
-				this.rotate ( [ 0, 1, 0 ], DEG_TO_RAD * 45 ); // Rotate right.
-				break;
-			}
+			this.rotate ( [ 1, 0, 0 ], angle ); // Rotate down.
+		}
+
+		if ( keysDown.has ( "ArrowLeft" ) )
+		{
+			this.rotate ( [ 0, 1, 0 ], -angle ); // Rotate left.
+		}
+
+		if ( keysDown.has ( "ArrowRight" ) )
+		{
+			this.rotate ( [ 0, 1, 0 ], angle ); // Rotate right.
 		}
 
 		viewer.requestRender();
