@@ -12,4 +12,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export * from "wgsg-lib";
+// Use the actual library.
+// export * from "wgsg-lib";
+
+// Directly import the library files.
+export * from "../../lib/src/index";
