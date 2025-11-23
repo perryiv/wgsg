@@ -164,7 +164,7 @@ export class Surface extends Base
 			observer.disconnect();
 		}
 
-		// Clean up resources.
+		// Help the garbage collection by seting these to initial or null values.
 		this.#canvas = null;
 		this.#context = null;
 		this.#observer = null;
