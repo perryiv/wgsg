@@ -163,6 +163,29 @@ export class Viewer extends BaseClass
 	}
 
 	/**
+	 * Initialize keyboard event processing.
+	 */
+	public initKeyboardEvents() : void
+	{
+		window.addEventListener ( "keydown", ( event: KeyboardEvent ) =>
+		{
+			if ( ( false === this.isDestroyed() ) && ( false === event.repeat ) )
+			{
+				this.keyDown ( event );
+			}
+		},
+		false );
+		window.addEventListener ( "keyup", ( event: KeyboardEvent ) =>
+		{
+			if ( false === this.isDestroyed() )
+			{
+				this.keyUp ( event );
+			}
+		},
+		false );
+	}
+
+	/**
 	 * Get the view matrix.
 	 * @returns {IMatrix44} The view matrix.
 	 */
