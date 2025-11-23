@@ -37,9 +37,11 @@ import type {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export type IViewerConstructor = ISurfaceConstructor;
-
-type IEventHandlerStack = BaseHandler[];
+export interface IViewerConstructor extends ISurfaceConstructor
+{
+	noMouseEvents?: boolean;
+	noKeyboardEvents?: boolean;
+}
 
 interface IViewerSceneBranches
 {
@@ -49,46 +51,12 @@ interface IViewerSceneBranches
 	model: Group;
 }
 
-
-///////////////////////////////////////////////////////////////////////////////
-/**
- * Make the default mouse data.
- * @returns {IMouseState} The default mouse data.
- */
-///////////////////////////////////////////////////////////////////////////////
-
-function makeMouseData() : IMouseState
-{
-	return {
-		buttonsDown: new Set < number > (),
-		current:  null,
-		previous: null,
-		pressed:  null,
-		released: null,
-	};
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-/**
- * Make the branches.
- * @returns {IViewerSceneBranches} The branches.
- */
-///////////////////////////////////////////////////////////////////////////////
-
-function makeBranches() : IViewerSceneBranches
-{
-	const root = new Group();
-	const fixed = new Group();
-	const nav = new Transform();
-	const model = new Group();
-
-	root.addChild ( fixed );
-	root.addChild ( nav );
-	nav.addChild ( model );
-
-	return { root, fixed, nav, model };
-}
+type IEventHandlerStack = BaseHandler[];
+type IEventListenerName = ( keyof WindowEventMap );
+type IKeyboardEventListener = ( ( event: KeyboardEvent ) => void );
+type IMouseEventListener = ( ( event: MouseEvent ) => void );
+type IKeyboardEventListenerMap = Map < IEventListenerName, IKeyboardEventListener >;
+type IMouseEventListenerMap = Map < IEventListenerName, IMouseEventListener >;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -100,10 +68,12 @@ function makeBranches() : IViewerSceneBranches
 
 export class Viewer extends BaseClass
 {
-	#mouse: IMouseState = makeMouseData();
+	#mouse: IMouseState = Viewer.makeMouseData();
 	#navigator: ( NavBase | null ) = null;
 	#eventHandlers: IEventHandlerStack = [];
-	#branches: IViewerSceneBranches = makeBranches();
+	#keyboardListeners: IKeyboardEventListenerMap = new Map < IEventListenerName, IKeyboardEventListener > ();
+	#mouseListeners: IMouseEventListenerMap = new Map < IEventListenerName, IMouseEventListener > ();
+	#branches: IViewerSceneBranches = Viewer.makeBranches ( true );
 	#keysDown: Set < string > = new Set < string > ();
 	static #commands: ICommandMap = makeCommands();
 	static #inputToCommand: IInputToCommandMap = makeInputToCommandMap();
@@ -115,8 +85,8 @@ export class Viewer extends BaseClass
 	 */
 	constructor ( input : IViewerConstructor )
 	{
-		// We need the canvas below.
-		const { canvas } = input;
+		// We need these below.
+		const { noMouseEvents, noKeyboardEvents } = input;
 
 		// Have to call the super class constructor first.
 		super ( input );
@@ -124,13 +94,17 @@ export class Viewer extends BaseClass
 		// Set the scene.
 		super.scene = this.#branches.root;
 
-		// Register the event listeners.
-		canvas.onmousedown   = this.mouseDown.bind ( this );
-		canvas.onmousemove   = this.mouseMove.bind ( this );
-		canvas.onmouseup     = this.mouseUp.bind ( this );
-		canvas.onmouseleave  = this.mouseOut.bind ( this );
-		canvas.onmouseenter  = this.mouseIn.bind ( this );
-		canvas.oncontextmenu = this.mouseContextMenu.bind ( this );
+		// Register the event listeners if we should.
+		if ( !noMouseEvents )
+		{
+			this.addMouseEventListeners();
+		}
+
+		// Register keyboard event listeners if we should.
+		if ( !noKeyboardEvents )
+		{
+			this.addKeyboardEventListeners();
+		}
 	}
 
 	/**
@@ -138,16 +112,18 @@ export class Viewer extends BaseClass
 	 */
 	public override destroy() : void
 	{
-		// Shortcut.
-		const canvas = this.canvas;
-
 		// Remove our event listeners.
-		canvas.onmousedown   = null;
-		canvas.onmousemove   = null;
-		canvas.onmouseup     = null;
-		canvas.onmouseleave  = null;
-		canvas.onmouseenter  = null;
-		canvas.oncontextmenu = null;
+		this.removeKeyboardEventListeners();
+		this.removeMouseEventListeners();
+
+		// Help the garbage collection by seting these to initial or null values.
+		this.#mouse = Viewer.makeMouseData();
+		this.#navigator = null;
+		this.#eventHandlers = [];
+		this.#keyboardListeners.clear();
+		this.#mouseListeners.clear();
+		this.#branches = Viewer.makeBranches ( false );
+		this.#keysDown.clear();
 
 		// Call the base class function.
 		super.destroy();
@@ -162,27 +138,174 @@ export class Viewer extends BaseClass
 		return "Viewers.Viewer";
 	}
 
+
 	/**
-	 * Initialize keyboard event processing.
+	 * Make the default mouse data.
+	 * @returns {IMouseState} The default mouse data.
 	 */
-	public initKeyboardEvents() : void
+	protected static makeMouseData() : IMouseState
 	{
-		window.addEventListener ( "keydown", ( event: KeyboardEvent ) =>
+		return {
+			buttonsDown: new Set < number > (),
+			current:  null,
+			previous: null,
+			pressed:  null,
+			released: null,
+		};
+	}
+
+	/**
+	 * Make the branches.
+	 * @param {boolean} buildScene - Whether or not to build the scene graph.
+	 * @returns {IViewerSceneBranches} The branches.
+	 */
+	protected static makeBranches ( buildScene: boolean ) : IViewerSceneBranches
+	{
+		const root = new Group();
+		const fixed = new Group();
+		const nav = new Transform();
+		const model = new Group();
+
+		if ( buildScene )
+		{
+			root.addChild ( fixed );
+			root.addChild ( nav );
+			nav.addChild ( model );
+		}
+
+		return { root, fixed, nav, model };
+	}
+
+	/**
+	 * Add mouse event listeners.
+	 */
+	protected addMouseEventListeners() : void
+	{
+		const canvas = this.canvas;
+		const lm = this.#mouseListeners;
+
+		if ( lm.size > 0 )
+		{
+			return; // Can only add them once.
+		}
+
+		lm.set ( "mousedown", ( event: MouseEvent ) =>
+		{
+			if ( false === this.isDestroyed() )
+			{
+				this.mouseDown ( event );
+			}
+		} );
+
+		lm.set ( "mousemove", ( event: MouseEvent ) =>
+		{
+			if ( false === this.isDestroyed() )
+			{
+				this.mouseMove ( event );
+			}
+		} );
+
+		lm.set ( "mouseup", ( event: MouseEvent ) =>
+		{
+			if ( false === this.isDestroyed() )
+			{
+				this.mouseUp ( event );
+			}
+		} );
+
+		lm.set ( "mouseleave", ( event: MouseEvent ) =>
+		{
+			if ( false === this.isDestroyed() )
+			{
+				this.mouseOut ( event );
+			}
+		} );
+
+		lm.set ( "mouseenter", ( event: MouseEvent ) =>
+		{
+			if ( false === this.isDestroyed() )
+			{
+				this.mouseIn ( event );
+			}
+		} );
+
+		lm.set ( "contextmenu", ( event: MouseEvent ) =>
+		{
+			if ( false === this.isDestroyed() )
+			{
+				this.mouseContextMenu ( event );
+			}
+		} );
+
+		lm.forEach ( ( handler, type ) =>
+		{
+			canvas.addEventListener ( type, ( handler as EventListener ), false );
+		} );
+	}
+
+	/**
+	 * Add keyboard event listeners.
+	 */
+	protected addKeyboardEventListeners() : void
+	{
+		const lm = this.#keyboardListeners;
+
+		if ( lm.size > 0 )
+		{
+			return; // Can only add them once.
+		}
+
+		lm.set ( "keydown", ( event: KeyboardEvent ) =>
 		{
 			if ( ( false === this.isDestroyed() ) && ( false === event.repeat ) )
 			{
 				this.keyDown ( event );
 			}
-		},
-		false );
-		window.addEventListener ( "keyup", ( event: KeyboardEvent ) =>
+		} );
+
+		lm.set ( "keyup", ( event: KeyboardEvent ) =>
 		{
 			if ( false === this.isDestroyed() )
 			{
 				this.keyUp ( event );
 			}
-		},
-		false );
+		} );
+
+		lm.forEach ( ( handler, type ) =>
+		{
+			globalThis.addEventListener ( type, ( handler as EventListener ), false );
+		} );
+	}
+
+	/**
+	 * Remove mouse event listeners.
+	 */
+	protected removeMouseEventListeners() : void
+	{
+		const canvas = this.canvas;
+		const lm = this.#mouseListeners;
+
+		lm.forEach ( ( handler, type ) =>
+		{
+			canvas.removeEventListener ( type, ( handler as EventListener ), false );
+		} );
+
+		lm.clear();
+	}
+
+	/**
+	 * Remove keyboard event listeners.
+	 */
+	protected removeKeyboardEventListeners() : void
+	{
+		const lm = this.#keyboardListeners;
+
+		lm.forEach ( ( handler, type ) =>
+		{
+			globalThis.removeEventListener ( type, ( handler as EventListener ), false );
+		} );
+
+		lm.clear();
 	}
 
 	/**
