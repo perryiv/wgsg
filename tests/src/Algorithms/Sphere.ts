@@ -17,7 +17,7 @@ import {
 	estimateSphereSizes,
 	generateUnitSphere,
 	type IVector3
-} from "wgsg-lib";
+} from "../wgsg";
 
 
 ///////////////////////////////////////////////////////////////////////////////

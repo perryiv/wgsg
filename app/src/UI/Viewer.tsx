@@ -28,7 +28,7 @@ import {
 	Trackball,
 	Viewer as InternalViewer,
 	Node,
-} from "wgsg-lib";
+} from "../wgsg";
 
 
 ///////////////////////////////////////////////////////////////////////////////

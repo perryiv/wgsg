@@ -26,12 +26,12 @@ import {
 	SphereNode,
 	State,
 	Transform,
-} from "wgsg-lib";
+} from "../wgsg";
 import type {
 	IVector2,
 	IVector3,
 	IVector4,
-} from "wgsg-lib";
+} from "../wgsg";
 
 
 ///////////////////////////////////////////////////////////////////////////////
