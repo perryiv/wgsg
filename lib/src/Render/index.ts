@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 export * from "./Bin";
+export * from "./GraphInfo";
 export * from "./Layer";
 export * from "./Pipeline";
 export * from "./ProjMatrixGroup";

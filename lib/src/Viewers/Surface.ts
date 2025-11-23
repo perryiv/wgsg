@@ -15,7 +15,7 @@
 import { Base } from "../Base/Base";
 import { clamp, DEVELOPER_BUILD, Device, IDENTITY_MATRIX } from "../Tools";
 import { Perspective, ProjectionBase as Projection } from "../Projections";
-import { Root } from "../Render";
+import { makeRenderGraphInfo, resetRenderGraphInfo, Root } from "../Render";
 import { SolidColor } from "../Shaders";
 import { vec4 } from "gl-matrix";
 import {
@@ -36,50 +36,6 @@ import type {
 	IVector3,
 	IVector4
 } from "../Types";
-
-
-///////////////////////////////////////////////////////////////////////////////
-/**
- * Make the default render graph info.
- * @returns {IRenderGraphInfo} The default render graph info.
- */
-///////////////////////////////////////////////////////////////////////////////
-
-const makeDefaultRenderGraphInfo = () : IRenderGraphInfo =>
-{
-	return {
-		numLayers: 0,
-		numBins: 0,
-		numPipelines: 0,
-		numProjMatrixGroups: 0,
-		numViewMatrixGroups: 0,
-		numStateGroups: 0,
-		numShapes: 0,
-		numTriangles: 0,
-		numLines: 0
-	};
-};
-
-
-///////////////////////////////////////////////////////////////////////////////
-/**
- * Reset the render graph info.
- * @param {IRenderGraphInfo} info - The render graph info.
- */
-///////////////////////////////////////////////////////////////////////////////
-
-const resetRenderGraphInfo = ( info: IRenderGraphInfo ) : void =>
-{
-	info.numLayers = 0;
-	info.numBins = 0;
-	info.numPipelines = 0;
-	info.numProjMatrixGroups = 0;
-	info.numViewMatrixGroups = 0;
-	info.numStateGroups = 0;
-	info.numShapes = 0;
-	info.numTriangles = 0;
-	info.numLines = 0;
-};
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -134,7 +90,7 @@ export class Surface extends Base
 	#root: Root = new Root();
 	#defaultState: ( State | null ) = null;
 	#clearColor: IVector4 = [ 0.0, 0.0, 0.0, 0.0 ]; // Transparent black.
-	#info: IRenderGraphInfo = makeDefaultRenderGraphInfo();
+	#info: IRenderGraphInfo = makeRenderGraphInfo();
 
 	/**
 	 * Construct the class.
