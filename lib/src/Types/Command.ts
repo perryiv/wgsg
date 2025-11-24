@@ -12,6 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { IEventType } from "./Event";
 import { IKeyboardState } from "./Keyboard";
 import { IMouseButtons } from "./Mouse";
 import { IViewer } from "./Viewer";
@@ -45,6 +46,9 @@ export interface ICommand
 
 export type ICommandMap = Map < ICommandName, ICommand >;
 
-export interface ICommandMapKey extends IMouseButtons, IKeyboardState {}
+export interface ICommandMapKey extends IMouseButtons, IKeyboardState
+{
+	type: IEventType;
+}
 
-export type IInputToCommandNameMap = Map < ICommandMapKey, ICommandName >;
+export type IInputToCommandNameMap = Map < string, ICommandName >;

@@ -14,13 +14,18 @@
 
 import { BaseHandler } from "../Events/Handlers/BaseHandler";
 import { Group, Node, Transform } from "../Scene";
-import { makeCommands, makeInputToCommandMap } from "./Commands";
 import { NavBase, Trackball } from "../Navigators";
+import {
+	makeCommands,
+	makeInput as makeInputAsString,
+	makeInputToCommandMap
+} from "./Commands";
 import {
 	type ISurfaceConstructor,
 	Surface as BaseClass,
 } from "./Surface";
 import type {
+	ICommand,
 	ICommandMap,
 	IEvent,
 	IEventType,
@@ -512,6 +517,37 @@ export class Viewer extends BaseClass
 	}
 
 	/**
+	 * Make the command map key from the event.
+	 * @param {IEvent} event - The event.
+	 * @returns {string} The command map key.
+	 */
+	protected makeCommandMapKey ( event: IEvent ) : string
+	{
+		const { type, buttonsDown, keysDown } = event;
+		return makeInputAsString ( type, Array.from ( buttonsDown ), Array.from ( keysDown ) );
+	}
+
+	/**
+	 * Get the command from the event.
+	 * @param {IEvent} event - The event.
+	 * @returns {(ICommand | null)} The command or null if there is none.
+	 */
+	public getCommand ( event: IEvent ) : ( ICommand | null )
+	{
+		const input = this.makeCommandMapKey ( event );
+		const name = Viewer.#inputToCommand.get ( input );
+
+		if ( !name )
+		{
+			return null;
+		}
+
+		const command = Viewer.#commands.get ( name );
+
+		return ( command ?? null );
+	}
+
+	/**
 	 * Make the event.
 	 * @param {IEventType} type - The event type.
 	 * @param {MouseEvent | KeyboardEvent} event - The original event.
@@ -656,13 +692,8 @@ export class Viewer extends BaseClass
 		this.keysDown.add ( code );
 
 		const handler = this.eventHandlerOrNavigator;
-
-		if ( handler )
-		{
-			const event = this.makeEvent ( "key_down", input );
-			handler.handleEvent ( event );
-			return;
-		}
+		const event = this.makeEvent ( "key_down", input );
+		handler.handleEvent ( event );
 	}
 
 	/**

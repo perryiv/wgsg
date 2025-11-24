@@ -18,8 +18,8 @@ import { quat, vec3 } from "gl-matrix";
 import type {
 	ICommand,
 	ICommandMap,
-	ICommandMapKey,
 	ICommandName,
+	IEventType,
 	IInputToCommandNameMap,
 	INavigator,
 	IVector3,
@@ -194,18 +194,20 @@ export function makeCommands() : ICommandMap
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * Make an input object.
- * @param {number[]} mouse The mouse buttons pressed.
- * @param {string[]} keys The keyboard keys pressed.
- * @returns {ICommandMapKey} The key to the map of command names.
+ * @param {IEventType} type The event type.
+ * @param {number[]} buttonsDown The mouse buttons pressed.
+ * @param {string[]} keysDown The keyboard keys pressed.
+ * @returns {string} The key to the map of command names.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-function makeInput ( mouse: number[], keys: string[] ) : ICommandMapKey
+export function makeInput ( type: IEventType, buttonsDown: number[], keysDown: string[] ) : string
 {
-	return {
-		buttonsDown: new Set ( mouse ),
-		keysDown: new Set ( keys )
-	};
+	return (
+		"type: " + type +
+		", buttonsDown: [" + buttonsDown.sort().toString() + "]" +
+		", keysDown: [" + keysDown.sort().toString() + "]"
+	);
 }
 
 
@@ -218,26 +220,25 @@ function makeInput ( mouse: number[], keys: string[] ) : ICommandMapKey
 
 export function makeInputToCommandMap() : IInputToCommandNameMap
 {
-	return new Map < ICommandMapKey, ICommandName > ( [
-		[ makeInput ( [], [ "ArrowUp" ] ),   "rotate_px_large" ],
-		[ makeInput ( [], [ "ArrowDown" ] ), "rotate_nx_large" ],
-		[ makeInput ( [], [ "ArrowLeft" ] ), "rotate_py_large" ],
-		[ makeInput ( [], [ "ArrowRight" ] ),"rotate_ny_large" ],
-		[ makeInput ( [], [ "Shift", "ArrowUp" ] ),   "rotate_px_small" ],
-		[ makeInput ( [], [ "Shift", "ArrowDown" ] ), "rotate_nx_small" ],
-		[ makeInput ( [], [ "Shift", "ArrowLeft" ] ), "rotate_py_small" ],
-		[ makeInput ( [], [ "Shift", "ArrowRight" ] ),"rotate_ny_small" ],
+	const au = "ArrowUp";
+	const ad = "ArrowDown";
+	const al = "ArrowLeft";
+	const ar = "ArrowRight";
+	const sl = "ShiftLeft";
+	const sr = "ShiftRight";
+
+	return new Map < string, ICommandName > ( [
+		[ makeInput ( "key_down", [], [ au     ] ), "rotate_nx_large" ],
+		[ makeInput ( "key_down", [], [ ad     ] ), "rotate_px_large" ],
+		[ makeInput ( "key_down", [], [ al     ] ), "rotate_ny_large" ],
+		[ makeInput ( "key_down", [], [ ar     ] ), "rotate_py_large" ],
+		[ makeInput ( "key_down", [], [ sl, au ] ), "rotate_nx_small" ],
+		[ makeInput ( "key_down", [], [ sl, ad ] ), "rotate_px_small" ],
+		[ makeInput ( "key_down", [], [ sl, al ] ), "rotate_ny_small" ],
+		[ makeInput ( "key_down", [], [ sl, ar ] ), "rotate_py_small" ],
+		[ makeInput ( "key_down", [], [ sr, au ] ), "rotate_nx_small" ],
+		[ makeInput ( "key_down", [], [ sr, ad ] ), "rotate_px_small" ],
+		[ makeInput ( "key_down", [], [ sr, al ] ), "rotate_ny_small" ],
+		[ makeInput ( "key_down", [], [ sr, ar ] ), "rotate_py_small" ],
 	] );
 }
-
-
-// What is a command?
-// command name --> lambda function?
-// command name --> base class with abstract function(s)?
-
-// A different (although related) thing is the mapping from keyboard and mouse input to a command.
-// You will want a two-way mapping.
-// input --> command name
-// command name --> input
-
-// The first command is rotate_about_y so that you can debug the trackball.

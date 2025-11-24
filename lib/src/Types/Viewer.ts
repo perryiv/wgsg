@@ -12,9 +12,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { ICommand } from "./Command";
+import { IEvent } from "./Event";
 import { IMatrix44 } from "./Matrix";
-import { IViewport } from "./Viewport";
 import { INavigator } from "./Navigator";
+import { IViewport } from "./Viewport";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -25,6 +27,7 @@ import { INavigator } from "./Navigator";
 
 export interface IViewer
 {
+	getCommand: ( event: IEvent ) => ( ICommand | null );
 	navigator: INavigator;
 	projMatrix: IMatrix44;
 	requestRender: ( () => void );
