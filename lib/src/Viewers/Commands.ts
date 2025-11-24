@@ -57,6 +57,7 @@ export abstract class Command extends BaseClass implements ICommand
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * A command to rotate the viewer.
+ * @class
  */
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -167,6 +168,48 @@ export class RotateZ extends Rotate
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
+ * Set the navigator such that the bounds are visible.
+ * @class
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export class ViewBounds extends Command
+{
+	#resetRotation = false;
+
+	/**
+	 * Construct the class.
+	 * @param {boolean} resetRotation Whether or not to reset the rotation.
+	 * @class
+	 */
+	constructor ( resetRotation: boolean )
+	{
+		super();
+		this.#resetRotation = resetRotation;
+	}
+
+	/**
+	 * Get the class name.
+	 * @returns {string} The class name.
+	 */
+	public getClassName() : string
+	{
+		return "Viewers.Commands.ViewBounds";
+	}
+
+	/**
+	 * Execute the command.
+	 * @param {IViewer} viewer The viewer.
+	 */
+	public execute ( viewer: IViewer ) : void
+	{
+		viewer.viewBounds ( { resetRotation: this.#resetRotation } );
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
  * Return a map of the commands.
  * @returns {ICommandMap} The commands.
  */
@@ -187,6 +230,8 @@ export function makeCommands() : ICommandMap
 		[ "rotate_nx_small", new RotateX ( DEG_TO_RAD *  -5 ) ],
 		[ "rotate_ny_small", new RotateY ( DEG_TO_RAD *  -5 ) ],
 		[ "rotate_nz_small", new RotateZ ( DEG_TO_RAD *  -5 ) ],
+		[ "view_bounds_reset", new ViewBounds ( true  ) ],
+		[ "view_bounds_fit",   new ViewBounds ( false ) ],
 	] );
 }
 
@@ -226,6 +271,7 @@ export function makeInputToCommandMap() : IInputToCommandNameMap
 	const ar = "ArrowRight";
 	const sl = "ShiftLeft";
 	const sr = "ShiftRight";
+	const sp = "Space";
 
 	return new Map < string, ICommandName > ( [
 		[ makeInput ( "key_down", [], [ au     ] ), "rotate_nx_large" ],
@@ -240,5 +286,7 @@ export function makeInputToCommandMap() : IInputToCommandNameMap
 		[ makeInput ( "key_down", [], [ sr, ad ] ), "rotate_px_small" ],
 		[ makeInput ( "key_down", [], [ sr, al ] ), "rotate_ny_small" ],
 		[ makeInput ( "key_down", [], [ sr, ar ] ), "rotate_py_small" ],
+		[ makeInput ( "key_down", [], [ sp     ] ), "view_bounds_reset" ],
+		[ makeInput ( "key_down", [], [ "KeyF" ] ), "view_bounds_fit" ],
 	] );
 }

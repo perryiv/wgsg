@@ -31,5 +31,6 @@ export interface IViewer
 	navigator: INavigator;
 	projMatrix: IMatrix44;
 	requestRender: ( () => void );
+	viewBounds: ( options?: { resetRotation?: boolean } ) => void;
 	viewport: IViewport;
 }

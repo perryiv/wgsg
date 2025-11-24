@@ -37,6 +37,8 @@ export type ICommandName = (
 	| "rotate_nx_small"
 	| "rotate_ny_small"
 	| "rotate_nz_small"
+	| "view_bounds_reset"
+	| "view_bounds_fit"
 );
 
 export interface ICommand
