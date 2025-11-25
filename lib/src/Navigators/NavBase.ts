@@ -56,7 +56,9 @@ export abstract class NavBase extends BaseClass
 	/**
 	 * Set the navigator so that the model is completely within the view-volume.
 	 * If the given model is null then reset the navigator to its default state.
-	 * @param {Node | null} model - The model node.
+	 * @param {object} options - The options.
+	 * @param {Node | null} options.scene - The scene node.
+	 * @param {boolean} [options.resetRotation] - Whether or not to reset rotations.
 	 */
-	public abstract viewAll ( model: Node | null ) : void;
+	public abstract viewBounds ( options: { scene: ( Node | null ), resetRotation?: boolean } ) : void;
 }

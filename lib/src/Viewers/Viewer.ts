@@ -14,17 +14,22 @@
 
 import { BaseHandler } from "../Events/Handlers/BaseHandler";
 import { Group, Node, Transform } from "../Scene";
-import { makeCommands, makeInputToCommandMap } from "./Commands";
 import { NavBase, Trackball } from "../Navigators";
+import {
+	makeCommands,
+	makeInput as makeInputAsString,
+	makeInputToCommandMap
+} from "./Commands";
 import {
 	type ISurfaceConstructor,
 	Surface as BaseClass,
 } from "./Surface";
 import type {
+	ICommand,
 	ICommandMap,
 	IEvent,
 	IEventType,
-	IInputToCommandMap,
+	IInputToCommandNameMap,
 	IMatrix44,
 	IMouseState,
 	IVector2,
@@ -76,7 +81,7 @@ export class Viewer extends BaseClass
 	#branches: IViewerSceneBranches = Viewer.makeBranches ( true );
 	#keysDown: Set < string > = new Set < string > ();
 	static #commands: ICommandMap = makeCommands();
-	static #inputToCommand: IInputToCommandMap = makeInputToCommandMap();
+	static #inputToCommand: IInputToCommandNameMap = makeInputToCommandMap();
 
 	/**
 	 * Construct the class.
@@ -448,11 +453,22 @@ export class Viewer extends BaseClass
 	}
 
 	/**
+	 * Set the navigator so that the bounds is completely within the view-volume.
+	 * @param {object} [options] - The options.
+	 * @param {boolean} [options.resetRotation] - Whether or not to reset the rotation.
+	 */
+	public viewBounds ( options?: { resetRotation?: boolean } ) : void
+	{
+		this.navigator.viewBounds ( { ...options, scene: this.modelScene } );
+		this.requestRender();
+	}
+
+	/**
 	 * Set the navigator so that the model is completely within the view-volume.
 	 */
 	public viewAll() : void
 	{
-		this.navigator.viewAll ( this.modelScene );
+		this.viewBounds ( { resetRotation: false } );
 		this.requestRender();
 	}
 
@@ -509,6 +525,37 @@ export class Viewer extends BaseClass
 
 		// Do not return undefined.
 		return ( handler ?? null );
+	}
+
+	/**
+	 * Make the command map key from the event.
+	 * @param {IEvent} event - The event.
+	 * @returns {string} The command map key.
+	 */
+	protected makeCommandMapKey ( event: IEvent ) : string
+	{
+		const { type, buttonsDown, keysDown } = event;
+		return makeInputAsString ( type, Array.from ( buttonsDown ), Array.from ( keysDown ) );
+	}
+
+	/**
+	 * Get the command from the event.
+	 * @param {IEvent} event - The event.
+	 * @returns {(ICommand | null)} The command or null if there is none.
+	 */
+	public getCommand ( event: IEvent ) : ( ICommand | null )
+	{
+		const input = this.makeCommandMapKey ( event );
+		const name = Viewer.#inputToCommand.get ( input );
+
+		if ( !name )
+		{
+			return null;
+		}
+
+		const command = Viewer.#commands.get ( name );
+
+		return ( command ?? null );
 	}
 
 	/**
@@ -656,13 +703,8 @@ export class Viewer extends BaseClass
 		this.keysDown.add ( code );
 
 		const handler = this.eventHandlerOrNavigator;
-
-		if ( handler )
-		{
-			const event = this.makeEvent ( "key_down", input );
-			handler.handleEvent ( event );
-			return;
-		}
+		const event = this.makeEvent ( "key_down", input );
+		handler.handleEvent ( event );
 	}
 
 	/**

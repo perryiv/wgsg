@@ -18,9 +18,9 @@ import { quat, vec3 } from "gl-matrix";
 import type {
 	ICommand,
 	ICommandMap,
-	ICommandMapKey,
 	ICommandName,
-	IInputToCommandMap,
+	IEventType,
+	IInputToCommandNameMap,
 	INavigator,
 	IVector3,
 	IVector4,
@@ -57,6 +57,7 @@ export abstract class Command extends BaseClass implements ICommand
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * A command to rotate the viewer.
+ * @class
  */
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -167,6 +168,48 @@ export class RotateZ extends Rotate
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
+ * Set the navigator such that the bounds are visible.
+ * @class
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export class ViewBounds extends Command
+{
+	#resetRotation = false;
+
+	/**
+	 * Construct the class.
+	 * @param {boolean} resetRotation Whether or not to reset the rotation.
+	 * @class
+	 */
+	constructor ( resetRotation: boolean )
+	{
+		super();
+		this.#resetRotation = resetRotation;
+	}
+
+	/**
+	 * Get the class name.
+	 * @returns {string} The class name.
+	 */
+	public getClassName() : string
+	{
+		return "Viewers.Commands.ViewBounds";
+	}
+
+	/**
+	 * Execute the command.
+	 * @param {IViewer} viewer The viewer.
+	 */
+	public execute ( viewer: IViewer ) : void
+	{
+		viewer.viewBounds ( { resetRotation: this.#resetRotation } );
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
  * Return a map of the commands.
  * @returns {ICommandMap} The commands.
  */
@@ -187,6 +230,8 @@ export function makeCommands() : ICommandMap
 		[ "rotate_nx_small", new RotateX ( DEG_TO_RAD *  -5 ) ],
 		[ "rotate_ny_small", new RotateY ( DEG_TO_RAD *  -5 ) ],
 		[ "rotate_nz_small", new RotateZ ( DEG_TO_RAD *  -5 ) ],
+		[ "view_bounds_reset", new ViewBounds ( true  ) ],
+		[ "view_bounds_fit",   new ViewBounds ( false ) ],
 	] );
 }
 
@@ -194,50 +239,54 @@ export function makeCommands() : ICommandMap
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * Make an input object.
- * @param {number[]} mouse The mouse buttons pressed.
- * @param {string[]} keys The keyboard keys pressed.
- * @returns {ICommandMapKey} The key to the map of command names.
+ * @param {IEventType} type The event type.
+ * @param {number[]} buttonsDown The mouse buttons pressed.
+ * @param {string[]} keysDown The keyboard keys pressed.
+ * @returns {string} The key to the map of command names.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-function makeInput ( mouse: number[], keys: string[] ) : ICommandMapKey
+export function makeInput ( type: IEventType, buttonsDown: number[], keysDown: string[] ) : string
 {
-	return {
-		buttonsDown: new Set ( mouse ),
-		keysDown: new Set ( keys )
-	};
+	return (
+		"type: " + type +
+		", buttonsDown: [" + buttonsDown.sort().toString() + "]" +
+		", keysDown: [" + keysDown.sort().toString() + "]"
+	);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * Return the map of input to command.
- * @returns {IInputToCommandMap} The input to command map.
+ * @returns {IInputToCommandNameMap} The input to command map.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export function makeInputToCommandMap() : IInputToCommandMap
+export function makeInputToCommandMap() : IInputToCommandNameMap
 {
-	return new Map < ICommandMapKey, ICommandName > ( [
-		[ makeInput ( [], [ "ArrowUp" ] ),   "rotate_px_large" ],
-		[ makeInput ( [], [ "ArrowDown" ] ), "rotate_nx_large" ],
-		[ makeInput ( [], [ "ArrowLeft" ] ), "rotate_py_large" ],
-		[ makeInput ( [], [ "ArrowRight" ] ),"rotate_ny_large" ],
-		[ makeInput ( [], [ "Shift", "ArrowUp" ] ),   "rotate_px_small" ],
-		[ makeInput ( [], [ "Shift", "ArrowDown" ] ), "rotate_nx_small" ],
-		[ makeInput ( [], [ "Shift", "ArrowLeft" ] ), "rotate_py_small" ],
-		[ makeInput ( [], [ "Shift", "ArrowRight" ] ),"rotate_ny_small" ],
+	const au = "ArrowUp";
+	const ad = "ArrowDown";
+	const al = "ArrowLeft";
+	const ar = "ArrowRight";
+	const sl = "ShiftLeft";
+	const sr = "ShiftRight";
+	const sp = "Space";
+
+	return new Map < string, ICommandName > ( [
+		[ makeInput ( "key_down", [], [ au     ] ), "rotate_nx_large" ],
+		[ makeInput ( "key_down", [], [ ad     ] ), "rotate_px_large" ],
+		[ makeInput ( "key_down", [], [ al     ] ), "rotate_ny_large" ],
+		[ makeInput ( "key_down", [], [ ar     ] ), "rotate_py_large" ],
+		[ makeInput ( "key_down", [], [ sl, au ] ), "rotate_nx_small" ],
+		[ makeInput ( "key_down", [], [ sl, ad ] ), "rotate_px_small" ],
+		[ makeInput ( "key_down", [], [ sl, al ] ), "rotate_ny_small" ],
+		[ makeInput ( "key_down", [], [ sl, ar ] ), "rotate_py_small" ],
+		[ makeInput ( "key_down", [], [ sr, au ] ), "rotate_nx_small" ],
+		[ makeInput ( "key_down", [], [ sr, ad ] ), "rotate_px_small" ],
+		[ makeInput ( "key_down", [], [ sr, al ] ), "rotate_ny_small" ],
+		[ makeInput ( "key_down", [], [ sr, ar ] ), "rotate_py_small" ],
+		[ makeInput ( "key_down", [], [ sp     ] ), "view_bounds_reset" ],
+		[ makeInput ( "key_down", [], [ "KeyF" ] ), "view_bounds_fit" ],
 	] );
 }
-
-
-// What is a command?
-// command name --> lambda function?
-// command name --> base class with abstract function(s)?
-
-// A different (although related) thing is the mapping from keyboard and mouse input to a command.
-// You will want a two-way mapping.
-// input --> command name
-// command name --> input
-
-// The first command is rotate_about_y so that you can debug the trackball.

@@ -21,7 +21,6 @@ import {
 	Sphere,
 } from "../Math";
 import {
-	DEG_TO_RAD,
 	IDENTITY_MATRIX,
 	makeLine as makeLineUnderScreenPoint,
 	normalizeQuat,
@@ -237,7 +236,7 @@ export class Trackball extends BaseClass
 				input = normalizeQuat ( input );
 
 				let answer: IVector4 = [ 0, 0, 0, 1 ];
-				quat.multiply ( answer, this.rotation, input );
+				quat.multiply ( answer, input, this.rotation ); // This order is rotation about global axes.
 				answer = normalizeQuat ( answer );
 
 				this.rotation = answer;
@@ -262,11 +261,13 @@ export class Trackball extends BaseClass
 	/**
 	 * Set the navigator so that the model is completely within the view-volume.
 	 * If the given model is null then reset the navigator to its default state.
-	 * @param {Node | null} model - The model node.
+	 * @param {object} options - The options.
+	 * @param {Node | null} options.scene - The scene node.
+	 * @param {boolean} [options.resetRotation] - Whether or not to reset rotations.
 	 */
-	public override viewAll ( model: Node | null ) : void
+	public override viewBounds ( options: { scene: ( Node | null ), resetRotation?: boolean } ) : void
 	{
-		void model;   // Do nothing with the function argument.
+		void options; // Do nothing with the function argument.
 		this.reset(); // For now just reset to the default state.
 	}
 
@@ -317,32 +318,16 @@ export class Trackball extends BaseClass
 	 */
 	protected keyDown ( event: IEvent ) : void
 	{
-		const { keysDown, viewer } = event;
+		const { viewer } = event;
 
-		const sl = keysDown.has ( "ShiftLeft" );
-		const sr = keysDown.has ( "ShiftRight" );
-		const angle = ( ( sl || sr ) ? 5 : 45 ) * DEG_TO_RAD;
+		const command = viewer.getCommand ( event );
 
-		if ( keysDown.has ( "ArrowUp" ) )
+		if ( !command )
 		{
-			this.rotate ( [ 1, 0, 0 ], -angle ); // Rotate up.
+			return
 		}
 
-		if ( keysDown.has ( "ArrowDown" ) )
-		{
-			this.rotate ( [ 1, 0, 0 ], angle ); // Rotate down.
-		}
-
-		if ( keysDown.has ( "ArrowLeft" ) )
-		{
-			this.rotate ( [ 0, 1, 0 ], -angle ); // Rotate left.
-		}
-
-		if ( keysDown.has ( "ArrowRight" ) )
-		{
-			this.rotate ( [ 0, 1, 0 ], angle ); // Rotate right.
-		}
-
+		command.execute ( viewer );
 		viewer.requestRender();
 	}
 

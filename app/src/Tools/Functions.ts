@@ -15,7 +15,6 @@
 import { mat4 } from "gl-matrix";
 import {
 	buildTriangleEdges,
-	DEG_TO_RAD,
 	Geometry,
 	Group,
 	IDENTITY_MATRIX,
