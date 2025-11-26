@@ -13,9 +13,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { expect } from "chai";
+import { mat4 } from "gl-matrix";
 import {
 	Device,
 	getNextId,
+	IDENTITY_MATRIX,
+	Sphere,
 	Viewer,
 } from "../wgsg";
 
@@ -82,6 +85,34 @@ export function test ()
 			expect ( viewer.context ).to.exist;
 			expect ( viewer.context instanceof GPUCanvasContext ).to.be.true;
 			expect ( viewer.context ).to.equal ( context );
+		} );
+
+		it ( "Should have correct default matrices", function ()
+		{
+			const canvas = document.createElement ( "canvas" );
+			const viewer = new Viewer ( { canvas } );
+			viewer.resize ( 100, 100 );
+
+			expect ( viewer.projMatrix ).to.deep.equal ( mat4.perspective (
+				[ ...IDENTITY_MATRIX ], 45, 1, 0.1, 1000
+			) );
+
+			expect ( viewer.viewMatrix ).to.deep.equal ( [
+				1, 0, 0, 0,
+				0, 1, 0, 0,
+				0, 0, 1, 0,
+				0, 0, -2, 1
+			] );
+		} );
+
+		it ( "Should be able to view the bounds", function ()
+		{
+			const canvas = document.createElement ( "canvas" );
+			const viewer = new Viewer ( { canvas } );
+			viewer.resize ( 100, 100 );
+
+			const sphere = new Sphere ( [ 0, 0, 0 ], Math.sqrt ( 3 ) );
+			viewer.viewSphere ( sphere );
 		} );
 	} );
 };
