@@ -82,7 +82,7 @@ export class Rotate extends Command
 	 * Get the class name.
 	 * @returns {string} The class name.
 	 */
-	public getClassName() : string
+	public override getClassName() : string
 	{
 		return "Viewers.Commands.Rotate";
 	}
@@ -192,7 +192,7 @@ export class ViewSphere extends Command
 	 * Get the class name.
 	 * @returns {string} The class name.
 	 */
-	public getClassName() : string
+	public override getClassName() : string
 	{
 		return "Viewers.Commands.ViewSphere";
 	}
@@ -239,7 +239,7 @@ export class Zoom extends Command
 	 * Get the class name.
 	 * @returns {string} The class name.
 	 */
-	public getClassName() : string
+	public override getClassName() : string
 	{
 		return "Viewers.Commands.Zoom";
 	}
