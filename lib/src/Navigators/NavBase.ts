@@ -15,7 +15,7 @@
 import { BaseHandler as BaseClass } from "../Events/Handlers/BaseHandler";
 import { Projection } from "../Projections/Projection";
 import { Sphere } from "../Math";
-import type { IMatrix44, IVector4 } from "../Types";
+import type { IEvent, IMatrix44, IVector4 } from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -50,6 +50,14 @@ export abstract class NavBase extends BaseClass
 	public abstract rotate ( r: IVector4 ) : void;
 
 	/**
+	 * Translate the navigator.
+	 * @param {object} params - The parameters.
+	 * @param {IEvent} params.event - The event.
+	 * @param {number} params.scale - The translation scale factor.
+	 */
+	public abstract translate ( params: { event: IEvent, scale: number } ) : void;
+
+	/**
 	 * Zoom the navigator.
 	 * @param {number} scale - The zoom scale factor.
 	 */
@@ -62,7 +70,6 @@ export abstract class NavBase extends BaseClass
 
 	/**
 	 * Set the navigator so that the sphere is completely within the view-volume.
-	 * If the given model is null then reset the navigator to its default state.
 	 * @param {Sphere} sphere - The bounding sphere.
 	 * @param {Projection} projection - The projection.
 	 * @param {object} [options] - The options.

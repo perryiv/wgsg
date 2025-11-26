@@ -36,6 +36,8 @@ export type ICommandName = (
 	| "rotate_py_small"
 	| "rotate_pz_large"
 	| "rotate_pz_small"
+	| "translate_xy_large"
+	| "translate_xy_small"
 	| "view_sphere_fit"
 	| "view_sphere_reset"
 	| "zoom_large"

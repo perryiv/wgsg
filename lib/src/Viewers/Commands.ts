@@ -275,6 +275,51 @@ export class Zoom extends Command
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
+ * Translate the navigator in the screen x-y space.
+ * @class
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export class TranslateXY extends Command
+{
+	#scale = 1;
+
+	/**
+	 * Construct the class.
+	 * @param {number} scale The scale factor for translation.
+	 * @class
+	 */
+	public constructor ( scale: number )
+	{
+		super();
+		this.#scale = scale;
+	}
+
+	/**
+	 * Get the class name.
+	 * @returns {string} The class name.
+	 */
+	public override getClassName() : string
+	{
+		return "Viewers.Commands.TranslateXY";
+	}
+
+	/**
+	 * Execute the command.
+	 * @param {IEvent} event The event.
+	 */
+	public execute ( event: IEvent ) : void
+	{
+		const { viewer } = event;
+		const { navBase } = viewer;
+		navBase.translate ( { event, scale: this.#scale } );
+		viewer.requestRender();
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
  * Return a map of the commands.
  * @returns {ICommandMap} The commands.
  */
@@ -283,22 +328,24 @@ export class Zoom extends Command
 export function makeCommands() : ICommandMap
 {
 	return new Map < ICommandName, ICommand > ( [
-		[ "zoom_large", new Zoom ( 0.90, 1.10 ) ],
-		[ "zoom_small", new Zoom ( 0.99, 1.01 ) ],
-		[ "rotate_nx_large",   new RotateX ( DEG_TO_RAD * -45 ) ],
-		[ "rotate_nx_small",   new RotateX ( DEG_TO_RAD *  -5 ) ],
-		[ "rotate_ny_large",   new RotateY ( DEG_TO_RAD * -45 ) ],
-		[ "rotate_ny_small",   new RotateY ( DEG_TO_RAD *  -5 ) ],
-		[ "rotate_nz_large",   new RotateZ ( DEG_TO_RAD * -45 ) ],
-		[ "rotate_nz_small",   new RotateZ ( DEG_TO_RAD *  -5 ) ],
-		[ "rotate_px_large",   new RotateX ( DEG_TO_RAD *  45 ) ],
-		[ "rotate_px_small",   new RotateX ( DEG_TO_RAD *   5 ) ],
-		[ "rotate_py_large",   new RotateY ( DEG_TO_RAD *  45 ) ],
-		[ "rotate_py_small",   new RotateY ( DEG_TO_RAD *   5 ) ],
-		[ "rotate_pz_large",   new RotateZ ( DEG_TO_RAD *  45 ) ],
-		[ "rotate_pz_small",   new RotateZ ( DEG_TO_RAD *   5 ) ],
-		[ "view_sphere_fit",   new ViewSphere ( false ) ],
-		[ "view_sphere_reset", new ViewSphere ( true  ) ],
+		[ "rotate_nx_large",    new RotateX ( DEG_TO_RAD * -45 ) ],
+		[ "rotate_nx_small",    new RotateX ( DEG_TO_RAD *  -5 ) ],
+		[ "rotate_ny_large",    new RotateY ( DEG_TO_RAD * -45 ) ],
+		[ "rotate_ny_small",    new RotateY ( DEG_TO_RAD *  -5 ) ],
+		[ "rotate_nz_large",    new RotateZ ( DEG_TO_RAD * -45 ) ],
+		[ "rotate_nz_small",    new RotateZ ( DEG_TO_RAD *  -5 ) ],
+		[ "rotate_px_large",    new RotateX ( DEG_TO_RAD *  45 ) ],
+		[ "rotate_px_small",    new RotateX ( DEG_TO_RAD *   5 ) ],
+		[ "rotate_py_large",    new RotateY ( DEG_TO_RAD *  45 ) ],
+		[ "rotate_py_small",    new RotateY ( DEG_TO_RAD *   5 ) ],
+		[ "rotate_pz_large",    new RotateZ ( DEG_TO_RAD *  45 ) ],
+		[ "rotate_pz_small",    new RotateZ ( DEG_TO_RAD *   5 ) ],
+		[ "translate_xy_large", new TranslateXY ( 1.0 )          ],
+		[ "translate_xy_small", new TranslateXY ( 0.1 )          ],
+		[ "view_sphere_fit",    new ViewSphere ( false )         ],
+		[ "view_sphere_reset",  new ViewSphere ( true  )         ],
+		[ "zoom_large",         new Zoom ( 0.90, 1.10 )          ],
+		[ "zoom_small",         new Zoom ( 0.99, 1.01 )          ],
 	] );
 }
 
@@ -356,23 +403,27 @@ export function makeInputToCommandMap() : IInputToCommandNameMap
 	const sl = "ShiftLeft";
 	const sr = "ShiftRight";
 	const sp = "Space";
+	const kf = "KeyF";
 
 	return new Map < string, ICommandName > ( [
-		makeTuple ( "rotate_nx_large",   "key_down",    [], [ au     ] ),
-		makeTuple ( "rotate_nx_small",   "key_down",    [], [ sl, au ] ),
-		makeTuple ( "rotate_nx_small",   "key_down",    [], [ sr, au ] ),
-		makeTuple ( "rotate_ny_large",   "key_down",    [], [ al     ] ),
-		makeTuple ( "rotate_ny_small",   "key_down",    [], [ sl, al ] ),
-		makeTuple ( "rotate_ny_small",   "key_down",    [], [ sr, al ] ),
-		makeTuple ( "rotate_px_large",   "key_down",    [], [ ad     ] ),
-		makeTuple ( "rotate_px_small",   "key_down",    [], [ sl, ad ] ),
-		makeTuple ( "rotate_px_small",   "key_down",    [], [ sr, ad ] ),
-		makeTuple ( "rotate_py_large",   "key_down",    [], [ ar     ] ),
-		makeTuple ( "rotate_py_small",   "key_down",    [], [ sl, ar ] ),
-		makeTuple ( "rotate_py_small",   "key_down",    [], [ sr, ar ] ),
-		makeTuple ( "view_sphere_fit",   "key_down",    [], [ "KeyF" ] ),
-		makeTuple ( "view_sphere_reset", "key_down",    [], [ sp     ] ),
-		makeTuple ( "zoom_large",        "mouse_wheel", [], [        ] ),
-		makeTuple ( "zoom_small",        "mouse_wheel", [], [ sl     ] ),
+		makeTuple ( "rotate_nx_large",    "key_down",    [   ], [ au     ] ),
+		makeTuple ( "rotate_nx_small",    "key_down",    [   ], [ sl, au ] ),
+		makeTuple ( "rotate_nx_small",    "key_down",    [   ], [ sr, au ] ),
+		makeTuple ( "rotate_ny_large",    "key_down",    [   ], [ al     ] ),
+		makeTuple ( "rotate_ny_small",    "key_down",    [   ], [ sl, al ] ),
+		makeTuple ( "rotate_ny_small",    "key_down",    [   ], [ sr, al ] ),
+		makeTuple ( "rotate_px_large",    "key_down",    [   ], [ ad     ] ),
+		makeTuple ( "rotate_px_small",    "key_down",    [   ], [ sl, ad ] ),
+		makeTuple ( "rotate_px_small",    "key_down",    [   ], [ sr, ad ] ),
+		makeTuple ( "rotate_py_large",    "key_down",    [   ], [ ar     ] ),
+		makeTuple ( "rotate_py_small",    "key_down",    [   ], [ sl, ar ] ),
+		makeTuple ( "rotate_py_small",    "key_down",    [   ], [ sr, ar ] ),
+		makeTuple ( "translate_xy_large", "mouse_drag",  [ 2 ], [        ] ),
+		makeTuple ( "translate_xy_small", "mouse_drag",  [ 2 ], [ sl     ] ),
+		makeTuple ( "translate_xy_small", "mouse_drag",  [ 2 ], [ sr     ] ),
+		makeTuple ( "view_sphere_fit",    "key_down",    [   ], [ kf     ] ),
+		makeTuple ( "view_sphere_reset",  "key_down",    [   ], [ sp     ] ),
+		makeTuple ( "zoom_large",         "mouse_wheel", [   ], [        ] ),
+		makeTuple ( "zoom_small",         "mouse_wheel", [   ], [ sl     ] ),
 	] );
 }

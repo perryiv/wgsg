@@ -254,6 +254,17 @@ export class Trackball extends BaseClass
 	}
 
 	/**
+	 * Translate the navigator.
+	 * @param {object} params - The parameters.
+	 * @param {IEvent} params.event - The event.
+	 * @param {number} params.scale - The translation scale factor.
+	 */
+	public translate ( params: { event: IEvent, scale: number } ) : void
+	{
+		void params; // TODO: Make this work.
+	}
+
+	/**
 	 * Zoom the navigator.
 	 * @param {number} scale - The zoom scale factor.
 	 */
@@ -274,7 +285,6 @@ export class Trackball extends BaseClass
 
 	/**
 	 * Set the navigator so that the sphere is completely within the view-volume.
-	 * If the given model is null then reset the navigator to its default state.
 	 * @param {Sphere} sphere - The bounding sphere.
 	 * @param {Projection} projection - The projection.
 	 * @param {object} [options] - The options.
@@ -340,23 +350,28 @@ export class Trackball extends BaseClass
 	 */
 	public override handleEvent ( event: IEvent ) : void
 	{
+		// Shortcut.
 		const { viewer } = event;
 
+		// Get the command for this event's input state.
 		const command = viewer.getCommand ( event );
 
+		// Handle no command.
 		if ( !command )
 		{
 			return
 		}
 
+		// If we get to here then execute the command.
 		command.execute ( event );
 	}
 
 	/**
-	 * Handle mouse drag event.
-	 * @param {IEvent} event - The mouse drag event.
+	 * Handle mouse rotation.
+	 * TODO: Revisit this. and change the name is appropriate.
+	 * @param {IEvent} event - The mouse event.
 	 */
-	protected mouseDrag ( event: IEvent ) : void
+	protected mouseRotate ( event: IEvent ) : void
 	{
 		// Get input.
 		const {

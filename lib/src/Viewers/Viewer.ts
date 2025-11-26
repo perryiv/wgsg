@@ -598,12 +598,15 @@ export class Viewer extends BaseClass
 	public mouseDown ( input: MouseEvent ) : void
 	{
 		input.preventDefault();
+		const { button, clientX, clientY } = input;
+
+		this.mouseButtonsDown.add ( button );
 
 		this.mousePrevious = this.mouseCurrent;
-		this.mouseCurrent = [ input.clientX, input.clientY ];
+		this.mouseCurrent = [ clientX, clientY ];
 
 		this.mouseReleased = null;
-		this.mousePressed = [ input.clientX, input.clientY ];
+		this.mousePressed = [ clientX, clientY ];
 
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "mouse_down", input );
@@ -618,15 +621,16 @@ export class Viewer extends BaseClass
 	public mouseMove ( input: MouseEvent ) : void
 	{
 		input.preventDefault();
+		const { buttons, clientX, clientY } = input;
 
 		this.mousePrevious = this.mouseCurrent;
-		this.mouseCurrent = [ input.clientX, input.clientY ];
+		this.mouseCurrent = [ clientX, clientY ];
 
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "mouse_move", input );
 		handler.handleEvent ( event );
 
-		if ( input.buttons )
+		if ( buttons )
 		{
 			event.type = "mouse_drag"; // Use all the same event data.
 			handler.handleEvent ( event );
@@ -651,11 +655,15 @@ export class Viewer extends BaseClass
 	public mouseUp ( input: MouseEvent ) : void
 	{
 		input.preventDefault();
+		const { button, clientX, clientY } = input;
+
+		this.mouseButtonsDown.delete ( button );
 
 		this.mousePrevious = this.mouseCurrent;
-		this.mouseCurrent = [ input.clientX, input.clientY ];
+		this.mouseCurrent = [ clientX, clientY ];
 
-		this.mouseReleased = [ input.clientX, input.clientY ];
+		this.mouseReleased = [ clientX, clientY ];
+		// The mouse pressed state is unchanged.
 
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "mouse_up", input );
