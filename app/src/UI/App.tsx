@@ -61,7 +61,7 @@ export function App()
 	const handleViewerReset = useCallback ( () =>
 	{
 		const viewer = getViewerOrThrow();
-		viewer.viewAll();
+		viewer.viewAll ( { resetRotation: true } );
 	},
 	[ getViewerOrThrow ] );
 

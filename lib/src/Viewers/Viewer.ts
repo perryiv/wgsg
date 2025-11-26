@@ -461,20 +461,20 @@ export class Viewer extends BaseClass
 	 */
 	public viewSphere ( sphere: Sphere, options?: { resetRotation?: boolean } ) : void
 	{
-		this.navigator.viewSphere ( sphere, options );
-		this.requestRender();
+		this.navigator.viewSphere ( sphere, this.projection, options );
 	}
 
 	/**
 	 * Set the navigator so that the model is completely within the view-volume.
+	 * @param {object} [options] - The options.
+	 * @param {boolean} [options.resetRotation] - Whether or not to reset the rotation.
 	 */
-	public viewAll() : void
+	public viewAll ( options?: { resetRotation?: boolean } ) : void
 	{
 		const sphere = this.modelScene?.sphere;
 		if ( sphere )
 		{
-			this.viewSphere ( sphere, { resetRotation: false } );
-			this.requestRender();
+			this.viewSphere ( sphere, options );
 		}
 	}
 

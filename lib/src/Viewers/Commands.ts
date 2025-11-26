@@ -204,6 +204,7 @@ export class ViewSphere extends Command
 	public execute ( viewer: IViewer ) : void
 	{
 		viewer.viewAll ( { resetRotation: this.#resetRotation } );
+		viewer.requestRender();
 	}
 }
 
