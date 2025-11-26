@@ -283,8 +283,8 @@ export class Zoom extends Command
 export function makeCommands() : ICommandMap
 {
 	return new Map < ICommandName, ICommand > ( [
-		[ "mouse_wheel_zoom_large", new Zoom ( 0.90, 1.10 ) ],
-		[ "mouse_wheel_zoom_small", new Zoom ( 0.99, 1.01 ) ],
+		[ "zoom_large", new Zoom ( 0.90, 1.10 ) ],
+		[ "zoom_small", new Zoom ( 0.99, 1.01 ) ],
 		[ "rotate_nx_large",   new RotateX ( DEG_TO_RAD * -45 ) ],
 		[ "rotate_nx_small",   new RotateX ( DEG_TO_RAD *  -5 ) ],
 		[ "rotate_ny_large",   new RotateY ( DEG_TO_RAD * -45 ) ],
@@ -297,8 +297,8 @@ export function makeCommands() : ICommandMap
 		[ "rotate_py_small",   new RotateY ( DEG_TO_RAD *   5 ) ],
 		[ "rotate_pz_large",   new RotateZ ( DEG_TO_RAD *  45 ) ],
 		[ "rotate_pz_small",   new RotateZ ( DEG_TO_RAD *   5 ) ],
-		[ "view_bounds_fit",   new ViewSphere ( false ) ],
-		[ "view_bounds_reset", new ViewSphere ( true  ) ],
+		[ "view_sphere_fit",   new ViewSphere ( false ) ],
+		[ "view_sphere_reset", new ViewSphere ( true  ) ],
 	] );
 }
 
@@ -322,6 +322,23 @@ export function makeInput ( type: IEventType, buttonsDown: number[], keysDown: s
 	);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * We do this so the the lines below can sort with the command names.
+ * @param {ICommandName} name The command name.
+ * @param {IEventType} type The event type.
+ * @param {number[]} buttonsDown The mouse buttons pressed.
+ * @param {string[]} keysDown The keyboard keys pressed.
+ * @returns {[string, ICommandName]} The tuple.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+function makeTuple ( name: ICommandName, type: IEventType, buttonsDown: number[], keysDown: string[] ) : [ string, ICommandName ]
+{
+	const key = makeInput ( type, buttonsDown, keysDown );
+	return [ key, name ];
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
@@ -341,21 +358,21 @@ export function makeInputToCommandMap() : IInputToCommandNameMap
 	const sp = "Space";
 
 	return new Map < string, ICommandName > ( [
-		[ makeInput ( "key_down",    [], [ "KeyF" ] ), "view_bounds_fit" ],
-		[ makeInput ( "key_down",    [], [ ad     ] ), "rotate_px_large" ],
-		[ makeInput ( "key_down",    [], [ al     ] ), "rotate_ny_large" ],
-		[ makeInput ( "key_down",    [], [ ar     ] ), "rotate_py_large" ],
-		[ makeInput ( "key_down",    [], [ au     ] ), "rotate_nx_large" ],
-		[ makeInput ( "key_down",    [], [ sl, ad ] ), "rotate_px_small" ],
-		[ makeInput ( "key_down",    [], [ sl, al ] ), "rotate_ny_small" ],
-		[ makeInput ( "key_down",    [], [ sl, ar ] ), "rotate_py_small" ],
-		[ makeInput ( "key_down",    [], [ sl, au ] ), "rotate_nx_small" ],
-		[ makeInput ( "key_down",    [], [ sp     ] ), "view_bounds_reset" ],
-		[ makeInput ( "key_down",    [], [ sr, ad ] ), "rotate_px_small" ],
-		[ makeInput ( "key_down",    [], [ sr, al ] ), "rotate_ny_small" ],
-		[ makeInput ( "key_down",    [], [ sr, ar ] ), "rotate_py_small" ],
-		[ makeInput ( "key_down",    [], [ sr, au ] ), "rotate_nx_small" ],
-		[ makeInput ( "mouse_wheel", [], [ sl     ] ), "mouse_wheel_zoom_small" ],
-		[ makeInput ( "mouse_wheel", [], [        ] ), "mouse_wheel_zoom_large" ],
+		makeTuple ( "rotate_nx_large",   "key_down",    [], [ au     ] ),
+		makeTuple ( "rotate_nx_small",   "key_down",    [], [ sl, au ] ),
+		makeTuple ( "rotate_nx_small",   "key_down",    [], [ sr, au ] ),
+		makeTuple ( "rotate_ny_large",   "key_down",    [], [ al     ] ),
+		makeTuple ( "rotate_ny_small",   "key_down",    [], [ sl, al ] ),
+		makeTuple ( "rotate_ny_small",   "key_down",    [], [ sr, al ] ),
+		makeTuple ( "rotate_px_large",   "key_down",    [], [ ad     ] ),
+		makeTuple ( "rotate_px_small",   "key_down",    [], [ sl, ad ] ),
+		makeTuple ( "rotate_px_small",   "key_down",    [], [ sr, ad ] ),
+		makeTuple ( "rotate_py_large",   "key_down",    [], [ ar     ] ),
+		makeTuple ( "rotate_py_small",   "key_down",    [], [ sl, ar ] ),
+		makeTuple ( "rotate_py_small",   "key_down",    [], [ sr, ar ] ),
+		makeTuple ( "view_sphere_fit",   "key_down",    [], [ "KeyF" ] ),
+		makeTuple ( "view_sphere_reset", "key_down",    [], [ sp     ] ),
+		makeTuple ( "zoom_large",        "mouse_wheel", [], [        ] ),
+		makeTuple ( "zoom_small",        "mouse_wheel", [], [ sl     ] ),
 	] );
 }
