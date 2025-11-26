@@ -29,8 +29,8 @@ export function test ()
 		it ( "Make sure WebGPU is supported", function ()
 		{
 			expect ( Device.supported ).to.be.true;
-			expect ( navigator instanceof Navigator ).to.be.true;
-			const { gpu } = navigator;
+			expect ( globalThis.navigator instanceof Navigator ).to.be.true;
+			const { gpu } = globalThis.navigator;
 			expect ( gpu ).to.exist;
 			expect ( gpu instanceof GPU ).to.be.true;
 		} );

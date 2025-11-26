@@ -25,5 +25,6 @@ import { IVector4 } from "./Vector";
 export interface INavigator
 {
 	rotate: ( ( r: IVector4 ) => void );
+	zoom: ( ( scale: number ) => void );
 	viewMatrix: IMatrix44;
 }

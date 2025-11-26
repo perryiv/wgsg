@@ -254,6 +254,16 @@ export class Trackball extends BaseClass
 	}
 
 	/**
+	 * Zoom the navigator.
+	 * @param {number} scale - The zoom scale factor.
+	 */
+	public zoom ( scale: number ) : void
+	{
+		this.distance *= scale;
+		this.#dirty = true;
+	}
+
+	/**
 	 * Reset the navigator to its default state.
 	 */
 	public override reset() : void
@@ -330,33 +340,6 @@ export class Trackball extends BaseClass
 	 */
 	public override handleEvent ( event: IEvent ) : void
 	{
-		const { type } = event;
-
-		switch ( type )
-		{
-			case "key_down":
-			{
-				this.keyDown ( event );
-				break;
-			}
-			case "mouse_drag":
-			{
-				this.mouseDrag ( event );
-				break;
-			}
-			default:
-			{
-				break;
-			}
-		}
-	}
-
-	/**
-	 * Handle key down event.
-	 * @param {IEvent} event - The key down event.
-	 */
-	protected keyDown ( event: IEvent ) : void
-	{
 		const { viewer } = event;
 
 		const command = viewer.getCommand ( event );
@@ -366,8 +349,7 @@ export class Trackball extends BaseClass
 			return
 		}
 
-		command.execute ( viewer );
-		viewer.requestRender();
+		command.execute ( event );
 	}
 
 	/**
