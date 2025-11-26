@@ -56,7 +56,7 @@ export class Geometry extends Shape
 	#colors:     ( IColorData       | null ) = null;
 	#texCoords:  ( ITexCoordData    | null ) = null;
 	#primitives: ( IPrimitiveList[] | null ) = null;
-	#bounds:     ( Box              | null ) = null;
+	#box:        ( Box              | null ) = null;
 
 	/**
 	 * Construct the class.
@@ -114,13 +114,13 @@ export class Geometry extends Shape
 	}
 
 	/**
-	 * Get the bounds of this node.
-	 * @returns {Box} The bounds of this node.
+	 * Get the bounding box of this node.
+	 * @returns {Box} The bounding box of this node.
 	 */
-	protected override getBounds() : Box
+	protected override getBoundingBox() : Box
 	{
 		// Shortcut.
-		const current = this.#bounds;
+		const current = this.#box;
 
 		// Return the bounding box if it is valid.
 		if ( ( current ) && ( true === current.valid ) )
@@ -149,7 +149,7 @@ export class Geometry extends Shape
 
 			// We save the answer for next time here, inside the "if" block,
 			// to keep from storing an invalid bounding box.
-			this.#bounds = answer;
+			this.#box = answer;
 		}
 
 		// Return the answer.
@@ -157,20 +157,20 @@ export class Geometry extends Shape
 	}
 
 	/**
-	 * Set the bounds of this node.
-	 * @param {Box | null} bounds - The new bounds of this node.
+	 * Set the bounding box of this node.
+	 * @param {Box | null} box - The new bounding box of this node.
 	 */
-	protected override setBounds ( bounds: Readonly<Box> | null ): void
+	protected override setBoundingBox ( box: Readonly<Box> | null ): void
 	{
 		// If we were given a box then clone it.
 		// Otherwise, make a new default box.
 		// Note: We can clone an invalid box, but not a null box.
-		this.#bounds = ( bounds ? bounds.clone() : new Box() );
+		this.#box = ( box ? box.clone() : new Box() );
 
-		// Let the parents know that their bounds are now invalid.
+		// Let the parents know that their bounding boxes are now invalid.
 		this.forEachParent ( ( parent ) =>
 		{
-			parent.bounds = null;
+			parent.box = null;
 		} );
 	}
 
