@@ -13,7 +13,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { BaseHandler as BaseClass } from "../Events/Handlers/BaseHandler";
-import { Node } from "../Scene";
+import { Projection } from "../Projections/Projection";
+import { Sphere } from "../Math";
 import type { IMatrix44, IVector4 } from "../Types";
 
 
@@ -54,11 +55,12 @@ export abstract class NavBase extends BaseClass
 	public abstract reset() : void;
 
 	/**
-	 * Set the navigator so that the model is completely within the view-volume.
+	 * Set the navigator so that the sphere is completely within the view-volume.
 	 * If the given model is null then reset the navigator to its default state.
-	 * @param {object} options - The options.
-	 * @param {Node | null} options.scene - The scene node.
-	 * @param {boolean} [options.resetRotation] - Whether or not to reset rotations.
+	 * @param {Sphere} sphere - The bounding sphere.
+	 * @param {Projection} projection - The projection.
+	 * @param {object} [options] - The options.
+	 * @param {boolean} [options.resetRotation] - Whether or not to reset the rotation.
 	 */
-	public abstract viewBounds ( options: { scene: ( Node | null ), resetRotation?: boolean } ) : void;
+	public abstract viewSphere ( sphere: Sphere, projection: Projection, options?: { resetRotation?: boolean } ) : void;
 }

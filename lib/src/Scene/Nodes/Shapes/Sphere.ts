@@ -258,7 +258,7 @@ export class Sphere extends BaseClass
 		this.primitives = new Indexed ( { mode: "triangle-list", indices } );
 
 		// The bounds is now dirty.
-		this.setBounds ( null );
+		this.setBoundingBox ( null );
 
 		// Call the base class's function.
 		super.update();

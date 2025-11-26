@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base } from "../../Base/Base";
-import { Box } from "../../Math";
+import { Box, Sphere } from "../../Math";
 import { Group } from "./Groups/Group";
 import { hasBits, setBits } from "../../Tools";
 import { State } from "../State";
@@ -308,36 +308,50 @@ export abstract class Node extends Base
 	}
 
 	/**
-	 * Get the bounds of this node.
-	 * @returns {Box} The bounds of this node.
+	 * Get the bounding box of this node.
+	 * @returns {Box} The bounding box of this node.
 	 */
-	public get bounds() : Box
+	public get box() : Box
 	{
-		return this.getBounds();
+		return this.getBoundingBox();
 	}
 
 	/**
-	 * Set the bounds of this node.
-	 * @param {Box | null} bounds - The new bounds of this node.
+	 * Set the bounding box of this node.
+	 * @param {Box | null} box - The new bounding box of this node.
 	 */
-	public set bounds ( bounds: Readonly<Box> | null )
+	public set box ( box: Readonly<Box> | null )
 	{
-		this.setBounds ( bounds );
+		this.setBoundingBox ( box );
 	}
 
 	/**
-	 * Get the bounds of this node.
-	 * @abstract
-	 * @returns {Box} The bounds of this node.
+	 * Get the bounding sphere of this node.
+	 * @returns {Sphere | null} The bounding sphere of this node.
 	 */
-	protected abstract getBounds() : Box;
+	public get sphere() : ( Sphere | null )
+	{
+		const box = this.box;
+		if ( box )
+		{
+			const { center, radius } = box;
+			return new Sphere ( center, radius );
+		}
+		return null;
+	}
 
 	/**
-	 * Set the bounds of this node.
+	 * Get the bounding box of this node.
 	 * @abstract
-	 * @param {Box | null} bounds - The new bounds of this node.
+	 * @returns {Box} The bounding box of this node.
 	 */
-	protected abstract setBounds ( _: Readonly<Box> | null ): void;
+	protected abstract getBoundingBox() : Box;
+	/**
+	 * Set the bounding box of this node.
+	 * @abstract
+	 * @param {Box | null} box - The new bounding box of this node.
+	 */
+	protected abstract setBoundingBox ( _: Readonly<Box> | null ): void;
 
 	/**
 	 * Traverse this node.

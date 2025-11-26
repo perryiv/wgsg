@@ -15,6 +15,7 @@
 import { BaseHandler } from "../Events/Handlers/BaseHandler";
 import { Group, Node, Transform } from "../Scene";
 import { NavBase, Trackball } from "../Navigators";
+import { Sphere } from "../Math";
 import {
 	makeCommands,
 	makeInput as makeInputAsString,
@@ -453,23 +454,28 @@ export class Viewer extends BaseClass
 	}
 
 	/**
-	 * Set the navigator so that the bounds is completely within the view-volume.
+	 * Set the navigator so that the sphere is completely within the view-volume.
+	 * @param {Sphere} sphere - The bounding sphere.
 	 * @param {object} [options] - The options.
 	 * @param {boolean} [options.resetRotation] - Whether or not to reset the rotation.
 	 */
-	public viewBounds ( options?: { resetRotation?: boolean } ) : void
+	public viewSphere ( sphere: Sphere, options?: { resetRotation?: boolean } ) : void
 	{
-		this.navigator.viewBounds ( { ...options, scene: this.modelScene } );
-		this.requestRender();
+		this.navigator.viewSphere ( sphere, this.projection, options );
 	}
 
 	/**
 	 * Set the navigator so that the model is completely within the view-volume.
+	 * @param {object} [options] - The options.
+	 * @param {boolean} [options.resetRotation] - Whether or not to reset the rotation.
 	 */
-	public viewAll() : void
+	public viewAll ( options?: { resetRotation?: boolean } ) : void
 	{
-		this.viewBounds ( { resetRotation: false } );
-		this.requestRender();
+		const sphere = this.modelScene?.sphere;
+		if ( sphere )
+		{
+			this.viewSphere ( sphere, options );
+		}
 	}
 
 	/**

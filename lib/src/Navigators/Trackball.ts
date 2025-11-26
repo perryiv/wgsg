@@ -14,13 +14,17 @@
 
 import { mat4, quat, vec2, vec3, vec4 } from "gl-matrix";
 import { NavBase as BaseClass } from "./NavBase";
-import { Node } from "../Scene";
+import {
+	Perspective,
+	ProjectionBase as Projection,
+} from "../Projections";
 import {
 	intersectLineSphere,
 	isFiniteNumber,
 	Sphere,
 } from "../Math";
 import {
+	DEG_TO_RAD,
 	IDENTITY_MATRIX,
 	makeLine as makeLineUnderScreenPoint,
 	normalizeQuat,
@@ -259,16 +263,51 @@ export class Trackball extends BaseClass
 	}
 
 	/**
-	 * Set the navigator so that the model is completely within the view-volume.
+	 * Set the navigator so that the sphere is completely within the view-volume.
 	 * If the given model is null then reset the navigator to its default state.
-	 * @param {object} options - The options.
-	 * @param {Node | null} options.scene - The scene node.
-	 * @param {boolean} [options.resetRotation] - Whether or not to reset rotations.
+	 * @param {Sphere} sphere - The bounding sphere.
+	 * @param {Projection} projection - The projection.
+	 * @param {object} [options] - The options.
+	 * @param {boolean} [options.resetRotation] - Whether or not to reset the rotation.
 	 */
-	public override viewBounds ( options: { scene: ( Node | null ), resetRotation?: boolean } ) : void
+	public override viewSphere ( sphere: Sphere, projection: Projection, options?: { resetRotation?: boolean } ) : void
 	{
-		void options; // Do nothing with the function argument.
-		this.reset(); // For now just reset to the default state.
+		if ( projection instanceof Perspective )
+		{
+			const { fov } = projection;
+			const { radius } = sphere;
+
+			// Think of a ball falling into a cone. The field-of-view (fov) is the
+			// angle of the cone's point. We want the distance from the cone's point
+			// to the center of the ball. The radius from the center of the ball to
+			// where the ball touches the cone makes a 90 degree angle with the cone.
+			// The hypotenuse of the two symmetric triangles is the new trackball
+			// distance. The geometry can be calculated in 2D.
+
+			// sin ( theta ) = opposite / hypotenuse
+			// hypotenuse = opposite / sin ( theta )
+			// theta = fov / 2
+			// opposite = radius
+			// hypotenuse = radius / sin ( fov / 2 )
+			const hypotenuse = radius / ( Math.sin ( ( fov / 2 ) * DEG_TO_RAD ) );
+
+			// The hypotenuse is the new distance.
+			this.distance = hypotenuse;
+
+			// // Set the center.
+			// this.center = sphere.center;
+
+			// Reset the rotation if we should.
+			if ( options?.resetRotation )
+			{
+				this.rotation = [ 0, 0, 0, 1 ];
+			}
+		}
+
+		else
+		{
+			throw new Error ( `Projection type '${projection.type}' not supported when viewing sphere` );
+		}
 	}
 
 	/**

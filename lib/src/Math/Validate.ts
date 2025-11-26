@@ -12,7 +12,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IMatrix44 } from "../Types";
+import type {
+	IMatrix44,
+	IVector2,
+	IVector3,
+	IVector4,
+} from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -48,6 +53,156 @@ export const isValidMatrix = ( m: Readonly<IMatrix44> ) =>
 	}
 
 	// If we get to here then the matrix is valid.
+	return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * See if the vector is valid.
+ * @param {IVector4} m - The vector to check.
+ * @returns {boolean} True if the vector is valid, otherwise false.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export const isValidVec4 = ( m: Readonly<IVector4> ) =>
+{
+	// Get the array length.
+	const length: number = m.length;
+
+	// Check the length.
+	if ( 4 !== length )
+	{
+		return false;
+	}
+
+	// Check all the elements.
+	if ( "number" !== ( typeof ( m[0] ) ) )
+	{
+		return false;
+	}
+	if ( false === isFinite ( m[0] ) )
+	{
+		return false;
+	}
+	if ( "number" !== ( typeof ( m[1] ) ) )
+	{
+		return false;
+	}
+	if ( false === isFinite ( m[1] ) )
+	{
+		return false;
+	}
+	if ( "number" !== ( typeof ( m[2] ) ) )
+	{
+		return false;
+	}
+	if ( false === isFinite ( m[2] ) )
+	{
+		return false;
+	}
+	if ( "number" !== ( typeof ( m[3] ) ) )
+	{
+		return false;
+	}
+	if ( false === isFinite ( m[3] ) )
+	{
+		return false;
+	}
+
+	// If we get to here then the vector is valid.
+	return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * See if the vector is valid.
+ * @param {IVector3} m - The vector to check.
+ * @returns {boolean} True if the vector is valid, otherwise false.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export const isValidVec3 = ( m: Readonly<IVector3> ) =>
+{
+	// Get the array length.
+	const length: number = m.length;
+
+	// Check the length.
+	if ( 3 !== length )
+	{
+		return false;
+	}
+
+	// Check all the elements.
+	if ( "number" !== ( typeof ( m[0] ) ) )
+	{
+		return false;
+	}
+	if ( false === isFinite ( m[0] ) )
+	{
+		return false;
+	}
+	if ( "number" !== ( typeof ( m[1] ) ) )
+	{
+		return false;
+	}
+	if ( false === isFinite ( m[1] ) )
+	{
+		return false;
+	}
+	if ( "number" !== ( typeof ( m[2] ) ) )
+	{
+		return false;
+	}
+	if ( false === isFinite ( m[2] ) )
+	{
+		return false;
+	}
+
+	// If we get to here then the vector is valid.
+	return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * See if the vector is valid.
+ * @param {IVector2} m - The vector to check.
+ * @returns {boolean} True if the vector is valid, otherwise false.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export const isValidVec2 = ( m: Readonly<IVector2> ) =>
+{
+	// Get the array length.
+	const length: number = m.length;
+
+	// Check the length.
+	if ( 2 !== length )
+	{
+		return false;
+	}
+
+	// Check all the elements.
+	if ( "number" !== ( typeof ( m[0] ) ) )
+	{
+		return false;
+	}
+	if ( false === isFinite ( m[0] ) )
+	{
+		return false;
+	}
+	if ( "number" !== ( typeof ( m[1] ) ) )
+	{
+		return false;
+	}
+	if ( false === isFinite ( m[1] ) )
+	{
+		return false;
+	}
+
+	// If we get to here then the vector is valid.
 	return true;
 }
 
