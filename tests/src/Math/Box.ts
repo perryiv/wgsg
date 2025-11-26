@@ -234,5 +234,12 @@ export function test ()
 			expect ( box.intersectsLine ( [  3,  3, -1 ], [  4,  4,  3 ] ) ).to.be.false;
 			expect ( box.intersectsLine ( [ -1, -1, -1 ], [  3,  3,  3 ] ) ).to.be.true;
 		} );
+
+		it ( "Can get a sphere that contains the box", function ()
+		{
+			const box = new Box ( { min: [ 0, 0, 0 ], max: [ 2, 2, 2 ] } );
+			expect ( box.center ).to.deep.equal ( [ 1, 1, 1 ] );
+			expect ( box.radius ).to.equal ( Math.sqrt ( 3 ) );
+		} );
 	} );
 };
