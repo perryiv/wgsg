@@ -353,25 +353,6 @@ export class Trackball extends BaseClass
 	}
 
 	/**
-	 * Handle key down event.
-	 * @param {IEvent} event - The key down event.
-	 */
-	protected keyDown ( event: IEvent ) : void
-	{
-		void event;
-	}
-
-
-	/**
-	 * Handle mouse wheel event.
-	 * @param {IEvent} event - The mouse wheel event.
-	 */
-	protected mouseWheel ( event: IEvent ) : void
-	{
-		void event;
-	}
-
-	/**
 	 * Handle mouse drag event.
 	 * @param {IEvent} event - The mouse drag event.
 	 */
