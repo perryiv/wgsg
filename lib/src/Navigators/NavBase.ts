@@ -50,6 +50,12 @@ export abstract class NavBase extends BaseClass
 	public abstract rotate ( r: IVector4 ) : void;
 
 	/**
+	 * Zoom the navigator.
+	 * @param {number} scale - The zoom scale factor.
+	 */
+	public abstract zoom ( scale: number ) : void;
+
+	/**
 	 * Reset the navigator to its default state.
 	 */
 	public abstract reset() : void;

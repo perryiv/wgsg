@@ -75,7 +75,7 @@ type IMouseEventListenerMap = Map < IEventListenerName, IMouseEventListener >;
 export class Viewer extends BaseClass
 {
 	#mouse: IMouseState = Viewer.makeMouseData();
-	#navigator: ( NavBase | null ) = null;
+	#navBase: ( NavBase | null ) = null;
 	#eventHandlers: IEventHandlerStack = [];
 	#keyboardListeners: IKeyboardEventListenerMap = new Map < IEventListenerName, IKeyboardEventListener > ();
 	#mouseListeners: IMouseEventListenerMap = new Map < IEventListenerName, IMouseEventListener > ();
@@ -124,7 +124,7 @@ export class Viewer extends BaseClass
 
 		// Help the garbage collection by seting these to initial or null values.
 		this.#mouse = Viewer.makeMouseData();
-		this.#navigator = null;
+		this.#navBase = null;
 		this.#eventHandlers = [];
 		this.#keyboardListeners.clear();
 		this.#mouseListeners.clear();
@@ -328,7 +328,7 @@ export class Viewer extends BaseClass
 	 */
 	public override get viewMatrix () : IMatrix44
 	{
-		return this.navigator.viewMatrix;
+		return this.navBase.viewMatrix;
 	}
 
 	/**
@@ -445,16 +445,16 @@ export class Viewer extends BaseClass
 	 * Get the navigator.
 	 * @returns {NavBase} The navigator.
 	 */
-	public get navigator() : NavBase
+	public get navBase() : NavBase
 	{
 		// Shortcut.
-		let n = this.#navigator;
+		let n = this.#navBase;
 
 		// The first time we make it.
 		if ( !n )
 		{
 			n = new Trackball();
-			this.#navigator = n;
+			this.#navBase = n;
 		}
 
 		// Return the navigator.
@@ -469,7 +469,7 @@ export class Viewer extends BaseClass
 	 */
 	public viewSphere ( sphere: Sphere, options?: { resetRotation?: boolean } ) : void
 	{
-		this.navigator.viewSphere ( sphere, this.projection, options );
+		this.navBase.viewSphere ( sphere, this.projection, options );
 	}
 
 	/**
@@ -513,7 +513,7 @@ export class Viewer extends BaseClass
 	public get eventHandlerOrNavigator() : BaseHandler
 	{
 		const handler = this.currentEventHandler;
-		return ( handler ?? this.navigator );
+		return ( handler ?? this.navBase );
 	}
 
 	/**
@@ -752,7 +752,7 @@ export class Viewer extends BaseClass
 	public override render() : void
 	{
 		// Set the transform from the navigator.
-		this.#branches.nav.matrix = this.navigator.viewMatrix;
+		this.#branches.nav.matrix = this.navBase.viewMatrix;
 
 		// Now call the base class.
 		super.render();

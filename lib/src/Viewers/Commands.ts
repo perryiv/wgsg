@@ -19,12 +19,11 @@ import type {
 	ICommand,
 	ICommandMap,
 	ICommandName,
+	IEvent,
 	IEventType,
 	IInputToCommandNameMap,
-	INavigator,
 	IVector3,
 	IVector4,
-	IViewer,
 } from "../Types";
 
 
@@ -48,9 +47,9 @@ export abstract class Command extends BaseClass implements ICommand
 
 	/**
 	 * Execute the command.
-	 * @param {IViewer} viewer The viewer.
+	 * @param {IEvent} event The event.
 	 */
-	abstract execute ( viewer: IViewer ) : void;
+	abstract execute ( event: IEvent ) : void;
 }
 
 
@@ -90,14 +89,15 @@ export class Rotate extends Command
 
 	/**
 	 * Execute the command.
-	 * @param {IViewer} viewer The viewer.
+	 * @param {IEvent} event The event.
 	 */
-	public execute ( viewer: IViewer ) : void
+	public execute ( event: IEvent ) : void
 	{
-		const nav: INavigator = viewer.navigator;
+		const { viewer } = event;
+		const { navBase } = viewer;
 		const rot: IVector4 = [ 0, 0, 0, 1 ];
 		quat.setAxisAngle ( rot, this.#axis, this.#angle );
-		nav.rotate ( rot );
+		navBase.rotate ( rot );
 		viewer.requestRender();
 	}
 }
@@ -199,10 +199,11 @@ export class ViewSphere extends Command
 
 	/**
 	 * Execute the command.
-	 * @param {IViewer} viewer The viewer.
+	 * @param {IEvent} event The event.
 	 */
-	public execute ( viewer: IViewer ) : void
+	public execute ( event: IEvent ) : void
 	{
+		const { viewer } = event;
 		viewer.viewAll ( { resetRotation: this.#resetRotation } );
 		viewer.requestRender();
 	}
@@ -245,11 +246,28 @@ export class Zoom extends Command
 
 	/**
 	 * Execute the command.
-	 * @param {IViewer} viewer The viewer.
+	 * @param {IEvent} event The event.
 	 */
-	public execute ( viewer: IViewer ) : void
+	public execute ( event: IEvent ) : void
 	{
-		// viewer.navigator.zoom ( this.#scaleIn, this.#scaleOut );
+		// Get input.
+		const { event: originalEvent, viewer } = event;
+		const { deltaY } = ( originalEvent as WheelEvent );
+		const { navBase } = viewer;
+
+		// Handle no motion.
+		if ( 0 === deltaY )
+		{
+			return;
+		}
+
+		// Get the correct scale from the direction of wheel rotation.
+		const scale = ( deltaY > 0 ) ? this.#scaleOut : this.#scaleIn;
+
+		// Zoom the navigator.
+		navBase.zoom ( scale );
+
+		// Render again so that we can see the change.
 		viewer.requestRender();
 	}
 }
@@ -265,8 +283,8 @@ export class Zoom extends Command
 export function makeCommands() : ICommandMap
 {
 	return new Map < ICommandName, ICommand > ( [
-		[ "mouse_wheel_zoom_large", new Zoom ( 0.5, 2.0 ) ],
-		[ "mouse_wheel_zoom_small", new Zoom ( 0.9, 1.1 ) ],
+		[ "mouse_wheel_zoom_large", new Zoom ( 0.90, 1.10 ) ],
+		[ "mouse_wheel_zoom_small", new Zoom ( 0.99, 1.01 ) ],
 		[ "rotate_nx_large",   new RotateX ( DEG_TO_RAD * -45 ) ],
 		[ "rotate_nx_small",   new RotateX ( DEG_TO_RAD *  -5 ) ],
 		[ "rotate_ny_large",   new RotateY ( DEG_TO_RAD * -45 ) ],

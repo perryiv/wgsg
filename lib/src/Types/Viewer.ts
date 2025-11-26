@@ -28,7 +28,7 @@ import { IViewport } from "./Viewport";
 export interface IViewer
 {
 	getCommand: ( event: IEvent ) => ( ICommand | null );
-	navigator: INavigator;
+	navBase: INavigator;
 	projMatrix: IMatrix44;
 	requestRender: ( () => void );
 	viewAll: ( options?: { resetRotation?: boolean } ) => void;

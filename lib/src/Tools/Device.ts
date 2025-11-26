@@ -57,7 +57,7 @@ export class Device extends Base
 		}
 
 		// Shortcut.
-		const { gpu } = navigator;
+		const { gpu } = globalThis.navigator;
 
 		// Handle no WebGPU support.
 		if ( !gpu )
@@ -133,7 +133,7 @@ export class Device extends Base
 	 */
 	public static get supported() : boolean
 	{
-		const { gpu } = navigator;
+		const { gpu } = globalThis.navigator;
 		return ( !!gpu );
 	}
 
@@ -215,7 +215,17 @@ export class Device extends Base
 		// The first time we have to set it.
 		if ( !this.#preferredFormat )
 		{
-			this.#preferredFormat = navigator.gpu.getPreferredCanvasFormat();
+			// Shortcut.
+			const { gpu } = globalThis.navigator;
+
+			// Make sure we have WebGPU support.
+			if ( !gpu )
+			{
+				throw new Error ( "WebGPU is not supported when getting the preferred canvas format" );
+			}
+
+			// Get the preferred format and save it for next time.
+			this.#preferredFormat = gpu.getPreferredCanvasFormat();
 		}
 
 		// Return the format.

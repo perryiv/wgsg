@@ -254,6 +254,16 @@ export class Trackball extends BaseClass
 	}
 
 	/**
+	 * Zoom the navigator.
+	 * @param {number} scale - The zoom scale factor.
+	 */
+	public zoom ( scale: number ) : void
+	{
+		this.distance *= scale;
+		this.#dirty = true;
+	}
+
+	/**
 	 * Reset the navigator to its default state.
 	 */
 	public override reset() : void
@@ -330,38 +340,6 @@ export class Trackball extends BaseClass
 	 */
 	public override handleEvent ( event: IEvent ) : void
 	{
-		const { type } = event;
-
-		switch ( type )
-		{
-			case "key_down":
-			{
-				this.keyDown ( event );
-				break;
-			}
-			case "mouse_drag":
-			{
-				this.mouseDrag ( event );
-				break;
-			}
-			case "mouse_wheel":
-			{
-				this.mouseWheel ( event );
-				break;
-			}
-			default:
-			{
-				break;
-			}
-		}
-	}
-
-	/**
-	 * Handle key down event.
-	 * @param {IEvent} event - The key down event.
-	 */
-	protected keyDown ( event: IEvent ) : void
-	{
 		const { viewer } = event;
 
 		const command = viewer.getCommand ( event );
@@ -371,8 +349,16 @@ export class Trackball extends BaseClass
 			return
 		}
 
-		command.execute ( viewer );
-		viewer.requestRender();
+		command.execute ( event );
+	}
+
+	/**
+	 * Handle key down event.
+	 * @param {IEvent} event - The key down event.
+	 */
+	protected keyDown ( event: IEvent ) : void
+	{
+		void event;
 	}
 
 
@@ -382,25 +368,7 @@ export class Trackball extends BaseClass
 	 */
 	protected mouseWheel ( event: IEvent ) : void
 	{
-		// Get input.
-		const { type, event: originalEvent } = event;
-
-		// Handle wrong event type.
-		if ( "mouse_wheel" !== type )
-		{
-			return;
-		}
-
-		// Handle wrong original event type.
-		if ( false === ( originalEvent instanceof WheelEvent ) )
-		{
-			return;
-		}
-
-		// Get the change in wheel.
-		const { deltaY } = originalEvent;
-
-		console.log ( "Mouse wheel deltaY:", deltaY );
+		void event;
 	}
 
 	/**

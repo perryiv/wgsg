@@ -12,10 +12,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IEventType } from "./Event";
+import { IEvent, IEventType } from "./Event";
 import { IKeyboardState } from "./Keyboard";
 import { IMouseButtons } from "./Mouse";
-import { IViewer } from "./Viewer";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -45,7 +44,7 @@ export type ICommandName = (
 
 export interface ICommand
 {
-	execute ( viewer: IViewer ) : void;
+	execute ( event: IEvent ) : void;
 }
 
 export type ICommandMap = Map < ICommandName, ICommand >;

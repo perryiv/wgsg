@@ -76,7 +76,7 @@ export function Viewer ( { style }: IViewerProps )
 		{
 			return null;
 		}
-		const trackball = ( viewer.navigator instanceof Trackball ) ? viewer.navigator : null;
+		const trackball = ( viewer.navBase instanceof Trackball ) ? viewer.navBase : null;
 		if ( !trackball )
 		{
 			return null;
