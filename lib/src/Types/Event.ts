@@ -27,6 +27,7 @@ export type IEventType = (
 	| "mouse_up"
 	| "mouse_move"
 	| "mouse_drag"
+	| "mouse_wheel"
 	| "mouse_in"
 	| "mouse_out"
 	| "key_down"

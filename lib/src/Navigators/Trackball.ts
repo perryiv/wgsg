@@ -344,6 +344,11 @@ export class Trackball extends BaseClass
 				this.mouseDrag ( event );
 				break;
 			}
+			case "mouse_wheel":
+			{
+				this.mouseWheel ( event );
+				break;
+			}
 			default:
 			{
 				break;
@@ -368,6 +373,34 @@ export class Trackball extends BaseClass
 
 		command.execute ( viewer );
 		viewer.requestRender();
+	}
+
+
+	/**
+	 * Handle mouse wheel event.
+	 * @param {IEvent} event - The mouse wheel event.
+	 */
+	protected mouseWheel ( event: IEvent ) : void
+	{
+		// Get input.
+		const { type, event: originalEvent } = event;
+
+		// Handle wrong event type.
+		if ( "mouse_wheel" !== type )
+		{
+			return;
+		}
+
+		// Handle wrong original event type.
+		if ( false === ( originalEvent instanceof WheelEvent ) )
+		{
+			return;
+		}
+
+		// Get the change in wheel.
+		const { deltaY } = originalEvent;
+
+		console.log ( "Mouse wheel deltaY:", deltaY );
 	}
 
 	/**

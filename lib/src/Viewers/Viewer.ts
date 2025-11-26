@@ -211,6 +211,14 @@ export class Viewer extends BaseClass
 			}
 		} );
 
+		lm.set ( "wheel", ( event: MouseEvent ) =>
+		{
+			if ( false === this.isDestroyed() )
+			{
+				this.mouseWheel ( event );
+			}
+		} );
+
 		lm.set ( "mouseup", ( event: MouseEvent ) =>
 		{
 			if ( false === this.isDestroyed() )
@@ -623,6 +631,17 @@ export class Viewer extends BaseClass
 			event.type = "mouse_drag"; // Use all the same event data.
 			handler.handleEvent ( event );
 		}
+	}
+
+	/**
+	 * Handle mouse wheel event.
+	 * @param {MouseEvent} input - The mouse wheel event.
+	 */
+	public mouseWheel ( input: MouseEvent ) : void
+	{
+		const handler = this.eventHandlerOrNavigator;
+		const event = this.makeEvent ( "mouse_wheel", input );
+		handler.handleEvent ( event );
 	}
 
 	/**

@@ -25,20 +25,22 @@ import { IViewer } from "./Viewer";
 ///////////////////////////////////////////////////////////////////////////////
 
 export type ICommandName = (
-	| "rotate_px_large"
-	| "rotate_py_large"
-	| "rotate_pz_large"
-	| "rotate_px_small"
-	| "rotate_py_small"
-	| "rotate_pz_small"
+	| "mouse_wheel_zoom_large"
+	| "mouse_wheel_zoom_small"
 	| "rotate_nx_large"
-	| "rotate_ny_large"
-	| "rotate_nz_large"
 	| "rotate_nx_small"
+	| "rotate_ny_large"
 	| "rotate_ny_small"
+	| "rotate_nz_large"
 	| "rotate_nz_small"
-	| "view_bounds_reset"
+	| "rotate_px_large"
+	| "rotate_px_small"
+	| "rotate_py_large"
+	| "rotate_py_small"
+	| "rotate_pz_large"
+	| "rotate_pz_small"
 	| "view_bounds_fit"
+	| "view_bounds_reset"
 );
 
 export interface ICommand
