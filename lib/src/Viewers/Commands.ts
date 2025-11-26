@@ -168,12 +168,12 @@ export class RotateZ extends Rotate
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Set the navigator such that the bounds are visible.
+ * Set the navigator such that the sphere is visible.
  * @class
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class ViewBounds extends Command
+export class ViewSphere extends Command
 {
 	#resetRotation = false;
 
@@ -194,7 +194,7 @@ export class ViewBounds extends Command
 	 */
 	public getClassName() : string
 	{
-		return "Viewers.Commands.ViewBounds";
+		return "Viewers.Commands.ViewSphere";
 	}
 
 	/**
@@ -203,7 +203,7 @@ export class ViewBounds extends Command
 	 */
 	public execute ( viewer: IViewer ) : void
 	{
-		viewer.viewBounds ( { resetRotation: this.#resetRotation } );
+		viewer.viewAll ( { resetRotation: this.#resetRotation } );
 	}
 }
 
@@ -230,8 +230,8 @@ export function makeCommands() : ICommandMap
 		[ "rotate_nx_small", new RotateX ( DEG_TO_RAD *  -5 ) ],
 		[ "rotate_ny_small", new RotateY ( DEG_TO_RAD *  -5 ) ],
 		[ "rotate_nz_small", new RotateZ ( DEG_TO_RAD *  -5 ) ],
-		[ "view_bounds_reset", new ViewBounds ( true  ) ],
-		[ "view_bounds_fit",   new ViewBounds ( false ) ],
+		[ "view_bounds_reset", new ViewSphere ( true  ) ],
+		[ "view_bounds_fit",   new ViewSphere ( false ) ],
 	] );
 }
 

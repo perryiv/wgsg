@@ -242,21 +242,20 @@ export class Surface extends Base
 	}
 
 	/**
-	 * Handle resize events.
-	 * @param {ResizeObserverEntry[]} items - The resize observer entries.
+	 * Resize the surface.
+	 * @param {number} width - The new width.
+	 * @param {number} height - The new height.
 	 */
-	protected resizeHandler ( items: ResizeObserverEntry[] ) : void
+	public resize ( width: number, height: number ) : void
 	{
-		// There can be only one.
-		const item = items[0];
-		let { inlineSize: width, blockSize: height } = item.contentBoxSize[0];
-		const { maxTextureDimension2D: maxDimension } = Device.instance.device.limits;
-
 		// Ignore when one or both are zero.
 		if ( ( width <= 0 ) || ( height <= 0 ) )
 		{
 			return;
 		}
+
+		// Needed below.
+		const { maxTextureDimension2D: maxDimension } = Device.instance.device.limits;
 
 		// Make sure it's within the device's range.
 		width  = Math.max ( 1, Math.min ( width,  maxDimension ) );
@@ -265,7 +264,7 @@ export class Surface extends Base
 		// console.log ( `New surface size: ${width}, ${height}` );
 
 		// Set the canvas size.
-		const canvas = ( item.target as HTMLCanvasElement );
+		const canvas = this.canvas;
 		canvas.width  = width;
 		canvas.height = height;
 
@@ -274,6 +273,22 @@ export class Surface extends Base
 
 		// Set the projection's viewport.
 		this.projection.viewport = { ...this.viewport };
+	}
+
+	/**
+	 * Handle resize events.
+	 * @param {ResizeObserverEntry[]} items - The resize observer entries.
+	 */
+	protected resizeHandler ( items: ResizeObserverEntry[] ) : void
+	{
+		// There can be only one.
+		const item = items[0];
+
+		// Get the new width and height.
+		const { inlineSize: width, blockSize: height } = item.contentBoxSize[0];
+
+		// Resize the surface.
+		this.resize ( width, height );
 
 		// Request a render in the near future.
 		this.requestRender();

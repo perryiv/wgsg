@@ -14,7 +14,6 @@
 
 import { mat4, quat, vec2, vec3, vec4 } from "gl-matrix";
 import { NavBase as BaseClass } from "./NavBase";
-import { Node } from "../Scene";
 import {
 	intersectLineSphere,
 	isFiniteNumber,
@@ -259,16 +258,20 @@ export class Trackball extends BaseClass
 	}
 
 	/**
-	 * Set the navigator so that the model is completely within the view-volume.
+	 * Set the navigator so that the sphere is completely within the view-volume.
 	 * If the given model is null then reset the navigator to its default state.
-	 * @param {object} options - The options.
-	 * @param {Node | null} options.scene - The scene node.
-	 * @param {boolean} [options.resetRotation] - Whether or not to reset rotations.
+	 * @param {Sphere} sphere - The bounding sphere.
+	 * @param {object} [options] - The options.
+	 * @param {boolean} [options.resetRotation] - Whether or not to reset the rotation.
 	 */
-	public override viewBounds ( options: { scene: ( Node | null ), resetRotation?: boolean } ) : void
+	public override viewSphere ( sphere: Sphere, options?: { resetRotation?: boolean } ) : void
 	{
-		void options; // Do nothing with the function argument.
-		this.reset(); // For now just reset to the default state.
+		// Do nothing with the function arguments.
+		void sphere;
+		void options;
+
+		// For now just reset to the default state.
+		this.reset();
 	}
 
 	/**
