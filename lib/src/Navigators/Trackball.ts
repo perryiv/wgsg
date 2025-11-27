@@ -425,7 +425,7 @@ export class Trackball extends BaseClass
 			viewMatrix, projMatrix, viewport,
 		} );
 
-		// Get the line under the current mouse position.
+		// Get the line under the previous mouse position.
 		const pl = makeLineUnderScreenPoint ( {
 			screenPoint: [ pm[0], pm[1] ],
 			viewMatrix, projMatrix, viewport,
@@ -514,4 +514,6 @@ export class Trackball extends BaseClass
 		// Request a render.
 		viewer.requestRender();
 	}
+
+
 }
