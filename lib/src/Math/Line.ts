@@ -49,6 +49,17 @@ export class Line
 	}
 
 	/**
+	 * Clone the line.
+	 * @returns {Line} - The cloned line.
+	 */
+	public clone(): Line
+	{
+		const line = new Line();
+		line.setFromLine ( this );
+		return line;
+	}
+
+	/**
 	 * Get the start point.
 	 * @returns {IVector3} - The start point.
 	 */
