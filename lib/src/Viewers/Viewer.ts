@@ -14,8 +14,8 @@
 
 import { BaseHandler } from "../Events/Handlers/BaseHandler";
 import { Group, Node, Transform } from "../Scene";
+import { Line, Sphere } from "../Math";
 import { NavBase, Trackball } from "../Navigators";
-import { Sphere } from "../Math";
 import {
 	makeCommands,
 	makeInput as makeInputAsString,
@@ -25,6 +25,9 @@ import {
 	type ISurfaceConstructor,
 	Surface as BaseClass,
 } from "./Surface";
+import {
+	makeLine as makeLineUnderScreenPoint,
+} from "../Tools";
 import type {
 	ICommand,
 	ICommandMap,
@@ -752,6 +755,43 @@ export class Viewer extends BaseClass
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "key_up", input );
 		handler.handleEvent ( event );
+	}
+
+	/**
+	 * Get the line under the screen point.
+	 * @param {IVector2} screenPoint - The screen point.
+	 * @returns {(Line | null)} The line under the screen point or null if there is none.
+	 */
+	public makeLine ( screenPoint: IVector2 ) : ( Line | null )
+	{
+		// Shortcut.
+		const { viewMatrix, projMatrix, viewport } = this;
+
+		// Get the line under the current mouse position.
+		const line = makeLineUnderScreenPoint ( {
+			screenPoint,
+			viewMatrix,
+			projMatrix,
+			viewport,
+		} );
+
+		// Handle invalid line.
+		if ( !line )
+		{
+			return null;
+		}
+
+		// Normalize the lines.
+		line.normalize();
+
+		// Handle invalid lines.
+		if ( !line.valid )
+		{
+			return null;
+		}
+
+		// Return the line.
+		return line;
 	}
 
 	/**
