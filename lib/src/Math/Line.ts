@@ -190,6 +190,17 @@ export class Line
 	}
 
 	/**
+	 * Set the length of the line segment.
+	 * @param {number} len - The new length of the line segment.
+	 */
+	public set length ( len: number )
+	{
+		const dir = this.unitDirection;
+		vec3.scale ( dir, dir, len );
+		vec3.add ( this.#p1, this.#p0, dir );
+	}
+
+	/**
 	 * Get the squared length of the line segment.
 	 * @returns {number} - The squared length of the line segment.
 	 */
