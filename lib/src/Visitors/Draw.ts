@@ -600,7 +600,7 @@ export class Draw extends BaseClass
 		if ( DEVELOPER_BUILD )
 		{
 			const info = this.renderGraphInfo;
-			switch ( prims.mode )
+			switch ( prims.topology )
 			{
 				case "triangle-list":
 				{
@@ -628,7 +628,7 @@ export class Draw extends BaseClass
 	 */
 	public visitArrays ( arrays: Arrays ): void
 	{
-		console.log ( `Drawing '${arrays.type}' ${arrays.id}` );
+		console.warn ( `Skipped drawing ${arrays.type} ${arrays.id}, not implemented yet` );
 
 		// Shortcuts.
 		// const pass = this.pass;

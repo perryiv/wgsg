@@ -132,7 +132,7 @@ export const buildBox = ( input?: IBoxBuilderInput ) : Geometry =>
 		}
 		case "triangle-list":
 		{
-			indices =new Uint16Array ( [
+			indices = new Uint16Array ( [
 				0, 1, 2, 1, 3, 2, // Every three numbers are a triangle.
 				4, 6, 5, 5, 6, 7,
 				0, 2, 4, 4, 2, 6,
@@ -151,7 +151,7 @@ export const buildBox = ( input?: IBoxBuilderInput ) : Geometry =>
 	}
 
 	// Make the primitives.
-	const primitives = new Indexed ( { mode: topology, indices } );
+	const primitives = new Indexed ( { topology, indices } );
 
 	// Make the new geometry.
 	const geom = new Geometry ( { points, primitives } );
