@@ -12,11 +12,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { ICommand } from "./Command";
-import { IEvent } from "./Event";
-import { IMatrix44 } from "./Matrix";
-import { INavigator } from "./Navigator";
-import { IViewport } from "./Viewport";
+import { Group, Node as SceneNode } from "../Scene";
+import { Line } from "../Math";
+import type { ICommand } from "./Command";
+import type { IEvent } from "./Event";
+import type { IMatrix44 } from "./Matrix";
+import type { INavigator } from "./Navigator";
+import type { IVector2 } from "./Vector";
+import type { IViewport } from "./Viewport";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -28,9 +31,12 @@ import { IViewport } from "./Viewport";
 export interface IViewer
 {
 	getCommand: ( event: IEvent ) => ( ICommand | null );
+	makeLine: ( screenPoint: IVector2 ) => ( Line | null );
 	navBase: INavigator;
 	projMatrix: IMatrix44;
 	requestRender: ( () => void );
 	viewAll: ( options?: { resetRotation?: boolean } ) => void;
 	viewport: IViewport;
+	extraScene: Group;
+	modelScene: ( SceneNode | null );
 }
