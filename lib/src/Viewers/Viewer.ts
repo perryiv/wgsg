@@ -58,6 +58,7 @@ interface IViewerSceneBranches
 	fixed: Group;
 	nav: Transform;
 	model: Group;
+	extra: Group;
 }
 
 type IEventHandlerStack = BaseHandler[];
@@ -174,15 +175,17 @@ export class Viewer extends BaseClass
 		const fixed = new Group();
 		const nav = new Transform();
 		const model = new Group();
+		const extra = new Group();
 
 		if ( buildScene )
 		{
 			root.addChild ( fixed );
 			root.addChild ( nav );
 			nav.addChild ( model );
+			nav.addChild ( extra );
 		}
 
-		return { root, fixed, nav, model };
+		return { root, fixed, nav, model, extra };
 	}
 
 	/**
@@ -353,6 +356,15 @@ export class Viewer extends BaseClass
 		const model = this.#branches.model;
 		model.clear();
 		model.addChild ( scene ); // This handles null.
+	}
+
+	/**
+	 * Get the extra scene.
+	 * @returns {Group} The extra scene.
+	 */
+	public get extraScene() : Group
+	{
+		return this.#branches.extra;
 	}
 
 	/**
@@ -758,7 +770,7 @@ export class Viewer extends BaseClass
 	}
 
 	/**
-	 * Get the line under the screen point.
+	 * Make a line in model space under the screen point.
 	 * @param {IVector2} screenPoint - The screen point.
 	 * @returns {(Line | null)} The line under the screen point or null if there is none.
 	 */
@@ -775,22 +787,7 @@ export class Viewer extends BaseClass
 			viewport,
 		} );
 
-		// Handle invalid line.
-		if ( !line )
-		{
-			return null;
-		}
-
-		// Normalize the lines.
-		line.normalize();
-
-		// Handle invalid lines.
-		if ( !line.valid )
-		{
-			return null;
-		}
-
-		// Return the line.
+		// Return the line, which may be null.
 		return line;
 	}
 
