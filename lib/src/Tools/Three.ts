@@ -158,3 +158,53 @@ export function makeLine ( input: Readonly<IMakeLineInput> ): ( Line | null )
 	// Return the line.
 	return new Line ( near, far );
 }
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Convert the line from global space to model space.
+ * @param {Line} line The line in global space.
+ * @param {IMatrix44} viewMatrix The model matrix.
+ * @returns {Line} The line in model space.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export function lineToModelSpace ( line: Readonly<Line>, viewMatrix: Readonly<IMatrix44> ) : ( Line | null )
+{
+	// Handle invalid lines.
+	if ( !line.valid )
+	{
+		return null;
+	}
+
+	// Normalize the lines.
+	line.normalize();
+
+	// Handle invalid lines.
+	if ( !line.valid )
+	{
+		return null;
+	}
+
+	// Get the inverse of the view matrix.
+	const ivm: IMatrix44 = [ ...IDENTITY_MATRIX ];
+	mat4.invert ( ivm, viewMatrix );
+
+	// Handle no inverse.
+	if ( !ivm )
+	{
+		return null;
+	}
+
+	// Put the line in model space.
+	const answer = line.clone();
+	Line.transform ( answer, ivm, line );
+
+	// Handle invalid answer.
+	if ( !answer.valid )
+	{
+		return null;
+	}
+
+	// Return the line.
+	return answer;
+}

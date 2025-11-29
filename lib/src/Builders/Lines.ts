@@ -12,18 +12,71 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Geometry, Indexed } from "../Scene";
+import { IVector4 } from "../Types";
+import { Line } from "../Math";
+import { makeSolidColorState } from "./State";
 import { makeTriangleEdges } from "../Algorithms";
-import {
-	Geometry,
-	Indexed
-} from "../Scene";
 
 
 ///////////////////////////////////////////////////////////////////////////////
-//
-//	Given a geometry with one indexed triangle-list, return a geometry with
-//	an indexed line-list for the triangle edges.
-//
+/**
+ * Build the scene for a line segment.
+ * @param {object} params The parameters.
+ * @param {Line} params.line The line segment.
+ * @param {IVector4} [params.color] The color of the line.
+ * @returns {Geometry} The geometry representing the line.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export const buildLine = ( { line, color }: { line: Readonly<Line>, color?: IVector4 } ) : ( Geometry | null ) =>
+{
+	// Handle invalid line.
+	if ( !line.valid )
+	{
+		return null;
+	}
+
+	// Get the end points from the line.
+	const { start, end } = line;
+
+	// Make the points.
+	const points = [
+		start[0], start[1], start[2],
+		end[0], end[1], end[2],
+	];
+
+	// Make the indices.
+	const indices = new Uint16Array ( [
+		0, 1, // Just one segment.
+	] );
+
+	// The topology is a line-list.
+	const topology = "line-list";
+
+	// Make the primitives.
+	const primitives = new Indexed ( { topology, indices } );
+
+	// Make the new geometry.
+	const geom = new Geometry ( { points, primitives } );
+
+	// Were we given a color?
+	if ( color )
+	{
+		geom.state = makeSolidColorState ( { color, topology } );
+	}
+
+	// Return the new geometry.
+	return geom;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Given a geometry with one indexed triangle-list, return a geometry with
+ * an indexed line-list for the triangle edges.
+ * @param {Geometry} geom The input geometry.
+ * @returns {(Geometry | null)} The new geometry or null on failure.
+ */
 ///////////////////////////////////////////////////////////////////////////////
 
 export const buildTriangleEdges = ( geom: Geometry ) : ( Geometry | null ) =>
@@ -72,7 +125,7 @@ export const buildTriangleEdges = ( geom: Geometry ) : ( Geometry | null ) =>
 	const prim = prims[0];
 
 	// TODO: For now we only handle triangle-lists.
-	if ( "triangle-list" !== prim.mode )
+	if ( "triangle-list" !== prim.topology )
 	{
 		return null;
 	}
@@ -119,7 +172,7 @@ export const buildTriangleEdges = ( geom: Geometry ) : ( Geometry | null ) =>
 	// Make the line-list primitive.
 	const lineList = new Indexed ( {
 		indices: new Uint32Array ( lineIndices ),
-		mode: "line-list"
+		topology: "line-list"
 	} );
 
 	// Make a geometry using the same points and the new indices.

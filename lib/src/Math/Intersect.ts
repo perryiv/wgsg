@@ -15,8 +15,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Line } from "./Line";
-import { Sphere } from "./Sphere";
+import type {
+  ILine,
+  IPlaneCoefficients,
+  ISphere,
+  IVector3,
+} from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -27,8 +31,8 @@ import { Sphere } from "./Sphere";
 
 export interface IIntersectLineSphereInput
 {
-  line: Line;
-  sphere: Sphere;
+  line: ILine;
+  sphere: ISphere;
   tolerance?: number;
 }
 
@@ -37,11 +41,22 @@ export interface ILineSphereIntersection {
   u2?: number;
 }
 
+export interface IIntersectLinePlaneInput
+{
+  line: ILine;
+  plane: IPlaneCoefficients;
+  tolerance?: number;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * Intersect a line with a sphere.
  * See: http://paulbourke.net/geometry/circlesphere/index.html#linesphere
  * @param {IIntersectLineSphereInput} input The input data.
+ * @param {ILine} input.line The line.
+ * @param {ISphere} input.sphere The sphere.
+ * @param {number} [input.tolerance ] The tolerance for floating point comparisons.
  * @returns {ILineSphereIntersection} The intersection data.
  */
 ///////////////////////////////////////////////////////////////////////////////
@@ -102,4 +117,54 @@ export function intersectLineSphere ( input: IIntersectLineSphereInput ) : ILine
   const u1 = ( -b - sqrtInner ) * denom;
   const u2 = ( -b + sqrtInner ) * denom;
   return { u1, u2 };
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Intersect a line with a plane.
+ * @param {IIntersectLinePlaneInput} input The input data.
+ * @param {ILine} input.line The line.
+ * @param {IPlaneCoefficients} input.plane The plane.
+ * @param {number} [input.tolerance ] The tolerance for floating point comparisons.
+ * @returns {number | null} The intersection parameter along the line, or null if no intersection.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export function intersectLinePlane ( input: IIntersectLinePlaneInput ) : number | null
+{
+  // Get the input.
+  const { line, plane, tolerance = 1e-6 } = input;
+
+  // Get the line direction.
+  const dir: IVector3 = [
+    line.end[0] - line.start[0],
+    line.end[1] - line.start[1],
+    line.end[2] - line.start[2]
+  ];
+
+  // Get the plane coefficients.
+  const coeffs = plane.coefficients;
+  const a = coeffs[0];
+  const b = coeffs[1];
+  const c = coeffs[2];
+  const d = coeffs[3];
+
+  // Calculate the denominator.
+  const denom = a * dir[0] + b * dir[1] + c * dir[2];
+
+  // If the denominator is zero, the line is parallel to the plane.
+  if ( Math.abs ( denom ) < tolerance )
+  {
+    return null;
+  }
+
+  // Calculate the numerator.
+  const numer = - ( a * line.start[0] + b * line.start[1] + c * line.start[2] + d );
+
+  // Calculate the intersection parameter.
+  const t = numer / denom;
+
+  // Return the intersection parameter.
+  return t;
 }

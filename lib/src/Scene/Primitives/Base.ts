@@ -24,7 +24,7 @@ import { Draw as DrawVisitor } from "../../Visitors/Draw";
 
 export interface IPrimitivesInput
 {
-	mode: GPUPrimitiveTopology;
+	topology: GPUPrimitiveTopology;
 }
 
 
@@ -37,13 +37,13 @@ export interface IPrimitivesInput
 
 export abstract class Base extends BaseClass
 {
-	#mode: GPUPrimitiveTopology = "point-list";
+	#topology: GPUPrimitiveTopology = "point-list";
 
 	/**
 	 * Construct the class.
 	 * @class
 	 * @param {IPrimitivesInput} [input] - Input for the primitives.
-	 * @param {GPUPrimitiveTopology} [input.mode] - The primitive topology mode.
+	 * @param {GPUPrimitiveTopology} [input.topology] - The primitive topology mode.
 	 */
 	constructor ( input?: IPrimitivesInput )
 	{
@@ -51,9 +51,9 @@ export abstract class Base extends BaseClass
 		super();
 
 		// Is there input?
-		if ( input?.mode )
+		if ( input?.topology )
 		{
-			this.#mode = input.mode;
+			this.#topology = input.topology;
 		}
 	}
 
@@ -66,21 +66,21 @@ export abstract class Base extends BaseClass
 	}
 
 	/**
-	 * Get the mode.
-	 * @returns {GPUPrimitiveTopology} The mode.
+	 * Get the topology.
+	 * @returns {GPUPrimitiveTopology} The topology.
 	 */
-	get mode(): GPUPrimitiveTopology
+	get topology(): GPUPrimitiveTopology
 	{
-		return this.#mode;
+		return this.#topology;
 	}
 
 	/**
-	 * Set the mode.
-	 * @param {GPUPrimitiveTopology} mode The mode.
+	 * Set the topology.
+	 * @param {GPUPrimitiveTopology} topology The topology.
 	 */
-	set mode ( mode: GPUPrimitiveTopology )
+	set topology ( topology: GPUPrimitiveTopology )
 	{
-		this.#mode = mode;
+		this.#topology = topology;
 	}
 
 	/**

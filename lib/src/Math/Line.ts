@@ -49,6 +49,17 @@ export class Line
 	}
 
 	/**
+	 * Clone the line.
+	 * @returns {Line} - The cloned line.
+	 */
+	public clone(): Line
+	{
+		const line = new Line();
+		line.setFromLine ( this );
+		return line;
+	}
+
+	/**
 	 * Get the start point.
 	 * @returns {IVector3} - The start point.
 	 */
@@ -176,6 +187,17 @@ export class Line
 	public get length(): number
 	{
 		return vec3.distance ( this.start, this.end );
+	}
+
+	/**
+	 * Set the length of the line segment.
+	 * @param {number} len - The new length of the line segment.
+	 */
+	public set length ( len: number )
+	{
+		const dir = this.unitDirection;
+		vec3.scale ( dir, dir, len );
+		vec3.add ( this.#p1, this.#p0, dir );
 	}
 
 	/**

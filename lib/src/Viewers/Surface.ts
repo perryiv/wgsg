@@ -114,7 +114,7 @@ export class Surface extends Base
 
 		// Set the default state's properties.
 		const state = new State();
-		state.name = `Default state for ${this.getClassName()} ${this.id}`;
+		state.name = `Default state for ${this.type} ${this.id}`;
 		state.shader = SolidColor.instance;
 		state.apply = this.defaultApplyFunction.bind ( this );
 		state.reset = this.defaultResetFunction.bind ( this );
