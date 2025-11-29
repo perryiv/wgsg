@@ -13,27 +13,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { vec3 } from "gl-matrix";
-import type { IMatrix44, IVector3, IVector4 } from "../Types";
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
-//	Types used below.
-//
-///////////////////////////////////////////////////////////////////////////////
-
-interface IPlaneCoefficients
-{
-	coefficients: IVector4;
-}
-
-interface IPlanePointAndNormal
-{
-	point: IVector3;
-	normal: IVector3;
-}
-
-type IPlaneDefinition = IPlaneCoefficients | IPlanePointAndNormal | Plane;
+import type {
+	IMatrix44,
+	IPlane,
+	IVector3,
+	IVector4,
+} from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -49,10 +34,10 @@ export class Plane
 
 	/**
 	 * Construct the class.
-	 * @param {IPlaneDefinition} input - The plane definition.
+	 * @param {IPlane} input - The plane definition.
 	 * @class
 	 */
-	constructor ( input?: IPlaneDefinition )
+	constructor ( input?: IPlane )
 	{
 		if ( input )
 		{
