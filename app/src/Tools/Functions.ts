@@ -14,6 +14,7 @@
 
 import { mat4 } from "gl-matrix";
 import {
+	buildBox,
 	buildTriangleEdges,
 	Geometry,
 	Group,
@@ -158,7 +159,7 @@ const makeQuad = ( { origin, size, color, topology } :
 	);
 
 	// Make the primitives.
-	const primitives = new Indexed ( { mode: topology, indices } );
+	const primitives = new Indexed ( { topology, indices } );
 
 	// Make the new geometry.
 	const geom = new Geometry ( { points, primitives } );
@@ -208,55 +209,6 @@ export const makeCorners = ( { center, size } : { center?: IVector3, size?: IVec
 		xMin, yMax, zMax,
 		xMax, yMax, zMax,
 	] );
-};
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
-//	Make a scene used for testing.
-//
-///////////////////////////////////////////////////////////////////////////////
-
-const makeBox = ( { center, size, color, topology } :
-	{ center?: IVector3, size?: IVector3, color?: IVector4, topology?: GPUPrimitiveTopology } ) =>
-{
-	// Give the input default values if needed.
-	topology ??= "triangle-list";
-
-	// The points are the same for both topologies.
-	const points = makeCorners ( { center, size } );
-
-	// Make the indices based on the topology.
-	const indices = ( ( topology === "line-list" ) ?
-		( new Uint32Array ( [
-				0, 1, 1, 3, 3, 2, 2, 0, // Every two numbers are a line segment.
-				0, 4, 1, 5, 3, 7, 2, 6,
-				4, 5, 5, 7, 7, 6, 6, 4
-			] ) ) :
-		( new Uint32Array ( [
-			0, 1, 2, 1, 3, 2, // Every three numbers are a triangle.
-			4, 6, 5, 5, 6, 7,
-			0, 2, 4, 4, 2, 6,
-			1, 5, 3, 3, 5, 7,
-			2, 3, 6, 6, 3, 7,
-			0, 4, 1, 1, 4, 5
-		] ) )
-	);
-
-	// Make the primitives.
-	const primitives = new Indexed ( { mode: topology, indices } );
-
-	// Make the new geometry.
-	const geom = new Geometry ( { points, primitives } );
-
-	// Were we given a color?
-	if ( color )
-	{
-		geom.state = makeSolidColorState ( { color, topology } );
-	}
-
-	// Return the new geometry.
-	return geom;
 };
 
 
@@ -354,21 +306,21 @@ export const buildSceneBox = ( sx = 1.0, sy = 1.0, sz = 1.0 ) : Node =>
 {
 	const group = new Group();
 
-	group.addChild ( makeBox ( {
+	group.addChild ( buildBox ( {
 		center: [ 0.0, 0.0, 0.0 ],
 		size:   [ sx, sy, sz ],
 		color:  [ 0.0, 0.0, 0.0, 1.0 ],
 		topology: "line-list",
 	} ) );
 
-	const scale = 0.98;
+	// const scale = 0.98;
 
-	group.addChild ( makeBox ( {
-		center: [ 0.0, 0.0, 0.0 ],
-		size:   [ sx * scale, sy * scale, sz * scale ],
-		color:  [ 0.8, 0.2, 0.2, 1.0 ],
-		topology: "triangle-list",
-	} ) );
+	// group.addChild ( buildBox ( {
+	// 	center: [ 0.0, 0.0, 0.0 ],
+	// 	size:   [ sx * scale, sy * scale, sz * scale ],
+	// 	color:  [ 0.8, 0.2, 0.2, 1.0 ],
+	// 	topology: "triangle-list",
+	// } ) );
 
 	return group;
 };
