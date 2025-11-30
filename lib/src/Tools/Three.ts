@@ -35,18 +35,19 @@ import type {
 
 interface IUnProjectInput
 {
-	screenPoint: ( IVector2 | IVector3 );
-	viewMatrix: IMatrix44;
-	projMatrix: IMatrix44;
-	viewport: IViewport;
+	screenPoint: Readonly<( IVector2 | IVector3 )>;
+	projMatrix: Readonly<IMatrix44>;
+	viewMatrix: Readonly<IMatrix44>;
+	invViewMatrix?: Readonly<IMatrix44>;
+	viewport: Readonly<IViewport>;
 };
 
 interface IMakeLineInput
 {
-	screenPoint: IVector2;
-	viewMatrix: IMatrix44;
-	projMatrix: IMatrix44;
-	viewport: IViewport;
+	screenPoint: Readonly<IVector2>;
+	projMatrix: Readonly<IMatrix44>;
+	viewMatrix: Readonly<IMatrix44>;
+	viewport: Readonly<IViewport>;
 }
 
 
@@ -55,6 +56,11 @@ interface IMakeLineInput
  * Unprojects a 2D screen point into world space.
  * See: https://github.com/perryiv/usul/blob/master/source/Usul/Math/Three.h
  * @param {IUnProjectInput} input The input data.
+ * @param {Readonly<(IVector2 | IVector3)>} input.screenPoint The screen point (x,y) or (x,y,z).
+ * @param {Readonly<IMatrix44>} input.projMatrix The projection matrix.
+ * @param {Readonly<IMatrix44>} input.viewMatrix The view matrix.
+ * @param {Readonly<IMatrix44> | undefined} input.invViewMatrix The inverse view matrix.
+ * @param {Readonly<IViewport>} input.viewport The viewport.
  * @returns {IVector3 | null} The unprojected point or null on failure.
  */
 ///////////////////////////////////////////////////////////////////////////////
@@ -91,16 +97,21 @@ export function unProject ( input: Readonly<IUnProjectInput> ) : ( IVector3 | nu
 	mat4.multiply ( m, m, projMatrix );
 	mat4.multiply ( m, m, viewMatrix );
 
-	// Get the inverse and handle when it does not exist.
-	const im: IMatrix44 = [ ...IDENTITY_MATRIX ];
-	if ( !mat4.invert ( im, m ) )
+	// If we were not given the inverse of the view matrix then calculate it.
+	let { invViewMatrix } = input;
+	if ( !invViewMatrix )
 	{
-		return null;
+		const im: IMatrix44 = [ ...IDENTITY_MATRIX ];
+		if ( !mat4.invert ( im, m ) )
+		{
+			return null; // The inverse does not exist.
+		}
+		invViewMatrix = im;
 	}
 
 	// Transform the 4D point.
 	const b: IVector4 = [ 0, 0, 0, 0 ];
-	vec4.transformMat4 ( b, a, im );
+	vec4.transformMat4 ( b, a, invViewMatrix );
 
 	// Make sure it worked.
 	if ( 0 == b[3] )

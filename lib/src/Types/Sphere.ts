@@ -6,24 +6,17 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { IVector3 } from "./Vector";
+
+
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Export the modules in this directory.
+//	Sphere type.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export * from "./Command";
-export * from "./Event";
-export * from "./Graphics";
-export * from "./Input";
-export * from "./Keyboard";
-export * from "./Line";
-export * from "./Matrix";
-export * from "./Mouse";
-export * from "./Navigator";
-export * from "./Plane";
-export * from "./Size";
-export * from "./Sphere";
-export * from "./Vector";
-export * from "./Viewer";
-export * from "./Viewport";
+export interface ISphere
+{
+	center: IVector3;
+	radius: number;
+}

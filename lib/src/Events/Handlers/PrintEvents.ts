@@ -39,7 +39,7 @@ export class PrintEvents extends BaseClass
 	 * Get the class name.
 	 * @returns {string} The class name.
 	 */
-	public getClassName () : string
+	public override getClassName () : string
 	{
 		return "Viewers.EventHandlers.PrintEvents";
 	}

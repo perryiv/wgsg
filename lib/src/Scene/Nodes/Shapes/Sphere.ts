@@ -255,7 +255,7 @@ export class Sphere extends BaseClass
 		this.normals = new Array1 ( normals );
 
 		// Set the primitive list.
-		this.primitives = new Indexed ( { mode: "triangle-list", indices } );
+		this.primitives = new Indexed ( { topology: "triangle-list", indices } );
 
 		// The bounds is now dirty.
 		this.setBoundingBox ( null );

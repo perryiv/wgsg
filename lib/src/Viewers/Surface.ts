@@ -114,7 +114,7 @@ export class Surface extends Base
 
 		// Set the default state's properties.
 		const state = new State();
-		state.name = `Default state for ${this.getClassName()} ${this.id}`;
+		state.name = `Default state for ${this.type} ${this.id}`;
 		state.shader = SolidColor.instance;
 		state.apply = this.defaultApplyFunction.bind ( this );
 		state.reset = this.defaultResetFunction.bind ( this );
@@ -558,7 +558,7 @@ export class Surface extends Base
 	 * Get the projection matrix.
 	 * @returns {IMatrix44} The projection matrix.
 	 */
-	public get projMatrix () : IMatrix44
+	public get projMatrix () : Readonly<IMatrix44>
 	{
 		return this.projection.matrix;
 	}
@@ -567,7 +567,7 @@ export class Surface extends Base
 	 * Get the view matrix.
 	 * @returns {IMatrix44} The view matrix.
 	 */
-	public get viewMatrix () : IMatrix44
+	public get viewMatrix () : Readonly<IMatrix44>
 	{
 		return [ ...IDENTITY_MATRIX ];
 	}
@@ -673,9 +673,9 @@ export class Surface extends Base
 	 * Get the surface viewport.
 	 * @returns {IViewport} The viewport of the surface.
 	 */
-	public get viewport() : IViewport
+	public get viewport() : Readonly<IViewport>
 	{
-		return { ...this.#viewport };
+		return this.#viewport;
 	}
 
 	/**

@@ -152,7 +152,7 @@ export class Perspective extends Projection
 	 * Return the projection matrix.
 	 * @returns {IMatrix44} The projection matrix.
 	 */
-	public override get matrix() : IMatrix44
+	public override get matrix() : Readonly<IMatrix44>
 	{
 		// Shortcuts.
 		const fov = this.#fov;

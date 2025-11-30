@@ -70,7 +70,7 @@ export abstract class WithMatrices extends BaseClass
 	 * Get the projection matrix.
 	 * @returns {IMatrix44} The projection matrix.
 	 */
-	public get projMatrix () : Readonly<IMatrix44>
+	public override get projMatrix () : Readonly<IMatrix44>
 	{
 		return this.#projMatrix;
 	}
@@ -88,7 +88,7 @@ export abstract class WithMatrices extends BaseClass
 	 * Get the view matrix.
 	 * @returns {IMatrix44} The view matrix.
 	 */
-	public get viewMatrix () : Readonly<IMatrix44>
+	public override get viewMatrix () : Readonly<IMatrix44>
 	{
 		return this.#viewMatrix;
 	}

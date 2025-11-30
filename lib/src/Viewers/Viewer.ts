@@ -14,8 +14,8 @@
 
 import { BaseHandler } from "../Events/Handlers/BaseHandler";
 import { Group, Node, Transform } from "../Scene";
+import { Line, Sphere } from "../Math";
 import { NavBase, Trackball } from "../Navigators";
-import { Sphere } from "../Math";
 import {
 	makeCommands,
 	makeInput as makeInputAsString,
@@ -25,6 +25,9 @@ import {
 	type ISurfaceConstructor,
 	Surface as BaseClass,
 } from "./Surface";
+import {
+	makeLine as makeLineUnderScreenPoint,
+} from "../Tools";
 import type {
 	ICommand,
 	ICommandMap,
@@ -55,6 +58,7 @@ interface IViewerSceneBranches
 	fixed: Group;
 	nav: Transform;
 	model: Group;
+	extra: Group;
 }
 
 type IEventHandlerStack = BaseHandler[];
@@ -171,15 +175,17 @@ export class Viewer extends BaseClass
 		const fixed = new Group();
 		const nav = new Transform();
 		const model = new Group();
+		const extra = new Group();
 
 		if ( buildScene )
 		{
 			root.addChild ( fixed );
 			root.addChild ( nav );
 			nav.addChild ( model );
+			nav.addChild ( extra );
 		}
 
-		return { root, fixed, nav, model };
+		return { root, fixed, nav, model, extra };
 	}
 
 	/**
@@ -326,7 +332,7 @@ export class Viewer extends BaseClass
 	 * Get the view matrix.
 	 * @returns {IMatrix44} The view matrix.
 	 */
-	public override get viewMatrix () : IMatrix44
+	public override get viewMatrix () : Readonly<IMatrix44>
 	{
 		return this.navBase.viewMatrix;
 	}
@@ -350,6 +356,24 @@ export class Viewer extends BaseClass
 		const model = this.#branches.model;
 		model.clear();
 		model.addChild ( scene ); // This handles null.
+	}
+
+	/**
+	 * Get the extra scene.
+	 * @returns {Group} The extra scene.
+	 */
+	public get extraScene() : Group
+	{
+		return this.#branches.extra;
+	}
+
+	/**
+	 * Get the fixed scene.
+	 * @returns {Group} The fixed scene.
+	 */
+	public get fixedScene() : Group
+	{
+		return this.#branches.fixed;
 	}
 
 	/**
@@ -598,12 +622,15 @@ export class Viewer extends BaseClass
 	public mouseDown ( input: MouseEvent ) : void
 	{
 		input.preventDefault();
+		const { button, clientX, clientY } = input;
+
+		this.mouseButtonsDown.add ( button );
 
 		this.mousePrevious = this.mouseCurrent;
-		this.mouseCurrent = [ input.clientX, input.clientY ];
+		this.mouseCurrent = [ clientX, clientY ];
 
 		this.mouseReleased = null;
-		this.mousePressed = [ input.clientX, input.clientY ];
+		this.mousePressed = [ clientX, clientY ];
 
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "mouse_down", input );
@@ -618,15 +645,16 @@ export class Viewer extends BaseClass
 	public mouseMove ( input: MouseEvent ) : void
 	{
 		input.preventDefault();
+		const { buttons, clientX, clientY } = input;
 
 		this.mousePrevious = this.mouseCurrent;
-		this.mouseCurrent = [ input.clientX, input.clientY ];
+		this.mouseCurrent = [ clientX, clientY ];
 
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "mouse_move", input );
 		handler.handleEvent ( event );
 
-		if ( input.buttons )
+		if ( buttons )
 		{
 			event.type = "mouse_drag"; // Use all the same event data.
 			handler.handleEvent ( event );
@@ -651,11 +679,15 @@ export class Viewer extends BaseClass
 	public mouseUp ( input: MouseEvent ) : void
 	{
 		input.preventDefault();
+		const { button, clientX, clientY } = input;
+
+		this.mouseButtonsDown.delete ( button );
 
 		this.mousePrevious = this.mouseCurrent;
-		this.mouseCurrent = [ input.clientX, input.clientY ];
+		this.mouseCurrent = [ clientX, clientY ];
 
-		this.mouseReleased = [ input.clientX, input.clientY ];
+		this.mouseReleased = [ clientX, clientY ];
+		// The mouse pressed state is unchanged.
 
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "mouse_up", input );
@@ -744,6 +776,33 @@ export class Viewer extends BaseClass
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "key_up", input );
 		handler.handleEvent ( event );
+	}
+
+	/**
+	 * Make a line in model space under the screen point.
+	 * @param {object} input - The input.
+	 * @param {IVector2} input.screenPoint - The screen point.
+	 * @param {IMatrix44} [input.viewMatrix] - The view matrix to use. If not provided, the viewer's view matrix is used.
+	 * @returns {(Line | null)} The line under the screen point or null if there is none.
+	 */
+	public makeLine ( { screenPoint, viewMatrix }: { screenPoint: Readonly<IVector2>, viewMatrix?: Readonly<IMatrix44> } ) : ( Line | null )
+	{
+		// Shortcut.
+		const { projMatrix, viewport } = this;
+
+		// Use our view matrix if none was provided.
+		const vm = ( viewMatrix ?? this.viewMatrix );
+
+		// Get the line under the current mouse position.
+		const line = makeLineUnderScreenPoint ( {
+			screenPoint,
+			viewMatrix: vm,
+			projMatrix,
+			viewport,
+		} );
+
+		// Return the line, which may be null.
+		return line;
 	}
 
 	/**
