@@ -12,7 +12,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { mat4, quat, vec2, vec3, vec4 } from "gl-matrix";
 import { NavBase as BaseClass } from "./NavBase";
 import {
 	Perspective,
@@ -38,6 +37,13 @@ import type {
 	IVector3,
 	IVector4,
 } from "../Types";
+import {
+	mat4,
+	quat,
+	vec2,
+	vec3,
+	vec4,
+} from "gl-matrix";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -198,7 +204,7 @@ export class Trackball extends BaseClass
 	 * Get the center point.
 	 * @returns {IVector3} The center point.
 	 */
-	public get center () : IVector3
+	public get center () : Readonly<IVector3>
 	{
 		return this.#state.center;
 	}
@@ -207,7 +213,7 @@ export class Trackball extends BaseClass
 	 * Set the center point.
 	 * @param {IVector3} c - The center point.
 	 */
-	public set center ( c: IVector3 )
+	public set center ( c: Readonly<IVector3> )
 	{
 		vec3.copy ( this.#state.center, c );
 		this.#matrix = null;
@@ -236,7 +242,7 @@ export class Trackball extends BaseClass
 	 * Get the rotation.
 	 * @returns {IVector4} The rotation.
 	 */
-	public get rotation () : IVector4
+	public get rotation () : Readonly<IVector4>
 	{
 		return this.#state.rotation;
 	}
@@ -245,7 +251,7 @@ export class Trackball extends BaseClass
 	 * Set the rotation.
 	 * @param {IVector4} r - The rotation.
 	 */
-	public set rotation ( r: IVector4 )
+	public set rotation ( r: Readonly<IVector4> )
 	{
 		vec4.copy ( this.#state.rotation, r );
 		this.#matrix = null;
@@ -256,7 +262,7 @@ export class Trackball extends BaseClass
 	 * @param {IVector3 | IVector4} input - The rotation axis or quaternion.
 	 * @param {number} [radians] - The angle in radians required if input is a rotation axis.
 	 */
-	public rotate ( input: ( IVector3 | IVector4 ), radians?: number ) : void
+	public rotate ( input: ( Readonly<IVector3> | Readonly<IVector4> ), radians?: number ) : void
 	{
 		switch ( input.length )
 		{
@@ -313,6 +319,15 @@ export class Trackball extends BaseClass
 
 		// Handle no mouse points.
 		if ( !previous || !current )
+		{
+			return;
+		}
+
+		// We need the inverse of the view matrix in order to proceed.
+		const ivm = this.invViewMatrix;
+
+		// Handle invalid matrix.
+		if ( !ivm )
 		{
 			return;
 		}
@@ -378,9 +393,17 @@ export class Trackball extends BaseClass
 		// Make sure there is no change in the z-value.
 		t[2] = 0;
 
-		// Update the center.
+		// Get the center in global space.
 		const center: IVector3 = [ ...this.center ];
+		vec3.transformMat4 ( center, center, this.viewMatrix );
+
+		// Now translate the center.
 		vec3.add ( center, center, t );
+
+		// Put the new center point in model space.
+		vec3.transformMat4 ( center, center, ivm );
+
+		// Set the new center.
 		this.center = center;
 
 		// Add a scene for the line to the viewer's extra scene.
@@ -414,7 +437,7 @@ export class Trackball extends BaseClass
 	 * @param {object} [options] - The options.
 	 * @param {boolean} [options.resetRotation] - Whether or not to reset the rotation.
 	 */
-	public override viewSphere ( sphere: Sphere, projection: Projection, options?: { resetRotation?: boolean } ) : void
+	public override viewSphere ( sphere: Readonly<Sphere>, projection: Readonly<Projection>, options?: { resetRotation?: boolean } ) : void
 	{
 		if ( projection instanceof Perspective )
 		{
