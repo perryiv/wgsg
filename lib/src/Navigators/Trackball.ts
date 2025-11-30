@@ -438,8 +438,8 @@ export class Trackball extends BaseClass
 			// The hypotenuse is the new distance.
 			this.distance = hypotenuse;
 
-			// // Set the center.
-			// this.center = sphere.center;
+			// Set the center.
+			this.center = sphere.center;
 
 			// Reset the rotation if we should.
 			if ( options?.resetRotation )
