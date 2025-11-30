@@ -28,5 +28,7 @@ export interface INavigator
 	rotate: ( ( r: IVector4 ) => void );
 	translate: ( ( params: { event: IEvent, scale: number } ) => void );
 	zoom: ( ( scale: number ) => void );
-	viewMatrix: IMatrix44;
+
+	viewMatrix: Readonly<IMatrix44>;
+	invViewMatrix: ( Readonly<IMatrix44> | null );
 }

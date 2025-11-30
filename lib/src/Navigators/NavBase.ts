@@ -41,7 +41,13 @@ export abstract class NavBase extends BaseClass
 	 * Get the view matrix.
 	 * @returns The view matrix.
 	 */
-	public abstract get viewMatrix () : IMatrix44;
+	public abstract get viewMatrix () : Readonly<IMatrix44>;
+
+	/**
+	 * Get the inverse view matrix.
+	 * @returns The inverse view matrix.
+	 */
+	public abstract get invViewMatrix () : ( Readonly<IMatrix44> | null );
 
 	/**
 	 * Rotate the navigator.

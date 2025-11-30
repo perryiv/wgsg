@@ -332,7 +332,7 @@ export class Viewer extends BaseClass
 	 * Get the view matrix.
 	 * @returns {IMatrix44} The view matrix.
 	 */
-	public override get viewMatrix () : IMatrix44
+	public override get viewMatrix () : Readonly<IMatrix44>
 	{
 		return this.navBase.viewMatrix;
 	}
@@ -365,6 +365,15 @@ export class Viewer extends BaseClass
 	public get extraScene() : Group
 	{
 		return this.#branches.extra;
+	}
+
+	/**
+	 * Get the fixed scene.
+	 * @returns {Group} The fixed scene.
+	 */
+	public get fixedScene() : Group
+	{
+		return this.#branches.fixed;
 	}
 
 	/**
@@ -771,18 +780,23 @@ export class Viewer extends BaseClass
 
 	/**
 	 * Make a line in model space under the screen point.
-	 * @param {IVector2} screenPoint - The screen point.
+	 * @param {object} input - The input.
+	 * @param {IVector2} input.screenPoint - The screen point.
+	 * @param {IMatrix44} [input.viewMatrix] - The view matrix to use. If not provided, the viewer's view matrix is used.
 	 * @returns {(Line | null)} The line under the screen point or null if there is none.
 	 */
-	public makeLine ( screenPoint: IVector2 ) : ( Line | null )
+	public makeLine ( { screenPoint, viewMatrix }: { screenPoint: Readonly<IVector2>, viewMatrix?: Readonly<IMatrix44> } ) : ( Line | null )
 	{
 		// Shortcut.
-		const { viewMatrix, projMatrix, viewport } = this;
+		const { projMatrix, viewport } = this;
+
+		// Use our view matrix if none was provided.
+		const vm = ( viewMatrix ?? this.viewMatrix );
 
 		// Get the line under the current mouse position.
 		const line = makeLineUnderScreenPoint ( {
 			screenPoint,
-			viewMatrix,
+			viewMatrix: vm,
 			projMatrix,
 			viewport,
 		} );

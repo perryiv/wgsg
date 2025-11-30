@@ -39,7 +39,7 @@ export abstract class Projection extends Base
 	 * Return the projection matrix.
 	 * @returns {IMatrix44} The projection matrix.
 	 */
-	public abstract get matrix() : IMatrix44;
+	public abstract get matrix() : Readonly<IMatrix44>;
 
 	/**
 	 * Let the projection know about the new viewport.

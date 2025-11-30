@@ -30,13 +30,16 @@ import type { IViewport } from "./Viewport";
 
 export interface IViewer
 {
-	getCommand: ( event: IEvent ) => ( ICommand | null );
-	makeLine: ( screenPoint: IVector2 ) => ( Line | null );
+	extraScene: Group;
+	fixedScene: Group;
+	modelScene: ( SceneNode | null );
+
 	navBase: INavigator;
-	projMatrix: IMatrix44;
+	projMatrix: Readonly<IMatrix44>;
+	viewport: Readonly<IViewport>;
+
+	getCommand: ( event: IEvent ) => ( ICommand | null );
+	makeLine: ( input: { screenPoint: Readonly<IVector2>, viewMatrix?: Readonly<IMatrix44> } ) => ( Line | null );
 	requestRender: ( () => void );
 	viewAll: ( options?: { resetRotation?: boolean } ) => void;
-	viewport: IViewport;
-	extraScene: Group;
-	modelScene: ( SceneNode | null );
 }

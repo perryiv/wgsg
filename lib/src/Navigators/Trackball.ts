@@ -19,8 +19,10 @@ import {
 	ProjectionBase as Projection,
 } from "../Projections";
 import {
+	intersectLinePlane,
 	intersectLineSphere,
 	isFiniteNumber,
+	Plane,
 	Sphere,
 } from "../Math";
 import {
@@ -78,8 +80,8 @@ function makeDefaultTrackballState() : ITrackballState
 
 export class Trackball extends BaseClass
 {
-	#dirty = true;
-	#matrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
+	#matrix: ( IMatrix44 | null ) = null;
+	#inverse: ( IMatrix44 | null ) = null;
 	#state: ITrackballState = makeDefaultTrackballState();
 
 	/**
@@ -137,15 +139,59 @@ export class Trackball extends BaseClass
 	 * Get the view matrix.
 	 * @returns {IMatrix44} The view matrix.
 	 */
-	public get viewMatrix () : IMatrix44
+	public override get viewMatrix () : Readonly<IMatrix44>
 	{
-		if ( true == this.#dirty )
+		// Initialize the answer.
+		let vm = this.#matrix;
+
+		// If the answer is invalid ...
+		if ( !vm )
 		{
-			mat4.copy ( this.#matrix, this.calculateMatrix() );
-			this.#dirty = false;
+			// Give it space for the answer.
+			vm = [ ...IDENTITY_MATRIX ];
+
+			// Calculate and copy the new matrix.
+			mat4.copy ( vm, this.calculateMatrix() );
+
+			// Assign the answer for next time.
+			this.#matrix = vm;
+
+			// The inverse is now invalid.
+			this.#inverse = null;
 		}
 
-		return this.#matrix;
+		// Return what we have.
+		return vm;
+	}
+
+	/**
+	 * Get the inverse view matrix.
+	 * @returns {IMatrix44 | null} The inverse view matrix, or null if it does not exist.
+	 */
+	public override get invViewMatrix () : ( Readonly<IMatrix44> | null )
+	{
+		// Initialize the answer.
+		let ivm = this.#inverse;
+
+		// If the answer is invalid ...
+		if ( !ivm )
+		{
+			// Give it space for the answer.
+			ivm = [ ...IDENTITY_MATRIX ];
+
+			// Calculate the inverse.
+			if ( !mat4.invert ( ivm, this.viewMatrix ) )
+			{
+				// If we get to here then the inverse failed.
+				return null;
+			}
+
+			// Assign the answer for next time.
+			this.#inverse = ivm;
+		}
+
+		// Return what we have.
+		return ivm;
 	}
 
 	/**
@@ -164,7 +210,7 @@ export class Trackball extends BaseClass
 	public set center ( c: IVector3 )
 	{
 		vec3.copy ( this.#state.center, c );
-		this.#dirty = true;
+		this.#matrix = null;
 	}
 
 	/**
@@ -183,7 +229,7 @@ export class Trackball extends BaseClass
 	public set distance ( d: number )
 	{
 		this.#state.distance = d;
-		this.#dirty = true;
+		this.#matrix = null;
 	}
 
 	/**
@@ -202,7 +248,7 @@ export class Trackball extends BaseClass
 	public set rotation ( r: IVector4 )
 	{
 		vec4.copy ( this.#state.rotation, r );
-		this.#dirty = true;
+		this.#matrix = null;
 	}
 
 	/**
@@ -261,7 +307,85 @@ export class Trackball extends BaseClass
 	 */
 	public translate ( params: { event: IEvent, scale: number } ) : void
 	{
-		void params; // TODO: Make this work.
+		// Get the input.
+		const { event } = params;
+		const { previous, current, viewer } = event;
+
+		// Handle no mouse points.
+		if ( !previous || !current )
+		{
+			return;
+		}
+
+		// Get the line under the current mouse point in global space.
+		const cl = viewer.makeLine ( { screenPoint: current, viewMatrix: IDENTITY_MATRIX } );
+
+		// Handle invalid line.
+		if ( !cl?.valid )
+		{
+			return;
+		}
+
+		// Get the line under the previous mouse point in global space.
+		const pl = viewer.makeLine ( { screenPoint: previous, viewMatrix: IDENTITY_MATRIX } );
+
+		// Handle invalid line.
+		if ( !pl?.valid )
+		{
+			return;
+		}
+
+		// Make sure the lines are normalized.
+		cl.normalize();
+		pl.normalize();
+
+		// Make a plane parallel to the view-plane at the negative distance.
+		const point: IVector3 = [ 0, 0, -this.distance ];
+		const plane = new Plane ( { point, normal: [ 0, 0, 1 ] } );
+
+		// Intersect the lines with the plane.
+		const ci = intersectLinePlane ( { line: cl, plane } );
+		const pi = intersectLinePlane ( { line: pl, plane } );
+
+		// Handle no intersections.
+		if ( ( null === ci ) || ( null === pi ) )
+		{
+			return;
+		}
+		if ( ( false === isFiniteNumber ( ci ) ) || ( false === isFiniteNumber ( pi ) ) )
+		{
+			return;
+		}
+
+		// Get the intersection points.
+		const cp = cl.getPoint ( ci );
+		const pp = pl.getPoint ( pi );
+
+		// if ( this.invViewMatrix )
+		// {
+		// 	vec3.transformMat4 ( point, cp, this.invViewMatrix );
+		// 	const sphere = new SphereNode ( { center: point, radius: 0.05 } );
+		// 	sphere.update();
+		// 	viewer.extraScene.clear()
+		// 	viewer.extraScene.addChild ( sphere );
+		// }
+
+		// The two points make our translation vector.
+		const t: IVector3 = [ 0, 0, 0 ];
+		vec3.subtract ( t, pp, cp );
+		vec3.scale ( t, t, params.scale );
+
+		// Make sure there is no change in the z-value.
+		t[2] = 0;
+
+		// Update the center.
+		const center: IVector3 = [ ...this.center ];
+		vec3.add ( center, center, t );
+		this.center = center;
+
+		// Add a scene for the line to the viewer's extra scene.
+		// viewer.fixedScene.clear();
+		// viewer.fixedScene.addChild ( buildLine ( { line: cl, color: [ 0, 0, 1, 1 ] } ) );
 	}
 
 	/**
@@ -271,7 +395,7 @@ export class Trackball extends BaseClass
 	public zoom ( scale: number ) : void
 	{
 		this.distance *= scale;
-		this.#dirty = true;
+		this.#matrix = null;
 	}
 
 	/**
@@ -280,7 +404,7 @@ export class Trackball extends BaseClass
 	public override reset() : void
 	{
 		this.#state = makeDefaultTrackballState();
-		this.#dirty = true;
+		this.#matrix = null;
 	}
 
 	/**
@@ -442,8 +566,7 @@ export class Trackball extends BaseClass
 		pl.normalize();
 
 		// Get the inverse of the view matrix.
-		const ivm: IMatrix44 = [ ...IDENTITY_MATRIX ];
-		mat4.invert ( ivm, viewMatrix );
+		const ivm = this.invViewMatrix;
 
 		// Handle no inverse.
 		if ( !ivm )
