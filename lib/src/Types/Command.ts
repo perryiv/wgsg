@@ -24,6 +24,12 @@ import { IMouseButtons } from "./Mouse";
 ///////////////////////////////////////////////////////////////////////////////
 
 export type ICommandName = (
+	| "mouse_rotate_large"
+	| "mouse_rotate_small"
+	| "mouse_translate_large"
+	| "mouse_translate_small"
+	| "mouse_zoom_large"
+	| "mouse_zoom_small"
 	| "rotate_nx_large"
 	| "rotate_nx_small"
 	| "rotate_ny_large"
@@ -36,12 +42,8 @@ export type ICommandName = (
 	| "rotate_py_small"
 	| "rotate_pz_large"
 	| "rotate_pz_small"
-	| "translate_xy_large"
-	| "translate_xy_small"
 	| "view_sphere_fit"
 	| "view_sphere_reset"
-	| "zoom_large"
-	| "zoom_small"
 );
 
 export interface ICommand

@@ -15,7 +15,13 @@
 import { BaseHandler as BaseClass } from "../Events/Handlers/BaseHandler";
 import { Projection } from "../Projections/Projection";
 import { Sphere } from "../Math";
-import type { IEvent, IMatrix44, IVector4 } from "../Types";
+import type {
+	IEvent,
+	IMatrix44,
+	IVector2,
+	IVector3,
+	IVector4,
+} from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -51,17 +57,42 @@ export abstract class NavBase extends BaseClass
 
 	/**
 	 * Rotate the navigator.
-	 * @param {IVector4} r - The rotation quaternion.
+	 * @param {IVector4} quaternion - The rotation quaternion.
 	 */
-	public abstract rotate ( r: IVector4 ) : void;
+	public abstract rotateQuaternion ( quaternion: IVector4 ) : void;
+
+	/**
+	 * Rotate the navigator.
+	 * @param {IVector3} axis - The rotation axis.
+	 * @param {number} radians - The angle in radians.
+	 */
+	public abstract rotateAxisAngle ( axis: IVector3, radians: number ) : void;
 
 	/**
 	 * Translate the navigator.
-	 * @param {object} params - The parameters.
-	 * @param {IEvent} params.event - The event.
-	 * @param {number} params.scale - The translation scale factor.
+	 * @param {object} input - The input parameters.
+	 * @param {IEvent} input.event - The event.
+	 * @param {IVector2} input.current - The current screen position.
+	 * @param {IVector2} input.previous - The previous screen position.
+	 * @param {number} input.scale - The translation scale factor.
 	 */
-	public abstract translate ( params: { event: IEvent, scale: number } ) : void;
+	public abstract translateScreenXY ( input: { current: IVector2, previous: IVector2, scale: number } ) : void;
+
+	/**
+	 * Rotate the navigator.
+	 * @param {object} input - The input parameters.
+	 * @param {IEvent} input.event - The event.
+	 * @param {number} input.scale - The rotation scale factor.
+	 */
+	public abstract mouseRotate ( input: { event: IEvent, scale: number } ) : void;
+
+	/**
+	 * Translate the navigator.
+	 * @param {object} input - The input parameters.
+	 * @param {IEvent} input.event - The event.
+	 * @param {number} input.scale - The translation scale factor.
+	 */
+	public abstract mouseTranslate ( input: { event: IEvent, scale: number } ) : void;
 
 	/**
 	 * Zoom the navigator.
@@ -76,10 +107,10 @@ export abstract class NavBase extends BaseClass
 
 	/**
 	 * Set the navigator so that the sphere is completely within the view-volume.
-	 * @param {Sphere} sphere - The bounding sphere.
-	 * @param {Projection} projection - The projection.
-	 * @param {object} [options] - The options.
-	 * @param {boolean} [options.resetRotation] - Whether or not to reset the rotation.
+	 * @param {object} input - The input parameters.
+	 * @param {Sphere} input.sphere - The sphere to view.
+	 * @param {Projection} input.projection - The projection to use.
+	 * @param {boolean} [input.resetRotation] - Whether to or not reset the rotation.
 	 */
-	public abstract viewSphere ( sphere: Sphere, projection: Projection, options?: { resetRotation?: boolean } ) : void;
+	public abstract viewSphere ( input: { sphere: Sphere, projection: Projection, resetRotation?: boolean } ) : void;
 }

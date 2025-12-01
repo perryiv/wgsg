@@ -487,13 +487,14 @@ export class Viewer extends BaseClass
 
 	/**
 	 * Set the navigator so that the sphere is completely within the view-volume.
-	 * @param {Sphere} sphere - The bounding sphere.
-	 * @param {object} [options] - The options.
-	 * @param {boolean} [options.resetRotation] - Whether or not to reset the rotation.
+	 * @param {object} input - The input.
+	 * @param {Sphere} input.sphere - The sphere to view.
+	 * @param {boolean} [input.resetRotation] - Whether or not to reset the rotation.
 	 */
-	public viewSphere ( sphere: Sphere, options?: { resetRotation?: boolean } ) : void
+	public viewSphere ( input: { sphere: Sphere, resetRotation?: boolean } ) : void
 	{
-		this.navBase.viewSphere ( sphere, this.projection, options );
+		const { sphere, resetRotation } = input;
+		this.navBase.viewSphere ( { sphere, projection: this.projection, resetRotation } );
 	}
 
 	/**
@@ -506,7 +507,8 @@ export class Viewer extends BaseClass
 		const sphere = this.modelScene?.sphere;
 		if ( sphere )
 		{
-			this.viewSphere ( sphere, options );
+			const resetRotation = options?.resetRotation;
+			this.viewSphere ( { sphere, resetRotation } );
 		}
 	}
 
