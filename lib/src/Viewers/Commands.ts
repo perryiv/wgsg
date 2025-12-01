@@ -60,7 +60,7 @@ export abstract class Command extends BaseClass implements ICommand
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Rotate extends Command
+export class RotateAxisAngle extends Command
 {
 	#axis: IVector3 = [ 0, 1, 0 ];
 	#angle = 0;
@@ -110,7 +110,7 @@ export class Rotate extends Command
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class RotateX extends Rotate
+export class RotateX extends RotateAxisAngle
 {
 	/**
 	 * Construct the class.
@@ -131,7 +131,7 @@ export class RotateX extends Rotate
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class RotateY extends Rotate
+export class RotateY extends RotateAxisAngle
 {
 	/**
 	 * Construct the class.
@@ -152,7 +152,7 @@ export class RotateY extends Rotate
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class RotateZ extends Rotate
+export class RotateZ extends RotateAxisAngle
 {
 	/**
 	 * Construct the class.
@@ -368,6 +368,7 @@ export function makeInput ( type: IEventType, buttonsDown: number[], keysDown: s
 		", keysDown: [" + keysDown.sort().toString() + "]"
 	);
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
