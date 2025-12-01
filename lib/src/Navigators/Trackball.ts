@@ -376,15 +376,6 @@ export class Trackball extends BaseClass
 		const cp = cl.getPoint ( ci );
 		const pp = pl.getPoint ( pi );
 
-		// if ( this.invViewMatrix )
-		// {
-		// 	vec3.transformMat4 ( point, cp, this.invViewMatrix );
-		// 	const sphere = new SphereNode ( { center: point, radius: 0.05 } );
-		// 	sphere.update();
-		// 	viewer.extraScene.clear()
-		// 	viewer.extraScene.addChild ( sphere );
-		// }
-
 		// The two points make our translation vector.
 		const t: IVector3 = [ 0, 0, 0 ];
 		vec3.subtract ( t, pp, cp );
@@ -405,10 +396,6 @@ export class Trackball extends BaseClass
 
 		// Set the new center.
 		this.center = center;
-
-		// Add a scene for the line to the viewer's extra scene.
-		// viewer.fixedScene.clear();
-		// viewer.fixedScene.addChild ( buildLine ( { line: cl, color: [ 0, 0, 1, 1 ] } ) );
 	}
 
 	/**
