@@ -132,6 +132,17 @@ export class Plane
 	}
 
 	/**
+	 * Return a string representation.
+	 * @returns {string} The string representation.
+	 */
+	public toString(): string
+	{
+		const p = this.point;
+		const n = this.normal;
+		return `{ point: [ ${p[0]}, ${p[1]}, ${p[2]} ], normal: [ ${n[0]}, ${n[1]}, ${n[2]} ] }`;
+	}
+
+	/**
 	 * Set this plane from another plane.
 	 * @param {Plane} plane - The plane to copy from.
 	 */

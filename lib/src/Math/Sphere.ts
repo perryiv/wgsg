@@ -92,7 +92,7 @@ export class Sphere
 	public toString(): string
 	{
 		const c = this.center;
-		return `center: [ ${c[0]}, ${c[1]}, ${c[2]} ], radius: ${this.radius}`;
+		return `{ center: [ ${c[0]}, ${c[1]}, ${c[2]} ], radius: ${this.radius} }`;
 	}
 
 	/**

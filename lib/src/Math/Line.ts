@@ -138,6 +138,17 @@ export class Line
 	}
 
 	/**
+	 * Return a string representation.
+	 * @returns {string} The string representation.
+	 */
+	public toString(): string
+	{
+		const s = this.start;
+		const e = this.end;
+		return `{ start: [ ${s[0]}, ${s[1]}, ${s[2]} ], end: [ ${e[0]}, ${e[1]}, ${e[2]} ] }`;
+	}
+
+	/**
 	 * Set this line from another line.
 	 * @param {Line} line - The line to copy from.
 	 */

@@ -192,6 +192,17 @@ export class Box
 	}
 
 	/**
+	 * Return a string representation.
+	 * @returns {string} The string representation.
+	 */
+	public toString(): string
+	{
+		const mn = this.min;
+		const mx = this.max;
+		return `{ min: [ ${mn[0]}, ${mn[1]}, ${mn[2]} ], max: [ ${mx[0]}, ${mx[1]}, ${mx[2]} ] }`;
+	}
+
+	/**
 	 * Grow this box so that it contains the given box.
 	 * @param {Box} box - The box to grow our box by.
 	 */
