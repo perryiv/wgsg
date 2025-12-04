@@ -21,6 +21,7 @@ import {
 	intersectLinePlane,
 	intersectLineSphere,
 	isFiniteNumber,
+	Line,
 	Plane,
 	Sphere,
 } from "../Math";
@@ -424,10 +425,7 @@ export class Trackball extends BaseClass
 	 */
 	public makeSphere () : Sphere
 	{
-		const { center, distance: d } = this;
-		const radius = d * 0.8;
-		const sphere = new Sphere ( center, radius );
-		return sphere;
+		return new Sphere ( [ 0, 0, -2 ], 1 );
 	}
 
 	/**
@@ -562,8 +560,8 @@ export class Trackball extends BaseClass
 			return;
 		}
 
-		// Get the line under the current mouse point in model space.
-		const cl = viewer.makeLine ( { screenPoint: cm } );
+		// Get the line under the current mouse point in global space.
+		const cl = viewer.makeLine ( { screenPoint: cm, viewMatrix: [ ...IDENTITY_MATRIX ] } );
 
 		// Handle invalid line.
 		if ( !cl?.valid )
@@ -571,8 +569,8 @@ export class Trackball extends BaseClass
 			return;
 		}
 
-		// Get the line under the previous mouse point in model space.
-		const pl = viewer.makeLine ( { screenPoint: pm } );
+		// Get the line under the previous mouse point in global space.
+		const pl = viewer.makeLine ( { screenPoint: pm, viewMatrix: [ ...IDENTITY_MATRIX ] } );
 
 		// Handle invalid line.
 		if ( !pl?.valid )
@@ -584,7 +582,7 @@ export class Trackball extends BaseClass
 		cl.normalize();
 		pl.normalize();
 
-		// Make the trackball sphere in model space.
+		// Make the trackball sphere in global space.
 		const sphere = this.makeSphere();
 
 		// Intersect the lines with the trackball sphere.
@@ -592,8 +590,12 @@ export class Trackball extends BaseClass
 		const pi = intersectLineSphere ( { line: pl, sphere } );
 
 		// We ignore zero or one (tangent) intersections.
-		if ( !( isFiniteNumber ( ci.u1 ) && isFiniteNumber ( ci.u2 ) &&
-						isFiniteNumber ( pi.u1 ) && isFiniteNumber ( pi.u2 ) ) )
+		if ( !(
+			isFiniteNumber ( ci.u1 ) &&
+			isFiniteNumber ( ci.u2 ) &&
+			isFiniteNumber ( pi.u1 ) &&
+			isFiniteNumber ( pi.u2 )
+		) )
 		{
 			return;
 		}
@@ -608,19 +610,18 @@ export class Trackball extends BaseClass
 
 		// Make the vector from the sphere center to the first intersection point.
 		let v0: IVector3 = [ 0, 0, 0 ];
-		vec3.subtract ( v0, p0, this.center );
+		vec3.subtract ( v0, p0, sphere.center );
 		v0 = normalizeVec3 ( v0 );
 
 		// Make the vector from the sphere center to the second intersection point.
 		let v1: IVector3 = [ 0, 0, 0 ];
-		vec3.subtract ( v1, p1, this.center );
+		vec3.subtract ( v1, p1, sphere.center );
 		v1 = normalizeVec3 ( v1 );
 
 		// The cross product is the axis of rotation.
 		let axis: IVector3 = [ 0, 0, 0 ];
 		vec3.cross ( axis, v0, v1 );
 		axis = normalizeVec3 ( axis );
-		// console.log ( "Axis of rotation:", axis );
 
 		// The angle between the two vectors.
 		const angle = vec3.angle ( v0, v1 );
