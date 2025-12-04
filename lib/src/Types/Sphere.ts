@@ -17,6 +17,6 @@ import { IVector3 } from "./Vector";
 
 export interface ISphere
 {
-	center: IVector3;
+	center: Readonly<IVector3>;
 	radius: number;
 }

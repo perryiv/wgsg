@@ -20,9 +20,10 @@ import { IMatrix44, IVector3 } from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
-//
-//	3D line class.
-//
+/**
+ * 3D line class.
+ * @class
+ */
 ///////////////////////////////////////////////////////////////////////////////
 
 export class Line
@@ -63,7 +64,7 @@ export class Line
 	 * Get the start point.
 	 * @returns {IVector3} - The start point.
 	 */
-	public get start(): IVector3
+	public get start(): Readonly<IVector3>
 	{
 		return this.#p0;
 	}
@@ -81,7 +82,7 @@ export class Line
 	 * Get the end point.
 	 * @returns {IVector3} - The end point.
 	 */
-	public get end(): IVector3
+	public get end(): Readonly<IVector3>
 	{
 		return this.#p1;
 	}
@@ -244,8 +245,12 @@ export class Line
 	 */
 	public static transform ( out: Line, m: Readonly<IMatrix44>, a: Readonly<Line> ): Line
 	{
-		vec3.transformMat4 ( out.start, a.start, m );
-		vec3.transformMat4 ( out.end, a.end, m );
+		const start: IVector3 = [ ...a.start ];
+		const end: IVector3 = [ ...a.end ];
+		vec3.transformMat4 ( start, a.start, m );
+		vec3.transformMat4 ( end, a.end, m );
+		out.start = start;
+		out.end = end;
 		return out;
 	}
 
