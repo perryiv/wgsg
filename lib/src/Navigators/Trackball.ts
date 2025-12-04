@@ -21,7 +21,6 @@ import {
 	intersectLinePlane,
 	intersectLineSphere,
 	isFiniteNumber,
-	Line,
 	Plane,
 	Sphere,
 } from "../Math";
