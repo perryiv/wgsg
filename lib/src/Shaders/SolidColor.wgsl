@@ -36,5 +36,6 @@ struct VertexOut
 
 @fragment fn fs ( fragData: VertexOut ) -> @location ( 0 ) vec4f
 {
-	return uniforms.color;
+	// We assume that the canvas is configured for pre-multiplied alpha.
+	return vec4 ( uniforms.color.rgb * uniforms.color.a, uniforms.color.a );
 }
