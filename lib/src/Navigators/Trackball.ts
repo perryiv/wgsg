@@ -27,13 +27,13 @@ import {
 import {
 	DEG_TO_RAD,
 	IDENTITY_MATRIX,
-	makeLine as makeLineUnderScreenPoint,
 	normalizeQuat,
 	normalizeVec3,
 } from "../Tools";
 import type {
 	IEvent,
 	IMatrix44,
+	IVector2,
 	IVector3,
 	IVector4,
 } from "../Types";
@@ -258,67 +258,217 @@ export class Trackball extends BaseClass
 	}
 
 	/**
-	 * Rotate the trackball.
-	 * @param {IVector3 | IVector4} input - The rotation axis or quaternion.
-	 * @param {number} [radians] - The angle in radians required if input is a rotation axis.
+	 * Rotate the navigator.
+	 * @param {IVector4} quaternion - The rotation quaternion.
 	 */
-	public rotate ( input: ( Readonly<IVector3> | Readonly<IVector4> ), radians?: number ) : void
+	public override rotateQuaternion ( quaternion: IVector4 ) : void
 	{
-		switch ( input.length )
-		{
-			case 3:
-			{
-				if ( false === isFiniteNumber ( radians ) )
-				{
-					throw new Error ( "An angle in radians is required when rotating about an axis" );
-				}
+		// Make sure it's normalized.
+		quaternion = normalizeQuat ( quaternion );
 
-				radians = radians!;
-				input = normalizeVec3 ( input );
+		// Make space for the answer.
+		let answer: IVector4 = [ 0, 0, 0, 1 ];
 
-				let dr: IVector4 = [ 0, 0, 0, 1 ]; // Delta rotation.
-				quat.setAxisAngle ( dr, input, radians );
-				dr = normalizeQuat ( dr );
+		// This order is rotation about global axes.
+		quat.multiply ( answer, quaternion, this.rotation );
 
-				let nr: IVector4 = [ 0, 0, 0, 1 ]; // New rotation.
-				quat.multiply ( nr, dr, this.rotation ); // This order is rotation about global axes.
-				nr = normalizeQuat ( nr );
+		// Make sure it's normalized.
+		answer = normalizeQuat ( answer );
 
-				this.rotation = nr;
-				break;
-			}
-			case 4:
-			{
-				input = normalizeQuat ( input );
+		// Set the new rotation.
+		this.rotation = answer;
+	}
 
-				let answer: IVector4 = [ 0, 0, 0, 1 ];
-				quat.multiply ( answer, input, this.rotation ); // This order is rotation about global axes.
-				answer = normalizeQuat ( answer );
+	/**
+	 * Rotate the navigator.
+	 * @param {IVector3} axis - The rotation axis.
+	 * @param {number} radians - The angle in radians.
+	 */
+	public override rotateAxisAngle ( axis: IVector3, radians: number ) : void
+	{
+		// Make sure the axis is normalized.
+		axis = normalizeVec3 ( axis );
 
-				this.rotation = answer;
-				break;
-			}
-			default:
-			{
-				throw new Error ( "Input must be a rotation axis (IVector3) or a quaternion (IVector4)" );
-			}
-		}
+		// Make space for the rotation.
+		let dr: IVector4 = [ 0, 0, 0, 1 ];
+
+		// Calculate the rotation quaternion.
+		quat.setAxisAngle ( dr, axis, radians );
+
+		dr = normalizeQuat ( dr );
+
+		let nr: IVector4 = [ 0, 0, 0, 1 ]; // New rotation.
+
+		// This order is rotation about global axes.
+		quat.multiply ( nr, dr, this.rotation );
+
+		// Make sure it's normalized.
+		nr = normalizeQuat ( nr );
+
+		// Set the new rotation.
+		this.rotation = nr;
 	}
 
 	/**
 	 * Translate the navigator.
+	 * @param {object} input - The input parameters.
+	 * @param {IVector2} input.current - The current screen position.
+	 * @param {IVector2} input.previous - The previous screen position.
+	 * @param {number} input.scale - The translation scale factor.
+	 */
+	public override translateScreenXY ( input: { current: IVector2, previous: IVector2, scale: number } ) : void
+	{
+		// Get the input.
+		const { current, previous, scale } = input;
+
+		// The two points make our translation vector.
+		const t: IVector2 = [ 0, 0 ];
+		vec2.subtract ( t, previous, current );
+		vec2.scale ( t, t, scale );
+
+		// Get the center in global space.
+		const center: IVector3 = [ ...this.center ];
+		vec3.transformMat4 ( center, center, this.viewMatrix );
+
+		// Now translate the center.
+		vec3.add ( center, center, [ t[0], t[1], 0 ] );
+
+		// Get the inverse of the view matrix.
+		const ivm = this.invViewMatrix;
+
+		// Handle invalid matrix.
+		if ( !ivm )
+		{
+			return;
+		}
+
+		// Put the new center point in model space.
+		vec3.transformMat4 ( center, center, ivm );
+
+		// Set the new center.
+		this.center = center;
+	}
+
+	/**
+	 * Zoom the navigator.
+	 * @param {number} scale - The zoom scale factor.
+	 */
+	public zoom ( scale: number ) : void
+	{
+		this.distance *= scale;
+		this.#matrix = null;
+	}
+
+	/**
+	 * Reset the navigator to its default state.
+	 */
+	public override reset() : void
+	{
+		this.#state = makeDefaultTrackballState();
+		this.#matrix = null;
+	}
+
+	/**
+	 * Set the navigator so that the sphere is completely within the view-volume.
+	 * @param {object} input - The input parameters.
+	 * @param {Sphere} input.sphere - The sphere to view.
+	 * @param {Projection} input.projection - The projection to use.
+	 * @param {boolean} [input.resetRotation] - Whether to or not reset the rotation.
+	 */
+	public override viewSphere ( input: { sphere: Sphere, projection: Projection, resetRotation?: boolean } ) : void
+	{
+		// Get the input.
+		const { sphere, projection, resetRotation } = input;
+
+		if ( projection instanceof Perspective )
+		{
+			const { fov } = projection;
+			const { radius } = sphere;
+
+			// Think of a ball falling into a cone. The field-of-view (fov) is the
+			// angle of the cone's point. We want the distance from the cone's point
+			// to the center of the ball. The radius from the center of the ball to
+			// where the ball touches the cone makes a 90 degree angle with the cone.
+			// The hypotenuse of the two symmetric triangles is the new trackball
+			// distance. The geometry can be calculated in 2D.
+
+			// sin ( theta ) = opposite / hypotenuse
+			// hypotenuse = opposite / sin ( theta )
+			// theta = fov / 2
+			// opposite = radius
+			// hypotenuse = radius / sin ( fov / 2 )
+			const hypotenuse = radius / ( Math.sin ( ( fov / 2 ) * DEG_TO_RAD ) );
+
+			// The hypotenuse is the new distance.
+			this.distance = hypotenuse;
+
+			// Set the center.
+			this.center = sphere.center;
+
+			// Reset the rotation if we should.
+			if ( resetRotation )
+			{
+				this.rotation = [ 0, 0, 0, 1 ];
+			}
+		}
+
+		else
+		{
+			throw new Error ( `Projection type '${projection.type}' not supported when viewing sphere` );
+		}
+	}
+
+	/**
+	 * Make the trackball sphere.
+	 * @returns {Sphere} The trackball sphere.
+	 */
+	public makeSphere () : Sphere
+	{
+		return new Sphere ( [ 0, 0, -2 ], 1 );
+	}
+
+	/**
+	 * Handle the event.
+	 * @param {IEvent} event - The event.
+	 */
+	public override handleEvent ( event: IEvent ) : void
+	{
+		// Shortcut.
+		const { viewer } = event;
+
+		// Get the command for this event's input state.
+		const command = viewer.getCommand ( event );
+
+		// Handle no command.
+		if ( !command )
+		{
+			return
+		}
+
+		// If we get to here then execute the command.
+		command.execute ( event );
+	}
+
+	/**
+	 * Translate the navigator in screen x-y space.
 	 * @param {object} params - The parameters.
 	 * @param {IEvent} params.event - The event.
 	 * @param {number} params.scale - The translation scale factor.
 	 */
-	public translate ( params: { event: IEvent, scale: number } ) : void
+	public override mouseTranslate ( params: { event: IEvent, scale: number } ) : void
 	{
 		// Get the input.
-		const { event } = params;
-		const { previous, current, viewer } = event;
+		const { event, scale } = params;
+		const { previous: pm, current: cm, viewer } = event;
 
 		// Handle no mouse points.
-		if ( !previous || !current )
+		if ( !pm || !cm )
+		{
+			return;
+		}
+
+		// Handle zero distance between screen points.
+		if ( true === vec2.equals ( cm, pm ) )
 		{
 			return;
 		}
@@ -333,7 +483,7 @@ export class Trackball extends BaseClass
 		}
 
 		// Get the line under the current mouse point in global space.
-		const cl = viewer.makeLine ( { screenPoint: current, viewMatrix: IDENTITY_MATRIX } );
+		const cl = viewer.makeLine ( { screenPoint: cm, viewMatrix: IDENTITY_MATRIX } );
 
 		// Handle invalid line.
 		if ( !cl?.valid )
@@ -342,7 +492,7 @@ export class Trackball extends BaseClass
 		}
 
 		// Get the line under the previous mouse point in global space.
-		const pl = viewer.makeLine ( { screenPoint: previous, viewMatrix: IDENTITY_MATRIX } );
+		const pl = viewer.makeLine ( { screenPoint: pm, viewMatrix: IDENTITY_MATRIX } );
 
 		// Handle invalid line.
 		if ( !pl?.valid )
@@ -376,238 +526,62 @@ export class Trackball extends BaseClass
 		const cp = cl.getPoint ( ci );
 		const pp = pl.getPoint ( pi );
 
-		// if ( this.invViewMatrix )
-		// {
-		// 	vec3.transformMat4 ( point, cp, this.invViewMatrix );
-		// 	const sphere = new SphereNode ( { center: point, radius: 0.05 } );
-		// 	sphere.update();
-		// 	viewer.extraScene.clear()
-		// 	viewer.extraScene.addChild ( sphere );
-		// }
-
-		// The two points make our translation vector.
-		const t: IVector3 = [ 0, 0, 0 ];
-		vec3.subtract ( t, pp, cp );
-		vec3.scale ( t, t, params.scale );
-
-		// Make sure there is no change in the z-value.
-		t[2] = 0;
-
-		// Get the center in global space.
-		const center: IVector3 = [ ...this.center ];
-		vec3.transformMat4 ( center, center, this.viewMatrix );
-
-		// Now translate the center.
-		vec3.add ( center, center, t );
-
-		// Put the new center point in model space.
-		vec3.transformMat4 ( center, center, ivm );
-
-		// Set the new center.
-		this.center = center;
-
-		// Add a scene for the line to the viewer's extra scene.
-		// viewer.fixedScene.clear();
-		// viewer.fixedScene.addChild ( buildLine ( { line: cl, color: [ 0, 0, 1, 1 ] } ) );
+		// Now we can translate with 2D screen points.
+		this.translateScreenXY ( {
+			current:  [ cp[0], cp[1] ],
+			previous: [ pp[0], pp[1] ],
+			scale } );
 	}
 
 	/**
-	 * Zoom the navigator.
-	 * @param {number} scale - The zoom scale factor.
+	 * Rotate the navigator.
+	 * @param {object} input - The input parameters.
+	 * @param {IEvent} input.event - The event.
+	 * @param {number} input.scale - The rotation scale factor.
 	 */
-	public zoom ( scale: number ) : void
-	{
-		this.distance *= scale;
-		this.#matrix = null;
-	}
-
-	/**
-	 * Reset the navigator to its default state.
-	 */
-	public override reset() : void
-	{
-		this.#state = makeDefaultTrackballState();
-		this.#matrix = null;
-	}
-
-	/**
-	 * Set the navigator so that the sphere is completely within the view-volume.
-	 * @param {Sphere} sphere - The bounding sphere.
-	 * @param {Projection} projection - The projection.
-	 * @param {object} [options] - The options.
-	 * @param {boolean} [options.resetRotation] - Whether or not to reset the rotation.
-	 */
-	public override viewSphere ( sphere: Readonly<Sphere>, projection: Readonly<Projection>, options?: { resetRotation?: boolean } ) : void
-	{
-		if ( projection instanceof Perspective )
-		{
-			const { fov } = projection;
-			const { radius } = sphere;
-
-			// Think of a ball falling into a cone. The field-of-view (fov) is the
-			// angle of the cone's point. We want the distance from the cone's point
-			// to the center of the ball. The radius from the center of the ball to
-			// where the ball touches the cone makes a 90 degree angle with the cone.
-			// The hypotenuse of the two symmetric triangles is the new trackball
-			// distance. The geometry can be calculated in 2D.
-
-			// sin ( theta ) = opposite / hypotenuse
-			// hypotenuse = opposite / sin ( theta )
-			// theta = fov / 2
-			// opposite = radius
-			// hypotenuse = radius / sin ( fov / 2 )
-			const hypotenuse = radius / ( Math.sin ( ( fov / 2 ) * DEG_TO_RAD ) );
-
-			// The hypotenuse is the new distance.
-			this.distance = hypotenuse;
-
-			// Set the center.
-			this.center = sphere.center;
-
-			// Reset the rotation if we should.
-			if ( options?.resetRotation )
-			{
-				this.rotation = [ 0, 0, 0, 1 ];
-			}
-		}
-
-		else
-		{
-			throw new Error ( `Projection type '${projection.type}' not supported when viewing sphere` );
-		}
-	}
-
-	/**
-	 * Make the trackball sphere in world space.
-	 * @returns {Sphere} The trackball sphere.
-	 */
-	public makeSphere () : Sphere
-	{
-		const dist = this.distance;
-		const sphere = new Sphere (
-			[ 0, 0, 0 ], // Center
-			( dist * 0.5 )   // Radius
-		);
-		return sphere;
-	}
-
-	/**
-	 * Handle the event.
-	 * @param {IEvent} event - The event.
-	 */
-	public override handleEvent ( event: IEvent ) : void
-	{
-		// Shortcut.
-		const { viewer } = event;
-
-		// Get the command for this event's input state.
-		const command = viewer.getCommand ( event );
-
-		// Handle no command.
-		if ( !command )
-		{
-			return
-		}
-
-		// If we get to here then execute the command.
-		command.execute ( event );
-	}
-
-	/**
-	 * Handle mouse rotation.
-	 * TODO: Revisit this. and change the name is appropriate.
-	 * @param {IEvent} event - The mouse event.
-	 */
-	protected mouseRotate ( event: IEvent ) : void
+	public override mouseRotate ( input: { event: IEvent, scale: number } ) : void
 	{
 		// Get input.
-		const {
-			type,
-			current: cm,
-			previous: pm,
-			event: originalEvent,
-			viewer,
-		} = event;
+		const { event, scale } = input;
 
-		// Get viewer properties.
-		const { projMatrix, viewport } = viewer;
-
-		// Handle wrong event type.
-		if ( "mouse_drag" !== type )
-		{
-			return;
-		}
+		// Get the event properties.
+		const { current: cm, previous: pm, viewer } = event;
 
 		// Handle invalid input.
-		if ( !cm || !pm || !originalEvent )
+		if ( !cm || !pm )
 		{
 			return;
 		}
 
-		// Handle wrong event type.
-		if ( false === ( originalEvent instanceof MouseEvent ) )
-		{
-			return;
-		}
-
-		// Left mouse button only.
-		// TODO: Make this configurable.
-		if ( 1 !== originalEvent.buttons )
-		{
-			return;
-		}
-
-		// Handle zero distance drag.
+		// Handle zero distance between screen points.
 		if ( true === vec2.equals ( cm, pm ) )
 		{
 			return;
 		}
 
-		// Shortcut.
-		const viewMatrix = this.viewMatrix;
+		// Get the line under the current mouse point in global space.
+		const cl = viewer.makeLine ( { screenPoint: cm, viewMatrix: [ ...IDENTITY_MATRIX ] } );
 
-		// Get the line under the current mouse position.
-		const cl = makeLineUnderScreenPoint ( {
-			screenPoint: [ cm[0], cm[1] ],
-			viewMatrix, projMatrix, viewport,
-		} );
-
-		// Get the line under the previous mouse position.
-		const pl = makeLineUnderScreenPoint ( {
-			screenPoint: [ pm[0], pm[1] ],
-			viewMatrix, projMatrix, viewport,
-		} );
-
-		// Handle invalid lines.
-		if ( ( !cl ) || ( !pl ) )
+		// Handle invalid line.
+		if ( !cl?.valid )
 		{
 			return;
 		}
 
-		// Normalize the lines.
+		// Get the line under the previous mouse point in global space.
+		const pl = viewer.makeLine ( { screenPoint: pm, viewMatrix: [ ...IDENTITY_MATRIX ] } );
+
+		// Handle invalid line.
+		if ( !pl?.valid )
+		{
+			return;
+		}
+
+		// Make sure the lines are normalized.
 		cl.normalize();
 		pl.normalize();
 
-		// Get the inverse of the view matrix.
-		const ivm = this.invViewMatrix;
-
-		// Handle no inverse.
-		if ( !ivm )
-		{
-			return;
-		}
-
-		// Put the lines in model space.
-		cl.transform ( ivm );
-		pl.transform ( ivm );
-
-		// Handle invalid lines.
-		if ( ( false === cl.valid ) || ( false === pl.valid ) )
-		{
-			return;
-		}
-
-		// Make the trackball sphere in world space.
+		// Make the trackball sphere in global space.
 		const sphere = this.makeSphere();
 
 		// Intersect the lines with the trackball sphere.
@@ -615,8 +589,12 @@ export class Trackball extends BaseClass
 		const pi = intersectLineSphere ( { line: pl, sphere } );
 
 		// We ignore zero or one (tangent) intersections.
-		if ( !( isFiniteNumber ( ci.u1 ) && isFiniteNumber ( ci.u2 ) &&
-						isFiniteNumber ( pi.u1 ) && isFiniteNumber ( pi.u2 ) ) )
+		if ( !(
+			isFiniteNumber ( ci.u1 ) &&
+			isFiniteNumber ( ci.u2 ) &&
+			isFiniteNumber ( pi.u1 ) &&
+			isFiniteNumber ( pi.u2 )
+		) )
 		{
 			return;
 		}
@@ -631,19 +609,18 @@ export class Trackball extends BaseClass
 
 		// Make the vector from the sphere center to the first intersection point.
 		let v0: IVector3 = [ 0, 0, 0 ];
-		vec3.subtract ( v0, p0, this.center );
+		vec3.subtract ( v0, p0, sphere.center );
 		v0 = normalizeVec3 ( v0 );
 
 		// Make the vector from the sphere center to the second intersection point.
 		let v1: IVector3 = [ 0, 0, 0 ];
-		vec3.subtract ( v1, p1, this.center );
+		vec3.subtract ( v1, p1, sphere.center );
 		v1 = normalizeVec3 ( v1 );
 
 		// The cross product is the axis of rotation.
 		let axis: IVector3 = [ 0, 0, 0 ];
 		vec3.cross ( axis, v0, v1 );
 		axis = normalizeVec3 ( axis );
-		// console.log ( "Axis of rotation:", axis );
 
 		// The angle between the two vectors.
 		const angle = vec3.angle ( v0, v1 );
@@ -655,11 +632,9 @@ export class Trackball extends BaseClass
 		}
 
 		// Rotate the trackball.
-		this.rotate ( axis, angle );
+		this.rotateAxisAngle ( axis, angle * scale );
 
 		// Request a render.
 		viewer.requestRender();
 	}
-
-
 }

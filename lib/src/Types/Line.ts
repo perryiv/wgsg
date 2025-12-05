@@ -17,6 +17,6 @@ import { IVector3 } from "./Vector";
 
 export interface ILine
 {
-	start: IVector3;
-	end: IVector3;
+	start: Readonly<IVector3>;
+	end: Readonly<IVector3>;
 }

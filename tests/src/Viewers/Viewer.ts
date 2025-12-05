@@ -132,7 +132,7 @@ export function test ()
 			viewer.resize ( 100, 100 );
 
 			const sphere = new Sphere ( [ 0, 0, 0 ], 1 );
-			viewer.viewSphere ( sphere );
+			viewer.viewSphere ( { sphere } );
 
 			// See comments in Trackball viewSphere for explanation of hypotenuse.
 			const hypotenuse = 1 / Math.sin ( 22.5 * DEG_TO_RAD );

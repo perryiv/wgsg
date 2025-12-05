@@ -249,7 +249,17 @@ export class SolidColor extends BaseClass
 				module: this.module,
 				entryPoint: "fs",
 				targets: [ {
-					format: preferredFormat
+					format: preferredFormat,
+					blend: {
+						color: {
+							srcFactor: "one",
+							dstFactor: "one-minus-src-alpha"
+						},
+						alpha: {
+							srcFactor: "one",
+							dstFactor: "one-minus-src-alpha"
+						},
+					},
 				} ]
 			},
 			primitive: {

@@ -22,9 +22,10 @@ import type {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-//
-//	3D plane class.
-//
+/**
+ * 3D plane class.
+ * @class
+ */
 ///////////////////////////////////////////////////////////////////////////////
 
 export class Plane
@@ -88,7 +89,7 @@ export class Plane
 	 * Get the point.
 	 * @returns {IVector3} - The point.
 	 */
-	public get point(): IVector3
+	public get point(): Readonly<IVector3>
 	{
 		return this.#point;
 	}
@@ -106,7 +107,7 @@ export class Plane
 	 * Get the normal vector.
 	 * @returns {IVector3} - The normal vector.
 	 */
-	public get normal(): IVector3
+	public get normal(): Readonly<IVector3>
 	{
 		return this.#normal;
 	}
@@ -128,6 +129,17 @@ export class Plane
 	{
 		const n = this.#normal;
 		return ( false === ( ( n[0] === 0 ) && ( n[1] === 0 ) && ( n[2] === 0 ) ) );
+	}
+
+	/**
+	 * Return a string representation.
+	 * @returns {string} The string representation.
+	 */
+	public toString(): string
+	{
+		const p = this.point;
+		const n = this.normal;
+		return `{ point: [ ${p[0]}, ${p[1]}, ${p[2]} ], normal: [ ${n[0]}, ${n[1]}, ${n[2]} ] }`;
 	}
 
 	/**

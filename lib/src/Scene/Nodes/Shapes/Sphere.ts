@@ -32,7 +32,7 @@ import {
 
 export interface ISphereInput extends INodeConstructorInput
 {
-	center?: IVector3;
+	center?: Readonly<IVector3>;
 	radius?: number;
 	numSubdivisions?: number;
 }

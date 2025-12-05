@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { buildSceneBox } from "../Tools";
+import { buildSceneSphere } from "../Tools";
 import { useViewerStore } from "../State";
 import {
 	useCallback,
@@ -81,8 +81,7 @@ export function Viewer ( { style }: IViewerProps )
 		{
 			return null;
 		}
-		const { radius } = trackball.makeSphere();
-		return buildSceneBox ( radius );
+		return buildSceneSphere ( trackball.makeSphere() );
 	},
 	[ getViewer ] );
 

@@ -14,7 +14,7 @@
 
 import { IEvent } from "./Event";
 import { IMatrix44 } from "./Matrix";
-import { IVector4 } from "./Vector";
+import { IVector3, IVector4 } from "./Vector";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -25,8 +25,10 @@ import { IVector4 } from "./Vector";
 
 export interface INavigator
 {
-	rotate: ( ( r: IVector4 ) => void );
-	translate: ( ( params: { event: IEvent, scale: number } ) => void );
+	mouseRotate: ( ( params: { event: IEvent, scale: number } ) => void );
+	mouseTranslate: ( ( params: { event: IEvent, scale: number } ) => void );
+	rotateAxisAngle ( axis: IVector3, radians: number ) : void;
+	rotateQuaternion: ( ( quaternion: IVector4 ) => void );
 	zoom: ( ( scale: number ) => void );
 
 	viewMatrix: Readonly<IMatrix44>;
