@@ -226,22 +226,22 @@ export class Box
 	/**
 	 * Grow this box by all the points in the given array.
 	 * The point are assumed to be:
-	 * [ x0, x1, ..., xn ]
-	 * [ y0, y1, ..., yn ]
-	 * [ z0, z1, ..., zn ]
-	 * @param {number} num - The number of points to grow by.
-	 * @param {Float32Array} x - The x coordinates of the points.
-	 * @param {Float32Array} y - The y coordinates of the points.
-	 * @param {Float32Array} z - The z coordinates of the points.
-	 * @private
+	 * [ x0, y0, z0, ..., xn, yn, zn ]
+	 * @param {Float32Array} points - The points to grow our box by.
 	 */
-	public growByPoints ( num: number, x: Float32Array, y: Float32Array, z: Float32Array ): void
+	public growByPoints ( points: Float32Array ): void
 	{
-		for ( let i = 0; i < num; ++i )
+		if ( 0 !== ( points.length % 3 ) )
 		{
-			this.growByDimension ( x[i], 0 );
-			this.growByDimension ( y[i], 1 );
-			this.growByDimension ( z[i], 2 );
+			throw new Error ( "Number of point not evenly divisible by 3" );
+		}
+
+		const length = points.length;
+		for ( let i = 0; i < length; i += 3 )
+		{
+			this.growByDimension ( points[i    ], 0 );
+			this.growByDimension ( points[i + 1], 1 );
+			this.growByDimension ( points[i + 2], 2 );
 		}
 	}
 
@@ -253,15 +253,19 @@ export class Box
 	 */
 	private growByDimension ( value: Readonly<number>, index: number ): void
 	{
+		// Shortcuts.
+		const mn = this.#min;
+		const mx = this.#max;
+
 		// Do both of these because if the box is invalid and it's grown by a
 		// single point, then that point is both the new min and max.
-		if ( value < this.#min[index] )
+		if ( value < mn[index] )
 		{
-			this.#min[index] = value;
+			mn[index] = value;
 		}
-		if ( value > this.#max[index] )
+		if ( value > mx[index] )
 		{
-			this.#max[index] = value;
+			mx[index] = value;
 		}
 	}
 
