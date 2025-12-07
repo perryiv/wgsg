@@ -14,6 +14,7 @@
 
 import { expect } from "chai";
 import {
+	Box,
 	estimateSphereSizes,
 	generateUnitSphere,
 	type IVector3
@@ -139,6 +140,26 @@ export function test ()
 			const message = "Number of sphere subdivisions -1 is < 0";
 			expect ( () => { estimateSphereSizes ( -1 ); } ).to.throw ( message );
 			expect ( () => { testSphere ( -1 ); } ).to.throw ( message );
+		} );
+
+		it ( "Algorithm makes tessellation with correct bounding box", function ()
+		{
+			const box = new Box();
+
+			generateUnitSphere ( 4, ( x1: number, y1: number, z1: number, x2: number, y2: number, z2: number, x3: number, y3: number, z3: number ) =>
+			{
+				box.growByPoint ( [ x1, y1, z1 ] );
+				box.growByPoint ( [ x2, y2, z2 ] );
+				box.growByPoint ( [ x3, y3, z3 ] );
+			} );
+
+			const epsilon = 0.0000001;
+			expect ( box.min[0] ).to.be.closeTo ( -1, epsilon );
+			expect ( box.min[1] ).to.be.closeTo ( -1, epsilon );
+			expect ( box.min[2] ).to.be.closeTo ( -1, epsilon );
+			expect ( box.max[0] ).to.be.closeTo (  1, epsilon );
+			expect ( box.max[1] ).to.be.closeTo (  1, epsilon );
+			expect ( box.max[2] ).to.be.closeTo (  1, epsilon );
 		} );
 	} );
 };
