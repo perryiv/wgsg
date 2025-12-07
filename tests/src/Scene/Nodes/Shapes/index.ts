@@ -13,11 +13,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { test as testGeometry } from "./Geometry";
+import { test as testSphere } from "./Sphere";
 
 export function test ()
 {
 	describe ( "Shapes", function ()
 	{
 		testGeometry();
+		testSphere();
 	} );
 };
