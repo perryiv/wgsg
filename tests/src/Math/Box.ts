@@ -89,25 +89,25 @@ export function test ()
 		it ( "Can grow a box with an array of points", function ()
 		{
 			const points = new Float32Array ( [
-				 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
-				10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-				20, 21, 22, 23, 24, 25, 26, 27, 28, 29
+				 0, 0, 0,
+				 1, 0, 0,
+				 1, 1, 0,
+				 0, 1, 0,
+				 0, 0, 1,
+				 1, 0, 1,
+				 1, 1, 1,
+				 0, 1, 1,
 			] );
-			const num = points.length / 3;
-			expect ( num ).to.equal ( 10 );
-
-			const x = points.subarray ( 0, 10 );
-			const y = points.subarray ( 10, 20 );
-			const z = points.subarray ( 20, 30 );
+			expect ( points.length ).to.equal ( 24 );
 
 			const box = new Box();
-			box.growByPoints ( num, x, y, z );
+			box.growByPoints ( points );
 			expect ( box.valid ).to.be.true;
-			expect ( box.min ).to.deep.equal ( [ 0, 10, 20 ] );
-			expect ( box.max ).to.deep.equal ( [ 9, 19, 29 ] );
-			expect ( box.center ).to.deep.equal ( [ 4.5, 14.5, 24.5 ] );
-			expect ( box.size ).to.deep.equal ( [ 9, 9, 9 ] );
-			expect ( box.radius ).to.equal ( 7.794228634059948 );
+			expect ( box.min ).to.deep.equal ( [ 0, 0, 0 ] );
+			expect ( box.max ).to.deep.equal ( [ 1, 1, 1 ] );
+			expect ( box.center ).to.deep.equal ( [ 0.5, 0.5, 0.5 ] );
+			expect ( box.size ).to.deep.equal ( [ 1, 1, 1 ] );
+			expect ( box.radius ).to.equal ( ( Math.sqrt ( 3 ) ) / 2 );
 		}	);
 
 		it ( "Can clone a box", function ()
