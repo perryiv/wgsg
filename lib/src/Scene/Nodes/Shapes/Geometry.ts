@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Array1, Array3 } from "../../../Arrays";
+import { Array1 } from "../../../Arrays";
 import { Arrays, Indexed } from "../../Primitives";
 import { Box } from "../../../Math";
 import { getNumElements } from "../../../Tools";
@@ -121,6 +121,7 @@ export class Geometry extends Shape
 	{
 		// Shortcut.
 		const current = this.#box;
+		const values = this.#points?.values;
 
 		// Return the bounding box if it is valid.
 		if ( ( current ) && ( true === current.valid ) )
@@ -132,20 +133,10 @@ export class Geometry extends Shape
 		const answer = new Box();
 
 		// Are there any points?
-		if ( this.#points?.values )
+		if ( values )
 		{
-			// Make the helper array wrapper.
-			const points = new Array3 ( this.#points.values );
-
-			// Shortcuts.
-			// TODO: Why is the "as" needed here?
-			const x = ( points.x0 as Float32Array );
-			const y = ( points.x1 as Float32Array );
-			const z = ( points.x2 as Float32Array );
-			const numVectors = points.numVectors;
-
 			// Grow the box by all the points.
-			answer.growByPoints ( numVectors, x, y, z );
+			answer.growByPoints ( values );
 
 			// We save the answer for next time here, inside the "if" block,
 			// to keep from storing an invalid bounding box.
