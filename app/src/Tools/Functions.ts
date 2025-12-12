@@ -83,7 +83,6 @@ export const buildSceneSphere = ( sphere: Sphere ) =>
 	} );
 	root.addChild ( node );
 
-	node.update();
 	const lines = buildTriangleEdges ( node );
 	if ( lines )
 	{
