@@ -21,14 +21,12 @@ import {
 	useState,
 } from "react";
 import {
-	DEVELOPER_BUILD,
 	Device,
 	DeviceLost,
 	getNextId,
-	Trackball,
-	Viewer as InternalViewer,
 	Node,
 	Sphere,
+	Viewer as InternalViewer,
 } from "../wgsg";
 
 
