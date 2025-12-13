@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Visitor } from "./Visitor";
+import { Visitor as BaseClass } from "./Visitor";
 import {
 	Geometry,
 	Group,
@@ -29,7 +29,7 @@ import {
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class DeviceLost extends Visitor
+export class DeviceLost extends BaseClass
 {
 	#states = new Set < number > ();
 	#shaders = new Set < number > ();

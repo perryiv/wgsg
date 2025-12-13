@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Visitor } from "./Visitor";
+import { Visitor as BaseClass } from "./Visitor";
 import {
 	Geometry,
 	Group,
@@ -30,7 +30,7 @@ import {
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Update extends Visitor
+export class Update extends BaseClass
 {
 	#wasDirty = new Map < number, Node > ();
 

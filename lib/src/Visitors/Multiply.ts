@@ -16,7 +16,7 @@ import { IMatrix44 } from "../Types";
 import { makeIdentity } from "../Tools/Math";
 import { mat4 } from "gl-matrix";
 import { ProjectionNode as Projection, Transform } from "../Scene";
-import { Visitor } from "./Visitor";
+import { Visitor as BaseClass } from "./Visitor";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -26,7 +26,7 @@ import { Visitor } from "./Visitor";
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export abstract class Multiply extends Visitor
+export abstract class Multiply extends BaseClass
 {
 	#viewMatrix: IMatrix44 = makeIdentity(); // Has to be a copy.
 	#projMatrix: IMatrix44 = makeIdentity(); // Has to be a copy.
