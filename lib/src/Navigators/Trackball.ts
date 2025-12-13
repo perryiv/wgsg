@@ -71,7 +71,7 @@ function makeDefaultTrackballState() : ITrackballState
 {
 	return {
 		center: [ 0, 0, 0 ],
-		distance: 2,
+		distance: 0,
 		rotation: [ 0, 0, 0, 1 ]
 	};
 }

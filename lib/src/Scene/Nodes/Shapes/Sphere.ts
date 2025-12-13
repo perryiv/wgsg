@@ -87,6 +87,9 @@ export class Sphere extends BaseClass
 				this.numSubdivisions = numSubdivisions;
 			}
 		}
+
+		// Update the geometry.
+		this.update();
 	}
 
 	/**

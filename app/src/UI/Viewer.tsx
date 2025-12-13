@@ -21,13 +21,12 @@ import {
 	useState,
 } from "react";
 import {
-	DEVELOPER_BUILD,
 	Device,
 	DeviceLost,
 	getNextId,
-	Trackball,
-	Viewer as InternalViewer,
 	Node,
+	Sphere,
+	Viewer as InternalViewer,
 } from "../wgsg";
 
 
@@ -69,21 +68,11 @@ export function Viewer ( { style }: IViewerProps )
 	//
 	// Build the test scene.
 	//
-	const buildTestScene = useCallback ( () : ( Node | null ) =>
+	const buildTestScene = useCallback ( () : Node =>
 	{
-		const viewer = getViewer ( VIEWER_NAME );
-		if ( !viewer )
-		{
-			return null;
-		}
-		const trackball = ( viewer.navBase instanceof Trackball ) ? viewer.navBase : null;
-		if ( !trackball )
-		{
-			return null;
-		}
-		return buildSceneSphere ( trackball.makeSphere() );
+		return buildSceneSphere ( new Sphere() );
 	},
-	[ getViewer ] );
+	[] );
 
 	//
 	// Handle when the device is lost.
@@ -168,15 +157,14 @@ export function Viewer ( { style }: IViewerProps )
 		if ( !viewer )
 		{
 			viewer = new InternalViewer ( { canvas: canvas.current } );
-			viewer.modelScene = buildTestScene();
 			setViewer ( VIEWER_NAME, viewer );
-			console.log ( `Internal viewer ${viewer.id} created and configured` );
+			console.log ( `Internal viewer ${viewer.id} created` );
 		}
 
 		// Return the viewer.
 		return viewer;
 	},
-	[ buildTestScene, getViewer, setViewer ] );
+	[ getViewer, setViewer ] );
 
 	//
 	// Local function to handle initialization.
@@ -190,14 +178,13 @@ export function Viewer ( { style }: IViewerProps )
 		// Get the viewer or make it if we have to.
 		const viewer = getOrCreateViewer();
 
-		// This is for hot-module-refresh. It will be removed in production.
-		if ( DEVELOPER_BUILD )
-		{
-			console.log ( "Building new scene for viewer" );
-			viewer.modelScene = buildTestScene();
-			viewer.requestRender();
-		}
-	}, [ buildTestScene, getOrCreateViewer, initDevice ] );
+		// Build the scene.
+		console.log ( `Adding test scene to viewer ${viewer.id}` );
+		viewer.modelScene = buildTestScene();
+		viewer.viewAll();
+		viewer.requestRender();
+	},
+	[ buildTestScene, getOrCreateViewer, initDevice ] );
 
 	//
 	// Called when the component mounts.
