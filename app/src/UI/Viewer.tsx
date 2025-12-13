@@ -21,6 +21,7 @@ import {
 	useState,
 } from "react";
 import {
+	buildBoundingBoxes,
 	Device,
 	DeviceLost,
 	getNextId,
@@ -70,7 +71,10 @@ export function Viewer ( { style }: IViewerProps )
 	//
 	const buildTestScene = useCallback ( () : Node =>
 	{
-		return buildSceneSphere ( new Sphere() );
+		const sphere = buildSceneSphere ( new Sphere() )
+		const boxes = buildBoundingBoxes ( sphere );
+		sphere.addChild ( boxes );
+		return sphere;
 	},
 	[] );
 

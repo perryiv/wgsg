@@ -12,8 +12,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Geometry, Indexed } from "../Scene";
+import { Geometry, Indexed, Node as SceneNode } from "../Scene";
 import { makeSolidColorState } from "./State";
+import { Multiply as BaseClass } from "../Visitors";
+import { SolidColor } from "../Shaders";
+import { vec4 } from "gl-matrix";
 import type { IVector3, IVector4 } from "../Types";
 
 
@@ -85,9 +88,11 @@ const getInput = ( mn: IVector3, mx: IVector3, input: IBoxBuilderInput ) : void 
 
 
 ///////////////////////////////////////////////////////////////////////////////
-//
-//	Build a box.
-//
+/**
+ * Build a box.
+ * @param {IBoxBuilderInput} [input] - Input for building the box.
+ * @returns {Geometry} The built box geometry.
+ */
 ///////////////////////////////////////////////////////////////////////////////
 
 export const buildBox = ( input?: IBoxBuilderInput ) : Geometry =>
@@ -164,4 +169,176 @@ export const buildBox = ( input?: IBoxBuilderInput ) : Geometry =>
 
 	// Return the new geometry.
 	return geom;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Local visitor class that builds bounding boxes.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+class BuildBoxes extends BaseClass
+{
+	#indices: number[] = [];
+	#points: number[] = [];
+	#colors: number[] = [];
+	#geom: ( Geometry | null ) = null;
+
+	/**
+	 * Construct the class.
+	 * @class
+	 */
+	constructor()
+	{
+		super();
+	}
+
+	/**
+	 * Return the class name.
+	 * @returns {string} The class name.
+	 */
+	public override getClassName() : string
+	{
+		return "Builders.Box.BuildBoxes";
+	}
+
+	/**
+	 * Reset the builder.
+	 */
+	public reset() : void
+	{
+		this.#indices = [];
+		this.#points = [];
+		this.#colors = [];
+		this.#geom = null;
+	}
+
+	/**
+	 * Get the built geometry.
+	 * @returns {Geometry} The built geometry.
+	 */
+	public get geometry() : Geometry
+	{
+		// If we don't have the geometry yet then make it.
+		if ( !this.#geom )
+		{
+			// Make the necessary arrays.
+			const indices = new Uint32Array ( this.#indices );
+			const points = new Float32Array ( this.#points );
+			const colors = new Float32Array ( this.#colors );
+
+			// Make the primitives.
+			const primitives = new Indexed ( { topology: "line-list", indices } );
+
+			// Make the geometry.
+			const geom = new Geometry ( { points, colors, primitives } );
+
+			// Add a state.
+			geom.state = makeSolidColorState ( { color: [ 1, 1, 1, 1 ], topology: "line-list" } );
+
+			// Save for next time.
+			this.#geom = geom;
+		}
+
+		// Return the geometry.
+		return this.#geom;
+	}
+
+	/**
+	 * Visit the geometry node.
+	 * @param {Geometry} geom - The geometry node.
+	 */
+	public override visitGeometry ( geom: Geometry ) : void
+	{
+		// Get the bounding box.
+		const box = geom.box;
+
+		// Handle invalid box
+		if ( false === box.valid )
+		{
+			return;
+		}
+
+		// Shortcuts.
+		const mn = box.min;
+		const mx = box.max;
+		const points = this.#points;
+		const colors = this.#colors;
+
+		// Add indices to connect the new box corners with line segments.
+		const base = ( points.length / 3 );
+		this.#indices.push (
+			base + 0, base + 1,
+			base + 1, base + 3,
+			base + 3, base + 2,
+			base + 2, base + 0,
+			base + 0, base + 4,
+			base + 1, base + 5,
+			base + 3, base + 7,
+			base + 2, base + 6,
+			base + 4, base + 5,
+			base + 5, base + 7,
+			base + 7, base + 6,
+			base + 6, base + 4,
+		);
+
+		// Append the box corners to the array of points.
+		points.push (
+			mn[0], mn[1], mn[2],
+			mx[0], mn[1], mn[2],
+			mn[0], mx[1], mn[2],
+			mx[0], mx[1], mn[2],
+			mn[0], mn[1], mx[2],
+			mx[0], mn[1], mx[2],
+			mn[0], mx[1], mx[2],
+			mx[0], mx[1], mx[2],
+		);
+
+		// Initialize the color.
+		const c: IVector4 = [ 0.5, 0.5, 0.5, 1 ];
+
+		// Try to get the color.
+		const state = geom.state;
+		if ( state )
+		{
+			const shader = state.shader;
+			if ( shader instanceof SolidColor )
+			{
+				vec4.copy ( c, shader.color );
+			}
+		}
+
+		// Append a color for each new point.
+		colors.push (
+			c[0], c[1], c[2], c[3],
+			c[0], c[1], c[2], c[3],
+			c[0], c[1], c[2], c[3],
+			c[0], c[1], c[2], c[3],
+			c[0], c[1], c[2], c[3],
+			c[0], c[1], c[2], c[3],
+			c[0], c[1], c[2], c[3],
+			c[0], c[1], c[2], c[3],
+		);
+	}
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Build a geometry for the bounding boxes of the given scene.
+ * @param {SceneNode} scene - The scene to build the bounding boxes for.
+ * @returns {Geometry} The built bounding box geometry.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export const buildBoundingBoxes = ( scene: SceneNode ) : Geometry =>
+{
+	// Visit the scene.
+	const visitor = new BuildBoxes();
+	scene.accept ( visitor );
+
+	// Return the geometry.
+	return visitor.geometry;
 }
