@@ -15,10 +15,10 @@
 import { Array1 } from "../../../Arrays";
 import { Arrays, Indexed } from "../../Primitives";
 import { Box } from "../../../Math";
-import { getNumElements } from "../../../Tools";
+import { Flags, type INodeConstructorInput } from "../Node";
+import { getNumElements, hasBits } from "../../../Tools";
 import { Shape } from "./Shape";
 import { Visitor } from "../../../Visitors";
-import type { INodeConstructorInput } from "../Node";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -121,7 +121,6 @@ export class Geometry extends Shape
 	{
 		// Shortcut.
 		const current = this.#box;
-		const values = this.#points?.values;
 
 		// Return the bounding box if it is valid.
 		if ( ( current ) && ( true === current.valid ) )
@@ -132,16 +131,47 @@ export class Geometry extends Shape
 		// Make a new bounds.
 		const answer = new Box();
 
-		// Are there any points?
-		if ( values )
+		// Handle when we should not add to the bounds.
+		if ( false === hasBits ( this.flags, Flags.ADDS_TO_BOUNDS ) )
 		{
-			// Grow the box by all the points.
-			answer.growByPoints ( values );
-
-			// We save the answer for next time here, inside the "if" block,
-			// to keep from storing an invalid bounding box.
-			this.#box = answer;
+			return answer;
 		}
+
+		// Get the points.
+		const points = this.#points?.values;
+
+		// Handle when there are no points.
+		if ( ( !points ) || ( points.length <= 0 ) )
+		{
+			return answer;
+		}
+
+		// Get the primitives.
+		const primitives = this.#primitives;
+
+		// Handle when there are no primitives.
+		if ( ( !primitives ) || ( primitives.length <= 0 ) )
+		{
+			return answer;
+		}
+
+		// Loop through the primitives to grow the box.
+		primitives.forEach ( ( pl: IPrimitiveList ) =>
+		{
+			// Loop through the indices used by this primitive list.
+			pl.forEachIndex ( ( index: number ) =>
+			{
+				answer.growByPoint ( [
+					points[( index * 3 )    ],
+					points[( index * 3 ) + 1],
+					points[( index * 3 ) + 2]
+				] );
+			} );
+		} );
+
+		// If we get to here then save the answer for next time.
+		// We wait until now to keep from storing an invalid bounding box.
+		this.#box = answer;
 
 		// Return the answer.
 		return answer;
