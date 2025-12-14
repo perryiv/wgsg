@@ -16,7 +16,7 @@ import { Geometry, Indexed, Node as SceneNode } from "../Scene";
 import { makeSolidColorState } from "./State";
 import { Multiply as BaseClass } from "../Visitors";
 import { SolidColor } from "../Shaders";
-import { vec4 } from "gl-matrix";
+import { vec3, vec4 } from "gl-matrix";
 import type { IVector3, IVector4 } from "../Types";
 
 
@@ -251,7 +251,7 @@ class BuildBoxes extends BaseClass
 	 */
 	public override visitGeometry ( geom: Geometry ) : void
 	{
-		// Get the bounding box.
+		// Get the bounding box in local space.
 		const box = geom.box;
 
 		// Handle invalid box
@@ -261,14 +261,28 @@ class BuildBoxes extends BaseClass
 		}
 
 		// Shortcuts.
-		const mn = box.min;
-		const mx = box.max;
+		const viewMatrix = this.viewMatrix;
+		const corners = { ...box.corners };
+
+		// Transform the corner points.
+		const { llb, llf, lrb, lrf, ulb, ulf, urb, urf } = corners;
+		vec3.transformMat4 ( llb as IVector3, llb, viewMatrix );
+		vec3.transformMat4 ( llf as IVector3, llf, viewMatrix );
+		vec3.transformMat4 ( lrb as IVector3, lrb, viewMatrix );
+		vec3.transformMat4 ( lrf as IVector3, lrf, viewMatrix );
+		vec3.transformMat4 ( ulb as IVector3, ulb, viewMatrix );
+		vec3.transformMat4 ( ulf as IVector3, ulf, viewMatrix );
+		vec3.transformMat4 ( urb as IVector3, urb, viewMatrix );
+		vec3.transformMat4 ( urf as IVector3, urf, viewMatrix );
+
+		// Shortcuts.
 		const points = this.#points;
 		const colors = this.#colors;
+		const indices = this.#indices;
 
 		// Add indices to connect the new box corners with line segments.
 		const base = ( points.length / 3 );
-		this.#indices.push (
+		indices.push (
 			base + 0, base + 1,
 			base + 1, base + 3,
 			base + 3, base + 2,
@@ -285,14 +299,14 @@ class BuildBoxes extends BaseClass
 
 		// Append the box corners to the array of points.
 		points.push (
-			mn[0], mn[1], mn[2],
-			mx[0], mn[1], mn[2],
-			mn[0], mx[1], mn[2],
-			mx[0], mx[1], mn[2],
-			mn[0], mn[1], mx[2],
-			mx[0], mn[1], mx[2],
-			mn[0], mx[1], mx[2],
-			mx[0], mx[1], mx[2],
+			llb[0], llb[1], llb[2],
+			llf[0], llf[1], llf[2],
+			lrb[0], lrb[1], lrb[2],
+			lrf[0], lrf[1], lrf[2],
+			ulb[0], ulb[1], ulb[2],
+			ulf[0], ulf[1], ulf[2],
+			urb[0], urb[1], urb[2],
+			urf[0], urf[1], urf[2],
 		);
 
 		// Initialize the color.
