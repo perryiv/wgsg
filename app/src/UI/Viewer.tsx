@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { buildSceneSphere } from "../Tools";
+import { buildSceneSpheres } from "../Tools";
 import { useViewerStore } from "../State";
 import {
 	useCallback,
@@ -25,8 +25,8 @@ import {
 	Device,
 	DeviceLost,
 	getNextId,
+	Group,
 	Node,
-	Sphere,
 	Viewer as InternalViewer,
 } from "../wgsg";
 
@@ -71,10 +71,12 @@ export function Viewer ( { style }: IViewerProps )
 	//
 	const buildTestScene = useCallback ( () : Node =>
 	{
-		const sphere = buildSceneSphere ( new Sphere() )
-		const boxes = buildBoundingBoxes ( sphere );
-		sphere.addChild ( boxes );
-		return sphere;
+		const group = new Group();
+		const spheres = buildSceneSpheres();
+		group.addChild ( spheres );
+		// const boxes = buildBoundingBoxes ( spheres );
+		// group.addChild ( boxes );
+		return group;
 	},
 	[] );
 
