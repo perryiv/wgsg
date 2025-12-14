@@ -16,7 +16,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { vec3 } from "gl-matrix";
-import { IVector3 } from "../Types";
+import { IMatrix44, IVector3 } from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -493,5 +493,47 @@ export class Box
 			ulf: [ mn[0], mx[1], mx[2] ],
 			urf: [ mx[0], mx[1], mx[2] ],
 		};
+	}
+
+	/**
+	 * Transform the box by the given matrix.
+	 * @param {Box} b1 - The box to transform.
+	 * @param {IMatrix44} matrix - The transformation matrix.
+	 * @returns {Box} A new box that is the transformed box.
+	 */
+	public static transform ( b1: Readonly<Box>, matrix: Readonly<IMatrix44> ): Box
+	{
+		// Create the new box.
+		const b2 = new Box();
+
+		// Get the corners.
+		const c = b1.corners;
+
+		// Needed below.
+		const pt: IVector3 = [ 0, 0, 0 ];
+
+		// Transform the corners and grow the box.
+		vec3.transformMat4 ( pt, c.llb, matrix ); b2.growByPoint ( pt );
+		vec3.transformMat4 ( pt, c.lrb, matrix ); b2.growByPoint ( pt );
+		vec3.transformMat4 ( pt, c.ulb, matrix ); b2.growByPoint ( pt );
+		vec3.transformMat4 ( pt, c.urb, matrix ); b2.growByPoint ( pt );
+		vec3.transformMat4 ( pt, c.llf, matrix ); b2.growByPoint ( pt );
+		vec3.transformMat4 ( pt, c.lrf, matrix ); b2.growByPoint ( pt );
+		vec3.transformMat4 ( pt, c.ulf, matrix ); b2.growByPoint ( pt );
+		vec3.transformMat4 ( pt, c.urf, matrix ); b2.growByPoint ( pt );
+
+		// Return the new box.
+		return b2;
+	}
+
+	/**
+	 * Transform this box in place.
+	 * @param {IMatrix44} matrix - The transformation matrix.
+	 */
+	public transform ( matrix: Readonly<IMatrix44> ): void
+	{
+		const box = Box.transform ( this, matrix );
+		this.min = box.min;
+		this.max = box.max;
 	}
 }

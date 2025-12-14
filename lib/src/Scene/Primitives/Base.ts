@@ -26,6 +26,7 @@ export interface IPrimitivesInput
 {
 	topology: GPUPrimitiveTopology;
 }
+export type IForEachIndexCallback = ( index: number, i: number ) => void;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -88,4 +89,10 @@ export abstract class Base extends BaseClass
 	 * @param {DrawVisitor} visitor - The visitor object.
 	 */
 	public abstract accept ( _: DrawVisitor ): void;
+
+	/**
+	 * Loop through all the indices.
+	 * @param {IForEachIndexCallback} func - The function to call for each index.
+	 */
+	public abstract forEachIndex ( func: IForEachIndexCallback ) : void;
 }

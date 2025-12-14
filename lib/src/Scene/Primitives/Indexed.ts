@@ -16,6 +16,7 @@ import { Array1 } from "../../Arrays";
 import { Draw as DrawVisitor } from "../../Visitors/Draw";
 import {
 	Base as BaseClass,
+	type IForEachIndexCallback,
 	type IPrimitivesInput,
 } from "./Base";
 
@@ -154,6 +155,27 @@ export class Indexed extends BaseClass
 			case 2: return "uint16";
 			case 4: return "uint32";
 			default: throw new Error ( "Unknown index type" );
+		}
+	}
+
+	/**
+	 * Loop through all the indices.
+	 * @param {IForEachIndexCallback} func - The function to call for each index.
+	 */
+	public override forEachIndex ( func: IForEachIndexCallback ) : void
+	{
+		const indices = this.#indices?.values;
+
+		if ( !indices )
+		{
+			return;
+		}
+
+		const numIndices = indices.length;
+
+		for ( let i = 0; i < numIndices; ++i )
+		{
+			func ( indices[i], i );
 		}
 	}
 }

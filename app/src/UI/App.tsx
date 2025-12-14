@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Button } from "./Button";
-import { Device } from "../wgsg";
+import { Device } from "../../../lib/src";
 import { Panel } from "./Panel";
 import { useCallback, useEffect } from "react";
 import { useViewerStore } from "../State";

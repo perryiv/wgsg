@@ -46,11 +46,11 @@ export interface INodeConstructorInput
 
 export enum Flags
 {
-	VISIBLE        = ( 1 << 0 ),
-	INTERSECTABLE  = ( 1 << 1 ),
-	ADDS_TO_BOUNDS = ( 1 << 2 ),
-	CLIPPED        = ( 1 << 3 ),
-	DIRTY          = ( 1 << 4 ),
+	ADDS_TO_BOUNDS = ( 1 << 0 ),
+	CLIPPED        = ( 1 << 1 ),
+	DIRTY          = ( 1 << 2 ),
+	INTERSECTABLE  = ( 1 << 3 ),
+	VISIBLE        = ( 1 << 4 ),
 };
 
 
@@ -331,13 +331,24 @@ export abstract class Node extends Base
 	 */
 	public get sphere() : ( Sphere | null )
 	{
+		// Get the box.
 		const box = this.box;
-		if ( box )
+
+		// Handle no box.
+		if ( !box )
 		{
-			const { center, radius } = box;
-			return new Sphere ( center, radius );
+			return null;
 		}
-		return null;
+
+		// Handle invalid box.
+		if ( false === box.valid )
+		{
+			return null;
+		}
+
+		// Make and return the sphere.
+		const { center, radius } = box;
+		return new Sphere ( center, radius );
 	}
 
 	/**

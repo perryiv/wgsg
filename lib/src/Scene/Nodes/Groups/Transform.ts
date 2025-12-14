@@ -12,12 +12,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Box, isValidMatrix } from "../../../Math";
 import { Group } from "./Group";
+import { IDENTITY_MATRIX } from "../../../Tools";
 import { IMatrix44, IVector3 } from "../../../Types";
-import { isValidMatrix } from "../../../Math";
 import { mat4 } from "gl-matrix";
 import { Visitor } from "../../../Visitors/Visitor";
-import { makeIdentity } from "../../../Tools/Math";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -29,7 +29,7 @@ import { makeIdentity } from "../../../Tools/Math";
 
 export class Transform extends Group
 {
-	#matrix: IMatrix44 = makeIdentity();
+	#matrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
 
 	/**
 	 * Construct the class.
@@ -120,5 +120,24 @@ export class Transform extends Group
 	public get valid () : boolean
 	{
 		return isValidMatrix ( this.#matrix );
+	}
+
+	/**
+	 * Get the bounding box of this node.
+	 * @returns {Box} The bounding box of this node.
+	 */
+	protected override getBoundingBox() : Box
+	{
+		// Call the base class function.
+		const box = super.getBoundingBox();
+
+		// Handle invalid box.
+		if ( false === box.valid )
+		{
+			return box;
+		}
+
+		// Return the transformed box.
+		return Box.transform ( box, this.#matrix );
 	}
 }

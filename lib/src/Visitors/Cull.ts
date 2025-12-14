@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Multiply } from "./Multiply";
+import { Multiply as BaseClass } from "./Multiply";
 import { Root } from "../Render";
 import { SolidColor } from "../Shaders";
 import type { IRenderGraphInfo } from "../Types";
@@ -63,7 +63,7 @@ const makeDefaultState = () : State =>
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Cull extends Multiply
+export class Cull extends BaseClass
 {
 	#root: Root;
 	#defaultState: State;
