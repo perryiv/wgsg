@@ -17,6 +17,7 @@
 import { Draw as DrawVisitor } from "../../Visitors/Draw";
 import {
 	Base as BaseClass,
+	type IForEachIndexCallback,
 	type IPrimitivesInput,
 } from "./Base";
 
@@ -132,5 +133,20 @@ export class Arrays extends BaseClass
 			throw new RangeError ( "The count must be >= 0" );
 		}
 		this.#count = count;
+	}
+
+	/**
+	 * Loop through all the indices.
+	 * @param {IForEachIndexCallback} func - The function to call for each index.
+	 */
+	public override forEachIndex ( func: IForEachIndexCallback ) : void
+	{
+		const first = this.#first;
+		const count = this.#count;
+
+		for ( let i = 0; i < count; ++i )
+		{
+			func ( first + i, i );
+		}
 	}
 }
