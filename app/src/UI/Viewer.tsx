@@ -28,7 +28,7 @@ import {
 	Group,
 	Node,
 	Viewer as InternalViewer,
-} from "../wgsg";
+} from "../../../lib/src";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -74,8 +74,9 @@ export function Viewer ( { style }: IViewerProps )
 		const group = new Group();
 		const spheres = buildSceneSpheres();
 		group.addChild ( spheres );
-		// const boxes = buildBoundingBoxes ( spheres );
-		// group.addChild ( boxes );
+		const boxes = buildBoundingBoxes ( spheres );
+		boxes.addsToBounds = false;
+		group.addChild ( boxes );
 		return group;
 	},
 	[] );
