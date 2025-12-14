@@ -106,22 +106,23 @@ export const buildSceneSphere = ( sphere: Sphere ) =>
 export const buildSceneSpheres = () =>
 {
 	const root = new Group();
+	const radius = 1.0;
 
 	{
 		const tr = new Transform();
 		mat4.translate ( tr.matrix, IDENTITY_MATRIX, [ 10, 0, 0 ] );
-		tr.addChild ( new SphereNode ( { center: [ 0, 0, 0 ] } ) );
-		tr.addChild ( new SphereNode ( { center: [ 2, 0, 0 ] } ) );
+		tr.addChild ( buildSceneSphere ( new Sphere ( [ 0, 0, 0 ], radius ) ) );
+		tr.addChild ( buildSceneSphere ( new Sphere ( [ 3, 0, 0 ], radius ) ) );
 		root.addChild ( tr );
 	}
 
 	{
 		const tr = new Transform();
-		mat4.translate ( tr.matrix, IDENTITY_MATRIX, [ 0, 10, 0 ] );
-		tr.addChild ( new SphereNode ( { center: [ 0, 0, 0 ] } ) );
-		tr.addChild ( new SphereNode ( { center: [ 2, 0, 0 ] } ) );
-		tr.addChild ( new SphereNode ( { center: [ 4, 0, 0 ] } ) );
-		tr.addChild ( new SphereNode ( { center: [ 6, 0, 0 ] } ) );
+		mat4.translate ( tr.matrix, IDENTITY_MATRIX, [ 10, 3, 0 ] );
+		tr.addChild ( buildSceneSphere ( new Sphere ( [ 0, 0, 0 ], radius ) ) );
+		tr.addChild ( buildSceneSphere ( new Sphere ( [ 3, 0, 0 ], radius ) ) );
+		tr.addChild ( buildSceneSphere ( new Sphere ( [ 6, 0, 0 ], radius ) ) );
+		tr.addChild ( buildSceneSphere ( new Sphere ( [ 9, 0, 0 ], radius ) ) );
 		root.addChild ( tr );
 	}
 
