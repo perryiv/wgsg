@@ -32,11 +32,12 @@ import {
 import {
 	Bin,
 	Layer,
-	ViewMatrixGroup,
+	makeRenderGraphInfo,
 	Pipeline,
 	ProjMatrixGroup,
 	Root,
 	StateGroup,
+	ViewMatrixGroup,
 } from "../Render";
 
 
@@ -127,10 +128,11 @@ export class Draw extends BaseClass
 	 */
 	public get renderGraphInfo () : IRenderGraphInfo
 	{
-		const info = this.#info;
+		let info = this.#info;
 		if ( !info )
 		{
-			throw new Error ( "Getting invalid render graph info" );
+			info = makeRenderGraphInfo();
+			this.#info = info;
 		}
 		return info;
 	}

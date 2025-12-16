@@ -12,8 +12,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { makeRenderGraphInfo, Root } from "../Render";
 import { Multiply as BaseClass } from "./Multiply";
-import { Root } from "../Render";
 import { SolidColor } from "../Shaders";
 import type { IRenderGraphInfo } from "../Types";
 import {
@@ -130,10 +130,11 @@ export class Cull extends BaseClass
 	 */
 	public get renderGraphInfo () : IRenderGraphInfo
 	{
-		const info = this.#info;
+		let info = this.#info;
 		if ( !info )
 		{
-			throw new Error ( "Getting invalid render graph info" );
+			info = makeRenderGraphInfo();
+			this.#info = info;
 		}
 		return info;
 	}
