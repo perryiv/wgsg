@@ -117,12 +117,7 @@ export function test ()
 				[ ...IDENTITY_MATRIX ], 45, 1, 0.1, 1000
 			) );
 
-			expect ( viewer.viewMatrix ).to.deep.equal ( [
-				1, 0, 0, 0,
-				0, 1, 0, 0,
-				0, 0, 1, 0,
-				0, 0, -2, 1
-			] );
+			expect ( viewer.viewMatrix ).to.deep.equal ( IDENTITY_MATRIX );
 		} );
 
 		it ( "Should be able to view the bounds", function ()

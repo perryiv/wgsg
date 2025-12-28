@@ -23,6 +23,7 @@ import {
 	isFiniteNumber,
 	Plane,
 	Sphere,
+	type ILineSphereIntersection,
 } from "../Math";
 import {
 	DEG_TO_RAD,
@@ -420,11 +421,12 @@ export class Trackball extends BaseClass
 
 	/**
 	 * Make the trackball sphere.
+	 * @param {number} [radius=1] - The sphere radius.
 	 * @returns {Sphere} The trackball sphere.
 	 */
-	public makeSphere () : Sphere
+	public makeSphere ( radius: ( number | undefined ) = 1 ) : Sphere
 	{
-		return new Sphere ( [ 0, 0, -2 ], 1 );
+		return new Sphere ( [ 0, 0, -2 ], radius );
 	}
 
 	/**
@@ -581,21 +583,49 @@ export class Trackball extends BaseClass
 		cl.normalize();
 		pl.normalize();
 
-		// Make the trackball sphere in global space.
-		const sphere = this.makeSphere();
+		// Initialize these up here.
+		let ci: ILineSphereIntersection = {};
+		let pi: ILineSphereIntersection = {};
+		const numSteps = 10;
+		const minRadius = 1.0;
+		let sphere = this.makeSphere ( minRadius );
+		let numIntersections = 0;
 
-		// Intersect the lines with the trackball sphere.
-		const ci = intersectLineSphere ( { line: cl, sphere } );
-		const pi = intersectLineSphere ( { line: pl, sphere } );
-
-		// We ignore zero or one (tangent) intersections.
-		if ( !(
-			isFiniteNumber ( ci.u1 ) &&
-			isFiniteNumber ( ci.u2 ) &&
-			isFiniteNumber ( pi.u1 ) &&
-			isFiniteNumber ( pi.u2 )
-		) )
+		// Grow the sphere until we intersect it. We do this because
+		// it's a better interaction when intersecting a smaller sphere.
+		for ( let i = 1; i < numSteps; ++i )
 		{
+			// Intersect the lines with the trackball sphere.
+			ci = intersectLineSphere ( { line: cl, sphere } );
+			pi = intersectLineSphere ( { line: pl, sphere } );
+
+			// If we have four intersections then we're done.
+			numIntersections = 0;
+			numIntersections += ( isFiniteNumber ( ci.u1 ) ? 1 : 0 );
+			numIntersections += ( isFiniteNumber ( ci.u2 ) ? 1 : 0 );
+			numIntersections += ( isFiniteNumber ( pi.u1 ) ? 1 : 0 );
+			numIntersections += ( isFiniteNumber ( pi.u2 ) ? 1 : 0 );
+
+			// If we have two intersections for each line then we're done.
+			// We ignore zero or one (tangent) intersections.
+			if ( 4 === numIntersections )
+			{
+				// console.log ( "Intersecting the trackball sphere took " + i + " steps." );
+				break;
+			}
+
+			// We want a number that varies from 1.0 to 2.0;
+			const radius = ( minRadius + ( i / ( numSteps - 1 ) ) );
+
+			// Make the trackball sphere again, but larger.
+			sphere = this.makeSphere ( radius );
+		}
+
+		// Handle no intersections.
+		// By the time we get to here this should not happen.
+		if ( numIntersections !== 4 )
+		{
+			// console.log ( "No intersections with the trackball sphere." );
 			return;
 		}
 
