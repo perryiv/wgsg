@@ -12,12 +12,18 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Geometry, Indexed, Node as SceneNode } from "../Scene";
 import { makeSolidColorState } from "./State";
 import { Multiply as BaseClass } from "../Visitors";
 import { SolidColor } from "../Shaders";
 import { vec3, vec4 } from "gl-matrix";
 import type { IVector3, IVector4 } from "../Types";
+import {
+	Geometry,
+	Group,
+	Indexed,
+	Node as SceneNode
+} from "../Scene";
+import { IDENTITY_MATRIX } from "../Tools";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -246,19 +252,23 @@ class BuildBoxes extends BaseClass
 	}
 
 	/**
-	 * Visit the geometry node.
-	 * @param {Geometry} geom - The geometry node.
+	 * Add the box.
+	 * @param {SceneNode} node - The scene node.
 	 */
-	public override visitGeometry ( geom: Geometry ) : void
+	protected addBox ( node: SceneNode ) : void
 	{
 		// Get the bounding box in local space.
-		const box = geom.box;
+		const box = node.box;
 
 		// Handle invalid box
 		if ( false === box.valid )
 		{
 			return;
 		}
+
+		// You need the bounding boxes in local space because you transform the
+		// corner points here to top-level model space. However, when
+		// you get a bounding box from a transform node, it gets transformed.
 
 		// Shortcuts.
 		const viewMatrix = this.viewMatrix;
@@ -313,7 +323,7 @@ class BuildBoxes extends BaseClass
 		const c: IVector4 = [ 0.5, 0.5, 0.5, 1 ];
 
 		// Try to get the color.
-		const state = geom.state;
+		const state = node.state;
 		if ( state )
 		{
 			const shader = state.shader;
@@ -335,8 +345,27 @@ class BuildBoxes extends BaseClass
 			c[0], c[1], c[2], c[3],
 		);
 	}
-}
 
+	/**
+	 * Visit the geometry node.
+	 * @param {Geometry} geom - The geometry node.
+	 */
+	public override visitGeometry ( geom: Geometry ) : void
+	{
+		this.addBox ( geom );
+		super.visitGeometry ( geom );
+	}
+
+	/**
+	 * Visit the group node.
+	 * @param {Group} group - The group node.
+	 */
+	public override visitGroup ( group: Group ) : void
+	{
+		this.addBox ( group );
+		super.visitGroup ( group );
+	}
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
