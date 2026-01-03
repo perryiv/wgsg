@@ -15,8 +15,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IMatrix44, IVector3 } from "../Types";
+import { midPoint } from "../Tools";
 import { vec3 } from "gl-matrix";
+import type { IMatrix44, IVector3 } from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -29,7 +30,7 @@ import { vec3 } from "gl-matrix";
 export class Sphere
 {
 	#c: IVector3 = [ 0, 0, 0 ];
-	#r = 1;
+	#r = -1; // Invalid by default.
 
 	/**
 	 * Construct the class.
@@ -86,6 +87,15 @@ export class Sphere
 	}
 
 	/**
+	 * Is the sphere valid?
+	 * @returns {boolean} True if the sphere is valid.
+	 */
+	public get valid(): boolean
+	{
+		return ( this.#r >= 0 );
+	}
+
+	/**
 	 * Return a string representation.
 	 * @returns {string} The string representation.
 	 */
@@ -133,4 +143,69 @@ export class Sphere
   {
     Sphere.transform ( this, m, this );
   }
+
+	/**
+	 * Grow the sphere to include another sphere.
+	 * @param {Sphere} sphere - The other sphere.
+	 */
+	public growBySphere ( sphere: Readonly<Sphere> ): void
+	{
+		// If the given sphere is invalid then do nothing.
+		if ( false === sphere.valid )
+		{
+			return;
+		}
+
+		// If we are invalid then assign our members from the given sphere.
+		if ( false === this.valid )
+		{
+			this.center = sphere.center;
+			this.radius = sphere.radius;
+			return;
+		}
+
+		// Shortcuts.
+		const c1 = this.center;
+		const r1 = this.radius;
+		const c2 = sphere.center;
+		const r2 = sphere.radius;
+
+		// Get the vector between the two centers, and its length.
+		const d12: IVector3 = [ 0, 0, 0 ];
+		vec3.subtract ( d12, c2, c1 );
+		const dist = vec3.length ( d12 );
+
+		// Do we already include the other sphere?
+		if ( r1 >= ( dist + r2 ) )
+		{
+			return;
+		}
+
+		// Does the given sphere include us?
+		if ( r2 >= ( dist + r1 ) )
+		{
+			this.center = c2;
+			this.radius = r2;
+			return;
+		}
+
+		// If we get to here then compute the new sphere.
+
+		// Normalize the direction from our center to the other sphere's center.
+		vec3.normalize ( d12, d12 );
+
+		// Get the two farthest points.
+		const p1: IVector3 = [ 0, 0, 0 ];
+		const p2: IVector3 = [ 0, 0, 0 ];
+		vec3.scaleAndAdd ( p1, c1, d12, -r1 );
+		vec3.scaleAndAdd ( p2, c2, d12, r2 );
+
+		// The new center is halfway between those points.
+		const c3: IVector3 = [ 0, 0, 0 ];
+		midPoint ( c3, p2, p1 );
+		this.center = c3;
+
+		// The new sphere's radius.
+		this.radius = ( dist + r1 + r2 ) * 0.5;
+	}
 }
