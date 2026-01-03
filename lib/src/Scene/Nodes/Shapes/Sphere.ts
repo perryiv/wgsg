@@ -15,6 +15,7 @@
 import { Array1 } from "../../../Arrays";
 import { Geometry as BaseClass } from "./Geometry";
 import { Indexed } from "../../Primitives";
+import { Sphere as MathSphere } from "../../../Math";
 import { vec3 } from "gl-matrix";
 import type { INodeConstructorInput } from "../Node";
 import type { IVector3 } from "../../../Types";
@@ -261,12 +262,21 @@ export class Sphere extends BaseClass
 		this.primitives = new Indexed ( { topology: "triangle-list", indices } );
 
 		// The bounds is now dirty.
-		this.setBoundingBox ( null );
+		this.dirtyBounds();
 
 		// Call the base class's function.
 		super.update();
 
 		// We are no longer dirty.
 		this.dirty = false;
+	}
+
+	/**
+	 * Get the bounding sphere of this node.
+	 * @returns {MathSphere} The bounding sphere of this node.
+	 */
+	public override getBoundingSphere() : MathSphere
+	{
+		return new MathSphere ( this.center, this.radius );
 	}
 }
