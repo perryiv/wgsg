@@ -252,7 +252,7 @@ class BuildBoxes extends BaseClass
 	public override visitGeometry ( geom: Geometry ) : void
 	{
 		// Get the bounding box in local space.
-		const box = geom.box;
+		const box = geom.getBoundingBox();
 
 		// Handle invalid box
 		if ( false === box.valid )

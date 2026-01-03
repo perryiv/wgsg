@@ -76,7 +76,7 @@ export function test ()
 				numSubdivisions: 1,
 			} );
 			sphere.update();
-			const box = sphere.box;
+			const box = sphere.getBoundingBox();
 
 			const epsilon = 0.0000001;
 			expect ( box.min[0] ).to.be.closeTo ( -1, epsilon );

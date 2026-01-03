@@ -504,7 +504,7 @@ export class Viewer extends BaseClass
 	 */
 	public viewAll ( options?: { resetRotation?: boolean } ) : void
 	{
-		const sphere = this.modelScene?.sphere;
+		const sphere = this.modelScene?.getBoundingSphere();
 		if ( sphere )
 		{
 			const resetRotation = options?.resetRotation;
