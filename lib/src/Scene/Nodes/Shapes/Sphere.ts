@@ -272,10 +272,10 @@ export class Sphere extends BaseClass
 	}
 
 	/**
-	 * Get the bounding box of this node.
+	 * Calculate the bounding box of this node.
 	 * @returns {Box} The bounding box of this node.
 	 */
-	public override getBoundingBox() : Box
+	protected override calculateBoundingBox() : Box
 	{
 		const c = this.center;
 		const r = this.radius;

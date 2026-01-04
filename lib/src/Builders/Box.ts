@@ -12,18 +12,19 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { IDENTITY_MATRIX } from "../Tools";
 import { makeSolidColorState } from "./State";
 import { Multiply as BaseClass } from "../Visitors";
 import { SolidColor } from "../Shaders";
 import { vec3, vec4 } from "gl-matrix";
-import type { IVector3, IVector4 } from "../Types";
+import type { IMatrix44, IVector3, IVector4 } from "../Types";
 import {
 	Geometry,
 	Group,
 	Indexed,
-	Node as SceneNode
+	Node as SceneNode,
+	Transform,
 } from "../Scene";
-import { IDENTITY_MATRIX } from "../Tools";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -254,11 +255,12 @@ class BuildBoxes extends BaseClass
 	/**
 	 * Add the box.
 	 * @param {SceneNode} node - The scene node.
+	 * @param {IMatrix44} [viewMatrix] - The view matrix.
 	 */
-	protected addBox ( node: SceneNode ) : void
+	protected addBox ( node: SceneNode, viewMatrix: Readonly<IMatrix44> ) : void
 	{
 		// Get the bounding box in local space.
-		const box = geom.getBoundingBox();
+		const box = node.getBoundingBox();
 
 		// Handle invalid box
 		if ( false === box.valid )
@@ -271,7 +273,6 @@ class BuildBoxes extends BaseClass
 		// you get a bounding box from a transform node, it gets transformed.
 
 		// Shortcuts.
-		const viewMatrix = this.viewMatrix;
 		const corners = { ...box.corners };
 
 		// Transform the corner points.
@@ -347,23 +348,33 @@ class BuildBoxes extends BaseClass
 	}
 
 	/**
-	 * Visit the geometry node.
+	 * Visit the node.
 	 * @param {Geometry} geom - The geometry node.
 	 */
 	public override visitGeometry ( geom: Geometry ) : void
 	{
-		this.addBox ( geom );
+		this.addBox ( geom, this.viewMatrix );
 		super.visitGeometry ( geom );
 	}
 
 	/**
-	 * Visit the group node.
+	 * Visit the node.
 	 * @param {Group} group - The group node.
 	 */
 	public override visitGroup ( group: Group ) : void
 	{
-		this.addBox ( group );
+		this.addBox ( group, this.viewMatrix );
 		super.visitGroup ( group );
+	}
+
+	/**
+	 * Visit the node.
+	 * @param {Transform} tr - The transform node.
+	 */
+	public override visitTransform ( tr: Transform ) : void
+	{
+		this.addBox ( tr, IDENTITY_MATRIX ); // The box is already transformed.
+		super.visitTransform ( tr );
 	}
 }
 

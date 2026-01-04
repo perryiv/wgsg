@@ -16,6 +16,7 @@ import { expect } from "chai";
 import {
 	Group,
 	IDENTITY_MATRIX,
+	SphereNode,
 	Transform,
 } from "../../../wgsg";
 
@@ -170,6 +171,36 @@ export function test ()
 				0, 0, 1, 0,
 				0, 0, 0, 10
 			] );
+		} );
+
+		it ( "Should have the correct bounding box", function ()
+		{
+			const radius = 1.0;
+			const tr = new Transform();
+			let box = tr.getBoundingBox();
+			expect ( box.valid ).to.be.false;
+
+			const sphere = new SphereNode ( { center: [ 0, 0, 0 ], radius } )
+			box = sphere.getBoundingBox();
+			expect ( box.valid ).to.be.true;
+			expect ( box.min ).to.be.deep.equal ( [ -1, -1, -1 ] );
+			expect ( box.max ).to.be.deep.equal ( [  1,  1,  1 ] );
+
+			tr.addChild ( sphere );
+			box = tr.getBoundingBox();
+			expect ( box.min ).to.be.deep.equal ( [ -1, -1, -1 ] );
+			expect ( box.max ).to.be.deep.equal ( [  1,  1,  1 ] );
+
+			tr.translate ( [ 10, 0, 0 ] );
+			tr.dirtyBounds();
+			box = tr.getBoundingBox();
+			expect ( box.min ).to.be.deep.equal ( [  9, -1, -1 ] );
+			expect ( box.max ).to.be.deep.equal ( [ 11,  1,  1 ] );
+
+			tr.addChild ( new SphereNode ( { center: [ 2, 0, 0 ], radius } ) );
+			box = tr.getBoundingBox();
+			expect ( box.min ).to.be.deep.equal ( [  9, -1, -1 ] );
+			expect ( box.max ).to.be.deep.equal ( [ 13,  1,  1 ] );
 		} );
 	} );
 };

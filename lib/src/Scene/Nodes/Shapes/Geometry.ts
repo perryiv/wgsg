@@ -56,7 +56,7 @@ export class Geometry extends Shape
 	#colors:     ( IColorData       | null ) = null;
 	#texCoords:  ( ITexCoordData    | null ) = null;
 	#primitives: ( IPrimitiveList[] | null ) = null;
-	#box:        ( Box              | null ) = null;
+	#box: Box = new Box();
 
 	/**
 	 * Construct the class.
@@ -139,15 +139,34 @@ export class Geometry extends Shape
 	 */
 	public override getBoundingBox() : Box
 	{
-		// Shortcut.
-		const current = this.#box;
-
 		// Return the bounding box if it is valid.
-		if ( ( current ) && ( true === current.valid ) )
+		if ( true === this.#box.valid )
 		{
-			return current;
+			return this.#box;
 		}
 
+		// Calculate the bounding box.
+		const answer = this.calculateBoundingBox();
+
+		// If it's invalid then don't store it.
+		if ( false === answer.valid )
+		{
+			return answer;
+		}
+
+		// If we get to here then save the answer for next time.
+		this.#box = answer;
+
+		// Return the answer.
+		return answer;
+	}
+
+	/**
+	 * Calculate the bounding box of this node.
+	 * @returns {Box} The bounding box of this node.
+	 */
+	protected override calculateBoundingBox() : Box
+	{
 		// Make a new bounds.
 		const answer = new Box();
 
@@ -185,10 +204,6 @@ export class Geometry extends Shape
 				] );
 			} );
 		} );
-
-		// If we get to here then save the answer for next time.
-		// We wait until now to keep from storing an invalid bounding box.
-		this.#box = answer;
 
 		// Return the answer.
 		return answer;

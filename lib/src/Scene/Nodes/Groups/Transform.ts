@@ -70,7 +70,7 @@ export class Transform extends Group
 	 * Get the matrix.
 	 * @returns {IMatrix44} The transformation matrix.
 	 */
-	public get matrix () : IMatrix44
+	public get matrix () : Readonly<IMatrix44>
 	{
 		return this.#matrix;
 	}
@@ -92,6 +92,9 @@ export class Transform extends Group
 
 		// Write over the values in our existing matrix.
 		mat4.copy ( this.#matrix, matrix );
+
+		// The bounds is now dirty.
+		this.dirtyBounds();
 	}
 
 	/**
@@ -101,6 +104,7 @@ export class Transform extends Group
 	public translate ( v: Readonly<IVector3> ) : void
 	{
 		mat4.translate ( this.#matrix, this.#matrix, v );
+		this.dirtyBounds();
 	}
 
 	/**
@@ -111,6 +115,7 @@ export class Transform extends Group
 	public rotate ( angle: Readonly<number>, axis: Readonly<IVector3> ) : void
 	{
 		mat4.rotate ( this.#matrix, this.#matrix, angle, axis );
+		this.dirtyBounds();
 	}
 
 	/**
@@ -123,11 +128,21 @@ export class Transform extends Group
 	}
 
 	/**
-	 * Get the bounding box of this node.
+	 * Calculate the bounding box of this node.
 	 * @returns {Box} The bounding box of this node.
 	 */
-	public override getBoundingBox() : Box
+	protected override calculateBoundingBox() : Box
 	{
-		return Group.getBoundingBox ( this, this.#matrix );
+		// Calculate the bounding box using the base class' function.
+		const answer = super.calculateBoundingBox();
+
+		// Handle when it's invalid.
+		if ( false === answer.valid )
+		{
+			return answer;
+		}
+
+		// Transform the box and return it.
+		return Box.transform ( answer, this.#matrix );
 	}
 }

@@ -12,13 +12,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { mat4 } from "gl-matrix";
 import {
 	buildBox,
 	buildTriangleEdges,
 	Geometry,
 	Group,
-	IDENTITY_MATRIX,
 	Indexed,
 	Node,
 	SolidColor,
@@ -107,7 +105,7 @@ export const buildSceneSpheres = () =>
 
 	{
 		const tr = new Transform();
-		mat4.translate ( tr.matrix, IDENTITY_MATRIX, [ 10, 0, 0 ] );
+		tr.translate ( [ 10, 0, 0 ] );
 		tr.addChild ( buildSceneSphere ( new Sphere ( [ 0, 0, 0 ], radius ) ) );
 		tr.addChild ( buildSceneSphere ( new Sphere ( [ 3, 0, 0 ], radius ) ) );
 		root.addChild ( tr );
@@ -115,7 +113,7 @@ export const buildSceneSpheres = () =>
 
 	{
 		const tr = new Transform();
-		mat4.translate ( tr.matrix, IDENTITY_MATRIX, [ 10, 3, 0 ] );
+		tr.translate ( [ 10, 3, 0 ] );
 		tr.addChild ( buildSceneSphere ( new Sphere ( [ 0, 0, 0 ], radius ) ) );
 		tr.addChild ( buildSceneSphere ( new Sphere ( [ 3, 0, 0 ], radius ) ) );
 		tr.addChild ( buildSceneSphere ( new Sphere ( [ 6, 0, 0 ], radius ) ) );
