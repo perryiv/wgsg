@@ -15,7 +15,7 @@
 import { Array1 } from "../../../Arrays";
 import { Geometry as BaseClass } from "./Geometry";
 import { Indexed } from "../../Primitives";
-import { Sphere as MathSphere } from "../../../Math";
+import { Box, Sphere as MathSphere } from "../../../Math";
 import { vec3 } from "gl-matrix";
 import type { INodeConstructorInput } from "../Node";
 import type { IVector3 } from "../../../Types";
@@ -269,6 +269,20 @@ export class Sphere extends BaseClass
 
 		// We are no longer dirty.
 		this.dirty = false;
+	}
+
+	/**
+	 * Get the bounding box of this node.
+	 * @returns {Box} The bounding box of this node.
+	 */
+	public override getBoundingBox() : Box
+	{
+		const c = this.center;
+		const r = this.radius;
+		return new Box ( {
+			min: [ ( c[0] - r ), ( c[1] - r ), ( c[2] - r ) ],
+			max: [ ( c[0] + r ), ( c[1] + r ), ( c[2] + r ) ]
+		} );
 	}
 
 	/**
