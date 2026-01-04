@@ -199,3 +199,21 @@ export const normalizeQuat = ( input: Readonly<IVector4> ) : IVector4 =>
 	quat.normalize ( answer, input );
 	return answer;
 };
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Get the midpoint between two 3D points.
+ * @param {IVector3} out - The output vector.
+ * @param {IVector3} a - The first point.
+ * @param {IVector3} b - The second point.
+ * @returns {IVector3} The midpoint.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export const midPoint = ( out: IVector3, a: Readonly<IVector3>, b: Readonly<IVector3> ): IVector3 =>
+{
+	vec3.add ( out, a, b );
+	vec3.scale ( out, out, 0.5 );
+	return out;
+};

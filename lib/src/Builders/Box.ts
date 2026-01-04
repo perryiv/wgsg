@@ -241,7 +241,7 @@ class BuildBoxes extends BaseClass
 			const geom = new Geometry ( { points, colors, primitives } );
 
 			// Add a state.
-			geom.state = makeSolidColorState ( { color: [ 1, 1, 1, 1 ], topology: "line-list" } );
+			geom.state = makeSolidColorState ( { color: [ 0.5, 0.5, 0.5, 1 ], topology: "line-list" } );
 
 			// Save for next time.
 			this.#geom = geom;
@@ -258,7 +258,7 @@ class BuildBoxes extends BaseClass
 	protected addBox ( node: SceneNode ) : void
 	{
 		// Get the bounding box in local space.
-		const box = node.box;
+		const box = geom.getBoundingBox();
 
 		// Handle invalid box
 		if ( false === box.valid )

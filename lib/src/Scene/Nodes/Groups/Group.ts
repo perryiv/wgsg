@@ -13,13 +13,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Visitor } from "../../../Visitors/Visitor";
-import { Box } from "../../../Math";
+import { Box, Sphere } from "../../../Math";
 import { hasBits } from "../../../Tools";
 import {
 	Flags,
 	Node,
 	type INodeTraverseCallback,
 } from "../Node";
+import { IMatrix44 } from "../../../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -71,22 +72,40 @@ export class Group extends Node
 	}
 
 	/**
-	 * Get the bounding box of this node.
-	 * @returns {Box} The bounding box of this node.
+	 * Get the bounding sphere of this node.
+	 * @returns {Sphere} The bounding sphere of this node.
 	 */
-	protected override getBoundingBox() : Box
+	public override getBoundingSphere() : Sphere
 	{
-		// Return the bounding box if it is valid.
-		if ( true === this.#box.valid )
+		// Get the bounding box.
+		const box = this.getBoundingBox();
+
+		// If the box is invalid then return an invalid sphere.
+		if ( false === box.valid )
 		{
-			return this.#box;
+			return new Sphere();
 		}
 
+		// Get the sphere that encloses the box.
+		const { center, radius } = box;
+
+		// Return the correct sphere.
+		return new Sphere ( center, radius );
+	}
+
+	/**
+	 * Get the bounding box of the given group.
+	 * @param {Group} group - The group.
+	 * @param {IMatrix44 | undefined} matrix - Optional matrix to transform the boxes.
+	 * @returns {Box} The bounding box of this group.
+	 */
+	protected static getBoundingBox ( group: Group, matrix?: IMatrix44 ) : Box
+	{
 		// Make a new box.
 		const answer = new Box();
 
 		// Add each child's box to ours.
-		this.forEachChild ( ( child: Node ) =>
+		group.forEachChild ( ( child: Node ) =>
 		{
 			// Handle when the child node does not add to the bounds.
 			if ( false === hasBits ( child.flags, Flags.ADDS_TO_BOUNDS ) )
@@ -94,15 +113,48 @@ export class Group extends Node
 				return;
 			}
 
+			// Get the child's box.
+			const box = child.getBoundingBox();
+
 			// If the child has an invalid box then skip it.
-			if ( false === child.box.valid )
+			if ( false === box.valid )
 			{
 				return;
 			}
 
-			// Grow the answer.
-			answer.growByBox ( child.box );
+			// Are we supposed to transform the box?
+			if ( matrix )
+			{
+				// Grow the answer by the transformed box.
+				answer.growByBox ( Box.transform ( box, matrix ) );
+			}
+
+			// Otherwise ...
+			else
+			{
+				// Grow the answer by the box.
+				answer.growByBox ( box );
+			}
 		} );
+
+		// Return the answer.
+		return answer;
+	}
+
+	/**
+	 * Get the bounding box of this node.
+	 * @returns {Box} The bounding box of this node.
+	 */
+	public override getBoundingBox() : Box
+	{
+		// Return the bounding box if it is valid.
+		if ( true === this.#box.valid )
+		{
+			return this.#box;
+		}
+
+		// Get the new bounding box.
+		const answer = Group.getBoundingBox ( this );
 
 		// Save the answer for next time.
 		this.#box = answer;
@@ -112,20 +164,17 @@ export class Group extends Node
 	}
 
 	/**
-	 * Set the bounding box of this node.
-	 * @param {Box | null} box - The new bounding box of this node.
+	 * Dirty the bounds of this node.
 	 */
-	protected override setBoundingBox ( box: Readonly<Box> | null ): void
+	public override dirtyBounds (): void
 	{
-		// If we were given a box then clone it.
-		// Otherwise, make a new default box.
-		// Note: We can clone an invalid box, but not a null box.
-		this.#box = ( box ? box.clone() : new Box() );
+		// Make a new invalid box.
+		this.#box = new Box();
 
 		// Let the parents know that their bounding boxes are now invalid.
 		this.forEachParent ( ( parent: Node ) =>
 		{
-			parent.box = null;
+			parent.dirtyBounds();
 		} );
 	}
 
@@ -191,6 +240,9 @@ export class Group extends Node
 		// Add the node to the array.
 		// If we get to here then we know it won't be a repeat.
 		this.#children.push ( node );
+
+		// This group's bounds are now dirty.
+		this.dirtyBounds();
 	}
 
 	/**

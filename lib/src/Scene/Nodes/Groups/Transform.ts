@@ -126,18 +126,8 @@ export class Transform extends Group
 	 * Get the bounding box of this node.
 	 * @returns {Box} The bounding box of this node.
 	 */
-	protected override getBoundingBox() : Box
+	public override getBoundingBox() : Box
 	{
-		// Call the base class function.
-		const box = super.getBoundingBox();
-
-		// Handle invalid box.
-		if ( false === box.valid )
-		{
-			return box;
-		}
-
-		// Return the transformed box.
-		return Box.transform ( box, this.#matrix );
+		return Group.getBoundingBox ( this, this.#matrix );
 	}
 }

@@ -308,61 +308,24 @@ export abstract class Node extends Base
 	}
 
 	/**
-	 * Get the bounding box of this node.
-	 * @returns {Box} The bounding box of this node.
-	 */
-	public get box() : Box
-	{
-		return this.getBoundingBox();
-	}
-
-	/**
-	 * Set the bounding box of this node.
-	 * @param {Box | null} box - The new bounding box of this node.
-	 */
-	public set box ( box: Readonly<Box> | null )
-	{
-		this.setBoundingBox ( box );
-	}
-
-	/**
 	 * Get the bounding sphere of this node.
-	 * @returns {Sphere | null} The bounding sphere of this node.
+	 * @abstract
+	 * @returns {Sphere} The bounding sphere of this node.
 	 */
-	public get sphere() : ( Sphere | null )
-	{
-		// Get the box.
-		const box = this.box;
-
-		// Handle no box.
-		if ( !box )
-		{
-			return null;
-		}
-
-		// Handle invalid box.
-		if ( false === box.valid )
-		{
-			return null;
-		}
-
-		// Make and return the sphere.
-		const { center, radius } = box;
-		return new Sphere ( center, radius );
-	}
+	public abstract getBoundingSphere() : Sphere;
 
 	/**
 	 * Get the bounding box of this node.
 	 * @abstract
 	 * @returns {Box} The bounding box of this node.
 	 */
-	protected abstract getBoundingBox() : Box;
+	public abstract getBoundingBox() : Box;
+
 	/**
-	 * Set the bounding box of this node.
+	 * Dirty the bounds of this node.
 	 * @abstract
-	 * @param {Box | null} box - The new bounding box of this node.
 	 */
-	protected abstract setBoundingBox ( _: Readonly<Box> | null ): void;
+	public abstract dirtyBounds (): void;
 
 	/**
 	 * Traverse this node.
