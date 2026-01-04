@@ -43,7 +43,6 @@ export class Group extends Node
 {
 	#children: Node[] = [];
 	#box: Box = new Box();
-	#sphere: Sphere = new Sphere();
 
 	/**
 	 * Construct the class.
@@ -78,42 +77,20 @@ export class Group extends Node
 	 */
 	public override getBoundingSphere() : Sphere
 	{
-		// Return the bounding sphere if it is valid.
-		if ( true === this.#sphere.valid )
+		// Get the bounding box.
+		const box = this.getBoundingBox();
+
+		// If the box is invalid then return an invalid sphere.
+		if ( false === box.valid )
 		{
-			return this.#sphere;
+			return new Sphere();
 		}
 
-		// Make a new sphere.
-		const answer = new Sphere();
+		// Get the sphere that encloses the box.
+		const { center, radius } = box;
 
-		// Add each child's sphere to ours.
-		this.forEachChild ( ( child: Node ) =>
-		{
-			// Handle when the child node does not add to the bounds.
-			if ( false === hasBits ( child.flags, Flags.ADDS_TO_BOUNDS ) )
-			{
-				return;
-			}
-
-			// Get the child's sphere.
-			const sphere = child.getBoundingSphere();
-
-			// If the child has an invalid sphere then skip it.
-			if ( false === sphere.valid )
-			{
-				return;
-			}
-
-			// Grow the answer.
-			answer.growBySphere ( sphere );
-		} );
-
-		// Save the answer for next time.
-		this.#sphere = answer;
-
-		// Return the answer.
-		return answer;
+		// Return the correct sphere.
+		return new Sphere ( center, radius );
 	}
 
 	/**
@@ -263,6 +240,9 @@ export class Group extends Node
 		// Add the node to the array.
 		// If we get to here then we know it won't be a repeat.
 		this.#children.push ( node );
+
+		// This group's bounds are now dirty.
+		this.dirtyBounds();
 	}
 
 	/**
