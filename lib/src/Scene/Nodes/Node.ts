@@ -322,6 +322,13 @@ export abstract class Node extends Base
 	public abstract getBoundingBox() : Box;
 
 	/**
+	 * Calculate the bounding box of this node.
+	 * @abstract
+	 * @returns {Box} The bounding box of this node.
+	 */
+	protected abstract calculateBoundingBox() : Box;
+
+	/**
 	 * Dirty the bounds of this node.
 	 * @abstract
 	 */

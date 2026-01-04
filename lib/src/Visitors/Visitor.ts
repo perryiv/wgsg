@@ -46,7 +46,7 @@ export abstract class Visitor extends Base
 	 * Visit the group.
 	 * @param {Group} group - The group to visit.
 	 */
-	public visitGroup ( group: Group ) : void
+	protected visitChildren ( group: Group ) : void
 	{
 		group.forEachChild ( ( child: Node ) =>
 		{
@@ -55,12 +55,23 @@ export abstract class Visitor extends Base
 	}
 
 	/**
+	 * Visit the group.
+	 * @param {Group} group - The group to visit.
+	 */
+	public visitGroup ( group: Group ) : void
+	{
+		// Call this functions rather than iterating here.
+		this.visitChildren ( group );
+	}
+
+	/**
 	 * Visit the transform.
 	 * @param {Transform} tr - The transform to visit.
 	 */
 	public visitTransform ( tr: Transform ) : void
 	{
-		this.visitGroup ( tr );
+		// Do not call visitGroup because it breaks the bounding box visitor.
+		this.visitChildren ( tr );
 	}
 
 	/**
@@ -69,7 +80,8 @@ export abstract class Visitor extends Base
 	 */
 	public visitProjection ( proj: Projection ) : void
 	{
-		this.visitGroup ( proj );
+		// Do not call visitGroup because it breaks the bounding box visitor.
+		this.visitChildren ( proj );
 	}
 
 	/**
