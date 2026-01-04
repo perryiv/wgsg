@@ -76,15 +76,29 @@ export function test ()
 				numSubdivisions: 1,
 			} );
 			sphere.update();
-			const box = sphere.box;
+			const box = sphere.getBoundingBox();
 
-			const epsilon = 0.0000001;
-			expect ( box.min[0] ).to.be.closeTo ( -1, epsilon );
-			expect ( box.min[1] ).to.be.closeTo ( -1, epsilon );
-			expect ( box.min[2] ).to.be.closeTo ( -1, epsilon );
-			expect ( box.max[0] ).to.be.closeTo (  1, epsilon );
-			expect ( box.max[1] ).to.be.closeTo (  1, epsilon );
-			expect ( box.max[2] ).to.be.closeTo (  1, epsilon );
+			expect ( box.min[0] ).to.be.equal ( -1 );
+			expect ( box.min[1] ).to.be.equal ( -1 );
+			expect ( box.min[2] ).to.be.equal ( -1 );
+			expect ( box.max[0] ).to.be.equal (  1 );
+			expect ( box.max[1] ).to.be.equal (  1 );
+			expect ( box.max[2] ).to.be.equal (  1 );
+		} );
+
+		it ( "Should have the correct bounding sphere", function ()
+		{
+			const sphere = new Sphere ( {
+				center: [ 1, 0, 0 ],
+				radius: 1.0,
+				numSubdivisions: 1,
+			} );
+			const bounds = sphere.getBoundingSphere();
+
+			expect ( bounds.center[0] ).to.be.equal ( 1 );
+			expect ( bounds.center[1] ).to.be.equal ( 0 );
+			expect ( bounds.center[2] ).to.be.equal ( 0 );
+			expect ( bounds.radius ).to.be.equal ( 1 );
 		} );
 	} );
 };

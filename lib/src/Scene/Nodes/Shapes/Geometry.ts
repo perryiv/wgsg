@@ -14,11 +14,11 @@
 
 import { Array1 } from "../../../Arrays";
 import { Arrays, Indexed } from "../../Primitives";
-import { Box } from "../../../Math";
-import { Flags, type INodeConstructorInput } from "../Node";
-import { getNumElements, hasBits } from "../../../Tools";
+import { Box, Sphere } from "../../../Math";
+import { getNumElements } from "../../../Tools";
 import { Shape } from "./Shape";
 import { Visitor } from "../../../Visitors";
+import type { INodeConstructorInput } from "../Node";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -114,10 +114,30 @@ export class Geometry extends Shape
 	}
 
 	/**
+	 * Get the bounding sphere of this node.
+	 * @returns {Sphere} The bounding sphere of this node.
+	 */
+	public override getBoundingSphere() : Sphere
+	{
+		// Shortcut.
+		const box = this.getBoundingBox();
+
+		// Return an invalid sphere if the box is not valid.
+		if ( false === box.valid )
+		{
+			return new Sphere();
+		}
+
+		// Return the sphere from the box.
+		const { center, radius } = box;
+		return new Sphere ( center, radius );
+	}
+
+	/**
 	 * Get the bounding box of this node.
 	 * @returns {Box} The bounding box of this node.
 	 */
-	protected override getBoundingBox() : Box
+	public override getBoundingBox() : Box
 	{
 		// Shortcut.
 		const current = this.#box;
@@ -131,11 +151,8 @@ export class Geometry extends Shape
 		// Make a new bounds.
 		const answer = new Box();
 
-		// Handle when we should not add to the bounds.
-		if ( false === hasBits ( this.flags, Flags.ADDS_TO_BOUNDS ) )
-		{
-			return answer;
-		}
+		// Note: Do not check the ADDS_TO_BOUNDS flag here because that only
+		// matters when deciding to add this bounds to another one.
 
 		// Get the points.
 		const points = this.#points?.values;
@@ -178,20 +195,17 @@ export class Geometry extends Shape
 	}
 
 	/**
-	 * Set the bounding box of this node.
-	 * @param {Box | null} box - The new bounding box of this node.
+	 * Dirty the bounds of this node.
 	 */
-	protected override setBoundingBox ( box: Readonly<Box> | null ): void
+	public override dirtyBounds (): void
 	{
-		// If we were given a box then clone it.
-		// Otherwise, make a new default box.
-		// Note: We can clone an invalid box, but not a null box.
-		this.#box = ( box ? box.clone() : new Box() );
+		// Make a new invalid box.
+		this.#box = new Box();
 
 		// Let the parents know that their bounding boxes are now invalid.
 		this.forEachParent ( ( parent ) =>
 		{
-			parent.box = null;
+			parent.dirtyBounds();
 		} );
 	}
 

@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { expect } from "chai";
-import { Group, Node } from "../../../wgsg";
+import { Group, Node, SphereNode } from "../../../wgsg";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -286,6 +286,40 @@ export function test ()
 			expect ( child01.dirty ).to.be.false;
 			expect ( child10.dirty ).to.be.false;
 			expect ( child11.dirty ).to.be.false;
+		} );
+
+		it ( "Should have the correct bounding box", function ()
+		{
+			const radius = 1.0;
+			const group = new Group();
+			group.addChild ( new SphereNode ( { center: [ 0, 0, 0 ], radius } ) );
+			let box = group.getBoundingBox();
+
+			expect ( box.min ).to.be.deep.equal ( [ -1, -1, -1 ] );
+			expect ( box.max ).to.be.deep.equal ( [  1,  1,  1 ] );
+
+			group.addChild ( new SphereNode ( { center: [ 2, 0, 0 ], radius } ) );
+			box = group.getBoundingBox();
+
+			expect ( box.min ).to.be.deep.equal ( [ -1, -1, -1 ] );
+			expect ( box.max ).to.be.deep.equal ( [  3,  1,  1 ] );
+		} );
+
+		it ( "Should have the correct bounding sphere", function ()
+		{
+			const radius = 1.0;
+			const group = new Group();
+			group.addChild ( new SphereNode ( { center: [ 0, 0, 0 ], radius } ) );
+			let bounds = group.getBoundingSphere();
+
+			expect ( bounds.center ).to.be.deep.equal ( [ 0, 0, 0 ] );
+			expect ( bounds.radius ).to.be.equal ( Math.sqrt ( 3 ) );
+
+			group.addChild ( new SphereNode ( { center: [ 2, 0, 0 ], radius } ) );
+			bounds = group.getBoundingSphere();
+
+			expect ( bounds.center ).to.be.deep.equal ( [ 1, 0, 0 ] );
+			expect ( bounds.radius ).to.be.equal ( 2 );
 		} );
 	} );
 };

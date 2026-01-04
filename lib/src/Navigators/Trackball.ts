@@ -421,7 +421,7 @@ export class Trackball extends BaseClass
 
 	/**
 	 * Make the trackball sphere.
-	 * @param {number} [radius=1] - The sphere radius.
+	 * @param {number} [radius] - The sphere radius.
 	 * @returns {Sphere} The trackball sphere.
 	 */
 	public makeSphere ( radius: ( number | undefined ) = 1 ) : Sphere
