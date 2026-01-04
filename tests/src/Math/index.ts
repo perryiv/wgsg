@@ -13,10 +13,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { test as testBox } from "./Box";
+import { test as testSphere } from "./Sphere";
 import { test as testValidate } from "./Validate";
 
 describe ( "Math", function ()
 {
 	testBox();
+	testSphere();
 	testValidate();
 } );
