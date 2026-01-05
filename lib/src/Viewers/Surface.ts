@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Base } from "../Base/Base";
+import { Base as BaseClass } from "../Base/Base";
 import { clamp, DEVELOPER_BUILD, Device, IDENTITY_MATRIX } from "../Tools";
 import { makeRenderGraphInfo, resetRenderGraphInfo, Root } from "../Render";
 import { Perspective, ProjectionBase as Projection } from "../Projections";
@@ -76,7 +76,7 @@ interface IVisitors
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Surface extends Base
+export class Surface extends BaseClass
 {
 	#canvas: ( HTMLCanvasElement | null ) = null;
 	#context: ( GPUCanvasContext | null ) = null;
