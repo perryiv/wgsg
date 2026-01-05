@@ -26,6 +26,10 @@ import {
 	Surface as BaseClass,
 } from "./Surface";
 import {
+	Animation,
+	type IAnimationFunction
+} from "./Animation";
+import {
 	makeLine as makeLineUnderScreenPoint,
 } from "../Tools";
 import type {
@@ -61,6 +65,11 @@ interface IViewerSceneBranches
 	extra: Group;
 }
 
+interface IAnimations
+{
+	navigationAnimation: ( Animation | null );
+}
+
 type IEventHandlerStack = BaseHandler[];
 type IEventListenerName = ( keyof WindowEventMap );
 type IKeyboardEventListener = ( ( event: KeyboardEvent ) => void );
@@ -85,6 +94,7 @@ export class Viewer extends BaseClass
 	#mouseListeners: IMouseEventListenerMap = new Map < IEventListenerName, IMouseEventListener > ();
 	#branches: IViewerSceneBranches = Viewer.makeBranches ( true );
 	#keysDown: Set < string > = new Set < string > ();
+	#animations: IAnimations = { navigationAnimation: null };
 	static #commands: ICommandMap = makeCommands();
 	static #inputToCommand: IInputToCommandNameMap = makeInputToCommandMap();
 
@@ -147,7 +157,6 @@ export class Viewer extends BaseClass
 	{
 		return "Viewers.Viewer";
 	}
-
 
 	/**
 	 * Make the default mouse data.
@@ -805,6 +814,54 @@ export class Viewer extends BaseClass
 
 		// Return the line, which may be null.
 		return line;
+	}
+
+	/**
+	 * Start a navigation animation.
+	 * @param {IAnimationFunction} fun - The function that does the animation step.
+	 */
+	protected startNavigationAnimation ( fun: IAnimationFunction ) : void
+	{
+		// Stop any existing animation.
+		this.stopNavigationAnimation();
+
+		// Make the new animation.
+		const animation = new Animation();
+
+		// Start the animation.
+		animation.start ( () : void =>
+		{
+			// If we are destroyed then stop.
+			if ( true === this.isDestroyed() )
+			{
+				this.stopNavigationAnimation();
+				return;
+			}
+
+			// Call the animation function.
+			fun();
+		} );
+
+		// Store the animation.
+		this.#animations.navigationAnimation = animation;
+	}
+
+	/**
+	 * Stop any existing navigation animation.
+	 */
+	protected stopNavigationAnimation() : void
+	{
+		// Shortcuts.
+		const { navigationAnimation } = this.#animations;
+
+		// Is there an animation to stop?
+		if ( navigationAnimation )
+		{
+			navigationAnimation.stop();
+		}
+
+		// Clear the animation.
+		this.#animations.navigationAnimation = null;
 	}
 
 	/**
