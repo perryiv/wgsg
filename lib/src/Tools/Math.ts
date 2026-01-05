@@ -217,3 +217,34 @@ export const midPoint = ( out: IVector3, a: Readonly<IVector3>, b: Readonly<IVec
 	vec3.scale ( out, out, 0.5 );
 	return out;
 };
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Return e^(-u)
+ * @param {number} u - The input value in the range [0,1].
+ * @returns {number} The output value in the range [0,1].
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export const exponentialDecay = ( u: number ) : number =>
+{
+	// Handle when input is out of range.
+  if ( u < 0 )
+  {
+    return 0;
+  }
+  if ( u > 1 )
+  {
+    return 1;
+  }
+
+  // See http://www.wolframalpha.com/input/?i=y%3De^-x
+  u *= 6;
+  u -= 3;
+  u = Math.exp ( -u );
+  u /= 20;
+
+  // Return modified value.
+  return u;
+}
