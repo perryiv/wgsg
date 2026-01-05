@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Visitor } from "../../../Visitors/Visitor";
-import { Box, Sphere } from "../../../Math";
+import { Box } from "../../../Math";
 import { hasBits } from "../../../Tools";
 import {
 	Flags,
@@ -68,28 +68,6 @@ export class Group extends Node
 	public override accept ( visitor: Visitor ): void
 	{
 		visitor.visitGroup ( this );
-	}
-
-	/**
-	 * Get the bounding sphere of this node.
-	 * @returns {Sphere} The bounding sphere of this node.
-	 */
-	public override getBoundingSphere() : Sphere
-	{
-		// Get the bounding box.
-		const box = this.getBoundingBox();
-
-		// If the box is invalid then return an invalid sphere.
-		if ( false === box.valid )
-		{
-			return new Sphere();
-		}
-
-		// Get the sphere that encloses the box.
-		const { center, radius } = box;
-
-		// Return the correct sphere.
-		return new Sphere ( center, radius );
 	}
 
 	/**
