@@ -12,6 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+export * from "./Animation";
 export * from "./Commands";
 export * from "./Surface";
 export * from "./Viewer";
