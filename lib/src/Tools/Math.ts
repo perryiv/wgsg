@@ -221,6 +221,25 @@ export const midPoint = ( out: IVector3, a: Readonly<IVector3>, b: Readonly<IVec
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
+ * Fix the given angle by keeping it in the given range.
+ * http://stackoverflow.com/questions/1628386/normalise-orientation-between-0-and-360
+ * @param {number} angle - The angle to fix.
+ * @param {number} low - The low end of the range.
+ * @param {number} high - The high end of the range.
+ * @returns {number} The fixed angle.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export const fixAngle = ( angle: number, low: number, high: number ) : number =>
+{
+  const width = high - low;
+  const offsetValue = angle - low;
+  return ( offsetValue - ( Math.floor ( offsetValue / width ) * width ) ) + low;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
  * Return e^(-u)
  * @param {number} u - The input value in the range [0,1].
  * @returns {number} The output value in the range [0,1].
