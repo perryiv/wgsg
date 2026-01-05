@@ -309,10 +309,23 @@ export abstract class Node extends Base
 
 	/**
 	 * Get the bounding sphere of this node.
-	 * @abstract
 	 * @returns {Sphere} The bounding sphere of this node.
 	 */
-	public abstract getBoundingSphere() : Sphere;
+	public getBoundingSphere() : Sphere
+	{
+		// Shortcut.
+		const box = this.getBoundingBox();
+
+		// Return an invalid sphere if the box is not valid.
+		if ( false === box.valid )
+		{
+			return new Sphere();
+		}
+
+		// Get the sphere that encloses the box.
+		const { center, radius } = box;
+		return new Sphere ( center, radius );
+	}
 
 	/**
 	 * Get the bounding box of this node.

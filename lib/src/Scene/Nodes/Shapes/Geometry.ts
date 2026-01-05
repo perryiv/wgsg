@@ -14,7 +14,7 @@
 
 import { Array1 } from "../../../Arrays";
 import { Arrays, Indexed } from "../../Primitives";
-import { Box, Sphere } from "../../../Math";
+import { Box } from "../../../Math";
 import { getNumElements } from "../../../Tools";
 import { Shape } from "./Shape";
 import { Visitor } from "../../../Visitors";
@@ -111,26 +111,6 @@ export class Geometry extends Shape
 	public override accept ( visitor: Visitor ): void
 	{
 		visitor.visitGeometry ( this );
-	}
-
-	/**
-	 * Get the bounding sphere of this node.
-	 * @returns {Sphere} The bounding sphere of this node.
-	 */
-	public override getBoundingSphere() : Sphere
-	{
-		// Shortcut.
-		const box = this.getBoundingBox();
-
-		// Return an invalid sphere if the box is not valid.
-		if ( false === box.valid )
-		{
-			return new Sphere();
-		}
-
-		// Return the sphere from the box.
-		const { center, radius } = box;
-		return new Sphere ( center, radius );
 	}
 
 	/**
