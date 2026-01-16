@@ -201,7 +201,7 @@ export class ViewSphere extends Command
 	public execute ( event: IEvent ) : void
 	{
 		const { viewer } = event;
-		viewer.viewAll ( { resetRotation: this.#resetRotation } );
+		viewer.viewAll ( { resetRotation: this.#resetRotation, animate: true } );
 		viewer.requestRender();
 	}
 }

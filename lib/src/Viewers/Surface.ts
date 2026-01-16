@@ -13,11 +13,16 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base as BaseClass } from "../Base/Base";
-import { clamp, DEVELOPER_BUILD, Device, IDENTITY_MATRIX } from "../Tools";
 import { makeRenderGraphInfo, resetRenderGraphInfo, Root } from "../Render";
 import { Perspective, ProjectionBase as Projection } from "../Projections";
 import { SolidColor } from "../Shaders";
 import { vec4 } from "gl-matrix";
+import {
+	clampVec4,
+	DEVELOPER_BUILD,
+	Device,
+	IDENTITY_MATRIX,
+} from "../Tools";
 import {
 	Node,
 	State,
@@ -333,7 +338,7 @@ export class Surface extends BaseClass
 		}
 
 		// Clamp the color values to [0, 1].
-		clamp ( c, 0.0, 1.0 );
+		clampVec4 ( c, 0.0, 1.0 );
 
 		// Now copy the values to our member.
 		vec4.copy ( this.#clearColor, c );

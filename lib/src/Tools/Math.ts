@@ -54,7 +54,7 @@ export const makeIdentity = () : IMatrix44 =>
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-const getClampedNumber = ( n: Readonly<number>, mn: Readonly<number>, mx: Readonly<number> ) : number =>
+export const clampNumber = ( n: Readonly<number>, mn: Readonly<number>, mx: Readonly<number> ) : number =>
 {
 	return Math.max ( mn, Math.min ( mx, n ) );
 }
@@ -66,10 +66,10 @@ const getClampedNumber = ( n: Readonly<number>, mn: Readonly<number>, mx: Readon
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-const clampVec2 = ( v: IVector2, mn: Readonly<number>, mx: Readonly<number> ) : void =>
+export const clampVec2 = ( v: IVector2, mn: Readonly<number>, mx: Readonly<number> ) : void =>
 {
-	v[0] = getClampedNumber ( v[0], mn, mx );
-	v[1] = getClampedNumber ( v[1], mn, mx );
+	v[0] = clampNumber ( v[0], mn, mx );
+	v[1] = clampNumber ( v[1], mn, mx );
 }
 
 
@@ -79,11 +79,11 @@ const clampVec2 = ( v: IVector2, mn: Readonly<number>, mx: Readonly<number> ) : 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-const clampVec3 = ( v: IVector3, mn: Readonly<number>, mx: Readonly<number> ) : void =>
+export const clampVec3 = ( v: IVector3, mn: Readonly<number>, mx: Readonly<number> ) : void =>
 {
-	v[0] = getClampedNumber ( v[0], mn, mx );
-	v[1] = getClampedNumber ( v[1], mn, mx );
-	v[2] = getClampedNumber ( v[2], mn, mx );
+	v[0] = clampNumber ( v[0], mn, mx );
+	v[1] = clampNumber ( v[1], mn, mx );
+	v[2] = clampNumber ( v[2], mn, mx );
 }
 
 
@@ -93,47 +93,12 @@ const clampVec3 = ( v: IVector3, mn: Readonly<number>, mx: Readonly<number> ) : 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-const clampVec4 = ( v: IVector4, mn: Readonly<number>, mx: Readonly<number> ) : void =>
+export const clampVec4 = ( v: IVector4, mn: Readonly<number>, mx: Readonly<number> ) : void =>
 {
-	v[0] = getClampedNumber ( v[0], mn, mx );
-	v[1] = getClampedNumber ( v[1], mn, mx );
-	v[2] = getClampedNumber ( v[2], mn, mx );
-	v[3] = getClampedNumber ( v[3], mn, mx );
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
-//	Clamp the number or vector to the given range.
-//
-///////////////////////////////////////////////////////////////////////////////
-
-export const clamp = ( v: IClampInputType, mn: Readonly<number>, mx: Readonly<number> ) : IClampInputType =>
-{
-	if ( typeof v === "number" )
-	{
-		return getClampedNumber ( v, mn, mx );
-	}
-
-	else if ( 2 === v.length )
-	{
-		clampVec2 ( v, mn, mx );
-		return v;
-	}
-
-	else if ( 3 === v.length )
-	{
-		clampVec3 ( v, mn, mx );
-		return v;
-	}
-
-	else if ( 4 === v.length )
-	{
-		clampVec4 ( v, mn, mx );
-		return v;
-	}
-
-	throw new Error ( "Invalid input type for clamp function" );
+	v[0] = clampNumber ( v[0], mn, mx );
+	v[1] = clampNumber ( v[1], mn, mx );
+	v[2] = clampNumber ( v[2], mn, mx );
+	v[3] = clampNumber ( v[3], mn, mx );
 }
 
 

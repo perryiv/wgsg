@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base as BaseClass } from "../Base/Base";
+import { clampNumber } from "../Tools";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -23,12 +24,10 @@ import { Base as BaseClass } from "../Base/Base";
 
 export interface IAnimationData
 {
-	startTime: number;
-	duration: number;
 	timeout: ITimeoutHandle;
 }
 
-export type IAnimationFunction = ( () => void );
+export type IAnimationFunction = ( ( fraction: number ) => void );
 export type ITimeoutHandle = ( number | null );
 
 
@@ -42,8 +41,6 @@ export type ITimeoutHandle = ( number | null );
 export class Animation extends BaseClass
 {
 	#data: IAnimationData = {
-		startTime: 0,
-		duration: 0,
 		timeout: null,
 	};
 
@@ -80,15 +77,13 @@ export class Animation extends BaseClass
 	/**
 	 * Get the next step in an exponential decay.
 	 * @param {number} timeElapsed - The time elapsed since the start of the animation.
+	 * @param {number} duration - The total duration of the animation.
 	 * @returns {number} The next step in the decay.
 	 */
-	protected getExponentialDecayStep ( timeElapsed: number ) : number
+	protected getExponentialDecayStep ( timeElapsed: number, duration: number ) : number
 	{
-		// Shortcuts.
-		const { duration } = this.#data;
-
 		// Compute the normalized time.
-		const t = Math.min ( timeElapsed / duration, 1 );
+		const t = Math.min ( ( timeElapsed / duration ), 1 );
 
 		// Return the exponential decay step.
 		return 1 - Math.exp ( -5 * t );
@@ -101,14 +96,36 @@ export class Animation extends BaseClass
 	 */
 	public start ( fun: IAnimationFunction, duration = 2000 ) : void
 	{
-		// Stop any existing animation.
-		this.stop();
+		// Do nothing if we're already animating.
+		if ( null !== this.#data.timeout )
+		{
+			return;
+		}
+
+		// Set the start time.
+		const startTime = Date.now();
 
 		// Local function to do one animation step.
 		const step = () : void =>
 		{
-			// Call the animation function.
-			fun();
+			// How much time has passed?
+			const elapsedTime = Date.now() - startTime;
+
+			// Has enough time passed?
+			if ( elapsedTime >= duration )
+			{
+				// Call the animation function one last time.
+				fun ( 1.0 );
+
+				// Just reset the data.
+				this.reset();
+
+				// We're done.
+				return;
+			}
+
+			// If we get to here then call the animation function.
+			fun ( clampNumber ( ( elapsedTime / duration ), 0, 1 ) );
 
 			// Request the next frame.
 			this.#data.timeout = globalThis.requestAnimationFrame ( step );
@@ -116,8 +133,6 @@ export class Animation extends BaseClass
 
 		// Start the animation.
 		this.#data = {
-			startTime: Date.now(),
-			duration,
 			timeout: globalThis.requestAnimationFrame ( step )
 		};
 	}
@@ -140,9 +155,15 @@ export class Animation extends BaseClass
 		globalThis.cancelAnimationFrame ( timeout );
 
 		// Reset the data.
+		this.reset();
+	}
+
+	/**
+	 * Reset the animation data.
+	 */
+	protected reset() : void
+	{
 		this.#data = {
-			startTime: 0,
-			duration: 0,
 			timeout: null,
 		};
 	}

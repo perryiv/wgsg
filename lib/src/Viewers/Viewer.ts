@@ -499,25 +499,60 @@ export class Viewer extends BaseClass
 	 * @param {object} input - The input.
 	 * @param {Sphere} input.sphere - The sphere to view.
 	 * @param {boolean} [input.resetRotation] - Whether or not to reset the rotation.
+	 * @param {boolean} [input.animate] - Whether or not to animate the navigation.
 	 */
-	public viewSphere ( input: { sphere: Sphere, resetRotation?: boolean } ) : void
+	public viewSphere ( input: { sphere: Sphere, resetRotation?: boolean, animate?: boolean } ) : void
 	{
-		const { sphere, resetRotation } = input;
+		// Shortcuts.
+		const { sphere, resetRotation, animate } = input;
+
+		// If we are not animating then set it and return.
+		if ( !animate )
+		{
+			// Have the navigator view the sphere.
+			this.navBase.viewSphere ( { sphere, projection: this.projection, resetRotation } );
+
+			// We're done.
+			return;
+		}
+
+		// If we get to here then animate.
+
+		// Get the current navigation state.
+		const navState1 = this.navBase.getInternalState();
+
+		// Have the navigator view the sphere.
 		this.navBase.viewSphere ( { sphere, projection: this.projection, resetRotation } );
+
+		// Get the new navigation state.
+		const navState2 = this.navBase.getInternalState();
+
+		// Return to the original state.
+		this.navBase.setInternalState ( navState1 );
+
+		// Start an animation between the two states if we should.
+		this.startNavigationAnimation ( ( fraction: number ) : void =>
+		{
+			const newState = this.navBase.blend ( navState1, navState2, fraction );
+			this.navBase.setInternalState ( newState );
+			this.requestRender();
+		} );
 	}
 
 	/**
 	 * Set the navigator so that the model is completely within the view-volume.
 	 * @param {object} [options] - The options.
 	 * @param {boolean} [options.resetRotation] - Whether or not to reset the rotation.
+	 * @param {boolean} [options.animate] - Whether or not to animate the navigation.
 	 */
-	public viewAll ( options?: { resetRotation?: boolean } ) : void
+	public viewAll ( options?: { resetRotation?: boolean, animate?: boolean } ) : void
 	{
 		const sphere = this.modelScene?.getBoundingSphere();
 		if ( sphere )
 		{
 			const resetRotation = options?.resetRotation;
-			this.viewSphere ( { sphere, resetRotation } );
+			const animate = options?.animate;
+			this.viewSphere ( { sphere, resetRotation, animate } );
 		}
 	}
 
@@ -829,7 +864,7 @@ export class Viewer extends BaseClass
 		const animation = new Animation();
 
 		// Start the animation.
-		animation.start ( () : void =>
+		animation.start ( ( fraction: number ) : void =>
 		{
 			// If we are destroyed then stop.
 			if ( true === this.isDestroyed() )
@@ -839,7 +874,7 @@ export class Viewer extends BaseClass
 			}
 
 			// Call the animation function.
-			fun();
+			fun ( fraction );
 		} );
 
 		// Store the animation.

@@ -25,6 +25,18 @@ import type {
 
 
 ///////////////////////////////////////////////////////////////////////////////
+//
+//	Types used below and elsewhere.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export interface INavigationState
+{
+	ignore?: number;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 /**
  * Base navigator class.
  * @abstract
@@ -104,6 +116,26 @@ export abstract class NavBase extends BaseClass
 	 * Reset the navigator to its default state.
 	 */
 	public abstract reset() : void;
+
+	/**
+	 * Get the internal state.
+	 * @returns {INavigationState} The internal state.
+	 */
+	public abstract getInternalState() : INavigationState;
+
+	/**
+	 * Set the internal state.
+	 * @param {INavigationState} state - The internal state.
+	 */
+	public abstract setInternalState ( state: Readonly<INavigationState> ) : void;
+
+	/**
+	 * Blend the given navigation states.
+	 * @param {INavigationState} from - The starting state.
+	 * @param {INavigationState} to - The ending state.
+	 * @param {number} fraction - The fraction between the two states.
+	 */
+	public abstract blend ( from: Readonly<INavigationState>, to: Readonly<INavigationState>, fraction: number ) : INavigationState;
 
 	/**
 	 * Set the navigator so that the sphere is completely within the view-volume.

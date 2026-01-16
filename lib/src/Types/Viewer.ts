@@ -41,5 +41,5 @@ export interface IViewer
 	getCommand: ( event: IEvent ) => ( ICommand | null );
 	makeLine: ( input: { screenPoint: Readonly<IVector2>, viewMatrix?: Readonly<IMatrix44> } ) => ( Line | null );
 	requestRender: ( () => void );
-	viewAll: ( options?: { resetRotation?: boolean } ) => void;
+	viewAll: ( options?: { resetRotation?: boolean, animate?: boolean } ) => void;
 }

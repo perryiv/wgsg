@@ -12,7 +12,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { NavBase as BaseClass } from "./NavBase";
+import {
+	NavBase as BaseClass,
+	type INavigationState,
+} from "./NavBase";
 import {
 	Perspective,
 	ProjectionBase as Projection,
@@ -53,7 +56,7 @@ import {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-interface ITrackballState
+interface ITrackballState extends INavigationState
 {
 	center: IVector3;
 	distance: number;
@@ -73,7 +76,8 @@ function makeDefaultTrackballState() : ITrackballState
 	return {
 		center: [ 0, 0, 0 ],
 		distance: 0,
-		rotation: [ 0, 0, 0, 1 ]
+		rotation: [ 0, 0, 0, 1 ],
+		matrix: [ ...IDENTITY_MATRIX ],
 	};
 }
 
@@ -367,6 +371,65 @@ export class Trackball extends BaseClass
 	{
 		this.#state = makeDefaultTrackballState();
 		this.#matrix = null;
+	}
+
+	/**
+	 * Get the internal state.
+	 * @returns {INavigationState} The internal state.
+	 */
+	public override getInternalState() : INavigationState
+	{
+		const state = this.#state;
+		const result: ITrackballState = {
+			center: [ ...state.center ],
+			distance: state.distance,
+			rotation: [ ...state.rotation ],
+		};
+		return result;
+	}
+
+	/**
+	 * Set the internal state.
+	 * @param {INavigationState} state - The internal state.
+	 */
+	public override setInternalState ( state: Readonly<INavigationState> ) : void
+	{
+		const input = ( state as Readonly<ITrackballState> );
+		this.center = input.center;
+		this.distance = input.distance;
+		this.rotation = input.rotation;
+	}
+
+	/**
+	 * Blend the given navigation states.
+	 * @param {INavigationState} from - The starting state.
+	 * @param {INavigationState} to - The ending state.
+	 * @param {number} fraction - The fraction between the two states.
+	 * @returns {INavigationState} The blended state.
+	 */
+	public override blend ( from: Readonly<INavigationState>, to: Readonly<INavigationState>, fraction: number ) : INavigationState
+	{
+		const fromState = from as Readonly<ITrackballState>;
+		const toState = to as Readonly<ITrackballState>;
+
+		// Lerp the center.
+		const center: IVector3 = [ 0, 0, 0 ];
+		vec3.lerp ( center, fromState.center, toState.center, fraction );
+
+		// Lerp the distance.
+		const distance = ( ( 1 - fraction ) * fromState.distance ) + ( fraction * toState.distance );
+
+		// Slerp the rotation.
+		const rotation: IVector4 = [ 0, 0, 0, 1 ];
+		quat.slerp ( rotation, fromState.rotation, toState.rotation, fraction );
+
+		// Make and return the result.
+		const result: ITrackballState = {
+			center,
+			distance,
+			rotation,
+		};
+		return result;
 	}
 
 	/**
