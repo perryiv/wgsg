@@ -530,13 +530,14 @@ export class Viewer extends BaseClass
 		// Return to the original state.
 		this.navBase.setInternalState ( navState1 );
 
-		// Start an animation between the two states if we should.
+		// Start an animation between the two states.
 		this.startNavigationAnimation ( ( fraction: number ) : void =>
 		{
 			const newState = this.navBase.blend ( navState1, navState2, fraction );
 			this.navBase.setInternalState ( newState );
 			this.requestRender();
-		} );
+		},
+		1000 ); // Duration in milliseconds.
 	}
 
 	/**
@@ -854,8 +855,9 @@ export class Viewer extends BaseClass
 	/**
 	 * Start a navigation animation.
 	 * @param {IAnimationFunction} fun - The function that does the animation step.
+	 * @param {number} duration - The total duration of the animation.
 	 */
-	protected startNavigationAnimation ( fun: IAnimationFunction ) : void
+	protected startNavigationAnimation ( fun: IAnimationFunction, duration = 2000 ) : void
 	{
 		// Stop any existing animation.
 		this.stopNavigationAnimation();
@@ -875,7 +877,8 @@ export class Viewer extends BaseClass
 
 			// Call the animation function.
 			fun ( fraction );
-		} );
+		},
+		duration );
 
 		// Store the animation.
 		this.#animations.navigationAnimation = animation;

@@ -75,18 +75,14 @@ export class Animation extends BaseClass
 	}
 
 	/**
-	 * Get the next step in an exponential decay.
-	 * @param {number} timeElapsed - The time elapsed since the start of the animation.
-	 * @param {number} duration - The total duration of the animation.
+	 * Return the exponential decay step.
+	 * @param {number} fraction - The fraction in the range [0,1].
 	 * @returns {number} The next step in the decay.
 	 */
-	protected getExponentialDecayStep ( timeElapsed: number, duration: number ) : number
+	protected getExponentialDecayStep ( fraction: number ) : number
 	{
-		// Compute the normalized time.
-		const t = Math.min ( ( timeElapsed / duration ), 1 );
-
-		// Return the exponential decay step.
-		return 1 - Math.exp ( -5 * t );
+		fraction = clampNumber ( fraction, 0, 1 );
+		return ( 1 - Math.exp ( -5 * fraction ) );
 	}
 
 	/**
@@ -94,7 +90,7 @@ export class Animation extends BaseClass
 	 * @param {IAnimationFunction} fun - The function that does the animation step.
 	 * @param {number} duration - The duration of the animation in milliseconds.
 	 */
-	public start ( fun: IAnimationFunction, duration = 2000 ) : void
+	public start ( fun: IAnimationFunction, duration: number ) : void
 	{
 		// Do nothing if we're already animating.
 		if ( null !== this.#data.timeout )
@@ -124,8 +120,12 @@ export class Animation extends BaseClass
 				return;
 			}
 
-			// If we get to here then call the animation function.
-			fun ( clampNumber ( ( elapsedTime / duration ), 0, 1 ) );
+			// Get the fraction.
+			let fraction = elapsedTime / duration;
+			fraction = this.getExponentialDecayStep ( fraction );
+
+			// Call the animation function.
+			fun ( fraction );
 
 			// Request the next frame.
 			this.#data.timeout = globalThis.requestAnimationFrame ( step );
