@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { IInputState } from "./Input";
+import { IVector2 } from "./Vector";
 import { IViewer } from "./Viewer";
 
 
@@ -27,6 +28,7 @@ export type IEventType = (
 	| "mouse_up"
 	| "mouse_move"
 	| "mouse_drag"
+	| "mouse_distance"
 	| "mouse_wheel"
 	| "mouse_in"
 	| "mouse_out"
@@ -36,7 +38,17 @@ export type IEventType = (
 
 export interface IEvent extends IInputState
 {
-	event: ( KeyboardEvent | MouseEvent );
 	type: IEventType;
+	event: ( KeyboardEvent | MouseEvent );
 	viewer: IViewer;
+}
+
+export interface IMouseDistanceEvent extends IEvent
+{
+	type: "mouse_distance";
+	event: MouseEvent;
+	start: IVector2;
+	end: IVector2;
+	distance: number;
+	button: number; // The button that was released.
 }
