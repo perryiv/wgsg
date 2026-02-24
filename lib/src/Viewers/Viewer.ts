@@ -15,6 +15,7 @@
 import { BaseHandler } from "../Events/Handlers/BaseHandler";
 import { Group, Node, Transform } from "../Scene";
 import { Line, Sphere } from "../Math";
+import { Listeners } from "../Events";
 import { NavBase, Trackball } from "../Navigators";
 import {
 	makeCommands,
@@ -92,6 +93,7 @@ export class Viewer extends BaseClass
 	#eventHandlers: IEventHandlerStack = [];
 	#keyboardListeners: IKeyboardEventListenerMap = new Map < IEventListenerName, IKeyboardEventListener > ();
 	#mouseListeners: IMouseEventListenerMap = new Map < IEventListenerName, IMouseEventListener > ();
+	#clientListeners: Listeners = new Listeners();
 	#branches: IViewerSceneBranches = Viewer.makeBranches ( true );
 	#keysDown: Set < string > = new Set < string > ();
 	#animations: IAnimations = { navigationAnimation: null };
@@ -142,6 +144,7 @@ export class Viewer extends BaseClass
 		this.#eventHandlers = [];
 		this.#keyboardListeners.clear();
 		this.#mouseListeners.clear();
+		this.#clientListeners.destroy();
 		this.#branches = Viewer.makeBranches ( false );
 		this.#keysDown.clear();
 
@@ -663,6 +666,15 @@ export class Viewer extends BaseClass
 	}
 
 	/**
+	 * Get the client event listeners.
+	 * @returns {Listeners} The client event listeners.
+	 */
+	public get clientListeners() : Listeners
+	{
+		return this.#clientListeners;
+	}
+
+	/**
 	 * Handle the mouse down event.
 	 * @param {MouseEvent} input - The mouse down event.
 	 */
@@ -683,6 +695,7 @@ export class Viewer extends BaseClass
 		const event = this.makeEvent ( "mouse_down", input );
 
 		handler.handleEvent ( event );
+		this.clientListeners.notify ( event );
 	}
 
 	/**
@@ -700,11 +713,13 @@ export class Viewer extends BaseClass
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "mouse_move", input );
 		handler.handleEvent ( event );
+		this.clientListeners.notify ( event );
 
 		if ( buttons )
 		{
 			event.type = "mouse_drag"; // Use all the same event data.
 			handler.handleEvent ( event );
+			this.clientListeners.notify ( event );
 		}
 	}
 
@@ -717,6 +732,7 @@ export class Viewer extends BaseClass
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "mouse_wheel", input );
 		handler.handleEvent ( event );
+		this.clientListeners.notify ( event );
 	}
 
 	/**
@@ -740,6 +756,7 @@ export class Viewer extends BaseClass
 		const event = this.makeEvent ( "mouse_up", input );
 
 		handler.handleEvent ( event );
+		this.clientListeners.notify ( event );
 
 		// Reset these now that they've been used.
 		this.mousePressed = null;
@@ -763,6 +780,7 @@ export class Viewer extends BaseClass
 		const event = this.makeEvent ( "mouse_out", input );
 
 		handler.handleEvent ( event );
+		this.clientListeners.notify ( event );
 	}
 
 	/**
@@ -781,6 +799,7 @@ export class Viewer extends BaseClass
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "mouse_in", input );
 		handler.handleEvent ( event );
+		this.clientListeners.notify ( event );
 	}
 
 	/**
@@ -809,6 +828,7 @@ export class Viewer extends BaseClass
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "key_down", input );
 		handler.handleEvent ( event );
+		this.clientListeners.notify ( event );
 	}
 
 	/**
@@ -823,6 +843,7 @@ export class Viewer extends BaseClass
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "key_up", input );
 		handler.handleEvent ( event );
+		this.clientListeners.notify ( event );
 	}
 
 	/**
