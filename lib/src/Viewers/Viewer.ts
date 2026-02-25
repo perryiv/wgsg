@@ -682,6 +682,7 @@ export class Viewer extends BaseClass
 	 */
 	public mouseDown ( input: MouseEvent ) : void
 	{
+		this.navAnimationStop();
 		input.preventDefault();
 		const { button, clientX, clientY } = input;
 
@@ -731,6 +732,7 @@ export class Viewer extends BaseClass
 	 */
 	public mouseWheel ( input: MouseEvent ) : void
 	{
+		this.navAnimationStop();
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "mouse_wheel", input );
 		handler.handleEvent ( event );
@@ -743,6 +745,7 @@ export class Viewer extends BaseClass
 	 */
 	public mouseUp ( input: MouseEvent ) : void
 	{
+		this.navAnimationStop();
 		input.preventDefault();
 		const { button, clientX, clientY } = input;
 
@@ -786,6 +789,7 @@ export class Viewer extends BaseClass
 	 */
 	public mouseOut ( input: MouseEvent ) : void
 	{
+		this.navAnimationStop();
 		input.preventDefault();
 
 		this.mouseButtonsDown.clear();
@@ -806,6 +810,7 @@ export class Viewer extends BaseClass
 	 */
 	public mouseIn ( input: MouseEvent ) : void
 	{
+		this.navAnimationStop();
 		input.preventDefault();
 
 		this.mouseButtonsDown.clear();
@@ -825,8 +830,8 @@ export class Viewer extends BaseClass
 	 */
 	public mouseContextMenu ( event: MouseEvent ) : void
 	{
-		// Prevent the context menu from showing.
-		event.preventDefault();
+		this.navAnimationStop();
+		event.preventDefault(); // Prevent the context menu from showing.
 	}
 
 	/**
