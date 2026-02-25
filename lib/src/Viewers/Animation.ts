@@ -25,6 +25,7 @@ import { clampNumber } from "../Tools";
 export interface IAnimationData
 {
 	timeout: ITimeoutHandle;
+	fun: ( IAnimationFunction | null );
 }
 
 export type IAnimationFunction = ( ( fraction: number ) => void );
@@ -41,6 +42,7 @@ export type ITimeoutHandle = ( number | null );
 export class Animation extends BaseClass
 {
 	#data: IAnimationData = {
+		fun: null,
 		timeout: null,
 	};
 
@@ -86,14 +88,41 @@ export class Animation extends BaseClass
 	}
 
 	/**
-	 * Start a navigation animation.
+	 * Set the navigation animation.
 	 * @param {IAnimationFunction} fun - The function that does the animation step.
+	 */
+	public set ( fun: IAnimationFunction ) : void
+	{
+		// Do nothing if we're animating.
+		if ( null !== this.#data.timeout )
+		{
+			return;
+		}
+
+		// Set the animation function.
+		this.#data.fun = fun;
+	}
+
+	/**
+	 * Start a navigation animation.
 	 * @param {number} duration - The duration of the animation in milliseconds.
 	 */
-	public start ( fun: IAnimationFunction, duration: number ) : void
+	public start ( duration: number ) : void
 	{
+		// Get the animation data.
+		const data = this.#data;
+
 		// Do nothing if we're already animating.
-		if ( null !== this.#data.timeout )
+		if ( null !== data.timeout )
+		{
+			return;
+		}
+
+		// Get the animation function.
+		const { fun } = data;
+
+		// Handle no animation function.
+		if ( null === fun )
 		{
 			return;
 		}
@@ -128,13 +157,11 @@ export class Animation extends BaseClass
 			fun ( fraction );
 
 			// Request the next frame.
-			this.#data.timeout = globalThis.requestAnimationFrame ( step );
+			data.timeout = globalThis.requestAnimationFrame ( step );
 		}
 
 		// Start the animation.
-		this.#data = {
-			timeout: globalThis.requestAnimationFrame ( step )
-		};
+		data.timeout = globalThis.requestAnimationFrame ( step );
 	}
 
 	/**
@@ -143,7 +170,8 @@ export class Animation extends BaseClass
 	public stop() : void
 	{
 		// Shortcuts.
-		const { timeout } = this.#data;
+		const data = this.#data;
+		const { timeout } = data;
 
 		// Is there an animation to stop?
 		if ( null === timeout )
@@ -165,6 +193,7 @@ export class Animation extends BaseClass
 	{
 		this.#data = {
 			timeout: null,
+			fun: null,
 		};
 	}
 }

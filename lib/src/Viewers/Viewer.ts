@@ -536,13 +536,13 @@ export class Viewer extends BaseClass
 		this.navBase.setInternalState ( navState1 );
 
 		// Start an animation between the two states.
-		this.startNavigationAnimation ( ( fraction: number ) : void =>
+		this.setNavigationAnimation ( ( fraction: number ) : void =>
 		{
 			const newState = this.navBase.blend ( navState1, navState2, fraction );
 			this.navBase.setInternalState ( newState );
 			this.requestRender();
-		},
-		1000 ); // Duration in milliseconds.
+		} );
+		this.startNavigationAnimation ( 1000 ); // Duration in milliseconds.
 	}
 
 	/**
@@ -891,11 +891,10 @@ export class Viewer extends BaseClass
 	}
 
 	/**
-	 * Start a navigation animation.
+	 * Set the navigation animation function.
 	 * @param {IAnimationFunction} fun - The function that does the animation step.
-	 * @param {number} duration - The total duration of the animation.
 	 */
-	protected startNavigationAnimation ( fun: IAnimationFunction, duration = 2000 ) : void
+	protected setNavigationAnimation ( fun: IAnimationFunction ) : void
 	{
 		// Stop any existing animation.
 		this.stopNavigationAnimation();
@@ -903,8 +902,8 @@ export class Viewer extends BaseClass
 		// Make the new animation.
 		const animation = new Animation();
 
-		// Start the animation.
-		animation.start ( ( fraction: number ) : void =>
+		// Set the animation.
+		animation.set ( ( fraction: number ) : void =>
 		{
 			// If we are destroyed then stop.
 			if ( true === this.isDestroyed() )
@@ -915,11 +914,32 @@ export class Viewer extends BaseClass
 
 			// Call the animation function.
 			fun ( fraction );
-		},
-		duration );
+		} );
 
 		// Store the animation.
 		this.#animations.navigationAnimation = animation;
+	}
+
+	/**
+	 * Start the navigation animation.
+	 * @param {number} duration - The total duration of the animation.
+	 */
+	protected startNavigationAnimation ( duration = 2000 ) : void
+	{
+		// Shortcuts.
+		const { navigationAnimation } = this.#animations;
+
+		// Handle no animation function.
+		if ( !navigationAnimation )
+		{
+			return;
+		}
+
+		// Stop any existing animation.
+		this.stopNavigationAnimation();
+
+		// Start the animation.
+		navigationAnimation.start ( duration );
 	}
 
 	/**
