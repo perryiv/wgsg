@@ -352,10 +352,35 @@ export class MouseRotate extends Command
 	 */
 	public execute ( event: IEvent ) : void
 	{
+		// Shortcuts.
 		const { viewer } = event;
 		const { navBase } = viewer;
-		navBase.mouseRotate ( { event, scale: this.#scale } );
+		const scale = this.#scale;
+
+		// Try to rotate the navigator with the mouse.
+		const step = navBase.mouseRotate ( { event, scale } );
+
+		// Handle no rotation.
+		if ( !step )
+		{
+			return;
+		}
+
+		// Request a render so that we can see the change.
 		viewer.requestRender();
+
+		// Shortcuts.
+		const { axis, angle } = step;
+
+		// Register an animation function that may be used.
+		viewer.navAnimationSet ( ( fraction: number ) =>
+		{
+			// Rotate the trackball.
+			navBase.rotateAxisAngle ( axis, angle * fraction );
+
+			// Request a render.
+			viewer.requestRender();
+		} );
 	}
 }
 
