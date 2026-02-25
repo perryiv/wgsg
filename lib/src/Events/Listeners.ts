@@ -123,12 +123,12 @@ export class Listeners extends BaseClass
 	 */
 	public once ( type: IEventType, listener: IEventListener ) : void
 	{
-		const onceListener = ( event: IEvent ) =>
+		const oneTimeListener = ( event: IEvent ) =>
 		{
-			this.remove ( type, onceListener );
+			this.remove ( type, oneTimeListener );
 			listener ( event );
 		}
-		this.add ( type, onceListener );
+		this.add ( type, oneTimeListener );
 	}
 
 	/**
