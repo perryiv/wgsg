@@ -18,6 +18,7 @@ import { Sphere } from "../Math";
 import type {
 	IEvent,
 	IMatrix44,
+	IRotationStep,
 	IVector2,
 	IVector3,
 	IVector4,
@@ -95,8 +96,9 @@ export abstract class NavBase extends BaseClass
 	 * @param {object} input - The input parameters.
 	 * @param {IEvent} input.event - The event.
 	 * @param {number} input.scale - The rotation scale factor.
+	 * @returns {IRotationStep | null} The rotation step or null if no rotation.
 	 */
-	public abstract mouseRotate ( input: { event: IEvent, scale: number } ) : void;
+	public abstract mouseRotate ( input: { event: IEvent, scale: number } ) : ( IRotationStep | null );
 
 	/**
 	 * Translate the navigator.

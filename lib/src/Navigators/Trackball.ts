@@ -37,6 +37,7 @@ import {
 import type {
 	IEvent,
 	IMatrix44,
+	IRotationStep,
 	IVector2,
 	IVector3,
 	IVector4,
@@ -602,8 +603,9 @@ export class Trackball extends BaseClass
 	 * @param {object} input - The input parameters.
 	 * @param {IEvent} input.event - The event.
 	 * @param {number} input.scale - The rotation scale factor.
+	 * @returns {IRotationStep | null} The axis and angle of rotation, or null if the rotation failed.
 	 */
-	public override mouseRotate ( input: { event: IEvent, scale: number } ) : void
+	public override mouseRotate ( input: { event: IEvent, scale: number } ) : ( IRotationStep | null )
 	{
 		// Get input.
 		const { event, scale } = input;
@@ -614,13 +616,13 @@ export class Trackball extends BaseClass
 		// Handle invalid input.
 		if ( !cm || !pm )
 		{
-			return;
+			return null;
 		}
 
 		// Handle zero distance between screen points.
 		if ( true === vec2.equals ( cm, pm ) )
 		{
-			return;
+			return null;
 		}
 
 		// Get the line under the current mouse point in global space.
@@ -629,7 +631,7 @@ export class Trackball extends BaseClass
 		// Handle invalid line.
 		if ( !cl?.valid )
 		{
-			return;
+			return null;
 		}
 
 		// Get the line under the previous mouse point in global space.
@@ -638,7 +640,7 @@ export class Trackball extends BaseClass
 		// Handle invalid line.
 		if ( !pl?.valid )
 		{
-			return;
+			return null;
 		}
 
 		// Make sure the lines are normalized.
@@ -687,8 +689,8 @@ export class Trackball extends BaseClass
 		// By the time we get to here this should not happen.
 		if ( numIntersections !== 4 )
 		{
-			// console.log ( "No intersections with the trackball sphere." );
-			return;
+			console.warn ( "No intersections with the trackball sphere" );
+			return null;
 		}
 
 		// Get the smaller parameter because that is the closest intersection.
@@ -720,7 +722,7 @@ export class Trackball extends BaseClass
 		// Handle invalid angles.
 		if ( false === isFiniteNumber ( angle ) )
 		{
-			return;
+			return null;
 		}
 
 		// Rotate the trackball.
@@ -728,5 +730,8 @@ export class Trackball extends BaseClass
 
 		// Request a render.
 		viewer.requestRender();
+
+		// Return the axis and angle.
+		return { axis, angle };
 	}
 }

@@ -23,9 +23,15 @@ import { IVector3, IVector4 } from "./Vector";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+export interface IRotationStep
+{
+	axis: IVector3;
+	angle: number;
+}
+
 export interface INavigator
 {
-	mouseRotate: ( ( params: { event: IEvent, scale: number } ) => void );
+	mouseRotate: ( ( params: { event: IEvent, scale: number } ) => ( IRotationStep | null ) );
 	mouseTranslate: ( ( params: { event: IEvent, scale: number } ) => void );
 	rotateAxisAngle ( axis: IVector3, radians: number ) : void;
 	rotateQuaternion: ( ( quaternion: IVector4 ) => void );
