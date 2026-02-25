@@ -135,14 +135,15 @@ export class Listeners extends BaseClass
 	 * Remove a listener for the given event type.
 	 * @param {IEventType} type - The event type.
 	 * @param {IEventListener} listener - The event listener.
+	 * @returns {boolean} True if the listener was removed, false otherwise.
 	 */
-	public remove ( type: IEventType, listener: IEventListener ) : void
+	public remove ( type: IEventType, listener: IEventListener ) : boolean
 	{
 		const listeners = this.#eventListeners.get ( type );
 
 		if ( !listeners )
 		{
-			return;
+			return false;
 		}
 
 		const index = listeners.indexOf ( listener );
@@ -150,16 +151,20 @@ export class Listeners extends BaseClass
 		if ( index >= 0 )
 		{
 			listeners.splice ( index, 1 );
+			return true;
 		}
+
+		return false;
 	}
 
 	/**
 	 * Remove all listeners for the given event type.
 	 * @param {IEventType} type - The event type.
+	 * @returns {boolean} True if the listeners were removed, false otherwise.
 	 */
-	public removeAll ( type: IEventType ) : void
+	public removeAll ( type: IEventType ) : boolean
 	{
-		this.#eventListeners.delete ( type );
+		return this.#eventListeners.delete ( type );
 	}
 
 	/**
