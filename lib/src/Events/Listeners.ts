@@ -85,7 +85,59 @@ export class Listeners extends BaseClass
 	 */
 	public notify ( event: IEvent ) : void
 	{
+		// Get the listeners for the event type.
 		const { type } = event;
+		let listeners = this.#eventListeners.get ( type );
+
+		// Handle no listeners.
+		if ( !listeners )
+		{
+			return;
+		}
+
+		// Make a copy of the listeners in case they get modified while iterating.
+		listeners = [ ...listeners ];
+
+		// Loop through the listeners and call them with the event.
+		for ( const listener of listeners )
+		{
+			listener ( event );
+		}
+	}
+
+	/**
+	 * Add a listener for the given event type.
+	 * @param {IEventType} type - The event type.
+	 * @param {IEventListener} listener - The event listener.
+	 */
+	public add ( type: IEventType, listener: IEventListener ) : void
+	{
+		const listeners = this.get ( type );
+		listeners.push ( listener );
+	}
+
+	/**
+	 * Add listeners for the given event type that gets called only once.
+	 * @param {IEventType} type - The event type.
+	 * @param {IEventListener} listener - The event listener.
+	 */
+	public once ( type: IEventType, listener: IEventListener ) : void
+	{
+		const onceListener = ( event: IEvent ) =>
+		{
+			this.remove ( type, onceListener );
+			listener ( event );
+		}
+		this.add ( type, onceListener );
+	}
+
+	/**
+	 * Remove a listener for the given event type.
+	 * @param {IEventType} type - The event type.
+	 * @param {IEventListener} listener - The event listener.
+	 */
+	public remove ( type: IEventType, listener: IEventListener ) : void
+	{
 		const listeners = this.#eventListeners.get ( type );
 
 		if ( !listeners )
@@ -93,10 +145,21 @@ export class Listeners extends BaseClass
 			return;
 		}
 
-		for ( const listener of listeners )
+		const index = listeners.indexOf ( listener );
+
+		if ( index >= 0 )
 		{
-			listener ( event );
+			listeners.splice ( index, 1 );
 		}
+	}
+
+	/**
+	 * Remove all listeners for the given event type.
+	 * @param {IEventType} type - The event type.
+	 */
+	public removeAll ( type: IEventType ) : void
+	{
+		this.#eventListeners.delete ( type );
 	}
 
 	/**
