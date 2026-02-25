@@ -536,13 +536,13 @@ export class Viewer extends BaseClass
 		this.navBase.setInternalState ( navState1 );
 
 		// Start an animation between the two states.
-		this.setNavigationAnimation ( ( fraction: number ) : void =>
+		this.navAnimationSet ( ( fraction: number ) : void =>
 		{
 			const newState = this.navBase.blend ( navState1, navState2, fraction );
 			this.navBase.setInternalState ( newState );
 			this.requestRender();
 		} );
-		this.startNavigationAnimation ( 1000 ); // Duration in milliseconds.
+		this.navAnimationStart ( 1000 ); // Duration in milliseconds.
 	}
 
 	/**
@@ -894,10 +894,10 @@ export class Viewer extends BaseClass
 	 * Set the navigation animation function.
 	 * @param {IAnimationFunction} fun - The function that does the animation step.
 	 */
-	protected setNavigationAnimation ( fun: IAnimationFunction ) : void
+	public navAnimationSet ( fun: IAnimationFunction ) : void
 	{
 		// Stop any existing animation.
-		this.stopNavigationAnimation();
+		this.navAnimationStop();
 
 		// Make the new animation.
 		const animation = new Animation();
@@ -908,7 +908,7 @@ export class Viewer extends BaseClass
 			// If we are destroyed then stop.
 			if ( true === this.isDestroyed() )
 			{
-				this.stopNavigationAnimation();
+				this.navAnimationStop();
 				return;
 			}
 
@@ -924,7 +924,7 @@ export class Viewer extends BaseClass
 	 * Start the navigation animation.
 	 * @param {number} duration - The total duration of the animation.
 	 */
-	protected startNavigationAnimation ( duration = 2000 ) : void
+	public navAnimationStart ( duration = 2000 ) : void
 	{
 		// Shortcuts.
 		const { navigationAnimation } = this.#animations;
@@ -936,7 +936,7 @@ export class Viewer extends BaseClass
 		}
 
 		// Stop any existing animation.
-		this.stopNavigationAnimation();
+		this.navAnimationStop();
 
 		// Start the animation.
 		navigationAnimation.start ( duration );
@@ -945,7 +945,7 @@ export class Viewer extends BaseClass
 	/**
 	 * Stop any existing navigation animation.
 	 */
-	protected stopNavigationAnimation() : void
+	public navAnimationStop() : void
 	{
 		// Shortcuts.
 		const { navigationAnimation } = this.#animations;

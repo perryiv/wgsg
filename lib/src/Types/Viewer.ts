@@ -14,6 +14,7 @@
 
 import { Group, Node as SceneNode } from "../Scene";
 import { Line } from "../Math";
+import type { IAnimationFunction } from "../Viewers/Animation";
 import type { ICommand } from "./Command";
 import type { IEvent } from "./Event";
 import type { IMatrix44 } from "./Matrix";
@@ -40,6 +41,9 @@ export interface IViewer
 
 	getCommand: ( event: IEvent ) => ( ICommand | null );
 	makeLine: ( input: { screenPoint: Readonly<IVector2>, viewMatrix?: Readonly<IMatrix44> } ) => ( Line | null );
+	navAnimationSet: ( fun: IAnimationFunction ) => void;
+	navAnimationStart: ( duration?: number ) => void;
+	navAnimationStop: () => void;
 	requestRender: ( () => void );
 	viewAll: ( options?: { resetRotation?: boolean, animate?: boolean } ) => void;
 }
