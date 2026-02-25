@@ -17,6 +17,7 @@ import { Group, Node, Transform } from "../Scene";
 import { Line, Sphere } from "../Math";
 import { Listeners } from "../Events";
 import { NavBase, Trackball } from "../Navigators";
+import { vec2 } from "gl-matrix";
 import {
 	makeCommands,
 	makeInput as makeInputAsString,
@@ -40,6 +41,7 @@ import type {
 	IEventType,
 	IInputToCommandNameMap,
 	IMatrix44,
+	IMouseDistanceEvent,
 	IMouseState,
 	IVector2,
 } from "../Types";
@@ -753,10 +755,25 @@ export class Viewer extends BaseClass
 		// The mouse pressed state is unchanged.
 
 		const handler = this.eventHandlerOrNavigator;
-		const event = this.makeEvent ( "mouse_up", input );
 
+		// Always sent the mouse-up event.
+		const event = this.makeEvent ( "mouse_up", input );
 		handler.handleEvent ( event );
 		this.clientListeners.notify ( event );
+
+		// If there is a previous mouse coordinate...
+		if ( this.mousePrevious )
+		{
+			// Send the mouse distance event.
+			const distance = vec2.distance ( this.mouseCurrent, this.mousePrevious );
+			const mouseEvent: IMouseDistanceEvent = { ...event,
+				type: "mouse_distance",
+				event: input,
+				button: input.button,
+				distance,
+			};
+			this.clientListeners.notify ( mouseEvent );
+		}
 
 		// Reset these now that they've been used.
 		this.mousePressed = null;
