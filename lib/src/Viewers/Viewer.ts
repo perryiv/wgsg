@@ -129,6 +129,16 @@ export class Viewer extends BaseClass
 		{
 			this.addKeyboardEventListeners();
 		}
+
+		// Listen for mouse distance events.
+		this.#clientListeners.add ( "mouse_distance", ( event: IEvent ) =>
+		{
+			const { distance } = ( event as IMouseDistanceEvent );
+			if ( distance > 10 )
+			{
+				this.navAnimationStart ( 1500 );
+			}
+		} );
 	}
 
 	/**
@@ -745,17 +755,17 @@ export class Viewer extends BaseClass
 	 */
 	public mouseUp ( input: MouseEvent ) : void
 	{
-		this.navAnimationStop();
 		input.preventDefault();
 		const { button, clientX, clientY } = input;
 
 		this.mouseButtonsDown.delete ( button );
 
-		this.mousePrevious = this.mouseCurrent;
+		// The previous mouse was already set in the mouse-move handler.
+		// Setting it again here would make it the same as the current.
 		this.mouseCurrent = [ clientX, clientY ];
 
+		// Set the released point. The pressed point is unchanged.
 		this.mouseReleased = [ clientX, clientY ];
-		// The mouse pressed state is unchanged.
 
 		const handler = this.eventHandlerOrNavigator;
 
@@ -767,6 +777,8 @@ export class Viewer extends BaseClass
 		// If there is a previous mouse coordinate...
 		if ( this.mousePrevious )
 		{
+			// console.log ( "Mouse, current: ", this.mouseCurrent, ", previous: ", this.mousePrevious );
+
 			// Send the mouse distance event.
 			const distance = vec2.distance ( this.mouseCurrent, this.mousePrevious );
 			const mouseEvent: IMouseDistanceEvent = { ...event,
@@ -789,7 +801,6 @@ export class Viewer extends BaseClass
 	 */
 	public mouseOut ( input: MouseEvent ) : void
 	{
-		this.navAnimationStop();
 		input.preventDefault();
 
 		this.mouseButtonsDown.clear();
@@ -810,7 +821,6 @@ export class Viewer extends BaseClass
 	 */
 	public mouseIn ( input: MouseEvent ) : void
 	{
-		this.navAnimationStop();
 		input.preventDefault();
 
 		this.mouseButtonsDown.clear();
@@ -830,8 +840,8 @@ export class Viewer extends BaseClass
 	 */
 	public mouseContextMenu ( event: MouseEvent ) : void
 	{
-		this.navAnimationStop();
-		event.preventDefault(); // Prevent the context menu from showing.
+		// Prevent the context menu from showing.
+		event.preventDefault();
 	}
 
 	/**

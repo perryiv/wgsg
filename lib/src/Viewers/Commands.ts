@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base as BaseClass } from "../Base";
-import { DEG_TO_RAD } from "../Tools";
+import { clampNumber, DEG_TO_RAD } from "../Tools";
 import { vec3 } from "gl-matrix";
 import type {
 	ICommand,
@@ -375,6 +375,21 @@ export class MouseRotate extends Command
 		// Register an animation function that may be used.
 		viewer.navAnimationSet ( ( fraction: number ) =>
 		{
+			// We want to go from 1 to 0.
+			fraction = 1 - fraction;
+
+			// Keep it in range.
+			fraction = clampNumber ( fraction, 0, 1 );
+
+			// console.log ( "Animation fraction: ", fraction );
+
+			// Are we done?
+			if ( fraction <= 0 )
+			{
+				viewer.navAnimationStop();
+				return;
+			}
+
 			// Rotate the trackball.
 			navBase.rotateAxisAngle ( axis, angle * fraction );
 
