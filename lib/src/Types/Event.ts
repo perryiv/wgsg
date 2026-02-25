@@ -13,7 +13,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { IInputState } from "./Input";
-import { IVector2 } from "./Vector";
 import { IViewer } from "./Viewer";
 
 
@@ -47,8 +46,6 @@ export interface IMouseDistanceEvent extends IEvent
 {
 	type: "mouse_distance";
 	event: MouseEvent;
-	start: IVector2;
-	end: IVector2;
 	distance: number;
 	button: number; // The button that was released.
 }
