@@ -816,7 +816,7 @@ export class Surface extends BaseClass
 
 		if ( handle > 0 )
 		{
-			cancelAnimationFrame ( handle );
+			globalThis.cancelAnimationFrame ( handle );
 		}
 	}
 
@@ -835,7 +835,7 @@ export class Surface extends BaseClass
 		}
 
 		// Schedule another one.
-		const handle = requestAnimationFrame ( () =>
+		const handle = globalThis.requestAnimationFrame ( () =>
 		{
 			this.render();
 		} );
