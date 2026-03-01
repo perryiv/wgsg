@@ -8,23 +8,20 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Export the modules in this directory.
+//	Types related to animations.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export * from "./Animations";
-export * from "./Command";
-export * from "./Event";
-export * from "./Graphics";
-export * from "./Input";
-export * from "./Keyboard";
-export * from "./Line";
-export * from "./Matrix";
-export * from "./Mouse";
-export * from "./Navigator";
-export * from "./Plane";
-export * from "./Size";
-export * from "./Sphere";
-export * from "./Vector";
-export * from "./Viewer";
-export * from "./Viewport";
+import { Animation } from "../Viewers/Animation";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Types related to the viewer.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export interface IAnimations
+{
+	nav: Animation
+}

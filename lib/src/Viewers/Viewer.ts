@@ -12,6 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Animation } from "./Animation";
 import { BaseHandler } from "../Events/Handlers/BaseHandler";
 import { Group, Node, Transform } from "../Scene";
 import { Line, Sphere } from "../Math";
@@ -28,13 +29,10 @@ import {
 	Surface as BaseClass,
 } from "./Surface";
 import {
-	Animation,
-	type IAnimationFunction
-} from "./Animation";
-import {
 	makeLine as makeLineUnderScreenPoint,
 } from "../Tools";
 import type {
+	IAnimations,
 	ICommand,
 	ICommandMap,
 	IEvent,
@@ -68,11 +66,6 @@ interface IViewerSceneBranches
 	extra: Group;
 }
 
-interface IAnimations
-{
-	navigationAnimation: ( Animation | null );
-}
-
 type IEventHandlerStack = BaseHandler[];
 type IEventListenerName = ( keyof WindowEventMap );
 type IKeyboardEventListener = ( ( event: KeyboardEvent ) => void );
@@ -98,7 +91,7 @@ export class Viewer extends BaseClass
 	#clientListeners: Listeners = new Listeners();
 	#branches: IViewerSceneBranches = Viewer.makeBranches ( true );
 	#keysDown: Set < string > = new Set < string > ();
-	#animations: IAnimations = { navigationAnimation: null };
+	#animations: IAnimations = { nav: new Animation() };
 	static #commands: ICommandMap = makeCommands();
 	static #inputToCommand: IInputToCommandNameMap = makeInputToCommandMap();
 
@@ -136,7 +129,7 @@ export class Viewer extends BaseClass
 			const { distance } = ( event as IMouseDistanceEvent );
 			if ( distance > 10 )
 			{
-				this.navAnimationStart ( 1500 );
+				this.#animations.nav.start ( 1500 );
 			}
 		} );
 	}
@@ -159,6 +152,7 @@ export class Viewer extends BaseClass
 		this.#clientListeners.destroy();
 		this.#branches = Viewer.makeBranches ( false );
 		this.#keysDown.clear();
+		this.#animations.nav.stop();
 
 		// Call the base class function.
 		super.destroy();
@@ -546,13 +540,13 @@ export class Viewer extends BaseClass
 		this.navBase.setInternalState ( navState1 );
 
 		// Start an animation between the two states.
-		this.navAnimationSet ( ( fraction: number ) : void =>
+		this.animations.nav.set ( ( fraction: number ) : void =>
 		{
 			const newState = this.navBase.blend ( navState1, navState2, fraction );
 			this.navBase.setInternalState ( newState );
 			this.requestRender();
 		} );
-		this.navAnimationStart ( 1000 ); // Duration in milliseconds.
+		this.animations.nav.start ( 1000 ); // Duration in milliseconds.
 	}
 
 	/**
@@ -692,7 +686,7 @@ export class Viewer extends BaseClass
 	 */
 	public mouseDown ( input: MouseEvent ) : void
 	{
-		this.navAnimationStop();
+		this.animations.nav.stop();
 		input.preventDefault();
 		const { button, clientX, clientY } = input;
 
@@ -742,7 +736,7 @@ export class Viewer extends BaseClass
 	 */
 	public mouseWheel ( input: MouseEvent ) : void
 	{
-		this.navAnimationStop();
+		this.animations.nav.stop();
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "mouse_wheel", input );
 		handler.handleEvent ( event );
@@ -906,73 +900,12 @@ export class Viewer extends BaseClass
 	}
 
 	/**
-	 * Set the navigation animation function.
-	 * @param {IAnimationFunction} fun - The function that does the animation step.
+	 * Get the navigation animation.
+	 * @returns {IAnimations} The animations.
 	 */
-	public navAnimationSet ( fun: IAnimationFunction ) : void
+	public get animations() : IAnimations
 	{
-		// Stop any existing animation.
-		this.navAnimationStop();
-
-		// Make the new animation.
-		const animation = new Animation();
-
-		// Set the animation.
-		animation.set ( ( fraction: number ) : void =>
-		{
-			// If we are destroyed then stop.
-			if ( true === this.isDestroyed() )
-			{
-				this.navAnimationStop();
-				return;
-			}
-
-			// Call the animation function.
-			fun ( fraction );
-		} );
-
-		// Store the animation.
-		this.#animations.navigationAnimation = animation;
-	}
-
-	/**
-	 * Start the navigation animation.
-	 * @param {number} duration - The total duration of the animation.
-	 */
-	public navAnimationStart ( duration = 2000 ) : void
-	{
-		// Shortcuts.
-		const { navigationAnimation } = this.#animations;
-
-		// Handle no animation function.
-		if ( !navigationAnimation )
-		{
-			return;
-		}
-
-		// Stop any existing animation.
-		this.navAnimationStop();
-
-		// Start the animation.
-		navigationAnimation.start ( duration );
-	}
-
-	/**
-	 * Stop any existing navigation animation.
-	 */
-	public navAnimationStop() : void
-	{
-		// Shortcuts.
-		const { navigationAnimation } = this.#animations;
-
-		// Is there an animation to stop?
-		if ( navigationAnimation )
-		{
-			navigationAnimation.stop();
-		}
-
-		// Clear the animation.
-		this.#animations.navigationAnimation = null;
+		return this.#animations;
 	}
 
 	/**

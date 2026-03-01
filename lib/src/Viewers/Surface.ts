@@ -883,7 +883,7 @@ export class Surface extends BaseClass
 		if ( DEVELOPER_BUILD )
 		{
 			const name = `${this.type} ${this.id}`;
-			const rgi = this.cullVisitor.renderGraphInfo
+			const rgi = this.cullVisitor.renderGraphInfo;
 			const info = [
 				{ layers: rgi.numLayers },
 				{ bins: rgi.numBins },
