@@ -35,8 +35,8 @@ export type ITimeoutHandle = number;
 
 export class Animation extends BaseClass
 {
-	#timeout: ( ITimeoutHandle | null ) = null;
 	#fun: ( IAnimationFunction | null ) = null;
+	#name: ( string | null ) = null;
 	#startTime = 0;
 	#duration = 0;
 
@@ -54,11 +54,8 @@ export class Animation extends BaseClass
 	 */
 	public override destroy() : void
 	{
-		// Stop any existing animation.
+		// Stop any existing animation and reset our members.
 		this.stop();
-
-		// Reset our members.
-		this.reset();
 
 		// Call the base class function.
 		super.destroy();
@@ -85,19 +82,16 @@ export class Animation extends BaseClass
 	}
 
 	/**
-	 * Set the navigation animation.
-	 * @param {IAnimationFunction} fun - The function that does the animation step.
+	 * Call the given function "in the next event cycle".
+	 * https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout
+	 * @param {() => void} callback - The function to call after the timeout.
 	 */
-	public set ( fun: IAnimationFunction ) : void
+	protected static callSoon ( callback: () => void ) : void
 	{
-		// Do nothing if we're animating.
-		if ( null !== this.#timeout )
-		{
-			return;
-		}
-
-		// Set the animation function.
-		this.#fun = fun;
+		// Do not use requestAnimationFrame() because the viewer's requestRender()
+		// uses it. If we also use it here then the viewer may not get around to
+		// rendering while it's animating.
+		globalThis.setTimeout ( callback );
 	}
 
 	/**
@@ -105,16 +99,19 @@ export class Animation extends BaseClass
 	 */
 	protected step () : void
 	{
-		// Get the members.
+		// Shortcuts.
 		const fun = this.#fun;
-		const startTime = this.#startTime;
-		const duration = this.#duration;
 
-		// Handle no animation function.
+		// Handle no function. This could happen if the animation was stopped.
 		if ( null === fun )
 		{
+			console.log ( `No animation function for '${this.#name}'` );
 			return;
 		}
+
+		// Shortcuts.
+		const startTime = this.#startTime;
+		const duration = this.#duration;
 
 		// How much time has passed?
 		const elapsedTime = Date.now() - startTime;
@@ -125,8 +122,10 @@ export class Animation extends BaseClass
 			// Call the animation function one last time.
 			fun ( 1.0 );
 
-			// Just reset the data.
-			this.reset();
+			console.log ( `Animation '${this.#name}' completed because enough time has passed` );
+
+			// This will reset our members.
+			this.stop();
 
 			// We're done.
 			return;
@@ -136,14 +135,29 @@ export class Animation extends BaseClass
 		let fraction = elapsedTime / duration;
 		fraction = Animation.getExponentialDecayStep ( fraction );
 
+		console.log ( `Animation '${this.#name}' step` );
+
 		// Call the animation function.
 		fun ( fraction );
 
 		// Request the next step.
-		this.#timeout = globalThis.requestAnimationFrame ( () =>
+		Animation.callSoon ( () =>
 		{
 			this.step();
 		} );
+	}
+
+	/**
+	 * Set the navigation animation.
+	 * @param {string} name - The name of the animation.
+	 * @param {IAnimationFunction} fun - The function that does the animation step.
+	 */
+	public set ( name: string, fun: IAnimationFunction ) : void
+	{
+		console.log ( `Setting animation function '${name}'` );
+
+		this.#name = name;
+		this.#fun = fun;
 	}
 
 	/**
@@ -152,28 +166,14 @@ export class Animation extends BaseClass
 	 */
 	public start ( duration: number ) : void
 	{
-		// Get the members.
-		const fun = this.#fun;
-		const timeout = this.#timeout;
-
-		// Do nothing if we're already animating.
-		if ( null !== timeout )
-		{
-			return;
-		}
-
-		// Handle no animation function.
-		if ( null === fun )
-		{
-			return;
-		}
+		console.log ( `Starting animation '${this.#name}'` );
 
 		// Set the start time and duration.
 		this.#startTime = Date.now();
 		this.#duration = duration;
 
 		// Start the animation.
-		this.#timeout = globalThis.requestAnimationFrame ( () =>
+		Animation.callSoon ( () =>
 		{
 			this.step();
 		} );
@@ -184,27 +184,10 @@ export class Animation extends BaseClass
 	 */
 	public stop() : void
 	{
-		// Shortcuts.
-		const timeout = this.#timeout;
+		console.log ( `Stopping animation '${this.#name}'` );
 
-		// Is there an animation to stop?
-		if ( null !== timeout )
-		{
-			// Cancel the animation.
-			globalThis.cancelAnimationFrame ( timeout );
-		}
-
-		// Reset the data.
-		this.reset();
-	}
-
-	/**
-	 * Reset the animation data.
-	 */
-	protected reset() : void
-	{
-		this.#timeout = null;
 		this.#fun = null;
+		this.#name = null;
 		this.#startTime = 0;
 		this.#duration = 0;
 	}
