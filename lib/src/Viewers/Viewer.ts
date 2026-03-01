@@ -540,7 +540,7 @@ export class Viewer extends BaseClass
 		this.navBase.setInternalState ( navState1 );
 
 		// Start an animation between the two states.
-		this.animations.nav.set ( ( fraction: number ) : void =>
+		this.animations.nav.set ( `${this.type}.viewSphere()`, ( fraction: number ) : void =>
 		{
 			const newState = this.navBase.blend ( navState1, navState2, fraction );
 			this.navBase.setInternalState ( newState );
