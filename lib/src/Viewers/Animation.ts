@@ -105,7 +105,7 @@ export class Animation extends BaseClass
 		// Handle no function. This could happen if the animation was stopped.
 		if ( null === fun )
 		{
-			console.log ( `No animation function for '${this.#name}'` );
+			// console.warn ( `No animation function for '${this.#name}'` );
 			return;
 		}
 
@@ -122,7 +122,7 @@ export class Animation extends BaseClass
 			// Call the animation function one last time.
 			fun ( 1.0 );
 
-			console.log ( `Animation '${this.#name}' completed because enough time has passed` );
+			// console.log ( `Animation '${this.#name}' completed because enough time has passed` );
 
 			// This will reset our members.
 			this.stop();
@@ -135,7 +135,7 @@ export class Animation extends BaseClass
 		let fraction = elapsedTime / duration;
 		fraction = Animation.getExponentialDecayStep ( fraction );
 
-		console.log ( `Animation '${this.#name}' step` );
+		// console.log ( `Animation '${this.#name}' step` );
 
 		// Call the animation function.
 		fun ( fraction );
@@ -154,7 +154,7 @@ export class Animation extends BaseClass
 	 */
 	public set ( name: string, fun: IAnimationFunction ) : void
 	{
-		console.log ( `Setting animation function '${name}'` );
+		// console.log ( `Setting animation function '${name}'` );
 
 		this.#name = name;
 		this.#fun = fun;
@@ -166,7 +166,7 @@ export class Animation extends BaseClass
 	 */
 	public start ( duration: number ) : void
 	{
-		console.log ( `Starting animation '${this.#name}'` );
+		// console.log ( `Starting animation '${this.#name}'` );
 
 		// Set the start time and duration.
 		this.#startTime = Date.now();
@@ -184,7 +184,7 @@ export class Animation extends BaseClass
 	 */
 	public stop() : void
 	{
-		console.log ( `Stopping animation '${this.#name}'` );
+		// console.log ( `Stopping animation '${this.#name}'` );
 
 		this.#fun = null;
 		this.#name = null;
