@@ -373,7 +373,7 @@ export class MouseRotate extends Command
 		const { axis, angle } = step;
 
 		// Register an animation function that may be used.
-		viewer.animations.nav.set ( ( fraction: number ) =>
+		viewer.animations.nav.set ( `${this.type}.execute()`, ( fraction: number ) =>
 		{
 			// We want to go from 1 to 0.
 			fraction = 1 - fraction;
@@ -381,12 +381,9 @@ export class MouseRotate extends Command
 			// Keep it in range.
 			fraction = clampNumber ( fraction, 0, 1 );
 
-			// console.log ( "Animation fraction: ", fraction );
-
 			// Are we done?
 			if ( fraction <= 0 )
 			{
-				viewer.animations.nav.stop();
 				return;
 			}
 
