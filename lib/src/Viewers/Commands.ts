@@ -307,10 +307,47 @@ export class MouseTranslate extends Command
 	 */
 	public execute ( event: IEvent ) : void
 	{
+		// Shortcuts.
 		const { viewer } = event;
 		const { navBase } = viewer;
-		navBase.mouseTranslate ( { event, scale: this.#scale } );
+		const scale = this.#scale;
+
+		// Try to translate the navigator with the mouse.
+		const step = navBase.mouseTranslate ( { event, scale } );
+
+		// Handle no translation.
+		if ( !step )
+		{
+			return;
+		}
+
+		// Request a render so that we can see the change.
 		viewer.requestRender();
+
+		// Shortcuts.
+		const { current, previous } = step;
+
+		// Register an animation function that may be used.
+		viewer.animations.nav.set ( `${this.type}.execute()`, ( fraction: number ) =>
+		{
+			// We want to go from 1 to 0, and keep it in range.
+			fraction = clampNumber ( ( 1 - fraction ), 0, 1 );
+
+			// Are we done?
+			if ( fraction <= 0 )
+			{
+				return;
+			}
+
+			// It's a little too sensitive without this.
+			fraction *= 0.4;
+
+			// Translate the trackball.
+			navBase.translateScreenXY ( { current, previous, scale: ( scale * fraction ) } );
+
+			// Request a render.
+			viewer.requestRender();
+		} );
 	}
 }
 
@@ -375,11 +412,8 @@ export class MouseRotate extends Command
 		// Register an animation function that may be used.
 		viewer.animations.nav.set ( `${this.type}.execute()`, ( fraction: number ) =>
 		{
-			// We want to go from 1 to 0.
-			fraction = 1 - fraction;
-
-			// Keep it in range.
-			fraction = clampNumber ( fraction, 0, 1 );
+			// We want to go from 1 to 0, and keep it in range.
+			fraction = clampNumber ( ( 1 - fraction ), 0, 1 );
 
 			// Are we done?
 			if ( fraction <= 0 )
@@ -388,7 +422,7 @@ export class MouseRotate extends Command
 			}
 
 			// Rotate the trackball.
-			navBase.rotateAxisAngle ( axis, angle * fraction );
+			navBase.rotateAxisAngle ( axis, ( angle * scale * fraction ) );
 
 			// Request a render.
 			viewer.requestRender();

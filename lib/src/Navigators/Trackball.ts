@@ -38,6 +38,7 @@ import type {
 	IEvent,
 	IMatrix44,
 	IRotationStep,
+	ITranslateScreenStep,
 	IVector2,
 	IVector3,
 	IVector4,
@@ -519,8 +520,9 @@ export class Trackball extends BaseClass
 	 * @param {object} params - The parameters.
 	 * @param {IEvent} params.event - The event.
 	 * @param {number} params.scale - The translation scale factor.
+	 * @returns {ITranslateScreenStep | null} The translation step, or null if the translation failed.
 	 */
-	public override mouseTranslate ( params: { event: IEvent, scale: number } ) : void
+	public override mouseTranslate ( params: { event: IEvent, scale: number } ) : ( ITranslateScreenStep | null )
 	{
 		// Get the input.
 		const { event, scale } = params;
@@ -529,13 +531,13 @@ export class Trackball extends BaseClass
 		// Handle no mouse points.
 		if ( !pm || !cm )
 		{
-			return;
+			return null;
 		}
 
 		// Handle zero distance between screen points.
 		if ( true === vec2.equals ( cm, pm ) )
 		{
-			return;
+			return null;
 		}
 
 		// We need the inverse of the view matrix in order to proceed.
@@ -544,7 +546,7 @@ export class Trackball extends BaseClass
 		// Handle invalid matrix.
 		if ( !ivm )
 		{
-			return;
+			return null;
 		}
 
 		// Get the line under the current mouse point in global space.
@@ -553,7 +555,7 @@ export class Trackball extends BaseClass
 		// Handle invalid line.
 		if ( !cl?.valid )
 		{
-			return;
+			return null;
 		}
 
 		// Get the line under the previous mouse point in global space.
@@ -562,7 +564,7 @@ export class Trackball extends BaseClass
 		// Handle invalid line.
 		if ( !pl?.valid )
 		{
-			return;
+			return null;
 		}
 
 		// Make sure the lines are normalized.
@@ -580,22 +582,26 @@ export class Trackball extends BaseClass
 		// Handle no intersections.
 		if ( ( null === ci ) || ( null === pi ) )
 		{
-			return;
+			return null;
 		}
 		if ( ( false === isFiniteNumber ( ci ) ) || ( false === isFiniteNumber ( pi ) ) )
 		{
-			return;
+			return null;
 		}
 
 		// Get the intersection points.
 		const cp = cl.getPoint ( ci );
 		const pp = pl.getPoint ( pi );
 
+		// Make the 2D points.
+		const current:  IVector2 = [ cp[0], cp[1] ];
+		const previous: IVector2 = [ pp[0], pp[1] ];
+
 		// Now we can translate with 2D screen points.
-		this.translateScreenXY ( {
-			current:  [ cp[0], cp[1] ],
-			previous: [ pp[0], pp[1] ],
-			scale } );
+		this.translateScreenXY ( { current, previous, scale } );
+
+		// Return the translation step.
+		return { current, previous };
 	}
 
 	/**
@@ -727,9 +733,6 @@ export class Trackball extends BaseClass
 
 		// Rotate the trackball.
 		this.rotateAxisAngle ( axis, angle * scale );
-
-		// Request a render.
-		viewer.requestRender();
 
 		// Return the axis and angle.
 		return { axis, angle };
