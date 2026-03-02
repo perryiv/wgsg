@@ -18,10 +18,12 @@ import { Perspective, ProjectionBase as Projection } from "../Projections";
 import { SolidColor } from "../Shaders";
 import { vec4 } from "gl-matrix";
 import {
+	BUILD_TIME_LOG_LEVEL,
 	clampVec4,
 	DEVELOPER_BUILD,
 	Device,
 	IDENTITY_MATRIX,
+	LogLevel,
 } from "../Tools";
 import {
 	Node,
@@ -880,7 +882,7 @@ export class Surface extends BaseClass
 		this.#frame.end = performance.now();
 
 		// Performance info.
-		if ( DEVELOPER_BUILD )
+		if ( BUILD_TIME_LOG_LEVEL >= LogLevel.DEBUG )
 		{
 			const name = `${this.type} ${this.id}`;
 			const rgi = this.cullVisitor.renderGraphInfo;
