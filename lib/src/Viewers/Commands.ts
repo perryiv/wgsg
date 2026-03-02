@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base as BaseClass } from "../Base";
-import { DEG_TO_RAD } from "../Tools";
+import { clampNumber, DEG_TO_RAD } from "../Tools";
 import { vec3 } from "gl-matrix";
 import type {
 	ICommand,
@@ -201,7 +201,7 @@ export class ViewSphere extends Command
 	public execute ( event: IEvent ) : void
 	{
 		const { viewer } = event;
-		viewer.viewAll ( { resetRotation: this.#resetRotation } );
+		viewer.viewAll ( { resetRotation: this.#resetRotation, animate: true } );
 		viewer.requestRender();
 	}
 }
@@ -352,10 +352,47 @@ export class MouseRotate extends Command
 	 */
 	public execute ( event: IEvent ) : void
 	{
+		// Shortcuts.
 		const { viewer } = event;
 		const { navBase } = viewer;
-		navBase.mouseRotate ( { event, scale: this.#scale } );
+		const scale = this.#scale;
+
+		// Try to rotate the navigator with the mouse.
+		const step = navBase.mouseRotate ( { event, scale } );
+
+		// Handle no rotation.
+		if ( !step )
+		{
+			return;
+		}
+
+		// Request a render so that we can see the change.
 		viewer.requestRender();
+
+		// Shortcuts.
+		const { axis, angle } = step;
+
+		// Register an animation function that may be used.
+		viewer.animations.nav.set ( `${this.type}.execute()`, ( fraction: number ) =>
+		{
+			// We want to go from 1 to 0.
+			fraction = 1 - fraction;
+
+			// Keep it in range.
+			fraction = clampNumber ( fraction, 0, 1 );
+
+			// Are we done?
+			if ( fraction <= 0 )
+			{
+				return;
+			}
+
+			// Rotate the trackball.
+			navBase.rotateAxisAngle ( axis, angle * fraction );
+
+			// Request a render.
+			viewer.requestRender();
+		} );
 	}
 }
 

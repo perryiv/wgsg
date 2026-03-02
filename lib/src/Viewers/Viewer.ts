@@ -12,10 +12,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Animation } from "./Animation";
 import { BaseHandler } from "../Events/Handlers/BaseHandler";
 import { Group, Node, Transform } from "../Scene";
 import { Line, Sphere } from "../Math";
+import { Listeners } from "../Events";
 import { NavBase, Trackball } from "../Navigators";
+import { vec2 } from "gl-matrix";
 import {
 	makeCommands,
 	makeInput as makeInputAsString,
@@ -29,12 +32,14 @@ import {
 	makeLine as makeLineUnderScreenPoint,
 } from "../Tools";
 import type {
+	IAnimations,
 	ICommand,
 	ICommandMap,
 	IEvent,
 	IEventType,
 	IInputToCommandNameMap,
 	IMatrix44,
+	IMouseDistanceEvent,
 	IMouseState,
 	IVector2,
 } from "../Types";
@@ -83,8 +88,10 @@ export class Viewer extends BaseClass
 	#eventHandlers: IEventHandlerStack = [];
 	#keyboardListeners: IKeyboardEventListenerMap = new Map < IEventListenerName, IKeyboardEventListener > ();
 	#mouseListeners: IMouseEventListenerMap = new Map < IEventListenerName, IMouseEventListener > ();
+	#clientListeners: Listeners = new Listeners();
 	#branches: IViewerSceneBranches = Viewer.makeBranches ( true );
 	#keysDown: Set < string > = new Set < string > ();
+	#animations: IAnimations = { nav: new Animation() };
 	static #commands: ICommandMap = makeCommands();
 	static #inputToCommand: IInputToCommandNameMap = makeInputToCommandMap();
 
@@ -115,6 +122,16 @@ export class Viewer extends BaseClass
 		{
 			this.addKeyboardEventListeners();
 		}
+
+		// Listen for mouse distance events.
+		this.#clientListeners.add ( "mouse_distance", ( event: IEvent ) =>
+		{
+			const { distance } = ( event as IMouseDistanceEvent );
+			if ( distance > 10 )
+			{
+				this.#animations.nav.start ( 1500 );
+			}
+		} );
 	}
 
 	/**
@@ -132,8 +149,10 @@ export class Viewer extends BaseClass
 		this.#eventHandlers = [];
 		this.#keyboardListeners.clear();
 		this.#mouseListeners.clear();
+		this.#clientListeners.destroy();
 		this.#branches = Viewer.makeBranches ( false );
 		this.#keysDown.clear();
+		this.#animations.nav.stop();
 
 		// Call the base class function.
 		super.destroy();
@@ -147,7 +166,6 @@ export class Viewer extends BaseClass
 	{
 		return "Viewers.Viewer";
 	}
-
 
 	/**
 	 * Make the default mouse data.
@@ -490,25 +508,61 @@ export class Viewer extends BaseClass
 	 * @param {object} input - The input.
 	 * @param {Sphere} input.sphere - The sphere to view.
 	 * @param {boolean} [input.resetRotation] - Whether or not to reset the rotation.
+	 * @param {boolean} [input.animate] - Whether or not to animate the navigation.
 	 */
-	public viewSphere ( input: { sphere: Sphere, resetRotation?: boolean } ) : void
+	public viewSphere ( input: { sphere: Sphere, resetRotation?: boolean, animate?: boolean } ) : void
 	{
-		const { sphere, resetRotation } = input;
+		// Shortcuts.
+		const { sphere, resetRotation, animate } = input;
+
+		// If we are not animating then set it and return.
+		if ( !animate )
+		{
+			// Have the navigator view the sphere.
+			this.navBase.viewSphere ( { sphere, projection: this.projection, resetRotation } );
+
+			// We're done.
+			return;
+		}
+
+		// If we get to here then animate.
+
+		// Get the current navigation state.
+		const navState1 = this.navBase.getInternalState();
+
+		// Have the navigator view the sphere.
 		this.navBase.viewSphere ( { sphere, projection: this.projection, resetRotation } );
+
+		// Get the new navigation state.
+		const navState2 = this.navBase.getInternalState();
+
+		// Return to the original state.
+		this.navBase.setInternalState ( navState1 );
+
+		// Start an animation between the two states.
+		this.animations.nav.set ( `${this.type}.viewSphere()`, ( fraction: number ) : void =>
+		{
+			const newState = this.navBase.blend ( navState1, navState2, fraction );
+			this.navBase.setInternalState ( newState );
+			this.requestRender();
+		} );
+		this.animations.nav.start ( 1000 ); // Duration in milliseconds.
 	}
 
 	/**
 	 * Set the navigator so that the model is completely within the view-volume.
 	 * @param {object} [options] - The options.
 	 * @param {boolean} [options.resetRotation] - Whether or not to reset the rotation.
+	 * @param {boolean} [options.animate] - Whether or not to animate the navigation.
 	 */
-	public viewAll ( options?: { resetRotation?: boolean } ) : void
+	public viewAll ( options?: { resetRotation?: boolean, animate?: boolean } ) : void
 	{
 		const sphere = this.modelScene?.getBoundingSphere();
 		if ( sphere )
 		{
 			const resetRotation = options?.resetRotation;
-			this.viewSphere ( { sphere, resetRotation } );
+			const animate = options?.animate;
+			this.viewSphere ( { sphere, resetRotation, animate } );
 		}
 	}
 
@@ -618,11 +672,21 @@ export class Viewer extends BaseClass
 	}
 
 	/**
+	 * Get the client event listeners.
+	 * @returns {Listeners} The client event listeners.
+	 */
+	public get clientListeners() : Listeners
+	{
+		return this.#clientListeners;
+	}
+
+	/**
 	 * Handle the mouse down event.
 	 * @param {MouseEvent} input - The mouse down event.
 	 */
 	public mouseDown ( input: MouseEvent ) : void
 	{
+		this.animations.nav.stop();
 		input.preventDefault();
 		const { button, clientX, clientY } = input;
 
@@ -638,6 +702,7 @@ export class Viewer extends BaseClass
 		const event = this.makeEvent ( "mouse_down", input );
 
 		handler.handleEvent ( event );
+		this.clientListeners.notify ( event );
 	}
 
 	/**
@@ -655,11 +720,13 @@ export class Viewer extends BaseClass
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "mouse_move", input );
 		handler.handleEvent ( event );
+		this.clientListeners.notify ( event );
 
 		if ( buttons )
 		{
 			event.type = "mouse_drag"; // Use all the same event data.
 			handler.handleEvent ( event );
+			this.clientListeners.notify ( event );
 		}
 	}
 
@@ -669,9 +736,11 @@ export class Viewer extends BaseClass
 	 */
 	public mouseWheel ( input: MouseEvent ) : void
 	{
+		this.animations.nav.stop();
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "mouse_wheel", input );
 		handler.handleEvent ( event );
+		this.clientListeners.notify ( event );
 	}
 
 	/**
@@ -685,16 +754,35 @@ export class Viewer extends BaseClass
 
 		this.mouseButtonsDown.delete ( button );
 
-		this.mousePrevious = this.mouseCurrent;
+		// The previous mouse was already set in the mouse-move handler.
+		// Setting it again here would make it the same as the current.
 		this.mouseCurrent = [ clientX, clientY ];
 
+		// Set the released point. The pressed point is unchanged.
 		this.mouseReleased = [ clientX, clientY ];
-		// The mouse pressed state is unchanged.
 
 		const handler = this.eventHandlerOrNavigator;
-		const event = this.makeEvent ( "mouse_up", input );
 
+		// Always sent the mouse-up event.
+		const event = this.makeEvent ( "mouse_up", input );
 		handler.handleEvent ( event );
+		this.clientListeners.notify ( event );
+
+		// If there is a previous mouse coordinate...
+		if ( this.mousePrevious )
+		{
+			// console.log ( "Mouse, current: ", this.mouseCurrent, ", previous: ", this.mousePrevious );
+
+			// Send the mouse distance event.
+			const distance = vec2.distance ( this.mouseCurrent, this.mousePrevious );
+			const mouseEvent: IMouseDistanceEvent = { ...event,
+				type: "mouse_distance",
+				event: input,
+				button: input.button,
+				distance,
+			};
+			this.clientListeners.notify ( mouseEvent );
+		}
 
 		// Reset these now that they've been used.
 		this.mousePressed = null;
@@ -718,6 +806,7 @@ export class Viewer extends BaseClass
 		const event = this.makeEvent ( "mouse_out", input );
 
 		handler.handleEvent ( event );
+		this.clientListeners.notify ( event );
 	}
 
 	/**
@@ -736,6 +825,7 @@ export class Viewer extends BaseClass
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "mouse_in", input );
 		handler.handleEvent ( event );
+		this.clientListeners.notify ( event );
 	}
 
 	/**
@@ -764,6 +854,7 @@ export class Viewer extends BaseClass
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "key_down", input );
 		handler.handleEvent ( event );
+		this.clientListeners.notify ( event );
 	}
 
 	/**
@@ -778,6 +869,7 @@ export class Viewer extends BaseClass
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "key_up", input );
 		handler.handleEvent ( event );
+		this.clientListeners.notify ( event );
 	}
 
 	/**
@@ -805,6 +897,15 @@ export class Viewer extends BaseClass
 
 		// Return the line, which may be null.
 		return line;
+	}
+
+	/**
+	 * Get the navigation animation.
+	 * @returns {IAnimations} The animations.
+	 */
+	public get animations() : IAnimations
+	{
+		return this.#animations;
 	}
 
 	/**

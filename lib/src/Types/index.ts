@@ -12,6 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+export * from "./Animations";
 export * from "./Command";
 export * from "./Event";
 export * from "./Graphics";

@@ -54,7 +54,7 @@ export const makeIdentity = () : IMatrix44 =>
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-const getClampedNumber = ( n: Readonly<number>, mn: Readonly<number>, mx: Readonly<number> ) : number =>
+export const clampNumber = ( n: Readonly<number>, mn: Readonly<number>, mx: Readonly<number> ) : number =>
 {
 	return Math.max ( mn, Math.min ( mx, n ) );
 }
@@ -66,10 +66,10 @@ const getClampedNumber = ( n: Readonly<number>, mn: Readonly<number>, mx: Readon
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-const clampVec2 = ( v: IVector2, mn: Readonly<number>, mx: Readonly<number> ) : void =>
+export const clampVec2 = ( v: IVector2, mn: Readonly<number>, mx: Readonly<number> ) : void =>
 {
-	v[0] = getClampedNumber ( v[0], mn, mx );
-	v[1] = getClampedNumber ( v[1], mn, mx );
+	v[0] = clampNumber ( v[0], mn, mx );
+	v[1] = clampNumber ( v[1], mn, mx );
 }
 
 
@@ -79,11 +79,11 @@ const clampVec2 = ( v: IVector2, mn: Readonly<number>, mx: Readonly<number> ) : 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-const clampVec3 = ( v: IVector3, mn: Readonly<number>, mx: Readonly<number> ) : void =>
+export const clampVec3 = ( v: IVector3, mn: Readonly<number>, mx: Readonly<number> ) : void =>
 {
-	v[0] = getClampedNumber ( v[0], mn, mx );
-	v[1] = getClampedNumber ( v[1], mn, mx );
-	v[2] = getClampedNumber ( v[2], mn, mx );
+	v[0] = clampNumber ( v[0], mn, mx );
+	v[1] = clampNumber ( v[1], mn, mx );
+	v[2] = clampNumber ( v[2], mn, mx );
 }
 
 
@@ -93,47 +93,12 @@ const clampVec3 = ( v: IVector3, mn: Readonly<number>, mx: Readonly<number> ) : 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-const clampVec4 = ( v: IVector4, mn: Readonly<number>, mx: Readonly<number> ) : void =>
+export const clampVec4 = ( v: IVector4, mn: Readonly<number>, mx: Readonly<number> ) : void =>
 {
-	v[0] = getClampedNumber ( v[0], mn, mx );
-	v[1] = getClampedNumber ( v[1], mn, mx );
-	v[2] = getClampedNumber ( v[2], mn, mx );
-	v[3] = getClampedNumber ( v[3], mn, mx );
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
-//	Clamp the number or vector to the given range.
-//
-///////////////////////////////////////////////////////////////////////////////
-
-export const clamp = ( v: IClampInputType, mn: Readonly<number>, mx: Readonly<number> ) : IClampInputType =>
-{
-	if ( typeof v === "number" )
-	{
-		return getClampedNumber ( v, mn, mx );
-	}
-
-	else if ( 2 === v.length )
-	{
-		clampVec2 ( v, mn, mx );
-		return v;
-	}
-
-	else if ( 3 === v.length )
-	{
-		clampVec3 ( v, mn, mx );
-		return v;
-	}
-
-	else if ( 4 === v.length )
-	{
-		clampVec4 ( v, mn, mx );
-		return v;
-	}
-
-	throw new Error ( "Invalid input type for clamp function" );
+	v[0] = clampNumber ( v[0], mn, mx );
+	v[1] = clampNumber ( v[1], mn, mx );
+	v[2] = clampNumber ( v[2], mn, mx );
+	v[3] = clampNumber ( v[3], mn, mx );
 }
 
 
@@ -217,3 +182,53 @@ export const midPoint = ( out: IVector3, a: Readonly<IVector3>, b: Readonly<IVec
 	vec3.scale ( out, out, 0.5 );
 	return out;
 };
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Fix the given angle by keeping it in the given range.
+ * http://stackoverflow.com/questions/1628386/normalise-orientation-between-0-and-360
+ * @param {number} angle - The angle to fix.
+ * @param {number} low - The low end of the range.
+ * @param {number} high - The high end of the range.
+ * @returns {number} The fixed angle.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export const fixAngle = ( angle: number, low: number, high: number ) : number =>
+{
+  const width = high - low;
+  const offsetValue = angle - low;
+  return ( offsetValue - ( Math.floor ( offsetValue / width ) * width ) ) + low;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Return e^(-u)
+ * @param {number} u - The input value in the range [0,1].
+ * @returns {number} The output value in the range [0,1].
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export const exponentialDecay = ( u: number ) : number =>
+{
+	// Handle when input is out of range.
+  if ( u < 0 )
+  {
+    return 0;
+  }
+  if ( u > 1 )
+  {
+    return 1;
+  }
+
+  // See http://www.wolframalpha.com/input/?i=y%3De^-x
+  u *= 6;
+  u -= 3;
+  u = Math.exp ( -u );
+  u /= 20;
+
+  // Return modified value.
+  return u;
+}

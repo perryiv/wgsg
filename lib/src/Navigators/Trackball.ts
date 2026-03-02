@@ -12,7 +12,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { NavBase as BaseClass } from "./NavBase";
+import {
+	NavBase as BaseClass,
+	type INavigationState,
+} from "./NavBase";
 import {
 	Perspective,
 	ProjectionBase as Projection,
@@ -34,6 +37,7 @@ import {
 import type {
 	IEvent,
 	IMatrix44,
+	IRotationStep,
 	IVector2,
 	IVector3,
 	IVector4,
@@ -53,7 +57,7 @@ import {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-interface ITrackballState
+interface ITrackballState extends INavigationState
 {
 	center: IVector3;
 	distance: number;
@@ -370,6 +374,65 @@ export class Trackball extends BaseClass
 	}
 
 	/**
+	 * Get the internal state.
+	 * @returns {INavigationState} The internal state.
+	 */
+	public override getInternalState() : INavigationState
+	{
+		const state = this.#state;
+		const result: ITrackballState = {
+			center: [ ...state.center ],
+			distance: state.distance,
+			rotation: [ ...state.rotation ],
+		};
+		return result;
+	}
+
+	/**
+	 * Set the internal state.
+	 * @param {INavigationState} state - The internal state.
+	 */
+	public override setInternalState ( state: Readonly<INavigationState> ) : void
+	{
+		const input = ( state as Readonly<ITrackballState> );
+		this.center = input.center;
+		this.distance = input.distance;
+		this.rotation = input.rotation;
+	}
+
+	/**
+	 * Blend the given navigation states.
+	 * @param {INavigationState} from - The starting state.
+	 * @param {INavigationState} to - The ending state.
+	 * @param {number} fraction - The fraction between the two states.
+	 * @returns {INavigationState} The blended state.
+	 */
+	public override blend ( from: Readonly<INavigationState>, to: Readonly<INavigationState>, fraction: number ) : INavigationState
+	{
+		const fromState = from as Readonly<ITrackballState>;
+		const toState = to as Readonly<ITrackballState>;
+
+		// Lerp the center.
+		const center: IVector3 = [ 0, 0, 0 ];
+		vec3.lerp ( center, fromState.center, toState.center, fraction );
+
+		// Lerp the distance.
+		const distance = ( ( 1 - fraction ) * fromState.distance ) + ( fraction * toState.distance );
+
+		// Slerp the rotation.
+		const rotation: IVector4 = [ 0, 0, 0, 1 ];
+		quat.slerp ( rotation, fromState.rotation, toState.rotation, fraction );
+
+		// Make and return the result.
+		const result: ITrackballState = {
+			center,
+			distance,
+			rotation,
+		};
+		return result;
+	}
+
+	/**
 	 * Set the navigator so that the sphere is completely within the view-volume.
 	 * @param {object} input - The input parameters.
 	 * @param {Sphere} input.sphere - The sphere to view.
@@ -540,8 +603,9 @@ export class Trackball extends BaseClass
 	 * @param {object} input - The input parameters.
 	 * @param {IEvent} input.event - The event.
 	 * @param {number} input.scale - The rotation scale factor.
+	 * @returns {IRotationStep | null} The axis and angle of rotation, or null if the rotation failed.
 	 */
-	public override mouseRotate ( input: { event: IEvent, scale: number } ) : void
+	public override mouseRotate ( input: { event: IEvent, scale: number } ) : ( IRotationStep | null )
 	{
 		// Get input.
 		const { event, scale } = input;
@@ -552,13 +616,13 @@ export class Trackball extends BaseClass
 		// Handle invalid input.
 		if ( !cm || !pm )
 		{
-			return;
+			return null;
 		}
 
 		// Handle zero distance between screen points.
 		if ( true === vec2.equals ( cm, pm ) )
 		{
-			return;
+			return null;
 		}
 
 		// Get the line under the current mouse point in global space.
@@ -567,7 +631,7 @@ export class Trackball extends BaseClass
 		// Handle invalid line.
 		if ( !cl?.valid )
 		{
-			return;
+			return null;
 		}
 
 		// Get the line under the previous mouse point in global space.
@@ -576,7 +640,7 @@ export class Trackball extends BaseClass
 		// Handle invalid line.
 		if ( !pl?.valid )
 		{
-			return;
+			return null;
 		}
 
 		// Make sure the lines are normalized.
@@ -625,8 +689,8 @@ export class Trackball extends BaseClass
 		// By the time we get to here this should not happen.
 		if ( numIntersections !== 4 )
 		{
-			// console.log ( "No intersections with the trackball sphere." );
-			return;
+			console.warn ( "No intersections with the trackball sphere" );
+			return null;
 		}
 
 		// Get the smaller parameter because that is the closest intersection.
@@ -658,7 +722,7 @@ export class Trackball extends BaseClass
 		// Handle invalid angles.
 		if ( false === isFiniteNumber ( angle ) )
 		{
-			return;
+			return null;
 		}
 
 		// Rotate the trackball.
@@ -666,5 +730,8 @@ export class Trackball extends BaseClass
 
 		// Request a render.
 		viewer.requestRender();
+
+		// Return the axis and angle.
+		return { axis, angle };
 	}
 }

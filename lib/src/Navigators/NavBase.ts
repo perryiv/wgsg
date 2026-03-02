@@ -18,10 +18,23 @@ import { Sphere } from "../Math";
 import type {
 	IEvent,
 	IMatrix44,
+	IRotationStep,
 	IVector2,
 	IVector3,
 	IVector4,
 } from "../Types";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Types used below and elsewhere.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export interface INavigationState
+{
+	ignore?: number;
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -83,8 +96,9 @@ export abstract class NavBase extends BaseClass
 	 * @param {object} input - The input parameters.
 	 * @param {IEvent} input.event - The event.
 	 * @param {number} input.scale - The rotation scale factor.
+	 * @returns {IRotationStep | null} The rotation step or null if no rotation.
 	 */
-	public abstract mouseRotate ( input: { event: IEvent, scale: number } ) : void;
+	public abstract mouseRotate ( input: { event: IEvent, scale: number } ) : ( IRotationStep | null );
 
 	/**
 	 * Translate the navigator.
@@ -104,6 +118,26 @@ export abstract class NavBase extends BaseClass
 	 * Reset the navigator to its default state.
 	 */
 	public abstract reset() : void;
+
+	/**
+	 * Get the internal state.
+	 * @returns {INavigationState} The internal state.
+	 */
+	public abstract getInternalState() : INavigationState;
+
+	/**
+	 * Set the internal state.
+	 * @param {INavigationState} state - The internal state.
+	 */
+	public abstract setInternalState ( state: Readonly<INavigationState> ) : void;
+
+	/**
+	 * Blend the given navigation states.
+	 * @param {INavigationState} from - The starting state.
+	 * @param {INavigationState} to - The ending state.
+	 * @param {number} fraction - The fraction between the two states.
+	 */
+	public abstract blend ( from: Readonly<INavigationState>, to: Readonly<INavigationState>, fraction: number ) : INavigationState;
 
 	/**
 	 * Set the navigator so that the sphere is completely within the view-volume.
