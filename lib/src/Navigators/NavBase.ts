@@ -19,6 +19,7 @@ import type {
 	IEvent,
 	IMatrix44,
 	IRotationStep,
+	ITranslateScreenStep,
 	IVector2,
 	IVector3,
 	IVector4,
@@ -105,8 +106,9 @@ export abstract class NavBase extends BaseClass
 	 * @param {object} input - The input parameters.
 	 * @param {IEvent} input.event - The event.
 	 * @param {number} input.scale - The translation scale factor.
+	 * @returns {ITranslateScreenStep | null} The translation step or null if no translation.
 	 */
-	public abstract mouseTranslate ( input: { event: IEvent, scale: number } ) : void;
+	public abstract mouseTranslate ( input: { event: IEvent, scale: number } ) : ( ITranslateScreenStep | null );
 
 	/**
 	 * Zoom the navigator.

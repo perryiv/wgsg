@@ -22,7 +22,7 @@ import { clampNumber } from "../Tools";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export type IAnimationFunction = ( ( fraction: number ) => void );
+export type IAnimationFunction = ( ( fraction: number, animation: Animation ) => void );
 export type ITimeoutHandle = number;
 
 
@@ -120,7 +120,7 @@ export class Animation extends BaseClass
 		if ( elapsedTime >= duration )
 		{
 			// Call the animation function one last time.
-			fun ( 1.0 );
+			fun ( 1.0, this );
 
 			// console.log ( `Animation '${this.#name}' completed because enough time has passed` );
 
@@ -138,7 +138,7 @@ export class Animation extends BaseClass
 		// console.log ( `Animation '${this.#name}' step` );
 
 		// Call the animation function.
-		fun ( fraction );
+		fun ( fraction, this );
 
 		// Request the next step.
 		Animation.callSoon ( () =>
@@ -190,5 +190,14 @@ export class Animation extends BaseClass
 		this.#name = null;
 		this.#startTime = 0;
 		this.#duration = 0;
+	}
+
+	/**
+	 * Get the name of the current animation.
+	 * @returns {string | null} The name of the current animation or null.
+	 */
+	public get name() : ( string | null )
+	{
+		return this.#name;
 	}
 }
