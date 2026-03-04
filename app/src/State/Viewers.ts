@@ -28,6 +28,7 @@ export interface IViewerStore
 	getViewer: ( id: string ) => ( Viewer | null );
 	setViewer: ( id: string, viewer: Viewer ) => void;
 	removeViewer: ( id: string ) => void;
+	clearViewers: () => void;
 }
 
 
