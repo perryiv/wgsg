@@ -138,7 +138,7 @@ export class Viewer extends BaseClass
 				{
 					// There has to be an animation function already set.
 					// Otherwise, this doesn't do anything.
-					this.#animations.nav.start ( this.options.duration.mouse_throw );
+					this.animations.nav.start ( this.options.duration.mouse_throw );
 				}
 			}
 		} );
