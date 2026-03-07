@@ -42,6 +42,7 @@ import type {
 	IMouseDistanceEvent,
 	IMouseState,
 	IVector2,
+	IViewerOptions,
 } from "../Types";
 
 
@@ -92,6 +93,7 @@ export class Viewer extends BaseClass
 	#branches: IViewerSceneBranches = Viewer.makeBranches ( true );
 	#keysDown: Set < string > = new Set < string > ();
 	#animations: IAnimations = { nav: new Animation() };
+	#options: IViewerOptions = Viewer.makeOptions();
 	static #commands: ICommandMap = makeCommands();
 	static #inputToCommand: IInputToCommandNameMap = makeInputToCommandMap();
 
@@ -127,9 +129,17 @@ export class Viewer extends BaseClass
 		this.#clientListeners.add ( "mouse_distance", ( event: IEvent ) =>
 		{
 			const { distance } = ( event as IMouseDistanceEvent );
-			if ( distance > 10 )
+
+			// Did the mouse move far enough to be considered a "throw"?
+			if ( ( distance >= this.options.distance.mouse_throw ) )
 			{
-				this.#animations.nav.start ( 1500 );
+				// Are we allowed to animate?
+				if ( true === this.options.animations.allow )
+				{
+					// There has to be an animation function already set.
+					// Otherwise, this doesn't do anything.
+					this.animations.nav.start ( this.options.duration.mouse_throw );
+				}
 			}
 		} );
 	}
@@ -143,7 +153,7 @@ export class Viewer extends BaseClass
 		this.removeKeyboardEventListeners();
 		this.removeMouseEventListeners();
 
-		// Help the garbage collection by seting these to initial or null values.
+		// Help the garbage collection by setting these to initial or null values.
 		this.#mouse = Viewer.makeMouseData();
 		this.#navBase = null;
 		this.#eventHandlers = [];
@@ -153,6 +163,7 @@ export class Viewer extends BaseClass
 		this.#branches = Viewer.makeBranches ( false );
 		this.#keysDown.clear();
 		this.#animations.nav.stop();
+		this.#options = Viewer.makeOptions();
 
 		// Call the base class function.
 		super.destroy();
@@ -204,6 +215,26 @@ export class Viewer extends BaseClass
 		}
 
 		return { root, fixed, nav, model, extra };
+	}
+
+	/**
+	 * Make the options.
+	 * @returns {IViewerOptions} The options.
+	 */
+	protected static makeOptions() : IViewerOptions
+	{
+		return {
+			animations: {
+				allow: true
+			},
+			distance: {
+				mouse_throw: 2
+			},
+			duration: {
+				mouse_throw: 1500,
+				view_reset: 1000
+			}
+		};
 	}
 
 	/**
@@ -515,8 +546,11 @@ export class Viewer extends BaseClass
 		// Shortcuts.
 		const { sphere, resetRotation, animate } = input;
 
+		// If the animate option is not set then use the one from the options.
+		const allowAnimations = ( animate ?? this.options.animations.allow );
+
 		// If we are not animating then set it and return.
-		if ( !animate )
+		if ( !allowAnimations )
 		{
 			// Have the navigator view the sphere.
 			this.navBase.viewSphere ( { sphere, projection: this.projection, resetRotation } );
@@ -539,14 +573,16 @@ export class Viewer extends BaseClass
 		// Return to the original state.
 		this.navBase.setInternalState ( navState1 );
 
-		// Start an animation between the two states.
+		// Set an animation function that blends between the two states.
 		this.animations.nav.set ( `${this.type}.viewSphere()`, ( fraction: number ) : void =>
 		{
 			const newState = this.navBase.blend ( navState1, navState2, fraction );
 			this.navBase.setInternalState ( newState );
 			this.requestRender();
 		} );
-		this.animations.nav.start ( 1000 ); // Duration in milliseconds.
+
+		// Start the animation and pass the duration in milliseconds.
+		this.animations.nav.start ( this.options.duration.view_reset );
 	}
 
 	/**
@@ -906,6 +942,15 @@ export class Viewer extends BaseClass
 	public get animations() : IAnimations
 	{
 		return this.#animations;
+	}
+
+	/**
+	 * Get the options.
+	 * @returns {IViewerOptions} The options.
+	 */
+	public get options() : IViewerOptions
+	{
+		return this.#options;
 	}
 
 	/**

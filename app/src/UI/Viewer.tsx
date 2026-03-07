@@ -188,7 +188,7 @@ export function Viewer ( { style }: IViewerProps )
 		// Build the scene.
 		console.log ( `Adding test scene to viewer ${viewer.id}` );
 		viewer.modelScene = buildTestScene();
-		viewer.viewAll();
+		viewer.viewAll ( { animate: false } );
 		viewer.requestRender();
 	},
 	[ buildTestScene, getOrCreateViewer, initDevice ] );

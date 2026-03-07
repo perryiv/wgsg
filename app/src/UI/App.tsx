@@ -15,7 +15,7 @@
 import { Button } from "./Button";
 import { Device } from "../../../lib/src";
 import { Panel } from "./Panel";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useViewerStore } from "../State";
 import { Viewer, VIEWER_NAME } from "./Viewer";
 
@@ -29,41 +29,50 @@ import { Viewer, VIEWER_NAME } from "./Viewer";
 export function App()
 {
 	// Get state.
-	const getViewer = useViewerStore ( ( state ) => state.getViewer );
+	const viewers = useViewerStore ( ( state ) => state.viewers );
+	const [ count, setCount ] = useState ( 0 );
 
 	//
-	// Get the viewer or throw an execption.
+	// Handle the "allow animations" button.
 	//
-	const getViewerOrThrow = useCallback ( () =>
+	const handleAllowAnimations = useCallback ( () =>
 	{
-		const viewer = getViewer ( VIEWER_NAME );
-		if ( !viewer )
+		const viewer = viewers.get ( VIEWER_NAME );
+		if ( viewer )
 		{
-			throw new Error ( `No viewer with name: ${VIEWER_NAME}` );
+			const { animations } = viewer.options;
+			animations.allow = !animations.allow;
+			setCount ( count + 1 );
 		}
-		return viewer;
 	},
-	[ getViewer ] );
+	[ count, viewers ] );
 
 	//
 	// Render the 3D viewer.
 	//
 	const handleViewerRender = useCallback ( () =>
 	{
-		const viewer = getViewerOrThrow();
-		viewer.requestRender();
+		const viewer = viewers.get ( VIEWER_NAME );
+		if ( viewer )
+		{
+			viewer.requestRender();
+		}
 	},
-	[ getViewerOrThrow ] );
+	[ viewers ] );
 
 	//
 	// Reset the viewer's camera.
 	//
 	const handleViewerReset = useCallback ( () =>
 	{
-		const viewer = getViewerOrThrow();
-		viewer.viewAll ( { resetRotation: true } );
+		const viewer = viewers.get ( VIEWER_NAME );
+		if ( viewer )
+		{
+			viewer.viewAll ( { resetRotation: true } );
+			viewer.requestRender();
+		}
 	},
-	[ getViewerOrThrow ] );
+	[ viewers ] );
 
 	//
 	// Simulate a lost device.
@@ -79,6 +88,21 @@ export function App()
 	[] );
 
 	//
+	// Return the text for allowing animations.
+	//
+	const allowAnimationsText = useMemo ( () =>
+	{
+		const viewer = viewers.get ( VIEWER_NAME );
+		if ( !viewer )
+		{
+			return "Animation state unknown";
+		}
+		return `Allow animations ${ viewer.options.animations.allow ? " on" : " off" }`;
+	},
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	[ count, viewers ] );
+
+	//
 	// Called when the component mounts.
 	//
 	useEffect ( () =>
@@ -92,7 +116,51 @@ export function App()
 	},
 	[] );
 
-	// console.log ( "Rendering app" );
+	console.log ( "Rendering app" );
+
+	//
+	// If there's no viewer then do not render the panel.
+	//
+	const renderPanel = useCallback ( () =>
+	{
+		const viewer = viewers.get ( VIEWER_NAME );
+		if ( !viewer )
+		{
+			return null;
+		}
+
+		return (
+			<Panel>
+				<div
+					style = { {
+						display: "flex",
+						flexDirection: "column",
+						alignItems: "flex-start",
+					} }
+				>
+					<Button onClick = { handleAllowAnimations } >
+						{ allowAnimationsText }
+					</Button>
+					<Button onClick = { handleViewerRender } >
+						Render viewer
+					</Button>
+					<Button onClick = { handleViewerReset } >
+						Reset navigation
+					</Button>
+					<Button onClick = { handleSimulateDeviceLost } >
+						Simulate device lost
+					</Button>
+				</div>
+			</Panel>
+		)
+	}, [
+		allowAnimationsText,
+		handleAllowAnimations,
+		handleSimulateDeviceLost,
+		handleViewerRender,
+		handleViewerReset,
+		viewers,
+	] );
 
 	//
 	// Render the components.
@@ -105,25 +173,7 @@ export function App()
 				background: "linear-gradient(#DDEEFF,#778899)"
 			} }
 		>
-			<Panel>
-				<div
-					style = { {
-						display: "flex",
-						flexDirection: "column",
-						alignItems: "flex-start",
-					} }
-				>
-					<Button onClick = { handleViewerReset } >
-						Reset navigation
-					</Button>
-					<Button onClick = { handleViewerRender } >
-						Render viewer
-					</Button>
-					<Button onClick = { handleSimulateDeviceLost } >
-						Simulate device lost
-					</Button>
-				</div>
-			</Panel>
+			{ renderPanel() }
 			<Viewer
 				style = { {
 					width: "100vw",

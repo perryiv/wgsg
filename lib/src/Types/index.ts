@@ -22,6 +22,7 @@ export * from "./Line";
 export * from "./Matrix";
 export * from "./Mouse";
 export * from "./Navigator";
+export * from "./Options";
 export * from "./Plane";
 export * from "./Size";
 export * from "./Sphere";

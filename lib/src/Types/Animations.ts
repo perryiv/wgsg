@@ -12,16 +12,17 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Animation } from "../Viewers/Animation";
+export type IAnimationFunction = ( ( fraction: number, animation: IAnimation ) => void );
 
-
-///////////////////////////////////////////////////////////////////////////////
-//
-//	Types related to animations.
-//
-///////////////////////////////////////////////////////////////////////////////
+export interface IAnimation
+{
+	set: ( name: string, fun: IAnimationFunction ) => void;
+	start: ( duration: number ) => void;
+	stop: () => void;
+	get name(): ( string | null );
+}
 
 export interface IAnimations
 {
-	nav: Animation
+	nav: IAnimation;
 }

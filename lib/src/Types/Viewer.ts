@@ -39,9 +39,9 @@ export interface IViewer
 	projMatrix: Readonly<IMatrix44>;
 	viewport: Readonly<IViewport>;
 
+	get animations(): IAnimations;
 	getCommand: ( event: IEvent ) => ( ICommand | null );
 	makeLine: ( input: { screenPoint: Readonly<IVector2>, viewMatrix?: Readonly<IMatrix44> } ) => ( Line | null );
-	animations: IAnimations;
 	requestRender: ( () => void );
 	viewAll: ( options?: { resetRotation?: boolean, animate?: boolean } ) => void;
 }
