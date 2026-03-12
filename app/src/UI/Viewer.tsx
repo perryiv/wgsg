@@ -30,6 +30,8 @@ import {
 	Viewer as InternalViewer,
 } from "../../../lib/src";
 
+let mountCount = 0;
+let unmountCount = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -82,11 +84,11 @@ export function Viewer ( { style }: IViewerProps )
 	[] );
 
 	//
-	// Handle when the device is lost.
+	// Handle when there is a new device.
 	//
-	const handleDeviceLost = useCallback ( () =>
+	const handleNewDevice = useCallback ( () =>
 	{
-		console.log ( "In handleDeviceLost()" );
+		console.log ( "In handleNewDevice()" );
 
 		// Get the viewer.
 		const viewer = getViewer ( VIEWER_NAME );
@@ -94,12 +96,12 @@ export function Viewer ( { style }: IViewerProps )
 		// Handle no viewer.
 		if ( !viewer )
 		{
-			console.log ( "Out handleDeviceLost(), no viewer" );
+			console.log ( "Out handleNewDevice(), no viewer" );
 			return;
 		}
 
-		// Tell the viewer to handle the lost device.
-		viewer.handleDeviceLost();
+		// Tell the viewer to handle the new device.
+		viewer.handleNewDevice();
 
 		// Get the scene.
 		const { scene } = viewer;
@@ -107,7 +109,7 @@ export function Viewer ( { style }: IViewerProps )
 		// Handle no scene.
 		if ( !scene )
 		{
-			console.log ( "Out handleDeviceLost(), no scene" );
+			console.log ( "Out handleNewDevice(), no scene" );
 			return;
 		}
 
@@ -118,7 +120,7 @@ export function Viewer ( { style }: IViewerProps )
 		// Render again so that we see the rebuilt scene.
 		viewer.requestRender();
 
-		console.log ( "Out handleDeviceLost()" );
+		console.log ( "Out handleNewDevice()" );
 	},
 	[ getViewer ] );
 
@@ -138,6 +140,7 @@ export function Viewer ( { style }: IViewerProps )
 
 		// Initialize the singleton device.
 		await Device.init();
+
 		console.log ( `Singleton device ${Device.instance.id} initialized` );
 
 		// Handle device lost.
@@ -146,16 +149,14 @@ export function Viewer ( { style }: IViewerProps )
 			// It's probably already destroyed but make sure.
 			Device.destroy();
 
-			console.log ( `Singleton device ${Device.instance.id} destroyed` );
-
 			// Make it again.
 			await initDevice();
 
 			// This will rebuild the resources.
-			handleDeviceLost();
+			handleNewDevice();
 		} );
 	},
-	[ handleDeviceLost ] );
+	[ handleNewDevice ] );
 
 	//
 	// Handle getting or creating the viewer.
@@ -194,7 +195,9 @@ export function Viewer ( { style }: IViewerProps )
 	//
 	const handleMount = useCallback ( async () =>
 	{
-		console.log ( `In handleMount() for viewer component ${id}` );
+		++mountCount;
+
+		console.log ( `In handleMount() for viewer component ${id}, mountCount: ${mountCount}` );
 
 		// Initialize the device if needed.
 		await initDevice();
@@ -208,7 +211,9 @@ export function Viewer ( { style }: IViewerProps )
 		viewer.viewAll ( { animate: false } );
 		viewer.requestRender();
 
-		console.log ( `Out handleMount() for viewer component ${id}` );
+		console.log ( `Out handleMount() for viewer component ${id}, mountCount: ${mountCount}` );
+
+		--mountCount;
 	},
 	[ buildTestScene, getOrCreateViewer, id, initDevice ] );
 
@@ -217,11 +222,13 @@ export function Viewer ( { style }: IViewerProps )
 	//
 	const handleUnmount = useCallback ( () =>
 	{
-		console.log ( `In handleUnmount() for viewer component ${id}` );
-		handleDeviceLost();
-		console.log ( `Out handleUnmount() for viewer component ${id}` );
+		++unmountCount;
+		console.log ( `In handleUnmount() for viewer component ${id}, unmountCount: ${unmountCount}` );
+		Device.destroy();
+		console.log ( `Out handleUnmount() for viewer component ${id}, unmountCount: ${unmountCount}` );
+		--unmountCount;
 	},
-	[ id, handleDeviceLost ] );
+	[ id ] );
 
 	//
 	// Called when the component mounts.
