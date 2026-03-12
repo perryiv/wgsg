@@ -15,7 +15,7 @@
 import { App } from "./UI/App"
 import { createRoot } from "react-dom/client"
 import { CssBaseline } from "@mui/material";
-// import { StrictMode } from "react"
+import { StrictMode } from "react"
 import { theme } from "./UI/Theme";
 import { ThemeProvider } from "@mui/material/styles";
 
@@ -27,15 +27,15 @@ import { ThemeProvider } from "@mui/material/styles";
 ///////////////////////////////////////////////////////////////////////////////
 
 createRoot ( ( document.getElementById ( "root" ) )! ).render (
-	// <StrictMode>
+	<StrictMode>
 		<ThemeProvider theme = { theme }>
 			<CssBaseline />
 			<App />
 		</ThemeProvider>
-	// </StrictMode>
+	</StrictMode>
 );
 
 // Note: When developing, StrictMode makes it mount, unmount, and mount again.
-// Because of the way the code is organized, tThis creates the singleton WebGPU
+// Because of the way the code is organized, this creates the singleton WebGPU
 // device, destroys it, and creates it again. Unfortunately, the singleton
 // shaders that are made with the first device all become invalid.

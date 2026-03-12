@@ -90,12 +90,15 @@ export class Device extends Base
 		// Set the label for debugging.
 		device.label = `Device ${Device.#instance.id}`;
 
+		// Capture the id now for use below.
+		const id = Device.#instance.id;
+
 		// Handle device lost events. We don't have enough information here to
 		// rebuild everything that needs to be rebuilt, so we just destroy the
 		// singleton instance.
 		void device.lost.then ( ( { reason, message }: GPUDeviceLostInfo ) =>
 		{
-			console.log ( `Device lost, reason: ${reason}, message: ${message}` );
+			console.log ( `Device ${id} lost, reason: ${reason}, message: ${message}` );
 			Device.destroy();
 		} );
 	}
@@ -111,6 +114,8 @@ export class Device extends Base
 			const device = instance.device;
 			if ( device )
 			{
+				console.log ( `Destroying singleton device ${instance.id}` );
+
 				// Destroy the device. This prevents any future operations on it.
 				device.destroy();
 			}

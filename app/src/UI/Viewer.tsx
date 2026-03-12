@@ -30,6 +30,8 @@ import {
 	Viewer as InternalViewer,
 } from "../../../lib/src";
 
+let mountCount = 0;
+let unmountCount = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -82,21 +84,24 @@ export function Viewer ( { style }: IViewerProps )
 	[] );
 
 	//
-	// Handle when the device is lost.
+	// Handle when there is a new device.
 	//
-	const handleDeviceLost = useCallback ( () =>
+	const handleNewDevice = useCallback ( () =>
 	{
+		console.log ( "In handleNewDevice()" );
+
 		// Get the viewer.
 		const viewer = getViewer ( VIEWER_NAME );
 
 		// Handle no viewer.
 		if ( !viewer )
 		{
+			console.log ( "Out handleNewDevice(), no viewer" );
 			return;
 		}
 
-		// Tell the viewer to handle the lost device.
-		viewer.handleDeviceLost();
+		// Tell the viewer to handle the new device.
+		viewer.handleNewDevice();
 
 		// Get the scene.
 		const { scene } = viewer;
@@ -104,6 +109,7 @@ export function Viewer ( { style }: IViewerProps )
 		// Handle no scene.
 		if ( !scene )
 		{
+			console.log ( "Out handleNewDevice(), no scene" );
 			return;
 		}
 
@@ -113,6 +119,8 @@ export function Viewer ( { style }: IViewerProps )
 
 		// Render again so that we see the rebuilt scene.
 		viewer.requestRender();
+
+		console.log ( "Out handleNewDevice()" );
 	},
 	[ getViewer ] );
 
@@ -121,14 +129,18 @@ export function Viewer ( { style }: IViewerProps )
 	//
 	const initDevice = useCallback ( async () =>
 	{
+		console.log ( "In initDevice()" );
+
 		// Do nothing if the device is valid.
 		if ( true === Device.valid )
 		{
+			console.log ( "Device is valid" );
 			return;
 		}
 
 		// Initialize the singleton device.
 		await Device.init();
+
 		console.log ( `Singleton device ${Device.instance.id} initialized` );
 
 		// Handle device lost.
@@ -141,16 +153,18 @@ export function Viewer ( { style }: IViewerProps )
 			await initDevice();
 
 			// This will rebuild the resources.
-			handleDeviceLost();
+			handleNewDevice();
 		} );
 	},
-	[ handleDeviceLost ] );
+	[ handleNewDevice ] );
 
 	//
 	// Handle getting or creating the viewer.
 	//
 	const getOrCreateViewer = useCallback ( () =>
 	{
+		console.log ( "In getOrCreateViewer()" );
+
 		// This should never happen.
 		if ( !canvas.current )
 		{
@@ -168,17 +182,23 @@ export function Viewer ( { style }: IViewerProps )
 			console.log ( `Internal viewer ${viewer.id} created` );
 		}
 
+		console.log ( "Out getOrCreateViewer()" );
+
 		// Return the viewer.
 		return viewer;
 	},
 	[ getViewer, setViewer ] );
 
 	//
-	// Local function to handle initialization.
+	// Local function to handle when this component is mounted.
 	// This has to be async because of how the device initializes.
 	//
-	const handleInit = useCallback ( async () =>
+	const handleMount = useCallback ( async () =>
 	{
+		++mountCount;
+
+		console.log ( `In handleMount() for viewer component ${id}, mountCount: ${mountCount}` );
+
 		// Initialize the device if needed.
 		await initDevice();
 
@@ -190,30 +210,48 @@ export function Viewer ( { style }: IViewerProps )
 		viewer.modelScene = buildTestScene();
 		viewer.viewAll ( { animate: false } );
 		viewer.requestRender();
+
+		console.log ( `Out handleMount() for viewer component ${id}, mountCount: ${mountCount}` );
+
+		--mountCount;
 	},
-	[ buildTestScene, getOrCreateViewer, initDevice ] );
+	[ buildTestScene, getOrCreateViewer, id, initDevice ] );
+
+	//
+	// Local function to handle when the component is unmounted.
+	//
+	const handleUnmount = useCallback ( () =>
+	{
+		++unmountCount;
+		console.log ( `In handleUnmount() for viewer component ${id}, unmountCount: ${unmountCount}` );
+		Device.destroy();
+		console.log ( `Out handleUnmount() for viewer component ${id}, unmountCount: ${unmountCount}` );
+		--unmountCount;
+	},
+	[ id ] );
 
 	//
 	// Called when the component mounts.
 	//
 	useEffect ( () =>
 	{
-		console.log ( `Viewer component ${id} mounted` );
+		// console.log ( `Viewer component ${id} mounted` );
 
 		// This has to be async because of the device initialization.
 		void ( async () =>
 		{
-			await handleInit();
+			await handleMount();
 		} ) ();
 
 		return ( () =>
 		{
-			console.log ( `Viewer component ${id} unmounted` );
+			// console.log ( `Viewer component ${id} unmounted` );
+			handleUnmount();
 		} );
 	},
-	[ id, handleInit ] );
+	[ id, handleMount, handleUnmount ] );
 
-	console.log ( "Rendering viewer component" );
+	// console.log ( `Rendering viewer component ${id}` );
 
 	//
 	// Render the components.

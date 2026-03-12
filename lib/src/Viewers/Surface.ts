@@ -144,7 +144,7 @@ export class Surface extends BaseClass
 		this.#visitors = { update, cull, draw: null };
 
 		// This will make the context and draw visitor.
-		this.handleDeviceLost();
+		this.handleNewDevice();
 	}
 
 	/**
@@ -197,10 +197,16 @@ export class Surface extends BaseClass
 	}
 
 	/**
-	 * Handle when the device is lost.
+	 * Handle when there is a new device.
 	 */
-	public handleDeviceLost () : void
+	public handleNewDevice () : void
 	{
+		// There should be a valid device.
+		if ( false === Device.valid )
+		{
+			throw new Error ( "There is no new device" );
+		}
+
 		// Get the context from the canvas using the new device.
 		const context = Device.instance.getConfiguredContext ( this.canvas );
 

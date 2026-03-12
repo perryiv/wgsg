@@ -55,11 +55,11 @@ export function Panel ( props: IPanelProps )
 	//
 	useEffect ( () =>
 	{
-		console.log ( "Panel component mounted" );
+		// console.log ( "Panel component mounted" );
 
 		return ( () =>
 		{
-			console.log ( "Panel component unmounted" );
+			// console.log ( "Panel component unmounted" );
 		} );
 	},
 	[] );
