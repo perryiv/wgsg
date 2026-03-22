@@ -26,6 +26,7 @@ import { IDeviceOptions, ITextureFormat } from "../Types/Graphics";
 export class Device extends Base
 {
 	static #instance: Device | null = null;
+	static #isInitializing = false;
 	#device: ( GPUDevice | null ) = null;
 	#preferredFormat: ( ITextureFormat | null ) = null;
 
@@ -56,6 +57,12 @@ export class Device extends Base
 			return;
 		}
 
+		// Did we re-enter this function while initializing?
+		if ( true === Device.#isInitializing )
+		{
+			throw new Error ( "Device is already being initialized" );
+		}
+
 		// Shortcut.
 		const { gpu } = globalThis.navigator;
 
@@ -65,12 +72,16 @@ export class Device extends Base
 			throw new Error ( "WebGPU is not supported" );
 		}
 
+		// If we get to here then we're starting the initialization.
+		Device.#isInitializing = true;
+
 		// Get the adapter.
 		const adapter = await gpu.requestAdapter ( options?.requestAdapterOptions );
 
 		// Handle no adapter.
 		if ( !adapter )
 		{
+			Device.#isInitializing = false;
 			throw new Error ( "Failed to get WebGPU adapter" );
 		}
 
@@ -81,17 +92,18 @@ export class Device extends Base
 		// Handle no device.
 		if ( !device )
 		{
+			Device.#isInitializing = false;
 			throw new Error ( "Failed to get device from WebGPU adapter" );
 		}
 
-		// If we get to here then set the singleton instance.
-		Device.#instance = new Device ( device );
+		// Make the new instance.
+		const instance = new Device ( device );
 
 		// Set the label for debugging.
-		device.label = `Device ${Device.#instance.id}`;
+		device.label = `Device ${instance.id}`;
 
 		// Capture the id now for use below.
-		const id = Device.#instance.id;
+		const id = instance.id;
 
 		// Handle device lost events. We don't have enough information here to
 		// rebuild everything that needs to be rebuilt, so we just destroy the
@@ -101,6 +113,12 @@ export class Device extends Base
 			console.log ( `Device ${id} lost, reason: ${reason}, message: ${message}` );
 			Device.destroy();
 		} );
+
+		// If we get to here then set the singleton instance.
+		Device.#instance = instance;
+
+		// We're done initializing.
+		Device.#isInitializing = false;
 	}
 
 	/**
@@ -108,19 +126,44 @@ export class Device extends Base
 	 */
 	public static destroy() : void
 	{
-		const instance = Device.#instance;
-		if ( instance )
+		// Are we destroying while initializing?
+		if ( true === Device.#isInitializing )
 		{
-			const device = instance.device;
-			if ( device )
-			{
-				console.log ( `Destroying singleton device ${instance.id}` );
-
-				// Destroy the device. This prevents any future operations on it.
-				device.destroy();
-			}
+			throw new Error ( "Device is being destroyed while it is being initialized" );
 		}
+
+		// Save the value and set it to null.
+		const instance = Device.#instance;
 		Device.#instance = null;
+
+		// Is there an instance to destroy?
+		if ( !instance )
+		{
+			return;
+		}
+
+		// Get the internal device.
+		const device = instance.device;
+
+		// Handle no device.
+		if ( !device )
+		{
+			return;
+		}
+
+		console.log ( `Destroying singleton device ${instance.id}` );
+
+		// Destroy the device. This prevents any future operations on it.
+		device.destroy();
+	}
+
+	/**
+	 * See if the device is being initialized.
+	 * @returns {boolean} True if the device is being initialized, false otherwise.
+	 */
+	public static get isInitializing() : boolean
+	{
+		return ( true === Device.#isInitializing );
 	}
 
 	/**
