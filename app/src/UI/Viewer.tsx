@@ -130,14 +130,13 @@ export function Viewer ( { style }: IViewerProps )
 	{
 		console.log ( "In initDevice()" );
 
-		// Do nothing if the device is valid.
+		// This should not happen.
 		if ( true === Device.valid )
 		{
-			console.log ( "Device is valid" );
-			return;
+			throw new Error ( "Device is already initialized" );
 		}
 
-		// There is no good way to handle this case so we throw.
+		// This should not happen.
 		if ( true === Device.isInitializing )
 		{
 			throw new Error ( "Device is already being initialized" );
