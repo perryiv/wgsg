@@ -43,6 +43,7 @@ export function App()
 			const { animations } = viewer.options;
 			animations.allow = !animations.allow;
 			setCount ( count + 1 );
+			console.log ( `Allow animations: ${animations.allow}` );
 		}
 	},
 	[ count, viewers ] );
@@ -107,16 +108,16 @@ export function App()
 	//
 	useEffect ( () =>
 	{
-		console.log ( "App component mounted" );
+		// console.log ( "App component mounted" );
 
 		return ( () =>
 		{
-			console.log ( "App component unmounted" );
+			// console.log ( "App component unmounted" );
 		} );
 	},
 	[] );
 
-	console.log ( "Rendering app" );
+	// console.log ( "Rendering app" );
 
 	//
 	// If there's no viewer then do not render the panel.
