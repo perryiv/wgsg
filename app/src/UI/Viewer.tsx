@@ -30,8 +30,6 @@ import {
 	Viewer as InternalViewer,
 } from "../../../lib/src";
 
-let mountCount = 0;
-let unmountCount = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -65,6 +63,7 @@ export function Viewer ( { style }: IViewerProps )
 	// Get state.
 	const [ id, ] = useState < number > ( getNextId ( "Viewer Component" ) );
 	const canvas = useRef < HTMLCanvasElement | null > ( null );
+	const isMounting = useRef ( false );
 	const getViewer = useViewerStore ( ( state ) => state.getViewer );
 	const setViewer = useViewerStore ( ( state ) => state.setViewer );
 
@@ -138,6 +137,12 @@ export function Viewer ( { style }: IViewerProps )
 			return;
 		}
 
+		// There is no good way to handle this case so we throw.
+		if ( true === Device.isInitializing )
+		{
+			throw new Error ( "Device is already being initialized" );
+		}
+
 		// Initialize the singleton device.
 		await Device.init();
 
@@ -195,9 +200,17 @@ export function Viewer ( { style }: IViewerProps )
 	//
 	const handleMount = useCallback ( async () =>
 	{
-		++mountCount;
+		console.log ( `In handleMount() for viewer component ${id}` );
 
-		console.log ( `In handleMount() for viewer component ${id}, mountCount: ${mountCount}` );
+		// Are we still in the middle of the first mount?
+		if ( true === isMounting.current )
+		{
+			console.log ( "We are still handling the previous mount" );
+			return;
+		}
+
+		// If we get to here then set the flag that says we are mounting.
+		isMounting.current = true;
 
 		// Initialize the device if needed.
 		await initDevice();
@@ -211,31 +224,19 @@ export function Viewer ( { style }: IViewerProps )
 		viewer.viewAll ( { animate: false } );
 		viewer.requestRender();
 
-		console.log ( `Out handleMount() for viewer component ${id}, mountCount: ${mountCount}` );
+		// We are done mounting.
+		isMounting.current = false;
 
-		--mountCount;
+		console.log ( `Out handleMount() for viewer component ${id}` );
 	},
 	[ buildTestScene, getOrCreateViewer, id, initDevice ] );
-
-	//
-	// Local function to handle when the component is unmounted.
-	//
-	const handleUnmount = useCallback ( () =>
-	{
-		++unmountCount;
-		console.log ( `In handleUnmount() for viewer component ${id}, unmountCount: ${unmountCount}` );
-		Device.destroy();
-		console.log ( `Out handleUnmount() for viewer component ${id}, unmountCount: ${unmountCount}` );
-		--unmountCount;
-	},
-	[ id ] );
 
 	//
 	// Called when the component mounts.
 	//
 	useEffect ( () =>
 	{
-		// console.log ( `Viewer component ${id} mounted` );
+		console.log ( `Viewer component ${id} mounted` );
 
 		// This has to be async because of the device initialization.
 		void ( async () =>
@@ -245,11 +246,10 @@ export function Viewer ( { style }: IViewerProps )
 
 		return ( () =>
 		{
-			// console.log ( `Viewer component ${id} unmounted` );
-			handleUnmount();
+			console.log ( `Viewer component ${id} unmounted` );
 		} );
 	},
-	[ id, handleMount, handleUnmount ] );
+	[ id, handleMount ] );
 
 	// console.log ( `Rendering viewer component ${id}` );
 
