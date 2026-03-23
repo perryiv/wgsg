@@ -16,6 +16,7 @@ import { Base as BaseClass } from "../Base";
 import { clampNumber, DEG_TO_RAD } from "../Tools";
 import { vec3 } from "gl-matrix";
 import type {
+	CoordinateSystem,
 	ICommand,
 	ICommandMap,
 	ICommandName,
@@ -94,7 +95,7 @@ export class RotateAxisAngle extends Command
 	{
 		const { viewer } = event;
 		const { navBase } = viewer;
-		navBase.rotateAxisAngle ( this.#axis, this.#angle );
+		navBase.rotateAxisAngle ( this.#axis, this.#angle, CoordinateSystem.Global );
 		viewer.requestRender();
 	}
 }
@@ -422,7 +423,7 @@ export class MouseRotate extends Command
 			}
 
 			// Rotate the trackball.
-			navBase.rotateAxisAngle ( axis, ( angle * scale * fraction ) );
+			navBase.rotateAxisAngle ( axis, ( angle * scale * fraction ), CoordinateSystem.Global );
 
 			// Request a render.
 			viewer.requestRender();

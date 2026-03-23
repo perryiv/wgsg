@@ -34,7 +34,8 @@ import {
 	normalizeQuat,
 	normalizeVec3,
 } from "../Tools";
-import type {
+import {
+	CoordinateSystem,
 	IEvent,
 	IMatrix44,
 	IRotationStep,
@@ -57,6 +58,12 @@ import {
 //	Types used below.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+enum RotationMode
+{
+	TRACK_BALL,
+	TURN_TABLE
+}
 
 interface ITrackballState extends INavigationState
 {
@@ -94,6 +101,7 @@ export class Trackball extends BaseClass
 {
 	#matrix: ( IMatrix44 | null ) = null;
 	#inverse: ( IMatrix44 | null ) = null;
+	#mode: RotationMode = RotationMode.TURN_TABLE;
 	#state: ITrackballState = makeDefaultTrackballState();
 
 	/**
@@ -207,6 +215,24 @@ export class Trackball extends BaseClass
 	}
 
 	/**
+	 * Get the rotation mode.
+	 * @returns {RotationMode} The rotation mode.
+	 */
+	public get mode () : RotationMode
+	{
+		return this.#mode;
+	}
+
+	/**
+	 * Set the rotation mode.
+	 * @param {RotationMode} mode - The rotation mode.
+	 */
+	public set mode ( mode: RotationMode )
+	{
+		this.#mode = mode;
+	}
+
+	/**
 	 * Get the center point.
 	 * @returns {IVector3} The center point.
 	 */
@@ -289,8 +315,9 @@ export class Trackball extends BaseClass
 	 * Rotate the navigator.
 	 * @param {IVector3} axis - The rotation axis.
 	 * @param {number} radians - The angle in radians.
+	 * @param {CoordinateSystem} space - The rotation space.
 	 */
-	public override rotateAxisAngle ( axis: IVector3, radians: number ) : void
+	public override rotateAxisAngle ( axis: IVector3, radians: number, space: CoordinateSystem ) : void
 	{
 		// Make sure the axis is normalized.
 		axis = normalizeVec3 ( axis );
@@ -301,12 +328,30 @@ export class Trackball extends BaseClass
 		// Calculate the rotation quaternion.
 		quat.setAxisAngle ( dr, axis, radians );
 
+		// Normalize the quaternion.
 		dr = normalizeQuat ( dr );
 
-		let nr: IVector4 = [ 0, 0, 0, 1 ]; // New rotation.
+		// The new rotation.
+		let nr: IVector4 = [ 0, 0, 0, 1 ];
 
-		// This order is rotation about global axes.
-		quat.multiply ( nr, dr, this.rotation );
+		// Multiply in the correct order.
+		switch ( space )
+		{
+			case CoordinateSystem.Global:
+			{
+				quat.multiply ( nr, dr, this.rotation );
+				break;
+			}
+			case CoordinateSystem.Local:
+			{
+				quat.multiply ( nr, this.rotation, dr );
+				break;
+			}
+			default:
+			{
+				throw new Error ( `Unrecognized coordinate system: ${space as string}` );
+			}
+		}
 
 		// Make sure it's normalized.
 		nr = normalizeQuat ( nr );
@@ -613,6 +658,32 @@ export class Trackball extends BaseClass
 	 */
 	public override mouseRotate ( input: { event: IEvent, scale: number } ) : ( IRotationStep | null )
 	{
+		switch ( this.mode )
+		{
+			case RotationMode.TRACK_BALL:
+			{
+				return this.trackballRotate ( input );
+			}
+			case RotationMode.TURN_TABLE:
+			{
+				return this.turnTableRotate ( input );
+			}
+			default:
+			{
+				throw new Error ( "Unknown rotation mode" );
+			}
+		}
+	}
+
+	/**
+	 * Rotate the navigator as a trackball.
+	 * @param {object} input - The input parameters.
+	 * @param {IEvent} input.event - The event.
+	 * @param {number} input.scale - The rotation scale factor.
+	 * @returns {IRotationStep | null} The axis and angle of rotation, or null if the rotation failed.
+	 */
+	public trackballRotate ( input: { event: IEvent, scale: number } ) : ( IRotationStep | null )
+	{
 		// Get input.
 		const { event, scale } = input;
 
@@ -723,7 +794,10 @@ export class Trackball extends BaseClass
 		axis = normalizeVec3 ( axis );
 
 		// The angle between the two vectors.
-		const angle = vec3.angle ( v0, v1 );
+		let angle = vec3.angle ( v0, v1 );
+
+		// Multiply by the scale.
+		angle *= scale;
 
 		// Handle invalid angles.
 		if ( false === isFiniteNumber ( angle ) )
@@ -732,9 +806,102 @@ export class Trackball extends BaseClass
 		}
 
 		// Rotate the trackball.
-		this.rotateAxisAngle ( axis, angle * scale );
+		this.rotateAxisAngle ( axis, angle, CoordinateSystem.Global );
 
 		// Return the axis and angle.
 		return { axis, angle };
+	}
+
+	/**
+	 * Rotate the navigator as a trackball.
+	 * @param {object} input - The input parameters.
+	 * @param {IEvent} input.event - The event.
+	 * @param {number} input.scale - The rotation scale factor.
+	 * @returns {IRotationStep | null} The axis and angle of rotation, or null if the rotation failed.
+	 */
+	public turnTableRotate ( input: { event: IEvent, scale: number } ) : ( IRotationStep | null )
+	{
+		// Get input.
+		const { event, scale } = input;
+
+		// Get the event properties.
+		const { current: cm, previous: pm } = event;
+
+		// Handle invalid input.
+		if ( !cm || !pm )
+		{
+			return null;
+		}
+
+		// Handle zero distance between screen points.
+		if ( true === vec2.equals ( cm, pm ) )
+		{
+			return null;
+		}
+
+		// We need the inverse of the view matrix in order to proceed.
+		const ivm = this.invViewMatrix;
+
+		// Handle invalid matrix.
+		if ( !ivm )
+		{
+			return null;
+		}
+
+		// We need to slow it down.
+		const sensitivity = 0.2;
+
+		// The vertical mouse distance determines the angle about the global x-axis.
+		const angleX = ( cm[1] - pm[1] ) * DEG_TO_RAD * sensitivity * scale;
+
+		// Rotate about the global x-axis.
+		this.rotateAxisAngle ( [ 1, 0, 0 ], angleX, CoordinateSystem.Global );
+
+		// The horizontal mouse distance determines the angle about the local y-axis.
+		const angleY = ( cm[0] - pm[0] ) * DEG_TO_RAD * sensitivity * scale;
+
+
+		// Make space for the rotation.
+		let dr: IVector4 = [ 0, 0, 0, 1 ];
+
+		// Calculate the rotation quaternion.
+		const yAxis: IVector3 = [ 0, 1, 0 ];
+		quat.setAxisAngle ( dr, yAxis, angleY );
+
+		// Normalize the quaternion.
+		dr = normalizeQuat ( dr );
+
+		// The new rotation.
+		let nr: IVector4 = [ 0, 0, 0, 1 ];
+
+		// This order is rotation about local axes.
+		quat.multiply ( nr, this.rotation, dr );
+
+		// Make sure it's normalized.
+		nr = normalizeQuat ( nr );
+
+		// Set the new rotation.
+		this.rotation = nr;
+
+
+
+
+
+
+
+
+
+
+
+
+
+		// Rotate about the local y-axis.
+		// const globalY: IVector3 = [ 0, 1, 0 ];
+		// const localY: IVector3 = [ 0, 0, 0 ];
+		// vec3.transformMat4 ( localY, globalY, ivm );
+		// this.rotateAxisAngle ( localY, angleY );
+
+		// Return the axis and angle.
+		return { axis: [ 0, 1, 0 ], angle: angleY };
 	}
 }

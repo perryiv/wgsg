@@ -35,11 +35,17 @@ export interface ITranslateScreenStep
 	previous: IVector2;
 }
 
+export enum CoordinateSystem
+{
+	Local,
+	Global,
+}
+
 export interface INavigator
 {
 	mouseRotate: ( ( params: { event: IEvent, scale: number } ) => ( IRotationStep | null ) );
 	mouseTranslate: ( ( params: { event: IEvent, scale: number } ) => ( ITranslateScreenStep | null ) );
-	rotateAxisAngle ( axis: IVector3, radians: number ) : void;
+	rotateAxisAngle ( axis: IVector3, radians: number, space: CoordinateSystem ) : void;
 	rotateQuaternion: ( ( quaternion: IVector4 ) => void );
 	translateScreenXY ( input: { current: IVector2, previous: IVector2, scale: number } ) : void;
 	zoom: ( ( scale: number ) => void );
