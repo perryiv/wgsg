@@ -133,7 +133,8 @@ export function Viewer ( { style }: IViewerProps )
 		// This should not happen.
 		if ( true === Device.valid )
 		{
-			throw new Error ( "Device is already initialized" );
+			console.log ( "Device is already initialized" );
+			return;
 		}
 
 		// This should not happen.
@@ -184,14 +185,21 @@ export function Viewer ( { style }: IViewerProps )
 			viewer = new InternalViewer ( { canvas: canvas.current } );
 			setViewer ( VIEWER_NAME, viewer );
 			console.log ( `Internal viewer ${viewer.id} created` );
+
+			// Build the scene.
+			viewer.modelScene = buildTestScene();
+			viewer.viewAll ( { animate: false } );
 		}
 
 		console.log ( "Out getOrCreateViewer()" );
 
 		// Return the viewer.
 		return viewer;
-	},
-	[ getViewer, setViewer ] );
+	}, [
+		buildTestScene,
+		getViewer,
+		setViewer,
+	] );
 
 	//
 	// Local function to handle when this component is mounted.
@@ -216,19 +224,17 @@ export function Viewer ( { style }: IViewerProps )
 
 		// Get the viewer or make it if we have to.
 		const viewer = getOrCreateViewer();
-
-		// Build the scene.
-		console.log ( `Adding test scene to viewer ${viewer.id}` );
-		viewer.modelScene = buildTestScene();
-		viewer.viewAll ( { animate: false } );
 		viewer.requestRender();
 
 		// We are done mounting.
 		isMounting.current = false;
 
 		console.log ( `Out handleMount() for viewer component ${id}` );
-	},
-	[ buildTestScene, getOrCreateViewer, id, initDevice ] );
+	}, [
+		getOrCreateViewer,
+		id,
+		initDevice,
+	] );
 
 	//
 	// Called when the component mounts.
