@@ -406,23 +406,11 @@ export class MouseRotate extends Command
 		// Request a render so that we can see the change.
 		viewer.requestRender();
 
-		// Shortcuts.
-		const { axis, angle } = step;
-
 		// Register an animation function that may be used.
 		viewer.animations.nav.set ( `${this.type}.execute()`, ( fraction: number ) =>
 		{
-			// We want to go from 1 to 0, and keep it in range.
-			fraction = clampNumber ( ( 1 - fraction ), 0, 1 );
-
-			// Are we done?
-			if ( fraction <= 0 )
-			{
-				return;
-			}
-
-			// Rotate the trackball.
-			navBase.rotateAxisAngle ( axis, ( angle * scale * fraction ), "global" );
+			// Take one step.
+			step ( fraction );
 
 			// Request a render.
 			viewer.requestRender();

@@ -29,6 +29,7 @@ import {
 	type ILineSphereIntersection,
 } from "../Math";
 import {
+	clampNumber,
 	DEG_TO_RAD,
 	IDENTITY_MATRIX,
 	normalizeQuat,
@@ -38,7 +39,7 @@ import {
 	ICoordinateSystem,
 	IEvent,
 	IMatrix44,
-	IRotationStep,
+	INavStepFunction,
 	ITranslateScreenStep,
 	IVector2,
 	IVector3,
@@ -101,7 +102,7 @@ export class Trackball extends BaseClass
 {
 	#matrix: ( IMatrix44 | null ) = null;
 	#inverse: ( IMatrix44 | null ) = null;
-	#mode: RotationMode = RotationMode.TURN_TABLE;
+	#mode: RotationMode = RotationMode.TRACK_BALL;
 	#state: ITrackballState = makeDefaultTrackballState();
 
 	/**
@@ -654,9 +655,9 @@ export class Trackball extends BaseClass
 	 * @param {object} input - The input parameters.
 	 * @param {IEvent} input.event - The event.
 	 * @param {number} input.scale - The rotation scale factor.
-	 * @returns {IRotationStep | null} The axis and angle of rotation, or null if the rotation failed.
+	 * @returns {INavStepFunction | null} The axis and angle of rotation, or null if the rotation failed.
 	 */
-	public override mouseRotate ( input: { event: IEvent, scale: number } ) : ( IRotationStep | null )
+	public override mouseRotate ( input: { event: IEvent, scale: number } ) : ( INavStepFunction | null )
 	{
 		switch ( this.mode )
 		{
@@ -680,9 +681,9 @@ export class Trackball extends BaseClass
 	 * @param {object} input - The input parameters.
 	 * @param {IEvent} input.event - The event.
 	 * @param {number} input.scale - The rotation scale factor.
-	 * @returns {IRotationStep | null} The axis and angle of rotation, or null if the rotation failed.
+	 * @returns {INavStepFunction | null} The axis and angle of rotation, or null if the rotation failed.
 	 */
-	public trackballRotate ( input: { event: IEvent, scale: number } ) : ( IRotationStep | null )
+	public trackballRotate ( input: { event: IEvent, scale: number } ) : ( INavStepFunction | null )
 	{
 		// Get input.
 		const { event, scale } = input;
@@ -805,11 +806,27 @@ export class Trackball extends BaseClass
 			return null;
 		}
 
-		// Rotate the trackball.
-		this.rotateAxisAngle ( axis, angle, "global" );
+		// Make the animation step function.
+		const oneStep = ( fraction: number ) =>
+		{
+			// We want to go from 1 to 0, and keep it in range.
+			fraction = clampNumber ( ( 1 - fraction ), 0, 1 );
 
-		// Return the axis and angle.
-		return { axis, angle };
+			// Are we done?
+			if ( fraction <= 0 )
+			{
+				return;
+			}
+
+			// Rotate the trackball.
+			this.rotateAxisAngle ( axis, ( angle * scale * fraction ), "global" );
+		};
+
+		// Take one step.
+		oneStep ( 0 );
+
+		// Return the animation step function.
+		return oneStep;
 	}
 
 	/**
@@ -817,9 +834,9 @@ export class Trackball extends BaseClass
 	 * @param {object} input - The input parameters.
 	 * @param {IEvent} input.event - The event.
 	 * @param {number} input.scale - The rotation scale factor.
-	 * @returns {IRotationStep | null} The axis and angle of rotation, or null if the rotation failed.
+	 * @returns {INavStepFunction | null} The axis and angle of rotation, or null if the rotation failed.
 	 */
-	public turnTableRotate ( input: { event: IEvent, scale: number } ) : ( IRotationStep | null )
+	public turnTableRotate ( input: { event: IEvent, scale: number } ) : ( INavStepFunction | null )
 	{
 		// Get input.
 		const { event, scale } = input;
@@ -842,19 +859,35 @@ export class Trackball extends BaseClass
 		// We need to slow it down.
 		const sensitivity = 0.2;
 
-		// The vertical mouse distance determines the angle about the global x-axis.
-		const angleX = ( cm[1] - pm[1] ) * DEG_TO_RAD * sensitivity * scale;
+		// Make the animation step function.
+		const oneStep = ( fraction: number ) =>
+		{
+			// We want to go from 1 to 0, and keep it in range.
+			fraction = clampNumber ( ( 1 - fraction ), 0, 1 );
 
-		// Rotate about the global x-axis.
-		this.rotateAxisAngle ( [ 1, 0, 0 ], angleX, "global" );
+			// Are we done?
+			if ( fraction <= 0 )
+			{
+				return;
+			}
 
-		// The horizontal mouse distance determines the angle about the local y-axis.
-		const angleY = ( cm[0] - pm[0] ) * DEG_TO_RAD * sensitivity * scale;
+			// The vertical mouse distance determines the angle about the global x-axis.
+			const angleX = ( cm[1] - pm[1] ) * DEG_TO_RAD * sensitivity * scale * fraction;
 
-		// Rotate about the local y-axis.
-		this.rotateAxisAngle ( [ 0, 1, 0 ], angleY, "local" );
+			// Rotate about the global x-axis.
+			this.rotateAxisAngle ( [ 1, 0, 0 ], angleX, "global" );
 
-		// Return the axis and angle.
-		return { axis: [ 0, 1, 0 ], angle: angleY };
+			// The horizontal mouse distance determines the angle about the local y-axis.
+			const angleY = ( cm[0] - pm[0] ) * DEG_TO_RAD * sensitivity * scale * fraction;
+
+			// Rotate about the local y-axis.
+			this.rotateAxisAngle ( [ 0, 1, 0 ], angleY, "local" );
+		};
+
+		// Take one step.
+		oneStep ( 0 );
+
+		// Return the animation step function.
+		return oneStep;
 	}
 }

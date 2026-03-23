@@ -19,7 +19,7 @@ import type {
 	ICoordinateSystem,
 	IEvent,
 	IMatrix44,
-	IRotationStep,
+	INavStepFunction,
 	ITranslateScreenStep,
 	IVector2,
 	IVector3,
@@ -99,9 +99,9 @@ export abstract class NavBase extends BaseClass
 	 * @param {object} input - The input parameters.
 	 * @param {IEvent} input.event - The event.
 	 * @param {number} input.scale - The rotation scale factor.
-	 * @returns {IRotationStep | null} The rotation step or null if no rotation.
+	 * @returns {INavStepFunction | null} The rotation step or null if no rotation.
 	 */
-	public abstract mouseRotate ( input: { event: IEvent, scale: number } ) : ( IRotationStep | null );
+	public abstract mouseRotate ( input: { event: IEvent, scale: number } ) : ( INavStepFunction | null );
 
 	/**
 	 * Translate the navigator.

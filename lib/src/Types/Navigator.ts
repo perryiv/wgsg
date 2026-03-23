@@ -37,9 +37,11 @@ export interface ITranslateScreenStep
 
 export type ICoordinateSystem = "local" | "global";
 
+export type INavStepFunction = ( u: number ) => void;
+
 export interface INavigator
 {
-	mouseRotate: ( ( params: { event: IEvent, scale: number } ) => ( IRotationStep | null ) );
+	mouseRotate: ( ( params: { event: IEvent, scale: number } ) => ( INavStepFunction | null ) );
 	mouseTranslate: ( ( params: { event: IEvent, scale: number } ) => ( ITranslateScreenStep | null ) );
 	rotateAxisAngle ( axis: IVector3, radians: number, space: ICoordinateSystem ) : void;
 	rotateQuaternion: ( ( quaternion: IVector4 ) => void );
