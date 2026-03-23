@@ -101,7 +101,7 @@ export class Trackball extends BaseClass
 {
 	#matrix: ( IMatrix44 | null ) = null;
 	#inverse: ( IMatrix44 | null ) = null;
-	#mode: RotationMode = RotationMode.TRACK_BALL;
+	#mode: RotationMode = RotationMode.TURN_TABLE;
 	#state: ITrackballState = makeDefaultTrackballState();
 
 	/**
@@ -875,7 +875,7 @@ export class Trackball extends BaseClass
 		}
 
 		// We need to slow it down.
-		const sensitivity = 0.2;
+		const sensitivity = [ 0.1, 0.1 ];
 
 		// Make the animation step function.
 		const oneStep = ( fraction: number ) =>
@@ -890,13 +890,13 @@ export class Trackball extends BaseClass
 			}
 
 			// The vertical mouse distance determines the angle about the global x-axis.
-			const angleX = ( cm[1] - pm[1] ) * DEG_TO_RAD * sensitivity * scale * fraction;
+			const angleX = ( cm[1] - pm[1] ) * DEG_TO_RAD * sensitivity[0] * scale * fraction;
 
 			// Rotate about the global x-axis.
 			this.rotateAxisAngle ( [ 1, 0, 0 ], angleX, "global" );
 
 			// The horizontal mouse distance determines the angle about the local y-axis.
-			const angleY = ( cm[0] - pm[0] ) * DEG_TO_RAD * sensitivity * scale * fraction;
+			const angleY = ( cm[0] - pm[0] ) * DEG_TO_RAD * sensitivity[1] * scale * fraction;
 
 			// Rotate about the local y-axis.
 			this.rotateAxisAngle ( [ 0, 1, 0 ], angleY, "local" );
