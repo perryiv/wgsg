@@ -22,6 +22,10 @@ export interface IViewerOptions
 
 	distance:
 	{
+		// The maximum allowed distance between subsequent mouse move events.
+		// If the distance is greater than this then the event is ignored.
+		mouse_move_max: number;
+
 		// The distance between subsequent mouse move events that, when a mouse
 		// button is released, gets interpreted as a "throw" and may cause the
 		// viewer to animate.
