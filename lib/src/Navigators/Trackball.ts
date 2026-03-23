@@ -35,7 +35,7 @@ import {
 	normalizeVec3,
 } from "../Tools";
 import {
-	CoordinateSystem,
+	ICoordinateSystem,
 	IEvent,
 	IMatrix44,
 	IRotationStep,
@@ -315,9 +315,9 @@ export class Trackball extends BaseClass
 	 * Rotate the navigator.
 	 * @param {IVector3} axis - The rotation axis.
 	 * @param {number} radians - The angle in radians.
-	 * @param {CoordinateSystem} space - The rotation space.
+	 * @param {ICoordinateSystem} space - The rotation space.
 	 */
-	public override rotateAxisAngle ( axis: IVector3, radians: number, space: CoordinateSystem ) : void
+	public override rotateAxisAngle ( axis: IVector3, radians: number, space: ICoordinateSystem ) : void
 	{
 		// Make sure the axis is normalized.
 		axis = normalizeVec3 ( axis );
@@ -337,12 +337,12 @@ export class Trackball extends BaseClass
 		// Multiply in the correct order.
 		switch ( space )
 		{
-			case CoordinateSystem.Global:
+			case "global":
 			{
 				quat.multiply ( nr, dr, this.rotation );
 				break;
 			}
-			case CoordinateSystem.Local:
+			case "local":
 			{
 				quat.multiply ( nr, this.rotation, dr );
 				break;
@@ -806,7 +806,7 @@ export class Trackball extends BaseClass
 		}
 
 		// Rotate the trackball.
-		this.rotateAxisAngle ( axis, angle, CoordinateSystem.Global );
+		this.rotateAxisAngle ( axis, angle, "global" );
 
 		// Return the axis and angle.
 		return { axis, angle };
@@ -855,51 +855,13 @@ export class Trackball extends BaseClass
 		const angleX = ( cm[1] - pm[1] ) * DEG_TO_RAD * sensitivity * scale;
 
 		// Rotate about the global x-axis.
-		this.rotateAxisAngle ( [ 1, 0, 0 ], angleX, CoordinateSystem.Global );
+		this.rotateAxisAngle ( [ 1, 0, 0 ], angleX, "global" );
 
 		// The horizontal mouse distance determines the angle about the local y-axis.
 		const angleY = ( cm[0] - pm[0] ) * DEG_TO_RAD * sensitivity * scale;
 
-
-		// Make space for the rotation.
-		let dr: IVector4 = [ 0, 0, 0, 1 ];
-
-		// Calculate the rotation quaternion.
-		const yAxis: IVector3 = [ 0, 1, 0 ];
-		quat.setAxisAngle ( dr, yAxis, angleY );
-
-		// Normalize the quaternion.
-		dr = normalizeQuat ( dr );
-
-		// The new rotation.
-		let nr: IVector4 = [ 0, 0, 0, 1 ];
-
-		// This order is rotation about local axes.
-		quat.multiply ( nr, this.rotation, dr );
-
-		// Make sure it's normalized.
-		nr = normalizeQuat ( nr );
-
-		// Set the new rotation.
-		this.rotation = nr;
-
-
-
-
-
-
-
-
-
-
-
-
-
 		// Rotate about the local y-axis.
-		// const globalY: IVector3 = [ 0, 1, 0 ];
-		// const localY: IVector3 = [ 0, 0, 0 ];
-		// vec3.transformMat4 ( localY, globalY, ivm );
-		// this.rotateAxisAngle ( localY, angleY );
+		this.rotateAxisAngle ( [ 0, 1, 0 ], angleY, "local" );
 
 		// Return the axis and angle.
 		return { axis: [ 0, 1, 0 ], angle: angleY };

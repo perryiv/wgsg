@@ -16,7 +16,7 @@ import { BaseHandler as BaseClass } from "../Events/Handlers/BaseHandler";
 import { Projection } from "../Projections/Projection";
 import { Sphere } from "../Math";
 import type {
-	CoordinateSystem,
+	ICoordinateSystem,
 	IEvent,
 	IMatrix44,
 	IRotationStep,
@@ -80,9 +80,9 @@ export abstract class NavBase extends BaseClass
 	 * Rotate the navigator.
 	 * @param {IVector3} axis - The rotation axis.
 	 * @param {number} radians - The angle in radians.
-	 * @param {CoordinateSystem} space - The rotation space.
+	 * @param {ICoordinateSystem} space - The rotation space.
 	 */
-	public abstract rotateAxisAngle ( axis: IVector3, radians: number, space: CoordinateSystem ) : void;
+	public abstract rotateAxisAngle ( axis: IVector3, radians: number, space: ICoordinateSystem ) : void;
 
 	/**
 	 * Translate the navigator.
