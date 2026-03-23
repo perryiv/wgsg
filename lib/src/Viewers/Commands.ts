@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base as BaseClass } from "../Base";
-import { clampNumber, DEG_TO_RAD } from "../Tools";
+import { DEG_TO_RAD } from "../Tools";
 import { vec3 } from "gl-matrix";
 import type {
 	ICommand,
@@ -324,26 +324,11 @@ export class MouseTranslate extends Command
 		// Request a render so that we can see the change.
 		viewer.requestRender();
 
-		// Shortcuts.
-		const { current, previous } = step;
-
 		// Register an animation function that may be used.
 		viewer.animations.nav.set ( `${this.type}.execute()`, ( fraction: number ) =>
 		{
-			// We want to go from 1 to 0, and keep it in range.
-			fraction = clampNumber ( ( 1 - fraction ), 0, 1 );
-
-			// Are we done?
-			if ( fraction <= 0 )
-			{
-				return;
-			}
-
-			// It's a little too sensitive without this.
-			fraction *= 0.4;
-
-			// Translate the trackball.
-			navBase.translateScreenXY ( { current, previous, scale: ( scale * fraction ) } );
+			// Take one step.
+			step ( fraction );
 
 			// Request a render.
 			viewer.requestRender();

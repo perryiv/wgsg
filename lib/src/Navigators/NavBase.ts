@@ -20,7 +20,6 @@ import type {
 	IEvent,
 	IMatrix44,
 	INavStepFunction,
-	ITranslateScreenStep,
 	IVector2,
 	IVector3,
 	IVector4,
@@ -99,7 +98,7 @@ export abstract class NavBase extends BaseClass
 	 * @param {object} input - The input parameters.
 	 * @param {IEvent} input.event - The event.
 	 * @param {number} input.scale - The rotation scale factor.
-	 * @returns {INavStepFunction | null} The rotation step or null if no rotation.
+	 * @returns {INavStepFunction | null} The navigation step function or null.
 	 */
 	public abstract mouseRotate ( input: { event: IEvent, scale: number } ) : ( INavStepFunction | null );
 
@@ -108,9 +107,9 @@ export abstract class NavBase extends BaseClass
 	 * @param {object} input - The input parameters.
 	 * @param {IEvent} input.event - The event.
 	 * @param {number} input.scale - The translation scale factor.
-	 * @returns {ITranslateScreenStep | null} The translation step or null if no translation.
+	 * @returns {INavStepFunction | null} The navigation step function or null.
 	 */
-	public abstract mouseTranslate ( input: { event: IEvent, scale: number } ) : ( ITranslateScreenStep | null );
+	public abstract mouseTranslate ( input: { event: IEvent, scale: number } ) : ( INavStepFunction | null );
 
 	/**
 	 * Zoom the navigator.

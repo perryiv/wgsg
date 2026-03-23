@@ -40,7 +40,6 @@ import {
 	IEvent,
 	IMatrix44,
 	INavStepFunction,
-	ITranslateScreenStep,
 	IVector2,
 	IVector3,
 	IVector4,
@@ -566,9 +565,9 @@ export class Trackball extends BaseClass
 	 * @param {object} params - The parameters.
 	 * @param {IEvent} params.event - The event.
 	 * @param {number} params.scale - The translation scale factor.
-	 * @returns {ITranslateScreenStep | null} The translation step, or null if the translation failed.
+	 * @returns {INavStepFunction | null} The navigation step function or null.
 	 */
-	public override mouseTranslate ( params: { event: IEvent, scale: number } ) : ( ITranslateScreenStep | null )
+	public override mouseTranslate ( params: { event: IEvent, scale: number } ) : ( INavStepFunction | null )
 	{
 		// Get the input.
 		const { event, scale } = params;
@@ -643,11 +642,30 @@ export class Trackball extends BaseClass
 		const current:  IVector2 = [ cp[0], cp[1] ];
 		const previous: IVector2 = [ pp[0], pp[1] ];
 
-		// Now we can translate with 2D screen points.
-		this.translateScreenXY ( { current, previous, scale } );
+		// Make the animation step function.
+		const oneStep = ( fraction: number ) =>
+		{
+			// We want to go from 1 to 0, and keep it in range.
+			fraction = clampNumber ( ( 1 - fraction ), 0, 1 );
 
-		// Return the translation step.
-		return { current, previous };
+			// Are we done?
+			if ( fraction <= 0 )
+			{
+				return;
+			}
+
+			// It's a little too sensitive without this.
+			fraction *= 0.4;
+
+			// Translate the trackball.
+			this.translateScreenXY ( { current, previous, scale: ( scale * fraction ) } );
+		};
+
+		// Take one step.
+		oneStep ( 0 );
+
+		// Return the animation step function.
+		return oneStep;
 	}
 
 	/**
@@ -655,7 +673,7 @@ export class Trackball extends BaseClass
 	 * @param {object} input - The input parameters.
 	 * @param {IEvent} input.event - The event.
 	 * @param {number} input.scale - The rotation scale factor.
-	 * @returns {INavStepFunction | null} The axis and angle of rotation, or null if the rotation failed.
+	 * @returns {INavStepFunction | null} The navigation step function or null.
 	 */
 	public override mouseRotate ( input: { event: IEvent, scale: number } ) : ( INavStepFunction | null )
 	{
@@ -681,7 +699,7 @@ export class Trackball extends BaseClass
 	 * @param {object} input - The input parameters.
 	 * @param {IEvent} input.event - The event.
 	 * @param {number} input.scale - The rotation scale factor.
-	 * @returns {INavStepFunction | null} The axis and angle of rotation, or null if the rotation failed.
+	 * @returns {INavStepFunction | null} The navigation step function or null.
 	 */
 	public trackballRotate ( input: { event: IEvent, scale: number } ) : ( INavStepFunction | null )
 	{
@@ -834,7 +852,7 @@ export class Trackball extends BaseClass
 	 * @param {object} input - The input parameters.
 	 * @param {IEvent} input.event - The event.
 	 * @param {number} input.scale - The rotation scale factor.
-	 * @returns {INavStepFunction | null} The axis and angle of rotation, or null if the rotation failed.
+	 * @returns {INavStepFunction | null} The navigation step function or null.
 	 */
 	public turnTableRotate ( input: { event: IEvent, scale: number } ) : ( INavStepFunction | null )
 	{

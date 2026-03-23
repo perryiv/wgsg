@@ -42,7 +42,7 @@ export type INavStepFunction = ( u: number ) => void;
 export interface INavigator
 {
 	mouseRotate: ( ( params: { event: IEvent, scale: number } ) => ( INavStepFunction | null ) );
-	mouseTranslate: ( ( params: { event: IEvent, scale: number } ) => ( ITranslateScreenStep | null ) );
+	mouseTranslate: ( ( params: { event: IEvent, scale: number } ) => ( INavStepFunction | null ) );
 	rotateAxisAngle ( axis: IVector3, radians: number, space: ICoordinateSystem ) : void;
 	rotateQuaternion: ( ( quaternion: IVector4 ) => void );
 	translateScreenXY ( input: { current: IVector2, previous: IVector2, scale: number } ) : void;
