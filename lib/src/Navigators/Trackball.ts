@@ -839,15 +839,6 @@ export class Trackball extends BaseClass
 			return null;
 		}
 
-		// We need the inverse of the view matrix in order to proceed.
-		const ivm = this.invViewMatrix;
-
-		// Handle invalid matrix.
-		if ( !ivm )
-		{
-			return null;
-		}
-
 		// We need to slow it down.
 		const sensitivity = 0.2;
 
