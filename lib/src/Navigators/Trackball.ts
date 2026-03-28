@@ -29,16 +29,17 @@ import {
 	type ILineSphereIntersection,
 } from "../Math";
 import {
+	clampNumber,
 	DEG_TO_RAD,
 	IDENTITY_MATRIX,
 	normalizeQuat,
 	normalizeVec3,
 } from "../Tools";
-import type {
+import {
+	ICoordinateSystem,
 	IEvent,
 	IMatrix44,
-	IRotationStep,
-	ITranslateScreenStep,
+	INavStepFunction,
 	IVector2,
 	IVector3,
 	IVector4,
@@ -57,6 +58,12 @@ import {
 //	Types used below.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+enum RotationMode
+{
+	TRACK_BALL,
+	TURN_TABLE
+}
 
 interface ITrackballState extends INavigationState
 {
@@ -94,6 +101,7 @@ export class Trackball extends BaseClass
 {
 	#matrix: ( IMatrix44 | null ) = null;
 	#inverse: ( IMatrix44 | null ) = null;
+	#mode: RotationMode = RotationMode.TURN_TABLE;
 	#state: ITrackballState = makeDefaultTrackballState();
 
 	/**
@@ -207,6 +215,24 @@ export class Trackball extends BaseClass
 	}
 
 	/**
+	 * Get the rotation mode.
+	 * @returns {RotationMode} The rotation mode.
+	 */
+	public get mode () : RotationMode
+	{
+		return this.#mode;
+	}
+
+	/**
+	 * Set the rotation mode.
+	 * @param {RotationMode} mode - The rotation mode.
+	 */
+	public set mode ( mode: RotationMode )
+	{
+		this.#mode = mode;
+	}
+
+	/**
 	 * Get the center point.
 	 * @returns {IVector3} The center point.
 	 */
@@ -289,8 +315,9 @@ export class Trackball extends BaseClass
 	 * Rotate the navigator.
 	 * @param {IVector3} axis - The rotation axis.
 	 * @param {number} radians - The angle in radians.
+	 * @param {ICoordinateSystem} space - The rotation space.
 	 */
-	public override rotateAxisAngle ( axis: IVector3, radians: number ) : void
+	public override rotateAxisAngle ( axis: IVector3, radians: number, space: ICoordinateSystem ) : void
 	{
 		// Make sure the axis is normalized.
 		axis = normalizeVec3 ( axis );
@@ -301,12 +328,30 @@ export class Trackball extends BaseClass
 		// Calculate the rotation quaternion.
 		quat.setAxisAngle ( dr, axis, radians );
 
+		// Normalize the quaternion.
 		dr = normalizeQuat ( dr );
 
-		let nr: IVector4 = [ 0, 0, 0, 1 ]; // New rotation.
+		// The new rotation.
+		let nr: IVector4 = [ 0, 0, 0, 1 ];
 
-		// This order is rotation about global axes.
-		quat.multiply ( nr, dr, this.rotation );
+		// Multiply in the correct order.
+		switch ( space )
+		{
+			case "global":
+			{
+				quat.multiply ( nr, dr, this.rotation );
+				break;
+			}
+			case "local":
+			{
+				quat.multiply ( nr, this.rotation, dr );
+				break;
+			}
+			default:
+			{
+				throw new Error ( `Unrecognized coordinate system: ${space as string}` );
+			}
+		}
 
 		// Make sure it's normalized.
 		nr = normalizeQuat ( nr );
@@ -520,9 +565,9 @@ export class Trackball extends BaseClass
 	 * @param {object} params - The parameters.
 	 * @param {IEvent} params.event - The event.
 	 * @param {number} params.scale - The translation scale factor.
-	 * @returns {ITranslateScreenStep | null} The translation step, or null if the translation failed.
+	 * @returns {INavStepFunction | null} The navigation step function or null.
 	 */
-	public override mouseTranslate ( params: { event: IEvent, scale: number } ) : ( ITranslateScreenStep | null )
+	public override mouseTranslate ( params: { event: IEvent, scale: number } ) : ( INavStepFunction | null )
 	{
 		// Get the input.
 		const { event, scale } = params;
@@ -597,11 +642,30 @@ export class Trackball extends BaseClass
 		const current:  IVector2 = [ cp[0], cp[1] ];
 		const previous: IVector2 = [ pp[0], pp[1] ];
 
-		// Now we can translate with 2D screen points.
-		this.translateScreenXY ( { current, previous, scale } );
+		// Make the animation step function.
+		const oneStep = ( fraction: number ) =>
+		{
+			// We want to go from 1 to 0, and keep it in range.
+			fraction = clampNumber ( ( 1 - fraction ), 0, 1 );
 
-		// Return the translation step.
-		return { current, previous };
+			// Are we done?
+			if ( fraction <= 0 )
+			{
+				return;
+			}
+
+			// It's a little too sensitive without this.
+			fraction *= 0.4;
+
+			// Translate the trackball.
+			this.translateScreenXY ( { current, previous, scale: ( scale * fraction ) } );
+		};
+
+		// Take one step.
+		oneStep ( 0 );
+
+		// Return the animation step function.
+		return oneStep;
 	}
 
 	/**
@@ -609,9 +673,35 @@ export class Trackball extends BaseClass
 	 * @param {object} input - The input parameters.
 	 * @param {IEvent} input.event - The event.
 	 * @param {number} input.scale - The rotation scale factor.
-	 * @returns {IRotationStep | null} The axis and angle of rotation, or null if the rotation failed.
+	 * @returns {INavStepFunction | null} The navigation step function or null.
 	 */
-	public override mouseRotate ( input: { event: IEvent, scale: number } ) : ( IRotationStep | null )
+	public override mouseRotate ( input: { event: IEvent, scale: number } ) : ( INavStepFunction | null )
+	{
+		switch ( this.mode )
+		{
+			case RotationMode.TRACK_BALL:
+			{
+				return this.trackballRotate ( input );
+			}
+			case RotationMode.TURN_TABLE:
+			{
+				return this.turnTableRotate ( input );
+			}
+			default:
+			{
+				throw new Error ( "Unknown rotation mode" );
+			}
+		}
+	}
+
+	/**
+	 * Rotate the navigator as a trackball.
+	 * @param {object} input - The input parameters.
+	 * @param {IEvent} input.event - The event.
+	 * @param {number} input.scale - The rotation scale factor.
+	 * @returns {INavStepFunction | null} The navigation step function or null.
+	 */
+	public trackballRotate ( input: { event: IEvent, scale: number } ) : ( INavStepFunction | null )
 	{
 		// Get input.
 		const { event, scale } = input;
@@ -723,7 +813,10 @@ export class Trackball extends BaseClass
 		axis = normalizeVec3 ( axis );
 
 		// The angle between the two vectors.
-		const angle = vec3.angle ( v0, v1 );
+		let angle = vec3.angle ( v0, v1 );
+
+		// Multiply by the scale.
+		angle *= scale;
 
 		// Handle invalid angles.
 		if ( false === isFiniteNumber ( angle ) )
@@ -731,10 +824,88 @@ export class Trackball extends BaseClass
 			return null;
 		}
 
-		// Rotate the trackball.
-		this.rotateAxisAngle ( axis, angle * scale );
+		// Make the animation step function.
+		const oneStep = ( fraction: number ) =>
+		{
+			// We want to go from 1 to 0, and keep it in range.
+			fraction = clampNumber ( ( 1 - fraction ), 0, 1 );
 
-		// Return the axis and angle.
-		return { axis, angle };
+			// Are we done?
+			if ( fraction <= 0 )
+			{
+				return;
+			}
+
+			// Rotate the trackball.
+			this.rotateAxisAngle ( axis, ( angle * scale * fraction ), "global" );
+		};
+
+		// Take one step.
+		oneStep ( 0 );
+
+		// Return the animation step function.
+		return oneStep;
+	}
+
+	/**
+	 * Rotate the navigator as a trackball.
+	 * @param {object} input - The input parameters.
+	 * @param {IEvent} input.event - The event.
+	 * @param {number} input.scale - The rotation scale factor.
+	 * @returns {INavStepFunction | null} The navigation step function or null.
+	 */
+	public turnTableRotate ( input: { event: IEvent, scale: number } ) : ( INavStepFunction | null )
+	{
+		// Get input.
+		const { event, scale } = input;
+
+		// Get the event properties.
+		const { current: cm, previous: pm } = event;
+
+		// Handle invalid input.
+		if ( !cm || !pm )
+		{
+			return null;
+		}
+
+		// Handle zero distance between screen points.
+		if ( true === vec2.equals ( cm, pm ) )
+		{
+			return null;
+		}
+
+		// We need to slow it down.
+		const sensitivity = [ 0.1, 0.1 ];
+
+		// Make the animation step function.
+		const oneStep = ( fraction: number ) =>
+		{
+			// We want to go from 1 to 0, and keep it in range.
+			fraction = clampNumber ( ( 1 - fraction ), 0, 1 );
+
+			// Are we done?
+			if ( fraction <= 0 )
+			{
+				return;
+			}
+
+			// The vertical mouse distance determines the angle about the global x-axis.
+			const angleX = ( cm[1] - pm[1] ) * DEG_TO_RAD * sensitivity[0] * scale * fraction;
+
+			// Rotate about the global x-axis.
+			this.rotateAxisAngle ( [ 1, 0, 0 ], angleX, "global" );
+
+			// The horizontal mouse distance determines the angle about the local y-axis.
+			const angleY = ( cm[0] - pm[0] ) * DEG_TO_RAD * sensitivity[1] * scale * fraction;
+
+			// Rotate about the local y-axis.
+			this.rotateAxisAngle ( [ 0, 1, 0 ], angleY, "local" );
+		};
+
+		// Take one step.
+		oneStep ( 0 );
+
+		// Return the animation step function.
+		return oneStep;
 	}
 }

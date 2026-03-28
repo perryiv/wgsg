@@ -228,6 +228,7 @@ export class Viewer extends BaseClass
 				allow: true
 			},
 			distance: {
+				mouse_move_max: 100,
 				mouse_throw: 2
 			},
 			duration: {
@@ -752,6 +753,19 @@ export class Viewer extends BaseClass
 
 		this.mousePrevious = this.mouseCurrent;
 		this.mouseCurrent = [ clientX, clientY ];
+
+		// If the distance is greater than the maximum allowed then do nothing.
+		// This will (hopefully) prevent erroneous "jumps".
+		if ( this.mousePrevious && this.mouseCurrent )
+		{
+			const d = vec2.distance ( this.mouseCurrent, this.mousePrevious );
+			const mx = this.options.distance.mouse_move_max;
+			if ( d > mx )
+			{
+				console.log ( `Mouse move event ignored because distance ${d} > ${mx}` );
+				return;
+			}
+		}
 
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "mouse_move", input );
