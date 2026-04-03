@@ -15,7 +15,7 @@
 import { Button } from "./Button";
 import { Device } from "../../../lib/src";
 import { Panel } from "./Panel";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useViewerStore } from "../State";
 import { Viewer, VIEWER_NAME } from "./Viewer";
 
@@ -89,21 +89,6 @@ export function App()
 	[] );
 
 	//
-	// Return the text for allowing animations.
-	//
-	const allowAnimationsText = useMemo ( () =>
-	{
-		const viewer = viewers.get ( VIEWER_NAME );
-		if ( !viewer )
-		{
-			return "Animation state unknown";
-		}
-		return `Allow animations ${ viewer.options.animations.allow ? " on" : " off" }`;
-	},
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	[ count, viewers ] );
-
-	//
 	// Called when the component mounts.
 	//
 	useEffect ( () =>
@@ -139,8 +124,11 @@ export function App()
 						alignItems: "flex-start",
 					} }
 				>
-					<Button onClick = { handleAllowAnimations } >
-						{ allowAnimationsText }
+					<Button
+						onClick = { handleAllowAnimations }
+						value = { viewer.options.animations.allow }
+					>
+						Allow animations
 					</Button>
 					<Button onClick = { handleViewerRender } >
 						Render viewer
@@ -155,7 +143,6 @@ export function App()
 			</Panel>
 		)
 	}, [
-		allowAnimationsText,
 		handleAllowAnimations,
 		handleSimulateDeviceLost,
 		handleViewerRender,
