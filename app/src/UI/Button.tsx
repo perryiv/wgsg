@@ -13,13 +13,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import {
-	MouseEvent,
+	CSSProperties,
 	ReactNode,
 	useCallback,
-	CSSProperties,
 } from "react";
 import {
-	Button as MUIButton,
+	Button as InternalButton,
+	Checkbox,
+	FormControlLabel,
 	useTheme,
 } from "@mui/material";
 
@@ -30,13 +31,12 @@ import {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-type ButtonClickEvent = MouseEvent<HTMLButtonElement>;
-
 export interface IButtonProps
 {
 	style?: CSSProperties;
 	children: ReactNode;
-	onClick?: ( event: ButtonClickEvent ) => void;
+	onClick?: ( value?: boolean ) => void;
+	value?: boolean;
 }
 
 
@@ -49,7 +49,7 @@ export interface IButtonProps
 export function Button ( props: IButtonProps )
 {
 	// Get input.
-	const { style, children, onClick } = props;
+	const { style, children, onClick, value } = props;
 
 	// Get the application state.
 	const { palette } = useTheme();
@@ -57,31 +57,71 @@ export function Button ( props: IButtonProps )
 	//
 	// Handle the click.
 	//
-	const handleClick = useCallback ( ( event: ButtonClickEvent ) =>
+	const handleClick = useCallback ( () =>
 	{
 		if ( onClick )
 		{
-			onClick ( event );
+			onClick();
 		}
-	},
-	[ onClick ] );
+	}, [ onClick ] );
 
 	//
 	// Render the components.
 	//
-	return (
-		<MUIButton
-			sx = { {
-				textTransform: "none",
-				padding: "1px 6px",
-				":hover": {
-					color: palette.secondary.main,
-				},
-				...style,
-			} }
-			onClick = { handleClick }
-		>
-			{ children }
-		</MUIButton>
-	);
+	if ( value !== undefined )
+	{
+		return (
+			<FormControlLabel
+				sx = { {
+					margin: 0,
+					paddingRight: "10px",
+					height: "24px",
+					":hover": { color: palette.secondary.main },
+					...style,
+				} }
+				control = {
+					<Checkbox
+						checked = { value }
+						onChange = { handleClick }
+						size = "small"
+					/>
+				}
+					label = {
+						<InternalButton
+				sx = { {
+					color: palette.text.primary,
+					textTransform: "none",
+					padding: 0,
+					":hover": { color: palette.secondary.main },
+					...style,
+				} }
+				onClick = { handleClick }
+			>
+				{ children }
+			</InternalButton>
+					}
+				/>
+		);
+	}
+	else
+	{
+		return (
+			<InternalButton
+				sx = { {
+					color: palette.text.primary,
+					textTransform: "none",
+					marginLeft: "32px",
+					paddingLeft: "6px",
+					paddingRight: "6px",
+					paddingTop: "0px",
+					paddingBottom: "0px",
+					":hover": { color: palette.secondary.main },
+					...style,
+				} }
+				onClick = { handleClick }
+			>
+				{ children }
+			</InternalButton>
+		);
+	}
 }
