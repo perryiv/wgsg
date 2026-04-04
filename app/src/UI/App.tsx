@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Button } from "./Button";
-import { Device } from "../../../lib/src";
+import { Device, Trackball } from "../../../lib/src";
 import { Panel } from "./Panel";
 import { useCallback, useEffect, useState } from "react";
 import { useViewerStore } from "../State";
@@ -44,6 +44,42 @@ export function App()
 			animations.allow = !animations.allow;
 			setCount ( count + 1 );
 			console.log ( `Allow animations: ${animations.allow}` );
+		}
+	},
+	[ count, viewers ] );
+
+	//
+	// Handle the trackball mode button.
+	//
+	const handleTrackballMode = useCallback ( () =>
+	{
+		const viewer = viewers.get ( VIEWER_NAME );
+		if ( viewer )
+		{
+			const { navBase: trackball } = viewer;
+			if ( trackball instanceof Trackball )
+			{
+				trackball.mode = "track_ball";
+				setCount ( count + 1 );
+			}
+		}
+	},
+	[ count, viewers ] );
+
+	//
+	// Handle the turntable mode button.
+	//
+	const handleTurntableMode = useCallback ( () =>
+	{
+		const viewer = viewers.get ( VIEWER_NAME );
+		if ( viewer )
+		{
+			const { navBase: trackball } = viewer;
+			if ( trackball instanceof Trackball )
+			{
+				trackball.mode = "turn_table";
+				setCount ( count + 1 );
+			}
 		}
 	},
 	[ count, viewers ] );
@@ -130,6 +166,18 @@ export function App()
 					>
 						Allow animations
 					</Button>
+					<Button
+						onClick = { handleTrackballMode }
+						value = { "track_ball" === viewer.navBase.rotationMode }
+					>
+						Trackball rotation
+					</Button>
+					<Button
+						onClick = { handleTurntableMode }
+						value = { "turn_table" === viewer.navBase.rotationMode }
+					>
+						Turntable rotation
+					</Button>
 					<Button onClick = { handleViewerRender } >
 						Render viewer
 					</Button>
@@ -145,6 +193,8 @@ export function App()
 	}, [
 		handleAllowAnimations,
 		handleSimulateDeviceLost,
+		handleTrackballMode,
+		handleTurntableMode,
 		handleViewerRender,
 		handleViewerReset,
 		viewers,
