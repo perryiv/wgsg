@@ -19,23 +19,13 @@ import type {
 	ICoordinateSystem,
 	IEvent,
 	IMatrix44,
+	INavigationState,
 	INavStepFunction,
+	IRotationMode,
 	IVector2,
 	IVector3,
 	IVector4,
 } from "../Types";
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
-//	Types used below and elsewhere.
-//
-///////////////////////////////////////////////////////////////////////////////
-
-export interface INavigationState
-{
-	ignore?: number;
-}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -68,6 +58,12 @@ export abstract class NavBase extends BaseClass
 	 * @returns The inverse view matrix.
 	 */
 	public abstract get invViewMatrix () : ( Readonly<IMatrix44> | null );
+
+	/**
+	 * Get the rotation mode.
+	 * @returns The rotation mode.
+	 */
+	public abstract get rotationMode () : ( IRotationMode | null );
 
 	/**
 	 * Rotate the navigator.

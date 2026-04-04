@@ -14,7 +14,6 @@
 
 import {
 	NavBase as BaseClass,
-	type INavigationState,
 } from "./NavBase";
 import {
 	Perspective,
@@ -39,7 +38,10 @@ import {
 	ICoordinateSystem,
 	IEvent,
 	IMatrix44,
+	INavigationState,
 	INavStepFunction,
+	IRotationMode,
+	ITrackballState,
 	IVector2,
 	IVector3,
 	IVector4,
@@ -51,26 +53,6 @@ import {
 	vec3,
 	vec4,
 } from "gl-matrix";
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
-//	Types used below.
-//
-///////////////////////////////////////////////////////////////////////////////
-
-enum RotationMode
-{
-	TRACK_BALL,
-	TURN_TABLE
-}
-
-interface ITrackballState extends INavigationState
-{
-	center: IVector3;
-	distance: number;
-	rotation: IVector4;
-}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -101,7 +83,7 @@ export class Trackball extends BaseClass
 {
 	#matrix: ( IMatrix44 | null ) = null;
 	#inverse: ( IMatrix44 | null ) = null;
-	#mode: RotationMode = RotationMode.TURN_TABLE;
+	#mode: IRotationMode = "turn_table";
 	#state: ITrackballState = makeDefaultTrackballState();
 
 	/**
@@ -216,20 +198,29 @@ export class Trackball extends BaseClass
 
 	/**
 	 * Get the rotation mode.
-	 * @returns {RotationMode} The rotation mode.
+	 * @returns {IRotationMode} The rotation mode.
 	 */
-	public get mode () : RotationMode
+	public get mode () : IRotationMode
 	{
 		return this.#mode;
 	}
 
 	/**
 	 * Set the rotation mode.
-	 * @param {RotationMode} mode - The rotation mode.
+	 * @param {IRotationMode} mode - The rotation mode.
 	 */
-	public set mode ( mode: RotationMode )
+	public set mode ( mode: IRotationMode )
 	{
 		this.#mode = mode;
+	}
+
+	/**
+	 * Get the rotation mode. This is part of the INavigator interface.
+	 * @returns {IRotationMode | null} The rotation mode.
+	 */
+	public get rotationMode () : ( IRotationMode | null )
+	{
+		return this.mode;
 	}
 
 	/**
@@ -679,11 +670,11 @@ export class Trackball extends BaseClass
 	{
 		switch ( this.mode )
 		{
-			case RotationMode.TRACK_BALL:
+			case "track_ball":
 			{
 				return this.trackballRotate ( input );
 			}
-			case RotationMode.TURN_TABLE:
+			case "turn_table":
 			{
 				return this.turnTableRotate ( input );
 			}
@@ -892,7 +883,7 @@ export class Trackball extends BaseClass
 			// Rotate about the global x-axis.
 			{
 				// Get the model's current y-axis in global space. The transformation
-				// matrix includes translations to we have to operate on points at the
+				// matrix includes translations so we have to operate on points at the
 				// origin and end of the y-axis.
 				const yAxis: IVector3 = [ 0, 1, 0 ];
 				const origin: IVector3 = [ 0, 0, 0 ];

@@ -18,9 +18,10 @@ import {
 	useCallback,
 } from "react";
 import {
-	Button as InternalButton,
+	Button as RegularButton,
 	Checkbox,
 	FormControlLabel,
+	Radio as RadioButton,
 	useTheme,
 } from "@mui/material";
 
@@ -37,6 +38,7 @@ export interface IButtonProps
 	children: ReactNode;
 	onClick?: ( value?: boolean ) => void;
 	value?: boolean;
+	radio?: boolean;
 }
 
 
@@ -49,7 +51,7 @@ export interface IButtonProps
 export function Button ( props: IButtonProps )
 {
 	// Get input.
-	const { style, children, onClick, value } = props;
+	const { style, children, onClick, value, radio } = props;
 
 	// Get the application state.
 	const { palette } = useTheme();
@@ -79,6 +81,12 @@ export function Button ( props: IButtonProps )
 					...style,
 				} }
 				control = {
+					( radio ) ?
+					<RadioButton
+						checked = { value }
+						onChange = { handleClick }
+						size = "small"
+					/> :
 					<Checkbox
 						checked = { value }
 						onChange = { handleClick }
@@ -86,7 +94,7 @@ export function Button ( props: IButtonProps )
 					/>
 				}
 					label = {
-						<InternalButton
+						<RegularButton
 							sx = { {
 								color: palette.text.primary,
 								textTransform: "none",
@@ -97,7 +105,7 @@ export function Button ( props: IButtonProps )
 							onClick = { handleClick }
 						>
 							{ children }
-						</InternalButton>
+						</RegularButton>
 					}
 				/>
 		);
@@ -105,7 +113,7 @@ export function Button ( props: IButtonProps )
 	else
 	{
 		return (
-			<InternalButton
+			<RegularButton
 				sx = { {
 					color: palette.text.primary,
 					textTransform: "none",
@@ -120,7 +128,7 @@ export function Button ( props: IButtonProps )
 				onClick = { handleClick }
 			>
 				{ children }
-			</InternalButton>
+			</RegularButton>
 		);
 	}
 }
