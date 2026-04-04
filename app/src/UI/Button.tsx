@@ -76,7 +76,6 @@ export function Button ( props: IButtonProps )
 					margin: 0,
 					paddingRight: "10px",
 					height: "24px",
-					":hover": { color: palette.secondary.main },
 					...style,
 				} }
 				control = {
@@ -88,17 +87,17 @@ export function Button ( props: IButtonProps )
 				}
 					label = {
 						<InternalButton
-				sx = { {
-					color: palette.text.primary,
-					textTransform: "none",
-					padding: 0,
-					":hover": { color: palette.secondary.main },
-					...style,
-				} }
-				onClick = { handleClick }
-			>
-				{ children }
-			</InternalButton>
+							sx = { {
+								color: palette.text.primary,
+								textTransform: "none",
+								padding: 0,
+								":hover": { color: palette.secondary.main },
+								...style,
+							} }
+							onClick = { handleClick }
+						>
+							{ children }
+						</InternalButton>
 					}
 				/>
 		);
