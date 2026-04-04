@@ -23,6 +23,18 @@ import { IVector2, IVector3, IVector4 } from "./Vector";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+export interface INavigationState
+{
+	ignore?: number;
+}
+
+export interface ITrackballState extends INavigationState
+{
+	center: IVector3;
+	distance: number;
+	rotation: IVector4;
+}
+
 export interface IRotationStep
 {
 	axis: IVector3;
@@ -47,9 +59,13 @@ export interface INavigator
 	mouseTranslate: ( ( params: { event: IEvent, scale: number } ) => ( INavStepFunction | null ) );
 	rotateAxisAngle ( axis: IVector3, radians: number, space: ICoordinateSystem ) : void;
 	rotateQuaternion: ( ( quaternion: IVector4 ) => void );
-	rotationMode: ( IRotationMode | null );
 	translateScreenXY ( input: { current: IVector2, previous: IVector2, scale: number } ) : void;
 	zoom: ( ( scale: number ) => void );
+
+	rotationMode: ( IRotationMode | null );
+
+	getInternalState: ( () => INavigationState );
+	setInternalState: ( ( state: Readonly<INavigationState> ) => void );
 
 	viewMatrix: Readonly<IMatrix44>;
 	invViewMatrix: ( Readonly<IMatrix44> | null );

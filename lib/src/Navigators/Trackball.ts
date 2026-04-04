@@ -14,7 +14,6 @@
 
 import {
 	NavBase as BaseClass,
-	type INavigationState,
 } from "./NavBase";
 import {
 	Perspective,
@@ -39,8 +38,10 @@ import {
 	ICoordinateSystem,
 	IEvent,
 	IMatrix44,
+	INavigationState,
 	INavStepFunction,
 	IRotationMode,
+	ITrackballState,
 	IVector2,
 	IVector3,
 	IVector4,
@@ -52,20 +53,6 @@ import {
 	vec3,
 	vec4,
 } from "gl-matrix";
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
-//	Types used below.
-//
-///////////////////////////////////////////////////////////////////////////////
-
-interface ITrackballState extends INavigationState
-{
-	center: IVector3;
-	distance: number;
-	rotation: IVector4;
-}
 
 
 ///////////////////////////////////////////////////////////////////////////////
