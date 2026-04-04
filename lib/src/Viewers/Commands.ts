@@ -14,15 +14,17 @@
 
 import { Base as BaseClass } from "../Base";
 import { DEG_TO_RAD } from "../Tools";
-import { vec3 } from "gl-matrix";
+import { mat3, quat, vec3 } from "gl-matrix";
 import type {
 	ICommand,
 	ICommandMap,
 	ICommandName,
+	ICoordinateSystem,
 	IEvent,
 	IEventType,
 	IInputToCommandNameMap,
 	IVector3,
+	IVector4,
 } from "../Types";
 
 
@@ -63,6 +65,7 @@ export class RotateAxisAngle extends Command
 {
 	#axis: IVector3 = [ 0, 1, 0 ];
 	#angle = 0;
+	#space: ICoordinateSystem = "global";
 
 	/**
 	 * Construct the class.
@@ -83,7 +86,25 @@ export class RotateAxisAngle extends Command
 	 */
 	public override getClassName() : string
 	{
-		return "Viewers.Commands.Rotate";
+		return "Viewers.Commands.RotateAxisAngle";
+	}
+
+	/**
+	 * Get the coordinate system for the rotation.
+	 * @returns {ICoordinateSystem} The coordinate system.
+	 */
+	public get space() : ICoordinateSystem
+	{
+		return this.#space;
+	}
+
+	/**
+	 * Set the coordinate system for the rotation.
+	 * @param {ICoordinateSystem} space The coordinate system.
+	 */
+	public set space ( space: ICoordinateSystem )
+	{
+		this.#space = space;
 	}
 
 	/**
@@ -94,7 +115,7 @@ export class RotateAxisAngle extends Command
 	{
 		const { viewer } = event;
 		const { navBase } = viewer;
-		navBase.rotateAxisAngle ( this.#axis, this.#angle, "global" );
+		navBase.rotateAxisAngle ( this.#axis, this.#angle, this.#space );
 		viewer.requestRender();
 	}
 }
@@ -118,6 +139,15 @@ export class RotateX extends RotateAxisAngle
 	{
 		super ( [ 1, 0, 0 ], angle );
 	}
+
+	/**
+	 * Execute the command.
+	 * @param {IEvent} event The event.
+	 */
+	public override execute ( event: IEvent ) : void
+	{
+		super.execute ( event );
+	}
 }
 
 
@@ -138,6 +168,32 @@ export class RotateY extends RotateAxisAngle
 	public constructor ( angle: number )
 	{
 		super ( [ 0, 1, 0 ], angle );
+	}
+
+	/**
+	 * Execute the command.
+	 * @param {IEvent} event The event.
+	 */
+	public override execute ( event: IEvent ) : void
+	{
+		// Get the navigator interface.
+		const { viewer } = event;
+		const { navBase } = viewer;
+
+		// Get the rotation mode.
+		const mode = navBase.rotationMode;
+
+		// Handle no rotation mode, which means the navigator is not a trackball.
+		if ( !mode )
+		{
+			return;
+		}
+
+		// Set the space based on the rotation mode.
+		this.space = ( ( "turn_table" === mode ) ? "local" : "global" );
+
+		// Now call the base class' function.
+		super.execute ( event );
 	}
 }
 

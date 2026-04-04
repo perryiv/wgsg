@@ -20,6 +20,7 @@ import type {
 	IEvent,
 	IMatrix44,
 	INavStepFunction,
+	IRotationMode,
 	IVector2,
 	IVector3,
 	IVector4,
@@ -68,6 +69,12 @@ export abstract class NavBase extends BaseClass
 	 * @returns The inverse view matrix.
 	 */
 	public abstract get invViewMatrix () : ( Readonly<IMatrix44> | null );
+
+	/**
+	 * Get the rotation mode.
+	 * @returns The rotation mode.
+	 */
+	public abstract get rotationMode () : ( IRotationMode | null );
 
 	/**
 	 * Rotate the navigator.

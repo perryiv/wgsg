@@ -35,7 +35,9 @@ export interface ITranslateScreenStep
 	previous: IVector2;
 }
 
-export type ICoordinateSystem = "local" | "global";
+export type IRotationMode = ( "track_ball" | "turn_table" );
+
+export type ICoordinateSystem = ( "local" | "global" );
 
 export type INavStepFunction = ( u: number ) => void;
 
@@ -45,6 +47,7 @@ export interface INavigator
 	mouseTranslate: ( ( params: { event: IEvent, scale: number } ) => ( INavStepFunction | null ) );
 	rotateAxisAngle ( axis: IVector3, radians: number, space: ICoordinateSystem ) : void;
 	rotateQuaternion: ( ( quaternion: IVector4 ) => void );
+	rotationMode: ( IRotationMode | null );
 	translateScreenXY ( input: { current: IVector2, previous: IVector2, scale: number } ) : void;
 	zoom: ( ( scale: number ) => void );
 
