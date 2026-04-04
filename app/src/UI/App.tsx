@@ -141,6 +141,19 @@ export function App()
 	// console.log ( "Rendering app" );
 
 	//
+	// Return a vertical space.
+	//
+	const verticalSpace = useCallback ( ( height?: number ) =>
+	{
+		height ??= 10;
+
+		return (
+			<div style = { { height: `${height}px` } } />
+		);
+	},
+	[] );
+
+	//
 	// If there's no viewer then do not render the panel.
 	//
 	const renderPanel = useCallback ( () =>
@@ -161,12 +174,6 @@ export function App()
 					} }
 				>
 					<Button
-						onClick = { handleAllowAnimations }
-						value = { viewer.options.animations.allow }
-					>
-						Allow animations
-					</Button>
-					<Button
 						onClick = { handleTrackballMode }
 						value = { "track_ball" === viewer.navBase.rotationMode }
 					>
@@ -178,6 +185,14 @@ export function App()
 					>
 						Turntable rotation
 					</Button>
+					{ verticalSpace() }
+					<Button
+						onClick = { handleAllowAnimations }
+						value = { viewer.options.animations.allow }
+					>
+						Allow animations
+					</Button>
+					{ verticalSpace() }
 					<Button onClick = { handleViewerRender } >
 						Render viewer
 					</Button>
@@ -197,6 +212,7 @@ export function App()
 		handleTurntableMode,
 		handleViewerRender,
 		handleViewerReset,
+		verticalSpace,
 		viewers,
 	] );
 
