@@ -329,7 +329,11 @@ export class Viewer extends BaseClass
 		{
 			if ( ( false === this.isDestroyed() ) && ( false === event.repeat ) )
 			{
+				// Handle the event.
 				this.keyDown ( event );
+
+				// Prevent other UI elements from responding to this keyboard event.
+				event.preventDefault();
 			}
 		} );
 
@@ -337,7 +341,11 @@ export class Viewer extends BaseClass
 		{
 			if ( false === this.isDestroyed() )
 			{
+				// Handle the event.
 				this.keyUp ( event );
+
+				// Prevent other UI elements from responding to this keyboard event.
+				event.preventDefault();
 			}
 		} );
 
