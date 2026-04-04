@@ -176,12 +176,14 @@ export function App()
 					<Button
 						onClick = { handleTrackballMode }
 						value = { "track_ball" === viewer.navBase.rotationMode }
+						radio = { true }
 					>
 						Trackball rotation
 					</Button>
 					<Button
 						onClick = { handleTurntableMode }
 						value = { "turn_table" === viewer.navBase.rotationMode }
+						radio = { true }
 					>
 						Turntable rotation
 					</Button>
