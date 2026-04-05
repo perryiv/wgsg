@@ -130,10 +130,36 @@ export class RotateAxisAngle extends Command
 	 */
 	public execute ( event: IEvent ) : void
 	{
+		// Shortcuts.
 		const { viewer } = event;
 		const { navBase } = viewer;
-		navBase.rotateAxisAngle ( this.#axis, this.#angle, this.#space );
-		viewer.requestRender();
+
+		// If we are not supposed to animate ...
+		if ( false === viewer.options.animations.allow )
+		{
+			navBase.rotateAxisAngle ( this.#axis, this.#angle, this.#space );
+			viewer.requestRender();
+			return;
+		}
+
+		// Save the current navigation state.
+		const originalState = navBase.getInternalState();
+
+		// If we get to here then animate the rotation.
+		const nav = viewer.animations.nav;
+		nav.set ( `${this.type}.execute()`, ( fraction: number ) =>
+		{
+			// Start at the original state.
+			navBase.setInternalState ( originalState );
+
+			// Rotate the navigator.
+			const angle = this.#angle * fraction;
+			navBase.rotateAxisAngle ( this.#axis, angle, this.#space );
+
+			// Request a render so that we can see the change.
+			viewer.requestRender();
+		} );
+		nav.start ( viewer.options.duration.rotate_axis_angle );
 	}
 }
 

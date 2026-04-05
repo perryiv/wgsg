@@ -233,6 +233,7 @@ export class Viewer extends BaseClass
 			},
 			duration: {
 				mouse_throw: 1500,
+				rotate_axis_angle: 500,
 				view_reset: 1000
 			}
 		};

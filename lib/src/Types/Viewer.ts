@@ -20,6 +20,7 @@ import type { IEvent } from "./Event";
 import type { IMatrix44 } from "./Matrix";
 import type { INavigator } from "./Navigator";
 import type { IVector2 } from "./Vector";
+import type { IViewerOptions } from "./Options";
 import type { IViewport } from "./Viewport";
 
 
@@ -36,6 +37,7 @@ export interface IViewer
 	modelScene: ( SceneNode | null );
 
 	navBase: INavigator;
+	options: IViewerOptions;
 	projMatrix: Readonly<IMatrix44>;
 	viewport: Readonly<IViewport>;
 
