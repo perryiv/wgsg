@@ -33,6 +33,57 @@ export function App()
 	const [ count, setCount ] = useState ( 0 );
 
 	//
+	// Return the formatted viewer render graph info.
+	//
+	const getRenderGraphInfo = useCallback ( () =>
+	{
+		const viewer = viewers.get ( VIEWER_NAME );
+		if ( !viewer )
+		{
+			return null;
+		};
+
+		const rgi = viewer.cullVisitor.renderGraphInfo;
+
+		const rightAlign = {
+			display: "inline-block",
+			width: "50px",
+			textAlign: "right",
+		};
+
+		const leftAlign = {
+			display: "inline-block",
+			width: "100px",
+			textAlign: "left",
+		};
+
+		return (
+			<div
+				style = { {
+					"display": "flex",
+					"flex-direction": "column",
+					"align-items": "flex-start",
+					"font-size": "12px",
+					"line-height": "16px",
+					"white-space": "pre",
+				} }
+			>
+				<div>Render graph info:</div>
+				<div><span style = { rightAlign }>           {rgi.numLayers} </span> <span style = { leftAlign }> Layers       </span></div>
+				<div><span style = { rightAlign }>             {rgi.numBins} </span> <span style = { leftAlign }> Bins         </span></div>
+				<div><span style = { rightAlign }>        {rgi.numPipelines} </span> <span style = { leftAlign }> Pipelines    </span></div>
+				<div><span style = { rightAlign }> {rgi.numProjMatrixGroups} </span> <span style = { leftAlign }> Projections  </span></div>
+				<div><span style = { rightAlign }> {rgi.numViewMatrixGroups} </span> <span style = { leftAlign }> ViewMatrices </span></div>
+				<div><span style = { rightAlign }>      {rgi.numStateGroups} </span> <span style = { leftAlign }> States       </span></div>
+				<div><span style = { rightAlign }>           {rgi.numShapes} </span> <span style = { leftAlign }> Shapes       </span></div>
+				<div><span style = { rightAlign }>        {rgi.numTriangles} </span> <span style = { leftAlign }> Triangles    </span></div>
+				<div><span style = { rightAlign }>            {rgi.numLines} </span> <span style = { leftAlign }> Lines        </span></div>
+			</div>
+		)
+	},
+	[ viewers ] );
+
+	//
 	// Handle the "allow animations" button.
 	//
 	const handleAllowAnimations = useCallback ( () =>
@@ -131,12 +182,22 @@ export function App()
 	{
 		// console.log ( "App component mounted" );
 
+		// When the viewer renders we want to re-render this component.
+		const viewer = viewers.get ( VIEWER_NAME );
+		if ( viewer )
+		{
+			viewer.clientListeners.add ( "post_render", () =>
+			{
+				setCount ( ( current ) => { return ( current + 1 ); } );
+			} );
+		}
+
 		return ( () =>
 		{
 			// console.log ( "App component unmounted" );
 		} );
 	},
-	[] );
+	[ viewers ] );
 
 	// console.log ( "Rendering app" );
 
@@ -204,10 +265,13 @@ export function App()
 					<Button onClick = { handleSimulateDeviceLost } >
 						Simulate device lost
 					</Button>
+					{ verticalSpace() }
+					{ getRenderGraphInfo() }
 				</div>
 			</Panel>
 		)
 	}, [
+		getRenderGraphInfo,
 		handleAllowAnimations,
 		handleSimulateDeviceLost,
 		handleTrackballMode,

@@ -693,10 +693,10 @@ export class Viewer extends BaseClass
 	/**
 	 * Make the event.
 	 * @param {IEventType} type - The event type.
-	 * @param {MouseEvent | KeyboardEvent} event - The original event.
-	 * @returns {IEvent} The mouse event data.
+	 * @param {MouseEvent | KeyboardEvent} [event] - The original event.
+	 * @returns {IEvent} The event data.
 	 */
-	private makeEvent ( type: IEventType, event: ( MouseEvent | KeyboardEvent ) ) : IEvent
+	private makeEvent ( type: IEventType, event?: ( MouseEvent | KeyboardEvent ) ) : IEvent
 	{
 		return {
 			type, event, viewer: this,
@@ -934,7 +934,11 @@ export class Viewer extends BaseClass
 		// command, like F5, will still reload the page.
 		if ( handled )
 		{
-			event.event.preventDefault();
+			const { event: originalEvent } = event;
+			if ( originalEvent )
+			{
+				originalEvent.preventDefault();
+			}
 		}
 	}
 
@@ -991,7 +995,13 @@ export class Viewer extends BaseClass
 		// Set the transform from the navigator.
 		this.#branches.nav.matrix = this.navBase.viewMatrix;
 
+		// Notify the listeners.
+		this.clientListeners.notify ( this.makeEvent ( "pre_render" ) );
+
 		// Now call the base class.
 		super.render();
+
+		// Notify the listeners.
+		this.clientListeners.notify ( this.makeEvent ( "post_render" ) );
 	}
 }
