@@ -532,8 +532,9 @@ export class Trackball extends BaseClass
 	/**
 	 * Handle the event.
 	 * @param {IEvent} event - The event.
+	 * @returns {boolean} True if the event was handled, false if not.
 	 */
-	public override handleEvent ( event: IEvent ) : void
+	public override handleEvent ( event: IEvent ) : boolean
 	{
 		// Shortcut.
 		const { viewer } = event;
@@ -544,11 +545,14 @@ export class Trackball extends BaseClass
 		// Handle no command.
 		if ( !command )
 		{
-			return
+			return false;
 		}
 
 		// If we get to here then execute the command.
 		command.execute ( event );
+
+		// We handled the event.
+		return true;
 	}
 
 	/**
