@@ -39,6 +39,9 @@ export interface IViewerOptions
 
 		// The duration of the animation when resetting the view.
 		view_reset: number;
+
+		// The duration of the animation when pressing the arrow keys.
+		rotate_axis_angle: number;
 	};
 }
 
