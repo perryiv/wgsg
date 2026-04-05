@@ -12,12 +12,41 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { useTheme } from "@mui/material";
 import { Button } from "./Button";
-import { Device, Trackball } from "../../../lib/src";
 import { Panel } from "./Panel";
-import { useCallback, useEffect, useState } from "react";
 import { useViewerStore } from "../State";
 import { Viewer, VIEWER_NAME } from "./Viewer";
+import {
+	useCallback,
+	useEffect,
+	useMemo,
+	useState,
+} from "react";
+import {
+	Device,
+	Trackball,
+	type IRenderGraphInfo,
+} from "../../../lib/src";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Default (empty) render graph info.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+const defaultRenderGraphInfo: IRenderGraphInfo = {
+	numLayers: 0,
+	numBins: 0,
+	numPipelines: 0,
+	numProjMatrixGroups: 0,
+	numViewMatrixGroups: 0,
+	numStateGroups: 0,
+	numShapes: 0,
+	numTriangles: 0,
+	numLines: 0,
+};
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -32,54 +61,30 @@ export function App()
 	const viewers = useViewerStore ( ( state ) => state.viewers );
 	const [ count, setCount ] = useState ( 0 );
 
+	// Get the application state.
+	const { palette } = useTheme();
+
+	//
+	// Get the background color for the panel.
+	//
+	const panelBackground = useMemo ( () =>
+	{
+		// Add alpha to the color.
+		return ( palette.background.paper + "5" );
+	},
+	[ palette ] );
+
 	//
 	// Return the formatted viewer render graph info.
 	//
 	const getRenderGraphInfo = useCallback ( () =>
 	{
 		const viewer = viewers.get ( VIEWER_NAME );
-		if ( !viewer )
-		{
-			return null;
-		};
 
-		const rgi = viewer.cullVisitor.renderGraphInfo;
-
-		const rightAlign = {
-			display: "inline-block",
-			width: "50px",
-			textAlign: "right",
-		};
-
-		const leftAlign = {
-			display: "inline-block",
-			width: "100px",
-			textAlign: "left",
-		};
-
-		return (
-			<div
-				style = { {
-					"display": "flex",
-					"flex-direction": "column",
-					"align-items": "flex-start",
-					"font-size": "12px",
-					"line-height": "16px",
-					"white-space": "pre",
-				} }
-			>
-				<div>Render graph info:</div>
-				<div><span style = { rightAlign }>           {rgi.numLayers} </span> <span style = { leftAlign }> Layers       </span></div>
-				<div><span style = { rightAlign }>             {rgi.numBins} </span> <span style = { leftAlign }> Bins         </span></div>
-				<div><span style = { rightAlign }>        {rgi.numPipelines} </span> <span style = { leftAlign }> Pipelines    </span></div>
-				<div><span style = { rightAlign }> {rgi.numProjMatrixGroups} </span> <span style = { leftAlign }> Projections  </span></div>
-				<div><span style = { rightAlign }> {rgi.numViewMatrixGroups} </span> <span style = { leftAlign }> ViewMatrices </span></div>
-				<div><span style = { rightAlign }>      {rgi.numStateGroups} </span> <span style = { leftAlign }> States       </span></div>
-				<div><span style = { rightAlign }>           {rgi.numShapes} </span> <span style = { leftAlign }> Shapes       </span></div>
-				<div><span style = { rightAlign }>        {rgi.numTriangles} </span> <span style = { leftAlign }> Triangles    </span></div>
-				<div><span style = { rightAlign }>            {rgi.numLines} </span> <span style = { leftAlign }> Lines        </span></div>
-			</div>
-		)
+		return ( ( viewer )
+			? viewer.cullVisitor.renderGraphInfo
+			: defaultRenderGraphInfo
+		);
 	},
 	[ viewers ] );
 
@@ -215,18 +220,24 @@ export function App()
 	[] );
 
 	//
-	// If there's no viewer then do not render the panel.
+	// Render the first panel in the top left position.
 	//
-	const renderPanel = useCallback ( () =>
+	const renderPanel1 = useCallback ( () =>
 	{
 		const viewer = viewers.get ( VIEWER_NAME );
+
+		// If there's no viewer then do not render the panel.
 		if ( !viewer )
 		{
 			return null;
 		}
 
 		return (
-			<Panel>
+			<Panel
+				style = { {
+					background: panelBackground,
+				} }
+			>
 				<div
 					style = { {
 						display: "flex",
@@ -265,20 +276,61 @@ export function App()
 					<Button onClick = { handleSimulateDeviceLost } >
 						Simulate device lost
 					</Button>
-					{ verticalSpace() }
-					{ getRenderGraphInfo() }
 				</div>
 			</Panel>
-		)
+		);
 	}, [
-		getRenderGraphInfo,
 		handleAllowAnimations,
 		handleSimulateDeviceLost,
 		handleTrackballMode,
 		handleTurntableMode,
 		handleViewerRender,
 		handleViewerReset,
+		panelBackground,
 		verticalSpace,
+		viewers,
+	] );
+
+	//
+	// Render the second panel.
+	//
+	const renderPanel2 = useCallback ( () =>
+	{
+		const viewer = viewers.get ( VIEWER_NAME );
+
+		// If there's no viewer then do not render the panel.
+		if ( !viewer )
+		{
+			return null;
+		}
+
+		return (
+			<Panel
+				style = { {
+					background: panelBackground,
+				} }
+			>
+				<div
+					style = { {
+						display: "flex",
+						flexDirection: "column",
+						alignItems: "flex-start",
+					} }
+				>
+					<pre>
+						{
+							JSON.stringify ( getRenderGraphInfo(), null, 2 )
+							.replace ( /[{}]/g, "" )
+							.replace ( / {2}/g, "" )
+							.trim()
+						}
+					</pre>
+				</div>
+			</Panel>
+		);
+	}, [
+		getRenderGraphInfo,
+		panelBackground,
 		viewers,
 	] );
 
@@ -293,7 +345,19 @@ export function App()
 				background: "linear-gradient(#DDEEFF,#778899)"
 			} }
 		>
-			{ renderPanel() }
+			<div
+				style = { {
+					position: "absolute",
+					top: "10px",
+					left: "10px",
+					display: "flex",
+					flexDirection: "row",
+					gap: "10px",
+				} }
+			>
+				{ renderPanel1() }
+				{ renderPanel2() }
+			</div>
 			<Viewer
 				style = { {
 					width: "100vw",

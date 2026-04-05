@@ -12,15 +12,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Paper } from "@mui/material";
 import {
 	CSSProperties,
 	ReactNode,
 	useEffect,
 } from "react";
-import {
-	Paper,
-	useTheme,
-} from "@mui/material";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -47,9 +44,6 @@ export function Panel ( props: IPanelProps )
 	// Get input.
 	const { style, children } = props;
 
-	// Get the application state.
-	const { palette } = useTheme();
-
 	//
 	// Called when the component mounts.
 	//
@@ -70,13 +64,7 @@ export function Panel ( props: IPanelProps )
 	return (
 		<Paper
 			style = { {
-				position: "absolute",
-				top: 10,
-				left: 10,
 				padding: "4px",
-				userSelect: "none",
-				background: palette.background.paper,
-				opacity: 0.6,
 				...style,
 			} }
 			elevation = { 0 }
