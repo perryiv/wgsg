@@ -39,9 +39,11 @@ export abstract class BaseHandler extends BaseClass
 	/**
 	 * Handle the event.
 	 * @param {IEvent} event - The event.
+	 * @returns {boolean} True if the event was handled, false if not.
 	 */
-	public handleEvent ( event: IEvent ) : void
+	public handleEvent ( event: IEvent ) : boolean
 	{
 		discardEvent ( event );
+		return false;
 	}
 }

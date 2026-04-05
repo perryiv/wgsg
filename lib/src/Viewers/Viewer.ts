@@ -330,11 +330,7 @@ export class Viewer extends BaseClass
 		{
 			if ( ( false === this.isDestroyed() ) && ( false === event.repeat ) )
 			{
-				// Handle the event.
 				this.keyDown ( event );
-
-				// Prevent other UI elements from responding to this keyboard event.
-				event.preventDefault();
 			}
 		} );
 
@@ -342,11 +338,7 @@ export class Viewer extends BaseClass
 		{
 			if ( false === this.isDestroyed() )
 			{
-				// Handle the event.
 				this.keyUp ( event );
-
-				// Prevent other UI elements from responding to this keyboard event.
-				event.preventDefault();
 			}
 		} );
 
@@ -733,6 +725,7 @@ export class Viewer extends BaseClass
 	public mouseDown ( input: MouseEvent ) : void
 	{
 		this.animations.nav.stop();
+
 		input.preventDefault();
 		const { button, clientX, clientY } = input;
 
@@ -903,17 +896,14 @@ export class Viewer extends BaseClass
 	 */
 	public keyDown ( input: KeyboardEvent ) : void
 	{
-		// Don't do this because it prevents all the normal key events,
-		// like F5 to reload the page, etc.
-		// input.preventDefault();
-
 		const { code } = input;
 		this.keysDown.add ( code );
 
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "key_down", input );
-		handler.handleEvent ( event );
+		const result = handler.handleEvent ( event );
 		this.clientListeners.notify ( event );
+		this.maybePreventDefault ( event, result );
 	}
 
 	/**
@@ -927,8 +917,25 @@ export class Viewer extends BaseClass
 
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "key_up", input );
-		handler.handleEvent ( event );
+		const result = handler.handleEvent ( event );
 		this.clientListeners.notify ( event );
+		this.maybePreventDefault ( event, result );
+	}
+
+	/**
+	 * Maybe prevent the default action for the event if it was handled.
+	 * @param {IEvent} event - The event.
+	 * @param {boolean} handled - Whether or not the event was handled.
+	 */
+	protected maybePreventDefault ( event: IEvent, handled: boolean ) : void
+	{
+		// If we handled the event then prevent other UI elements from responding
+		// to this same event. This way a key that's probably not mapped to a
+		// command, like F5, will still reload the page.
+		if ( handled )
+		{
+			event.event.preventDefault();
+		}
 	}
 
 	/**
