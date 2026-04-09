@@ -60,6 +60,7 @@ export function App()
 	// Get state.
 	const viewers = useViewerStore ( ( state ) => state.viewers );
 	const [ count, setCount ] = useState ( 0 );
+	const [ showStats, setShowStats ] = useState ( false );
 
 	// Get the application state.
 	const { palette } = useTheme();
@@ -181,6 +182,18 @@ export function App()
 	[] );
 
 	//
+	// Handle the show stats button.
+	//
+	const handleShowStats = useCallback ( () =>
+	{
+		setShowStats ( ( current ) =>
+		{
+			return ( !current );
+		} );
+	},
+	[] );
+
+	//
 	// Called when the component mounts.
 	//
 	useEffect ( () =>
@@ -276,17 +289,26 @@ export function App()
 					<Button onClick = { handleSimulateDeviceLost } >
 						Simulate device lost
 					</Button>
+					{ verticalSpace() }
+					<Button
+						onClick = { handleShowStats }
+						value = { showStats }
+					>
+						Render stats
+					</Button>
 				</div>
 			</Panel>
 		);
 	}, [
 		handleAllowAnimations,
+		handleShowStats,
 		handleSimulateDeviceLost,
 		handleTrackballMode,
 		handleTurntableMode,
 		handleViewerRender,
 		handleViewerReset,
 		panelBackground,
+		showStats,
 		verticalSpace,
 		viewers,
 	] );
@@ -304,6 +326,54 @@ export function App()
 			return null;
 		}
 
+		// Are we showing the stats?
+		if ( !showStats )
+		{
+			return null;
+		}
+
+		// Get the frame info and make sure there is an end time.
+		const frame = viewer.frame;
+		if ( !frame.end )
+		{
+			return null;
+		}
+
+		// Determine how long the frame took in milliseconds.
+		const duration = ( frame.end - frame.start );
+
+		// Make the string for the frame info.
+		const frameInfo =
+			`Frame: ${ viewer.frame.count }\n` +
+			`Time: ${ duration.toFixed ( 4 ) } ms\n` +
+			`Rate: ${ ( 1000 / duration ).toFixed ( 2 ) } f/s\n`;
+
+		// Get the render graph info.
+		const rgi: IRenderGraphInfo = getRenderGraphInfo();
+
+		// Make an object with more readable names.
+		const info = {
+			"Layers": rgi.numLayers,
+			"Bins": rgi.numBins,
+			"Pipelines": rgi.numPipelines,
+			"Projections": rgi.numProjMatrixGroups,
+			"ViewMatrices": rgi.numViewMatrixGroups,
+			"States": rgi.numStateGroups,
+			"Shapes": rgi.numShapes,
+			"Triangles": rgi.numTriangles,
+			"Lines": rgi.numLines,
+		};
+
+		// Make the final string.
+		const label = frameInfo +
+			JSON.stringify ( info, null, 2 )
+			.replace ( /[{}]/g,  "" )
+			.replace ( / {2}/g,  "" )
+			.replace ( /"/g,     "" )
+			.replace ( /,/g,     "" )
+			.replace ( /\nnum/g, "\n" )
+			.trim()
+
 		return (
 			<Panel
 				style = { {
@@ -317,20 +387,24 @@ export function App()
 						alignItems: "flex-start",
 					} }
 				>
-					<pre>
-						{
-							JSON.stringify ( getRenderGraphInfo(), null, 2 )
-							.replace ( /[{}]/g, "" )
-							.replace ( / {2}/g, "" )
-							.trim()
-						}
-					</pre>
+					<div
+						style = { {
+							display: "flex",
+							flexDirection: "column",
+							alignItems: "flex-start",
+							whiteSpace: "pre",
+							fontSize: "12px",
+						} }
+					>
+						{ label }
+					</div>
 				</div>
 			</Panel>
 		);
 	}, [
 		getRenderGraphInfo,
 		panelBackground,
+		showStats,
 		viewers,
 	] );
 
