@@ -12,12 +12,41 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { useTheme } from "@mui/material";
 import { Button } from "./Button";
-import { Device, Trackball } from "../../../lib/src";
 import { Panel } from "./Panel";
-import { useCallback, useEffect, useState } from "react";
 import { useViewerStore } from "../State";
 import { Viewer, VIEWER_NAME } from "./Viewer";
+import {
+	useCallback,
+	useEffect,
+	useMemo,
+	useState,
+} from "react";
+import {
+	Device,
+	Trackball,
+	type IRenderGraphInfo,
+} from "../../../lib/src";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Default (empty) render graph info.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+const defaultRenderGraphInfo: IRenderGraphInfo = {
+	numLayers: 0,
+	numBins: 0,
+	numPipelines: 0,
+	numProjMatrixGroups: 0,
+	numViewMatrixGroups: 0,
+	numStateGroups: 0,
+	numShapes: 0,
+	numTriangles: 0,
+	numLines: 0,
+};
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -31,6 +60,34 @@ export function App()
 	// Get state.
 	const viewers = useViewerStore ( ( state ) => state.viewers );
 	const [ count, setCount ] = useState ( 0 );
+	const [ showStats, setShowStats ] = useState ( false );
+
+	// Get the application state.
+	const { palette } = useTheme();
+
+	//
+	// Get the background color for the panel.
+	//
+	const panelBackground = useMemo ( () =>
+	{
+		// Add alpha to the color.
+		return ( palette.background.paper + "5" );
+	},
+	[ palette ] );
+
+	//
+	// Return the formatted viewer render graph info.
+	//
+	const getRenderGraphInfo = useCallback ( () =>
+	{
+		const viewer = viewers.get ( VIEWER_NAME );
+
+		return ( ( viewer )
+			? viewer.cullVisitor.renderGraphInfo
+			: defaultRenderGraphInfo
+		);
+	},
+	[ viewers ] );
 
 	//
 	// Handle the "allow animations" button.
@@ -125,18 +182,40 @@ export function App()
 	[] );
 
 	//
+	// Handle the show stats button.
+	//
+	const handleShowStats = useCallback ( () =>
+	{
+		setShowStats ( ( current ) =>
+		{
+			return ( !current );
+		} );
+	},
+	[] );
+
+	//
 	// Called when the component mounts.
 	//
 	useEffect ( () =>
 	{
 		// console.log ( "App component mounted" );
 
+		// When the viewer renders we want to re-render this component.
+		const viewer = viewers.get ( VIEWER_NAME );
+		if ( viewer )
+		{
+			viewer.clientListeners.add ( "post_render", () =>
+			{
+				setCount ( ( current ) => { return ( current + 1 ); } );
+			} );
+		}
+
 		return ( () =>
 		{
 			// console.log ( "App component unmounted" );
 		} );
 	},
-	[] );
+	[ viewers ] );
 
 	// console.log ( "Rendering app" );
 
@@ -154,18 +233,24 @@ export function App()
 	[] );
 
 	//
-	// If there's no viewer then do not render the panel.
+	// Render the first panel in the top left position.
 	//
-	const renderPanel = useCallback ( () =>
+	const renderPanel1 = useCallback ( () =>
 	{
 		const viewer = viewers.get ( VIEWER_NAME );
+
+		// If there's no viewer then do not render the panel.
 		if ( !viewer )
 		{
 			return null;
 		}
 
 		return (
-			<Panel>
+			<Panel
+				style = { {
+					background: panelBackground,
+				} }
+			>
 				<div
 					style = { {
 						display: "flex",
@@ -204,17 +289,108 @@ export function App()
 					<Button onClick = { handleSimulateDeviceLost } >
 						Simulate device lost
 					</Button>
+					{ verticalSpace() }
+					<Button
+						onClick = { handleShowStats }
+						value = { showStats }
+					>
+						Render stats
+					</Button>
 				</div>
 			</Panel>
-		)
+		);
 	}, [
 		handleAllowAnimations,
+		handleShowStats,
 		handleSimulateDeviceLost,
 		handleTrackballMode,
 		handleTurntableMode,
 		handleViewerRender,
 		handleViewerReset,
+		panelBackground,
+		showStats,
 		verticalSpace,
+		viewers,
+	] );
+
+	//
+	// Render the second panel.
+	//
+	const renderPanel2 = useCallback ( () =>
+	{
+		const viewer = viewers.get ( VIEWER_NAME );
+
+		// If there's no viewer then do not render the panel.
+		if ( !viewer )
+		{
+			return null;
+		}
+
+		// Are we showing the stats?
+		if ( !showStats )
+		{
+			return null;
+		}
+
+		// Get the frame info and make sure there is an end time.
+		const frame = viewer.frame;
+		if ( !frame.end )
+		{
+			return null;
+		}
+
+		// Get the render graph info.
+		const rgi: IRenderGraphInfo = getRenderGraphInfo();
+
+		// Determine how long the frame took in milliseconds.
+		const duration = ( frame.end - frame.start );
+
+		// Make the final string.
+		const label =
+			`Frame: ${ viewer.frame.count }\n` +
+			`Time: ${ duration.toFixed ( 4 ) } ms\n` +
+			`Rate: ${ ( 1000 / duration ).toFixed ( 2 ) } f/s\n` +
+			`Layers: ${ rgi.numLayers }\n` +
+			`Bins: ${ rgi.numBins }\n` +
+			`Pipelines: ${ rgi.numPipelines }\n` +
+			`Projections: ${ rgi.numProjMatrixGroups }\n` +
+			`ViewMatrices: ${ rgi.numViewMatrixGroups }\n` +
+			`States: ${ rgi.numStateGroups }\n` +
+			`Shapes: ${ rgi.numShapes }\n` +
+			`Triangles: ${ rgi.numTriangles }\n` +
+			`Lines: ${ rgi.numLines }`;
+
+		// Render the panel.
+		return (
+			<Panel
+				style = { {
+					background: panelBackground,
+				} }
+			>
+				<div
+					style = { {
+						display: "flex",
+						flexDirection: "column",
+						alignItems: "flex-start",
+						paddingLeft: "4px",
+						minWidth: "100px",
+					} }
+				>
+					<div
+						style = { {
+							whiteSpace: "pre",
+							fontSize: "12px",
+						} }
+					>
+						{ label }
+					</div>
+				</div>
+			</Panel>
+		);
+	}, [
+		getRenderGraphInfo,
+		panelBackground,
+		showStats,
 		viewers,
 	] );
 
@@ -229,7 +405,19 @@ export function App()
 				background: "linear-gradient(#DDEEFF,#778899)"
 			} }
 		>
-			{ renderPanel() }
+			<div
+				style = { {
+					position: "absolute",
+					top: "10px",
+					left: "10px",
+					display: "flex",
+					flexDirection: "row",
+					gap: "10px",
+				} }
+			>
+				{ renderPanel1() }
+				{ renderPanel2() }
+			</div>
 			<Viewer
 				style = { {
 					width: "100vw",

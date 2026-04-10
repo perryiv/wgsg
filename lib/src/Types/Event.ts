@@ -33,12 +33,14 @@ export type IEventType = (
 	| "mouse_out"
 	| "key_down"
 	| "key_up"
+	| "pre_render"
+	| "post_render"
 );
 
 export interface IEvent extends IInputState
 {
 	type: IEventType;
-	event: ( KeyboardEvent | MouseEvent );
+	event?: ( KeyboardEvent | MouseEvent );
 	viewer: IViewer;
 }
 

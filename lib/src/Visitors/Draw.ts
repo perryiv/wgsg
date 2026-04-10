@@ -285,6 +285,14 @@ export class Draw extends BaseClass
 	 */
 	public draw ( root: Root ) : void
 	{
+		// Make sure we have a device. This can happen if the device is lost after
+		// a render is scheduled but before it happens.
+		if ( false === Device.valid )
+		{
+			console.warn ( "Cannot draw because the device is not valid" );
+			return;
+		}
+
 		// Shortcut.
 		const device = Device.instance.device;
 
