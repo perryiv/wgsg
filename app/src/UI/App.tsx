@@ -339,41 +339,28 @@ export function App()
 			return null;
 		}
 
-		// Determine how long the frame took in milliseconds.
-		const duration = ( frame.end - frame.start );
-
-		// Make the string for the frame info.
-		const frameInfo =
-			`Frame: ${ viewer.frame.count }\n` +
-			`Time: ${ duration.toFixed ( 4 ) } ms\n` +
-			`Rate: ${ ( 1000 / duration ).toFixed ( 2 ) } f/s\n`;
-
 		// Get the render graph info.
 		const rgi: IRenderGraphInfo = getRenderGraphInfo();
 
-		// Make an object with more readable names.
-		const info = {
-			"Layers": rgi.numLayers,
-			"Bins": rgi.numBins,
-			"Pipelines": rgi.numPipelines,
-			"Projections": rgi.numProjMatrixGroups,
-			"ViewMatrices": rgi.numViewMatrixGroups,
-			"States": rgi.numStateGroups,
-			"Shapes": rgi.numShapes,
-			"Triangles": rgi.numTriangles,
-			"Lines": rgi.numLines,
-		};
+		// Determine how long the frame took in milliseconds.
+		const duration = ( frame.end - frame.start );
 
 		// Make the final string.
-		const label = frameInfo +
-			JSON.stringify ( info, null, 2 )
-			.replace ( /[{}]/g,  "" )
-			.replace ( / {2}/g,  "" )
-			.replace ( /"/g,     "" )
-			.replace ( /,/g,     "" )
-			.replace ( /\nnum/g, "\n" )
-			.trim()
+		const label =
+			`Frame: ${ viewer.frame.count }\n` +
+			`Time: ${ duration.toFixed ( 4 ) } ms\n` +
+			`Rate: ${ ( 1000 / duration ).toFixed ( 2 ) } f/s\n` +
+			`Layers: ${ rgi.numLayers }\n` +
+			`Bins: ${ rgi.numBins }\n` +
+			`Pipelines: ${ rgi.numPipelines }\n` +
+			`Projections: ${ rgi.numProjMatrixGroups }\n` +
+			`ViewMatrices: ${ rgi.numViewMatrixGroups }\n` +
+			`States: ${ rgi.numStateGroups }\n` +
+			`Shapes: ${ rgi.numShapes }\n` +
+			`Triangles: ${ rgi.numTriangles }\n` +
+			`Lines: ${ rgi.numLines }`;
 
+		// Render the panel.
 		return (
 			<Panel
 				style = { {
@@ -385,13 +372,12 @@ export function App()
 						display: "flex",
 						flexDirection: "column",
 						alignItems: "flex-start",
+						paddingLeft: "4px",
+						minWidth: "100px",
 					} }
 				>
 					<div
 						style = { {
-							display: "flex",
-							flexDirection: "column",
-							alignItems: "flex-start",
 							whiteSpace: "pre",
 							fontSize: "12px",
 						} }
