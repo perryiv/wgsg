@@ -16,6 +16,7 @@ export * from "./Algorithms";
 export * from "./Arrays";
 export * from "./Base";
 export * from "./Builders";
+export * from "./IO";
 export * from "./Math";
 export * from "./Navigators";
 export * from "./Projections";

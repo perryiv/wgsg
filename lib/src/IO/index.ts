@@ -12,21 +12,4 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export * from "./Animations";
-export * from "./Command";
-export * from "./Event";
-export * from "./Graphics";
-export * from "./Input";
-export * from "./Keyboard";
-export * from "./Line";
-export * from "./Matrix";
-export * from "./Mouse";
-export * from "./Navigator";
-export * from "./Options";
-export * from "./Plane";
-export * from "./Progress";
-export * from "./Size";
-export * from "./Sphere";
-export * from "./Vector";
-export * from "./Viewer";
-export * from "./Viewport";
+export * from "./Reader";
