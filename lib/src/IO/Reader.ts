@@ -19,11 +19,12 @@ import type { IProgressCallback } from "../Types";
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	The map of readers.
+//	The map of reader factory functions.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-const readers = new Map < string, Reader > ();
+export type ReaderFactory = ( () => Reader );
+const readers = new Map < string, ReaderFactory > ();
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -76,26 +77,26 @@ export abstract class Reader extends BaseClass
 
 	/**
 	 * Read the file and return a promise that resolves to the scene node.
-	 * @param {string} file The name of the file to read.
+	 * @param {File} file The file to read.
 	 * @returns {Promise<SceneNode>} A promise that resolves to the scene node.
 	 */
-	public abstract read ( file: string ) : Promise < SceneNode >;
+	public abstract read ( file: File ) : Promise < SceneNode >;
 }
 
 
 /**
  * Add a reader to the map of readers.
  * @param {string} extension The file extension that this reader can handle.
- * @param {Reader} reader The reader to add.
+ * @param {ReaderFactory} factory The reader factory function to add.
  */
-export function addReader ( extension: string, reader: Reader ) : void
+export function addReader ( extension: string, factory: ReaderFactory ) : void
 {
 	if ( extension.length <= 0 )
 	{
 		throw new Error( "Empty extension string when adding reader" );
 	}
 
-	readers.set ( extension, reader );
+	readers.set ( extension, factory );
 }
 
 /**
@@ -116,19 +117,19 @@ export function clearReaders() : void
 }
 
 /**
- * Get a reader for the given file extension.
+ * Get a factory for the reader for the given file extension.
  * @param {string} extension The file extension to get the reader for.
- * @returns {Reader | null} The reader for the given file extension, or null if no reader is found.
+ * @returns {ReaderFactory | null} The reader factory for the given file extension, or null if no reader is found.
  */
-export function getReader ( extension: string ) : ( Reader | null )
+export function getReader ( extension: string ) : ( ReaderFactory | null )
 {
 	return ( readers.get ( extension ) ?? null );
 }
 
 /**
- * See if a reader exists for the given file extension.
+ * See if a reader factory exists for the given file extension.
  * @param {string} extension The file extension to check for.
- * @returns {boolean} True if a reader exists for the given file extension, false otherwise.
+ * @returns {boolean} True if a reader factory exists for the given file extension, false otherwise.
  */
 export function hasReader ( extension: string ) : boolean
 {

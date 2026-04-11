@@ -12,7 +12,4 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export * from "./Reader";
-
-// Import the concrete readers to load them into memory. Do not export them.
-import "./Readers";
+export * from "./STL";
