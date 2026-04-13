@@ -171,6 +171,9 @@ export function Viewer ( { style }: IViewerProps )
 		// Add the model to the scene.
 		viewer.modelScene = model;
 
+		// Move the camera so we see the new model.
+		viewer.viewAll ( { animate: false } );
+
 		// Render so we see the new model.
 		viewer.requestRender();
 	}, [
