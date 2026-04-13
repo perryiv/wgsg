@@ -15,6 +15,8 @@
 import { buildSceneSpheres } from "../Tools";
 import { useViewerStore } from "../State";
 import {
+	CSSProperties,
+	DragEvent,
 	useCallback,
 	useEffect,
 	useRef,
@@ -25,8 +27,9 @@ import {
 	Device,
 	DeviceLost,
 	getNextId,
+	getReader,
 	Group,
-	Node,
+	Node as SceneNode,
 	Viewer as InternalViewer,
 } from "../../../lib/src";
 
@@ -48,7 +51,7 @@ export const VIEWER_NAME = "main_viewer";
 
 export interface IViewerProps
 {
-	style?: React.CSSProperties;
+	style?: CSSProperties;
 }
 
 
@@ -70,7 +73,7 @@ export function Viewer ( { style }: IViewerProps )
 	//
 	// Build the test scene.
 	//
-	const buildTestScene = useCallback ( () : Node =>
+	const buildTestScene = useCallback ( () : SceneNode =>
 	{
 		const group = new Group();
 		const spheres = buildSceneSpheres();
@@ -81,6 +84,126 @@ export function Viewer ( { style }: IViewerProps )
 		return group;
 	},
 	[] );
+
+	//
+	// Handle when the mouse drags a file over this component.
+	//
+	const handleDragOver = useCallback ( ( event: DragEvent < HTMLCanvasElement > ) =>
+	{
+		event.preventDefault();
+		event.stopPropagation();
+	}, [] );
+
+	//
+	// Handle reading the given file.
+	//
+	const handleFileRead = useCallback ( async ( file: File ) =>
+	{
+		// Try to get a reader factory.
+		const ext = ( file.name.split ( "." ).pop() ?? "" ).toLowerCase();
+		const factory = getReader ( ext );
+
+		// Handle no factory function.
+		if ( !factory )
+		{
+			console.warn ( `No reader found for file extension: ${ext}` );
+			return;
+		}
+
+		// Make the reader.
+		const reader = factory();
+
+		// Handle no reader.
+		if ( !reader )
+		{
+			console.warn ( `Failed to create reader for file extension: ${ext}` );
+			return;
+		}
+
+		// Attach the progress callback.
+		reader.progress = ( value: number, total: number ) =>
+		{
+			// Handle values that are out of range.
+			if ( ( value < 0 ) || ( total <= 0 ) || ( value > total ) )
+			{
+				// Keep going because it might fix itself.
+				return true;
+			}
+
+			const percent = ( ( value / total ) * 100 ).toFixed ( 2 );
+			console.log ( `Reading ${percent}% of ${file.name}` );
+
+			// Keep going.
+			return true;
+		}
+
+		// Initalize the model.
+		let model: ( SceneNode | null ) = null;
+
+		try
+		{
+			// Read the file.
+			model = await reader.read ( file );
+		}
+		catch ( error )
+		{
+			console.error ( `Error reading file ${file.name}:`, error );
+			return;
+		}
+
+		// Handle invalid model.
+		if ( !model )
+		{
+			console.warn ( `Reader returned null model for file: ${file.name}` );
+			return;
+		}
+
+		// Get the viewer.
+		const viewer = getViewer ( VIEWER_NAME );
+
+		// Handle no viewer.
+		if ( !viewer )
+		{
+			console.warn ( `No viewer found with name: ${VIEWER_NAME}` );
+			return;
+		}
+
+		// Add the model to the scene.
+		viewer.modelScene = model;
+
+		// Move the camera so we see the new model.
+		viewer.viewAll ( { animate: false } );
+
+		// Render so we see the new model.
+		viewer.requestRender();
+	}, [
+		getViewer
+	] );
+
+	//
+	// Handle when the mouse drops a file on this component.
+	//
+	const handleDroppedFiles = useCallback ( ( event: DragEvent < HTMLCanvasElement > ) =>
+	{
+		event.preventDefault();
+		event.stopPropagation();
+
+		const { files } = event.dataTransfer;
+
+		if ( files.length <= 0 )
+		{
+			return;
+		}
+
+		// Loop through the files.
+		for ( const file of files )
+		{
+			console.log ( "Dropped file name:", file.name );
+
+			// Handle reading the file. We don't need to wait for it.
+			void handleFileRead ( file );
+		}
+	}, [ handleFileRead ] );
 
 	//
 	// Handle when there is a new device.
@@ -265,6 +388,8 @@ export function Viewer ( { style }: IViewerProps )
 		<canvas
 			style = { style }
 			ref = { canvas }
+			onDragOver = { handleDragOver }
+			onDrop = { handleDroppedFiles }
 		>
 		</canvas>
 	);
