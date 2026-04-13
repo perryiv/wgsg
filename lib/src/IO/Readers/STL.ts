@@ -342,7 +342,7 @@ class STL extends BaseClass
 			} );
 
 			// Add the triangles to the scene.
-			// group.addChild ( tris );
+			group.addChild ( tris );
 		}
 
 		// Make the lines.
