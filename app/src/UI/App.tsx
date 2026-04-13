@@ -345,20 +345,27 @@ export function App()
 		// Determine how long the frame took in milliseconds.
 		const duration = ( frame.end - frame.start );
 
+		// Make the number formatters.
+		const intF = new Intl.NumberFormat();
+		const decF = new Intl.NumberFormat ( navigator.languages[0], {
+			minimumFractionDigits: 2,
+			maximumFractionDigits: 2,
+		} );
+
 		// Make the final string.
 		const label =
 			`Frame: ${ viewer.frame.count }\n` +
-			`Time: ${ duration.toFixed ( 4 ) } ms\n` +
-			`Rate: ${ ( 1000 / duration ).toFixed ( 2 ) } f/s\n` +
-			`Layers: ${ rgi.numLayers }\n` +
-			`Bins: ${ rgi.numBins }\n` +
-			`Pipelines: ${ rgi.numPipelines }\n` +
-			`Projections: ${ rgi.numProjMatrixGroups }\n` +
-			`ViewMatrices: ${ rgi.numViewMatrixGroups }\n` +
-			`States: ${ rgi.numStateGroups }\n` +
-			`Shapes: ${ rgi.numShapes }\n` +
-			`Triangles: ${ rgi.numTriangles }\n` +
-			`Lines: ${ rgi.numLines }`;
+			`Time: ${ decF.format ( duration ) } ms\n` +
+			`Rate: ${ decF.format ( ( 1000 / duration ) ) } f/s\n` +
+			`Layers: ${ intF.format ( rgi.numLayers ) }\n` +
+			`Bins: ${ intF.format ( rgi.numBins ) }\n` +
+			`Pipelines: ${ intF.format ( rgi.numPipelines ) }\n` +
+			`Projections: ${ intF.format ( rgi.numProjMatrixGroups ) }\n` +
+			`ViewMatrices: ${ intF.format ( rgi.numViewMatrixGroups ) }\n` +
+			`States: ${ intF.format ( rgi.numStateGroups ) }\n` +
+			`Shapes: ${ intF.format ( rgi.numShapes ) }\n` +
+			`Triangles: ${ intF.format ( rgi.numTriangles ) }\n` +
+			`Lines: ${ intF.format ( rgi.numLines ) }`;
 
 		// Render the panel.
 		return (
@@ -373,7 +380,8 @@ export function App()
 						flexDirection: "column",
 						alignItems: "flex-start",
 						paddingLeft: "4px",
-						minWidth: "100px",
+						minWidth: "104px",
+						maxWidth: "104px",
 					} }
 				>
 					<div
