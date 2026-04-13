@@ -192,6 +192,21 @@ export class RotateX extends RotateAxisAngle
 		// Shortcuts.
 		const { viewer } = event;
 		const { navBase } = viewer;
+
+		// If we are in trackball mode then just call the base class' function.
+		if ( "track_ball" === navBase.rotationMode )
+		{
+			super.execute ( event );
+			return;
+		}
+
+		// If we get to here then we should be in turn-table mode.
+		if ( "turn_table" !== navBase.rotationMode )
+		{
+			throw new Error ( `Unsupported rotation mode: ${navBase.rotationMode}` );
+		}
+
+		// Save the original angle so that we can restore it later.
 		const originalAngle = this.angle;
 
 		// Loop a reasonable number of times.
@@ -216,20 +231,22 @@ export class RotateX extends RotateAxisAngle
 			vec3.rotateX ( yAxis, yAxis, [ 0, 0, 0 ], angle );
 
 			// See if this rotation will "pitch" the model too far.
-			if ( yAxis[1] >= 0 )
+			if ( yAxis[1] < 0 )
 			{
-				// If we get to here then the rotation is within bounds.
-				this.angle = angle;
-
-				// Call the base class' function to perform the rotation.
-				super.execute ( event );
-
-				// Restore the original angle.
-				this.angle = originalAngle;
-
-				// We're done.
 				return;
 			}
+
+			// If we get to here then the rotation is within bounds.
+			this.angle = angle;
+
+			// Call the base class' function to perform the rotation.
+			super.execute ( event );
+
+			// Restore the original angle.
+			this.angle = originalAngle;
+
+			// We're done.
+			return;
 		}
 	}
 }
