@@ -14,10 +14,12 @@
     "watch": "chokidar \"src/**/*.ts\" --initial --silent --command \"yarn run clear && yarn run build && yarn run lint && echo watching ...\""
   },
   "dependencies": {
-    "gl-matrix": "^3.4.3"
+    "gl-matrix": "^3.4.3",
+    "papaparse": "^5.5.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
+    "@types/papaparse": "^5.5.2",
     "@webgpu/types": "^0.1.56",
     "chokidar-cli": "^3.0.0",
     "clear-cli": "^2.0.0",
