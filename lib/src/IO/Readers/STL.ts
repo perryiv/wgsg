@@ -14,17 +14,10 @@
 
 import { buildTriangleEdges } from "../../Builders/Lines"
 import { Indexed } from "../../Scene/Primitives";
+import { parse, ParseStepResult } from "papaparse";
 import { SolidColor } from "../../Shaders";
 import { State } from "../../Scene/State";
-import type {
-	IProgressCallback,
-	IVector4
-} from "../../Types";
-import {
-	parse,
-	Parser,
-	ParseStepResult,
-} from "papaparse";
+import type { IVector4 } from "../../Types";
 import {
 	Geometry,
 	Group,
@@ -120,7 +113,7 @@ class STL extends BaseClass
 			const onProgress = this.makeProgressCallback();
 
 			// This function get called for every line.
-			const step = ( results: ParseStepResult < unknown > ) =>
+			const step = ( results: ParseStepResult < string[] > ) =>
 			{
 				// Did we already finish?
 				if ( true === done )
@@ -142,21 +135,26 @@ class STL extends BaseClass
 					reject ( new Error ( `Error when parsing row ${rowCount}: ${results.errors[0].message}` ) );
 				}
 
-				const { data } = results;
+				const { data: lines } = results;
 
-				if ( false === Array.isArray ( data ) )
+				if ( false === Array.isArray ( lines ) )
 				{
 					done = true;
-					reject ( new Error ( `Row ${rowCount} data is not an array` ) );
+					reject ( new Error ( `Row ${rowCount} is not an array` ) );
 				}
 
-				const lines: string[] = ( data as [] );
 				let line = lines[0];
 
-				if ( line )
+				if ( "string" === ( typeof line ) )
 				{
 					byteCount += line.length; // Do this before we trim.
 					line = line.trimStart();
+				}
+
+				else // Not a string.
+				{
+					done = true;
+					reject ( new Error ( `Row ${rowCount} array does not contain one string` ) );
 				}
 
 				onProgress ( byteCount, size, true );
