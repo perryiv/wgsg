@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { buildTriangleEdges } from "../../Builders/Lines"
+import { clampNumber } from "../../Tools";
 import { Indexed } from "../../Scene/Primitives";
 import { parse, ParseStepResult } from "papaparse";
 import { SolidColor } from "../../Shaders";
@@ -462,7 +463,12 @@ class STL extends BaseClass
 			tris.primitives = new Indexed ( { topology, indices } );
 
 			// The color of the triangles.
-			const color: IVector4 = [ 0.9, 0.9, 0.9, 1.0 ];
+			const color: IVector4 = [
+				clampNumber ( Math.random(), 0.1, 0.9 ),
+				clampNumber ( Math.random(), 0.1, 0.9 ),
+				clampNumber ( Math.random(), 0.1, 0.9 ),
+				1.0
+			];
 
 			// Add the state.
 			tris.state = new State ( {
