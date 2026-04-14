@@ -381,7 +381,6 @@ export function App()
 						alignItems: "flex-start",
 						paddingLeft: "4px",
 						minWidth: "104px",
-						maxWidth: "104px",
 					} }
 				>
 					<div
