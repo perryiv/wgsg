@@ -101,6 +101,16 @@ class STL extends BaseClass
 	 */
 	public override read ( file: File ) : Promise < SceneNode >
 	{
+		// Allocate the arrays. We make new ones if they get full, and we trim
+		// them when we are done if they are not full.
+		const allocateArrays = () =>
+		{
+			const indices = new Uint32Array ( 1024 * 1024 * 3 );
+			const points = new Float32Array ( indices.length * 3 );
+			const normals = new Float32Array ( points.length );
+			return { points, normals, indices };
+		};
+
 		return new Promise ( ( resolve, reject ) =>
 		{
 			// Get the size of the file.
@@ -111,6 +121,27 @@ class STL extends BaseClass
 			let byteCount = 0;
 			let done = false;
 			const onProgress = this.makeProgressCallback();
+
+			// Shortcuts used below.
+			let px = 0; let py = 0; let pz = 0;
+			let nx = 0; let ny = 0; let nz = 0;
+
+			// Allocate the arrays. We make new ones if they get full, and we trim
+			// them when we are done if they are not full.
+			let { points, normals, indices } = allocateArrays();
+
+			// Keep count.
+			let indexCount = 0;
+			let pointCount = 0;
+			let normalCount = 0;
+
+			// These are used below.
+			let solidCount = 0;
+			let facetCount = 0;
+			let loopCount = 0;
+
+			// The group node we return.
+			const scene = new Group();
 
 			// This function get called for every line.
 			const step = ( results: ParseStepResult < string[] > ) =>
@@ -164,11 +195,191 @@ class STL extends BaseClass
 					return; // This is not an error, just skip it.
 				}
 
-				if ( 0 === line.indexOf ( "endsolid" ) )
+				// Split the line at any space character.
+				const parts = line.trim().split ( /\s+/ );
+
+				// Handle no parts.
+				if ( parts.length <= 0 )
 				{
-					done = true;
-					onProgress ( size, size, false );
-					resolve ( new Group() );
+					return; // TODO: Should this be an error?
+				}
+
+				switch ( parts[0].toLowerCase() )
+				{
+					case "solid":
+					{
+						++solidCount;
+
+						if ( 1 !== solidCount )
+						{
+							done = true;
+							reject ( new Error ( `Keyword 'solid' on line ${rowCount} not balanced with 'endsolid'` ) );
+						}
+
+						break;
+					}
+					case "facet":
+					{
+						if ( ( 5 !== parts.length ) || ( "normal" !== parts[1].toLowerCase() ) )
+						{
+							done = true;
+							reject ( new Error ( `Invalid facet on line ${rowCount}: ${line}` ) );
+						}
+
+						++facetCount;
+
+						if ( 1 !== facetCount )
+						{
+							done = true;
+							reject ( new Error ( `Keyword 'facet' on line ${rowCount} not balanced with 'endfacet'` ) );
+						}
+
+						// Read the normal for the whole triangle.
+						nx = parseFloat ( parts[2] );
+						ny = parseFloat ( parts[3] );
+						nz = parseFloat ( parts[4] );
+
+						// We need a normal for each point.
+						normals[normalCount++] = nx;
+						normals[normalCount++] = ny;
+						normals[normalCount++] = nz;
+
+						normals[normalCount++] = nx;
+						normals[normalCount++] = ny;
+						normals[normalCount++] = nz;
+
+						normals[normalCount++] = nx;
+						normals[normalCount++] = ny;
+						normals[normalCount++] = nz;
+
+						break;
+					}
+					case "outer":
+					{
+						if ( "loop" !== parts[1].toLowerCase() )
+						{
+							done = true;
+							reject ( new Error ( `Keyword 'outer' on line ${rowCount} not followed by 'loop'` ) );
+						}
+
+						++loopCount;
+
+						if ( 1 !== loopCount )
+						{
+							done = true;
+							reject ( new Error ( `Keyword 'outer' on line ${rowCount} not balanced with 'endloop'` ) );
+						}
+
+						break;
+					}
+					case "vertex":
+					{
+						if ( 4 !== parts.length )
+						{
+							done = true;
+							reject ( new Error ( `Invalid vertex on line ${rowCount}: ${line}` ) );
+						}
+
+						if ( 1 !== solidCount )
+						{
+							done = true;
+							reject ( new Error ( `Keyword 'vertex' on line ${rowCount} not inside a 'solid'` ) );
+						}
+
+						if ( 1 !== facetCount )
+						{
+							done = true;
+							reject ( new Error ( `Keyword 'vertex' on line ${rowCount} not inside a 'facet'` ) );
+						}
+
+						if ( 1 !== loopCount )
+						{
+							done = true;
+							reject ( new Error ( `Keyword 'vertex' on line ${rowCount} not inside a 'loop'` ) );
+						}
+
+						// Read the point into a local variable for easier debugging.
+						px = parseFloat ( parts[1] );
+						py = parseFloat ( parts[2] );
+						pz = parseFloat ( parts[3] );
+
+						// Save the point.
+						points[pointCount++] = px;
+						points[pointCount++] = py;
+						points[pointCount++] = pz;
+
+						// Add trivial indices.
+						indices[indexCount] = indexCount++;
+
+						break;
+					}
+					case "endloop":
+					{
+						--loopCount;
+
+						if ( 0 !== loopCount )
+						{
+							done = true;
+							reject ( new Error ( `Keyword 'endloop' on line ${rowCount} not balanced with 'outer'` ) );
+						}
+
+						break;
+					}
+					case "endfacet":
+					{
+						--facetCount;
+
+						if ( 0 !== facetCount )
+						{
+							done = true;
+							reject ( new Error ( `Keyword 'endfacet' on line ${rowCount} not balanced with 'facet'` ) );
+						}
+
+						// Did we overflow the array?
+						if ( indexCount > indices.length )
+						{
+							done = true;
+							reject ( new Error ( `Index count ${indexCount} exceeds array length ${indices.length}` ) );
+						}
+
+						// Are the arrays full?
+						if ( indexCount === indices.length )
+						{
+							scene.addChild ( this.buildScene (
+								points, normals, indices,
+								pointCount, normalCount, indexCount
+							) );
+
+							const newArrays = allocateArrays();
+							points = newArrays.points;
+							normals = newArrays.normals;
+							indices = newArrays.indices;
+							pointCount = normalCount = indexCount = 0;
+						}
+
+						break;
+					}
+					case "endsolid":
+					{
+						--solidCount;
+
+						if ( 0 !== solidCount )
+						{
+							done = true;
+							reject ( new Error ( `Keyword 'endsolid' on line ${rowCount} not balanced with 'solid'` ) );
+						}
+
+						// Build the final scene, which may be the only one for smaller files.
+						scene.addChild ( this.buildScene (
+							points, normals, indices,
+							pointCount, normalCount, indexCount
+						) );
+
+						done = true;
+						onProgress ( size, size, false );
+						resolve ( scene );
+					}
+
 				}
 			};
 
@@ -189,183 +400,17 @@ class STL extends BaseClass
 	}
 
 	/**
-	 * Build the scene from the STL file contents.
-	 * @param {string[]} lines The lines of the STL file.
+	 * Build the scene from the arrays.
+	 * @param {Float32Array} points The array of point coordinates.
+	 * @param {Float32Array} normals The array of normal coordinates.
+	 * @param {Uint32Array} indices The array of indices.
+	 * @param {number} pointCount The number of points in the points array.
+	 * @param {number} normalCount The number of normals in the normals array.
+	 * @param {number} indexCount The number of indices in the indices array.
 	 * @returns {SceneNode} The scene node representing the STL file.
 	 */
-	protected buildScene ( lines: string[] ) : SceneNode
+	protected buildScene ( points: Float32Array, normals: Float32Array, indices: Uint32Array, pointCount: number, normalCount: number, indexCount: number ) : SceneNode
 	{
-		// Shortcuts used below.
-		const numLines = lines.length;
-		let px = 0; let py = 0; let pz = 0;
-		let nx = 0; let ny = 0; let nz = 0;
-
-		// Allocate these longer than needed.
-		let points = new Float32Array ( numLines * 3 );
-		let normals = new Float32Array ( points.length );
-		let indices = new Uint32Array ( points.length );
-
-		// Keep count.
-		let pointCount = 0;
-		let normalCount = 0;
-		let indexCount = 0;
-
-		// These are used below.
-		let solidCount = 0;
-		let facetCount = 0;
-		let loopCount = 0;
-
-		// Loop through the lines;
-		for ( let i = 0; i < numLines; ++i )
-		{
-			// Shortcut.
-			const line = lines[i];
-
-			// Split the line at any space character.
-			const parts = line.trim().split ( /\s+/ );
-
-			// Handle no parts.
-			if ( parts.length <= 0 )
-			{
-				continue;
-			}
-
-			switch ( parts[0].toLowerCase() )
-			{
-				case "solid":
-				{
-					++solidCount;
-
-					if ( 1 !== solidCount )
-					{
-						throw new Error ( `Keyword 'solid' on line ${i + 1} not balanced with 'endsolid'` );
-					}
-
-					break;
-				}
-				case "facet":
-				{
-					if ( 5 !== parts.length || "normal" !== parts[1].toLowerCase() )
-					{
-						break;
-					}
-
-					++facetCount;
-
-					if ( 1 !== facetCount )
-					{
-						throw new Error ( `Keyword 'facet' on line ${i + 1} not balanced with 'endfacet'` );
-					}
-
-					// Read the normal for the whole triangle.
-					nx = parseFloat ( parts[2] );
-					ny = parseFloat ( parts[3] );
-					nz = parseFloat ( parts[4] );
-
-					// We need a normal for each point.
-					normals[normalCount++] = nx;
-					normals[normalCount++] = ny;
-					normals[normalCount++] = nz;
-
-					normals[normalCount++] = nx;
-					normals[normalCount++] = ny;
-					normals[normalCount++] = nz;
-
-					normals[normalCount++] = nx;
-					normals[normalCount++] = ny;
-					normals[normalCount++] = nz;
-
-					break;
-				}
-				case "outer":
-				{
-					if ( "loop" !== parts[1].toLowerCase() )
-					{
-						throw new Error ( `Keyword 'outer' on line ${i + 1} not followed by 'loop'` );
-					}
-
-					++loopCount;
-
-					if ( 1 !== loopCount )
-					{
-						throw new Error ( `Keyword 'outer' on line ${i + 1} not balanced with 'endloop'` );
-					}
-
-					break;
-				}
-				case "vertex":
-				{
-					if ( 4 !== parts.length )
-					{
-						break;
-					}
-
-					if ( 1 !== solidCount )
-					{
-						throw new Error ( `Keyword 'vertex' on line ${i + 1} not inside a 'solid'` );
-					}
-
-					if ( 1 !== facetCount )
-					{
-						throw new Error ( `Keyword 'vertex' on line ${i + 1} not inside a 'facet'` );
-					}
-
-					if ( 1 !== loopCount )
-					{
-						throw new Error ( `Keyword 'vertex' on line ${i + 1} not inside a 'loop'` );
-					}
-
-					// Read the point into a local variable for easier debugging.
-					px = parseFloat ( parts[1] );
-					py = parseFloat ( parts[2] );
-					pz = parseFloat ( parts[3] );
-
-					// Save the point.
-					points[pointCount++] = px;
-					points[pointCount++] = py;
-					points[pointCount++] = pz;
-
-					// Add trivial indices.
-					indices[indexCount] = indexCount++;
-
-					break;
-				}
-				case "endloop":
-				{
-					--loopCount;
-
-					if ( 0 !== loopCount )
-					{
-						throw new Error ( `Keyword 'endloop' on line ${i + 1} not balanced with 'outer'` );
-					}
-
-					break;
-				}
-				case "endfacet":
-				{
-					--facetCount;
-
-					if ( 0 !== facetCount )
-					{
-						throw new Error ( `Keyword 'endfacet' on line ${i + 1} not balanced with 'facet'` );
-					}
-
-					break;
-				}
-				case "endsolid":
-				{
-					--solidCount;
-
-					if ( 0 !== solidCount )
-					{
-						throw new Error ( `Keyword 'endsolid' on line ${i + 1} not balanced with 'solid'` );
-					}
-
-					break;
-				}
-			}
-		}
-
 		// Make sure we alloacted enough space for the points.
 		if ( pointCount > points.length )
 		{
