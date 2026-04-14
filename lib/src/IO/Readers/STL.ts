@@ -12,10 +12,19 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { buildTriangleEdges } from "../../Builders/Lines"
 import { Indexed } from "../../Scene/Primitives";
 import { SolidColor } from "../../Shaders";
 import { State } from "../../Scene/State";
-import type { IVector4 } from "../../Types";
+import type {
+	IProgressCallback,
+	IVector4
+} from "../../Types";
+import {
+	parse,
+	Parser,
+	ParseStepResult,
+} from "papaparse";
 import {
 	Geometry,
 	Group,
@@ -26,7 +35,6 @@ import {
 	Reader as BaseClass,
 	ReaderFactory as Factory
 } from "../Reader";
-import { buildTriangleEdges } from "../..";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -57,6 +65,43 @@ class STL extends BaseClass
 	}
 
 	/**
+	 * Return a function that can be used to throttle reporting progress.
+	 * @returns {Function} A function that can be used to throttle reporting progress.
+	 */
+	protected makeProgressCallback()
+	{
+		const progress = this.progress;
+
+		if ( !progress )
+		{
+			return () : boolean =>
+			{
+				return true;
+			};
+		}
+
+		let start = Date.now();
+
+		return ( value: number, total: number, checkTime: boolean ) : boolean =>
+		{
+			if ( false === checkTime )
+			{
+				return progress ( value, total );
+			}
+
+			const now = Date.now();
+
+			if ( ( now - start ) < 1000 )
+			{
+				return true;
+			}
+
+			start = now;
+			return progress ( value, total );
+		};
+	}
+
+	/**
 	 * Read the file and return a promise that resolves to the scene node.
 	 * @param {File} file The file to read.
 	 * @returns {Promise<SceneNode>} A promise that resolves to the scene node.
@@ -65,37 +110,83 @@ class STL extends BaseClass
 	{
 		return new Promise ( ( resolve, reject ) =>
 		{
-			const reader = new FileReader();
+			// Get the size of the file.
+			const { size } = file;
 
-			reader.onprogress = ( event ) =>
+			// Initialize.
+			let rowCount = 0;
+			let byteCount = 0;
+			let done = false;
+			const onProgress = this.makeProgressCallback();
+
+			// This function get called for every line.
+			const step = ( results: ParseStepResult < unknown > ) =>
 			{
-				if ( event.lengthComputable && this.progress )
+				// Did we already finish?
+				if ( true === done )
 				{
-					this.progress ( event.loaded, event.total );
-				}
-			}
-
-			reader.onload = ( event ) =>
-			{
-				if ( null === event.target )
-				{
-					reject ( new Error ( "No file reader target" ) );
-					return;
+					return; // Is there a second solid in the file?
 				}
 
-				const contents = ( event.target.result as string ).split ( "\n" );
-				console.log ( `STL file ${file.name} has ${contents.length} lines` );
+				++rowCount;
 
-				const scene = this.buildScene ( contents );
-				resolve ( scene );
+				if ( !results )
+				{
+					done = true;
+					reject ( new Error ( `Row ${rowCount} has no data` ) );
+				}
+
+				if ( results.errors.length > 0 )
+				{
+					done = true;
+					reject ( new Error ( `Error when parsing row ${rowCount}: ${results.errors[0].message}` ) );
+				}
+
+				const { data } = results;
+
+				if ( false === Array.isArray ( data ) )
+				{
+					done = true;
+					reject ( new Error ( `Row ${rowCount} data is not an array` ) );
+				}
+
+				const lines: string[] = ( data as [] );
+				let line = lines[0];
+
+				if ( line )
+				{
+					byteCount += line.length; // Do this before we trim.
+					line = line.trimStart();
+				}
+
+				onProgress ( byteCount, size, true );
+
+				if ( line.length <= 0 )
+				{
+					return; // This is not an error, just skip it.
+				}
+
+				if ( 0 === line.indexOf ( "endsolid" ) )
+				{
+					done = true;
+					onProgress ( size, size, false );
+					resolve ( new Group() );
+				}
 			};
 
-			reader.onerror = ( event ) =>
-			{
-				reject ( new Error ( `Error reading file: ${event.type}` ) );
-			};
+			// We do not want the lines to be split so using a delimeter
+			// that should not be in an STL file.
+			const delimiter = ";";
 
-			reader.readAsText ( file );
+			// Parse the file.
+			parse ( file, {
+				chunkSize: ( 1024 * 1024 ), // 1 MB.
+				delimiter,
+				fastMode: true,
+				skipEmptyLines: true,
+				step,
+				worker: true, // Use a web-worker.
+			} );
 		} );
 	}
 
