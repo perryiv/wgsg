@@ -59,39 +59,21 @@ class STL extends BaseClass
 	}
 
 	/**
-	 * Return a function that can be used to throttle reporting progress.
-	 * @returns {Function} A function that can be used to throttle reporting progress.
+	 * Return a function that can be used to report progress.
+	 * @returns {Function} A function that can be used report progress.
 	 */
 	protected makeProgressCallback()
 	{
 		const progress = this.progress;
 
-		if ( !progress )
+		if ( progress )
 		{
-			return () : boolean =>
-			{
-				return true;
-			};
+			return progress;
 		}
 
-		let start = Date.now();
-
-		return ( value: number, total: number, checkTime: boolean ) : boolean =>
+		return () : boolean =>
 		{
-			if ( false === checkTime )
-			{
-				return progress ( value, total );
-			}
-
-			const now = Date.now();
-
-			if ( ( now - start ) < 1000 )
-			{
-				return true;
-			}
-
-			start = now;
-			return progress ( value, total );
+			return true;
 		};
 	}
 
@@ -189,7 +171,7 @@ class STL extends BaseClass
 					reject ( new Error ( `Row ${rowCount} array does not contain one string` ) );
 				}
 
-				onProgress ( byteCount, size, true );
+				onProgress ( byteCount, size );
 
 				if ( line.length <= 0 )
 				{
@@ -377,7 +359,7 @@ class STL extends BaseClass
 						) );
 
 						done = true;
-						onProgress ( size, size, false );
+						onProgress ( size, size );
 						resolve ( scene );
 					}
 
