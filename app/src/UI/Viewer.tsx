@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { buildSceneSpheres } from "../Tools";
-import { Box, LinearProgress, Paper } from "@mui/material";
+import { LinearProgress, Paper } from "@mui/material";
 import { useViewerStore } from "../State";
 import throttle from "throttleit";
 import {
@@ -434,8 +434,6 @@ export function Viewer ( { style }: IViewerProps )
 					display: "flex",
 					alignItems: "center",
 					gap: "10px",
-					// background: "rgba(255, 255, 255, 0.8)",
-					// border: "1px solid rgba(0, 0, 0, 0.5)",
 					padding: "0px 8px 0px 8px",
 					borderRadius: "5px",
 				} }
