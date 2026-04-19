@@ -12,10 +12,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { buildTriangleEdges } from "../../Builders/Lines"
+import { clampNumber } from "../../Tools";
 import { Indexed } from "../../Scene/Primitives";
+import { parse, ParseStepResult } from "papaparse";
 import { SolidColor } from "../../Shaders";
 import { State } from "../../Scene/State";
-import type { IVector4 } from "../../Types";
+import { vec3 } from "gl-matrix";
+import type { IVector3, IVector4 } from "../../Types";
 import {
 	Geometry,
 	Group,
@@ -26,7 +30,6 @@ import {
 	Reader as BaseClass,
 	ReaderFactory as Factory
 } from "../Reader";
-import { buildTriangleEdges } from "../..";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -57,226 +60,347 @@ class STL extends BaseClass
 	}
 
 	/**
+	 * Return a progress callback function. Make one if needed.
+	 * @returns {Function} A function that can be used report progress.
+	 */
+	protected getProgressCallback()
+	{
+		const progress = this.progress;
+
+		if ( progress )
+		{
+			return progress;
+		}
+
+		return () : boolean =>
+		{
+			return true;
+		};
+	}
+
+	/**
 	 * Read the file and return a promise that resolves to the scene node.
 	 * @param {File} file The file to read.
 	 * @returns {Promise<SceneNode>} A promise that resolves to the scene node.
 	 */
 	public override read ( file: File ) : Promise < SceneNode >
 	{
+		// Allocate the arrays. We make new ones if they get full, and we trim
+		// them when we are done if they are not full.
+		const allocateArrays = () =>
+		{
+			const indices = new Uint32Array ( 1024 * 1024 * 3 );
+			const points = new Float32Array ( indices.length * 3 );
+			const normals = new Float32Array ( points.length );
+			return { points, normals, indices };
+		};
+
 		return new Promise ( ( resolve, reject ) =>
 		{
-			const reader = new FileReader();
+			// Get the size of the file.
+			const { size } = file;
 
-			reader.onprogress = ( event ) =>
+			// Initialize.
+			let rowCount = 0;
+			let byteCount = 0;
+			let done = false;
+
+			// This will get or make a progress callback function.
+			const onProgress = this.getProgressCallback();
+
+			// Shortcuts used below.
+			let px = 0; let py = 0; let pz = 0;
+			const normal: IVector3 = [ 0, 0, 0 ];
+
+			// Allocate the arrays. We make new ones if they get full, and we trim
+			// them when we are done if they are not full.
+			let { points, normals, indices } = allocateArrays();
+
+			// Keep count.
+			let indexCount = 0;
+			let pointCount = 0;
+			let normalCount = 0;
+
+			// These are used below.
+			let solidCount = 0;
+			let facetCount = 0;
+			let loopCount = 0;
+
+			// The group node we return.
+			const scene = new Group();
+
+			// This function get called for every line.
+			const step = ( results: ParseStepResult < string[] > ) =>
 			{
-				if ( event.lengthComputable && this.progress )
+				// Did we already finish?
+				if ( true === done )
 				{
-					this.progress ( event.loaded, event.total );
-				}
-			}
-
-			reader.onload = ( event ) =>
-			{
-				if ( null === event.target )
-				{
-					reject ( new Error ( "No file reader target" ) );
-					return;
+					return; // Is there a second solid in the file?
 				}
 
-				const contents = ( event.target.result as string ).split ( "\n" );
-				console.log ( `STL file ${file.name} has ${contents.length} lines` );
+				++rowCount;
 
-				const scene = this.buildScene ( contents );
-				resolve ( scene );
+				if ( !results )
+				{
+					done = true;
+					reject ( new Error ( `Row ${rowCount} has no data` ) );
+				}
+
+				if ( results.errors.length > 0 )
+				{
+					done = true;
+					reject ( new Error ( `Error when parsing row ${rowCount}: ${results.errors[0].message}` ) );
+				}
+
+				const { data: lines } = results;
+
+				if ( false === Array.isArray ( lines ) )
+				{
+					done = true;
+					reject ( new Error ( `Row ${rowCount} is not an array` ) );
+				}
+
+				let line = lines[0];
+
+				if ( "string" === ( typeof line ) )
+				{
+					byteCount += line.length; // Do this before we trim.
+					line = line.trimStart();
+				}
+
+				else // Not a string.
+				{
+					done = true;
+					reject ( new Error ( `Row ${rowCount} array does not contain one string` ) );
+				}
+
+				onProgress ( byteCount, size );
+
+				if ( line.length <= 0 )
+				{
+					return; // This is not an error, just skip it.
+				}
+
+				// Split the line at any space character.
+				const parts = line.trim().split ( /\s+/ );
+
+				// Handle no parts.
+				if ( parts.length <= 0 )
+				{
+					return; // TODO: Should this be an error?
+				}
+
+				switch ( parts[0].toLowerCase() )
+				{
+					case "solid":
+					{
+						++solidCount;
+
+						if ( 1 !== solidCount )
+						{
+							done = true;
+							reject ( new Error ( `Keyword 'solid' on line ${rowCount} not balanced with 'endsolid'` ) );
+						}
+
+						break;
+					}
+					case "facet":
+					{
+						if ( ( 5 !== parts.length ) || ( "normal" !== parts[1].toLowerCase() ) )
+						{
+							done = true;
+							reject ( new Error ( `Invalid facet on line ${rowCount}: ${line}` ) );
+						}
+
+						++facetCount;
+
+						if ( 1 !== facetCount )
+						{
+							done = true;
+							reject ( new Error ( `Keyword 'facet' on line ${rowCount} not balanced with 'endfacet'` ) );
+						}
+
+						// Read the normal for the whole triangle.
+						normal[0] = parseFloat ( parts[2] );
+						normal[1] = parseFloat ( parts[3] );
+						normal[2] = parseFloat ( parts[4] );
+
+						// Make sure it is a unit vector.
+						vec3.normalize ( normal, normal );
+
+						// We need a normal for each point.
+						normals[normalCount++] = normal[0];
+						normals[normalCount++] = normal[1];
+						normals[normalCount++] = normal[2];
+
+						normals[normalCount++] = normal[0];
+						normals[normalCount++] = normal[1];
+						normals[normalCount++] = normal[2];
+
+						normals[normalCount++] = normal[0];
+						normals[normalCount++] = normal[1];
+						normals[normalCount++] = normal[2];
+
+						break;
+					}
+					case "outer":
+					{
+						if ( "loop" !== parts[1].toLowerCase() )
+						{
+							done = true;
+							reject ( new Error ( `Keyword 'outer' on line ${rowCount} not followed by 'loop'` ) );
+						}
+
+						++loopCount;
+
+						if ( 1 !== loopCount )
+						{
+							done = true;
+							reject ( new Error ( `Keyword 'outer' on line ${rowCount} not balanced with 'endloop'` ) );
+						}
+
+						break;
+					}
+					case "vertex":
+					{
+						if ( 4 !== parts.length )
+						{
+							done = true;
+							reject ( new Error ( `Invalid vertex on line ${rowCount}: ${line}` ) );
+						}
+
+						if ( 1 !== solidCount )
+						{
+							done = true;
+							reject ( new Error ( `Keyword 'vertex' on line ${rowCount} not inside a 'solid'` ) );
+						}
+
+						if ( 1 !== facetCount )
+						{
+							done = true;
+							reject ( new Error ( `Keyword 'vertex' on line ${rowCount} not inside a 'facet'` ) );
+						}
+
+						if ( 1 !== loopCount )
+						{
+							done = true;
+							reject ( new Error ( `Keyword 'vertex' on line ${rowCount} not inside a 'loop'` ) );
+						}
+
+						// Read the point into a local variable for easier debugging.
+						px = parseFloat ( parts[1] );
+						py = parseFloat ( parts[2] );
+						pz = parseFloat ( parts[3] );
+
+						// Save the point.
+						points[pointCount++] = px;
+						points[pointCount++] = py;
+						points[pointCount++] = pz;
+
+						// Add trivial indices.
+						indices[indexCount] = indexCount++;
+
+						break;
+					}
+					case "endloop":
+					{
+						--loopCount;
+
+						if ( 0 !== loopCount )
+						{
+							done = true;
+							reject ( new Error ( `Keyword 'endloop' on line ${rowCount} not balanced with 'outer'` ) );
+						}
+
+						break;
+					}
+					case "endfacet":
+					{
+						--facetCount;
+
+						if ( 0 !== facetCount )
+						{
+							done = true;
+							reject ( new Error ( `Keyword 'endfacet' on line ${rowCount} not balanced with 'facet'` ) );
+						}
+
+						// Did we overflow the array?
+						if ( indexCount > indices.length )
+						{
+							done = true;
+							reject ( new Error ( `Index count ${indexCount} exceeds array length ${indices.length}` ) );
+						}
+
+						// Are the arrays full?
+						if ( indexCount === indices.length )
+						{
+							scene.addChild ( this.buildScene (
+								points, normals, indices,
+								pointCount, normalCount, indexCount
+							) );
+
+							const newArrays = allocateArrays();
+							points = newArrays.points;
+							normals = newArrays.normals;
+							indices = newArrays.indices;
+							pointCount = normalCount = indexCount = 0;
+						}
+
+						break;
+					}
+					case "endsolid":
+					{
+						--solidCount;
+
+						if ( 0 !== solidCount )
+						{
+							done = true;
+							reject ( new Error ( `Keyword 'endsolid' on line ${rowCount} not balanced with 'solid'` ) );
+						}
+
+						// Build the final scene, which may be the only one for smaller files.
+						scene.addChild ( this.buildScene (
+							points, normals, indices,
+							pointCount, normalCount, indexCount
+						) );
+
+						done = true;
+						onProgress ( size, size );
+						resolve ( scene );
+					}
+
+				}
 			};
 
-			reader.onerror = ( event ) =>
-			{
-				reject ( new Error ( `Error reading file: ${event.type}` ) );
-			};
+			// We do not want the lines to be split so using a delimeter
+			// that should not be in an STL file.
+			const delimiter = ";";
 
-			reader.readAsText ( file );
+			// Parse the file.
+			parse ( file, {
+				chunkSize: ( 1024 * 1024 ), // 1 MB.
+				delimiter,
+				fastMode: true,
+				skipEmptyLines: true,
+				step,
+				// TODO: Figure out how to move a progress bar when using a worker.
+				worker: false,
+			} );
 		} );
 	}
 
 	/**
-	 * Build the scene from the STL file contents.
-	 * @param {string[]} lines The lines of the STL file.
+	 * Build the scene from the arrays.
+	 * @param {Float32Array} points The array of point coordinates.
+	 * @param {Float32Array} normals The array of normal coordinates.
+	 * @param {Uint32Array} indices The array of indices.
+	 * @param {number} pointCount The number of points in the points array.
+	 * @param {number} normalCount The number of normals in the normals array.
+	 * @param {number} indexCount The number of indices in the indices array.
 	 * @returns {SceneNode} The scene node representing the STL file.
 	 */
-	protected buildScene ( lines: string[] ) : SceneNode
+	protected buildScene ( points: Float32Array, normals: Float32Array, indices: Uint32Array, pointCount: number, normalCount: number, indexCount: number ) : SceneNode
 	{
-		// Shortcuts used below.
-		const numLines = lines.length;
-		let px = 0; let py = 0; let pz = 0;
-		let nx = 0; let ny = 0; let nz = 0;
-
-		// Allocate these longer than needed.
-		let points = new Float32Array ( numLines * 3 );
-		let normals = new Float32Array ( points.length );
-		let indices = new Uint32Array ( points.length );
-
-		// Keep count.
-		let pointCount = 0;
-		let normalCount = 0;
-		let indexCount = 0;
-
-		// These are used below.
-		let solidCount = 0;
-		let facetCount = 0;
-		let loopCount = 0;
-
-		// Loop through the lines;
-		for ( let i = 0; i < numLines; ++i )
-		{
-			// Shortcut.
-			const line = lines[i];
-
-			// Split the line at any space character.
-			const parts = line.trim().split ( /\s+/ );
-
-			// Handle no parts.
-			if ( parts.length <= 0 )
-			{
-				continue;
-			}
-
-			switch ( parts[0].toLowerCase() )
-			{
-				case "solid":
-				{
-					++solidCount;
-
-					if ( 1 !== solidCount )
-					{
-						throw new Error ( `Keyword 'solid' on line ${i + 1} not balanced with 'endsolid'` );
-					}
-
-					break;
-				}
-				case "facet":
-				{
-					if ( 5 !== parts.length || "normal" !== parts[1].toLowerCase() )
-					{
-						break;
-					}
-
-					++facetCount;
-
-					if ( 1 !== facetCount )
-					{
-						throw new Error ( `Keyword 'facet' on line ${i + 1} not balanced with 'endfacet'` );
-					}
-
-					// Read the normal for the whole triangle.
-					nx = parseFloat ( parts[2] );
-					ny = parseFloat ( parts[3] );
-					nz = parseFloat ( parts[4] );
-
-					// We need a normal for each point.
-					normals[normalCount++] = nx;
-					normals[normalCount++] = ny;
-					normals[normalCount++] = nz;
-
-					normals[normalCount++] = nx;
-					normals[normalCount++] = ny;
-					normals[normalCount++] = nz;
-
-					normals[normalCount++] = nx;
-					normals[normalCount++] = ny;
-					normals[normalCount++] = nz;
-
-					break;
-				}
-				case "outer":
-				{
-					if ( "loop" !== parts[1].toLowerCase() )
-					{
-						throw new Error ( `Keyword 'outer' on line ${i + 1} not followed by 'loop'` );
-					}
-
-					++loopCount;
-
-					if ( 1 !== loopCount )
-					{
-						throw new Error ( `Keyword 'outer' on line ${i + 1} not balanced with 'endloop'` );
-					}
-
-					break;
-				}
-				case "vertex":
-				{
-					if ( 4 !== parts.length )
-					{
-						break;
-					}
-
-					if ( 1 !== solidCount )
-					{
-						throw new Error ( `Keyword 'vertex' on line ${i + 1} not inside a 'solid'` );
-					}
-
-					if ( 1 !== facetCount )
-					{
-						throw new Error ( `Keyword 'vertex' on line ${i + 1} not inside a 'facet'` );
-					}
-
-					if ( 1 !== loopCount )
-					{
-						throw new Error ( `Keyword 'vertex' on line ${i + 1} not inside a 'loop'` );
-					}
-
-					// Read the point into a local variable for easier debugging.
-					px = parseFloat ( parts[1] );
-					py = parseFloat ( parts[2] );
-					pz = parseFloat ( parts[3] );
-
-					// Save the point.
-					points[pointCount++] = px;
-					points[pointCount++] = py;
-					points[pointCount++] = pz;
-
-					// Add trivial indices.
-					indices[indexCount] = indexCount++;
-
-					break;
-				}
-				case "endloop":
-				{
-					--loopCount;
-
-					if ( 0 !== loopCount )
-					{
-						throw new Error ( `Keyword 'endloop' on line ${i + 1} not balanced with 'outer'` );
-					}
-
-					break;
-				}
-				case "endfacet":
-				{
-					--facetCount;
-
-					if ( 0 !== facetCount )
-					{
-						throw new Error ( `Keyword 'endfacet' on line ${i + 1} not balanced with 'facet'` );
-					}
-
-					break;
-				}
-				case "endsolid":
-				{
-					--solidCount;
-
-					if ( 0 !== solidCount )
-					{
-						throw new Error ( `Keyword 'endsolid' on line ${i + 1} not balanced with 'solid'` );
-					}
-
-					break;
-				}
-			}
-		}
-
 		// Make sure we alloacted enough space for the points.
 		if ( pointCount > points.length )
 		{
@@ -328,7 +452,12 @@ class STL extends BaseClass
 			tris.primitives = new Indexed ( { topology, indices } );
 
 			// The color of the triangles.
-			const color: IVector4 = [ 0.9, 0.9, 0.9, 1.0 ];
+			const color: IVector4 = [
+				clampNumber ( Math.random(), 0.1, 0.9 ),
+				clampNumber ( Math.random(), 0.1, 0.9 ),
+				clampNumber ( Math.random(), 0.1, 0.9 ),
+				1.0
+			];
 
 			// Add the state.
 			tris.state = new State ( {

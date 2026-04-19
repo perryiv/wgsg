@@ -13,7 +13,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { buildSceneSpheres } from "../Tools";
+import { LinearProgress, Paper } from "@mui/material";
 import { useViewerStore } from "../State";
+import throttle from "throttleit";
 import {
 	CSSProperties,
 	DragEvent,
@@ -24,6 +26,7 @@ import {
 } from "react";
 import {
 	buildBoundingBoxes,
+	clampNumber,
 	Device,
 	DeviceLost,
 	getNextId,
@@ -54,6 +57,14 @@ export interface IViewerProps
 	style?: CSSProperties;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+//
+//	For debugging.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+// let componentRenderCount = 0;
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -69,6 +80,7 @@ export function Viewer ( { style }: IViewerProps )
 	const isMounting = useRef ( false );
 	const getViewer = useViewerStore ( ( state ) => state.getViewer );
 	const setViewer = useViewerStore ( ( state ) => state.setViewer );
+	const [ progress, setProgress ] = useState < number > ( 0 );
 
 	//
 	// Build the test scene.
@@ -121,7 +133,7 @@ export function Viewer ( { style }: IViewerProps )
 		}
 
 		// Attach the progress callback.
-		reader.progress = ( value: number, total: number ) =>
+		reader.progress = throttle ( ( value: number, total: number ) =>
 		{
 			// Handle values that are out of range.
 			if ( ( value < 0 ) || ( total <= 0 ) || ( value > total ) )
@@ -130,12 +142,25 @@ export function Viewer ( { style }: IViewerProps )
 				return true;
 			}
 
-			const percent = ( ( value / total ) * 100 ).toFixed ( 2 );
-			console.log ( `Reading ${percent}% of ${file.name}` );
+			// Calculate the fraction, which should be in the range [ 0, 1 ].
+			let fraction = ( value / total );
+
+			// When we get to the end, hide it.
+			if ( fraction >= 1 )
+			{
+				fraction = 0;
+			}
+
+			// Set the new progress value.
+			setProgress ( fraction );
+
+			// For debugging.
+			// console.log ( `Reading ${( fraction * 100 ).toFixed ( 2 )}% of ${file.name}` );
 
 			// Keep going.
 			return true;
-		}
+		},
+		200 );
 
 		// Initalize the model.
 		let model: ( SceneNode | null ) = null;
@@ -149,6 +174,11 @@ export function Viewer ( { style }: IViewerProps )
 		{
 			console.error ( `Error reading file ${file.name}:`, error );
 			return;
+		}
+		finally
+		{
+			// Hide the progress bar.
+			setProgress ( 0 );
 		}
 
 		// Handle invalid model.
@@ -176,9 +206,8 @@ export function Viewer ( { style }: IViewerProps )
 
 		// Render so we see the new model.
 		viewer.requestRender();
-	}, [
-		getViewer
-	] );
+	},
+	[ getViewer ] );
 
 	//
 	// Handle when the mouse drops a file on this component.
@@ -210,7 +239,7 @@ export function Viewer ( { style }: IViewerProps )
 	//
 	const handleNewDevice = useCallback ( () =>
 	{
-		console.log ( "In handleNewDevice()" );
+		// console.log ( "In handleNewDevice()" );
 
 		// Get the viewer.
 		const viewer = getViewer ( VIEWER_NAME );
@@ -218,7 +247,7 @@ export function Viewer ( { style }: IViewerProps )
 		// Handle no viewer.
 		if ( !viewer )
 		{
-			console.log ( "Out handleNewDevice(), no viewer" );
+			// console.log ( "Out handleNewDevice(), no viewer" );
 			return;
 		}
 
@@ -231,7 +260,7 @@ export function Viewer ( { style }: IViewerProps )
 		// Handle no scene.
 		if ( !scene )
 		{
-			console.log ( "Out handleNewDevice(), no scene" );
+			// console.log ( "Out handleNewDevice(), no scene" );
 			return;
 		}
 
@@ -242,7 +271,7 @@ export function Viewer ( { style }: IViewerProps )
 		// Render again so that we see the rebuilt scene.
 		viewer.requestRender();
 
-		console.log ( "Out handleNewDevice()" );
+		// console.log ( "Out handleNewDevice()" );
 	},
 	[ getViewer ] );
 
@@ -251,7 +280,7 @@ export function Viewer ( { style }: IViewerProps )
 	//
 	const initDevice = useCallback ( async () =>
 	{
-		console.log ( "In initDevice()" );
+		// console.log ( "In initDevice()" );
 
 		// This should not happen.
 		if ( true === Device.valid )
@@ -291,7 +320,7 @@ export function Viewer ( { style }: IViewerProps )
 	//
 	const getOrCreateViewer = useCallback ( () =>
 	{
-		console.log ( "In getOrCreateViewer()" );
+		// console.log ( "In getOrCreateViewer()" );
 
 		// This should never happen.
 		if ( !canvas.current )
@@ -314,7 +343,7 @@ export function Viewer ( { style }: IViewerProps )
 			viewer.viewAll ( { animate: false } );
 		}
 
-		console.log ( "Out getOrCreateViewer()" );
+		// console.log ( "Out getOrCreateViewer()" );
 
 		// Return the viewer.
 		return viewer;
@@ -330,7 +359,7 @@ export function Viewer ( { style }: IViewerProps )
 	//
 	const handleMount = useCallback ( async () =>
 	{
-		console.log ( `In handleMount() for viewer component ${id}` );
+		// console.log ( `In handleMount() for viewer component ${id}` );
 
 		// Are we still in the middle of the first mount?
 		if ( true === isMounting.current )
@@ -352,10 +381,10 @@ export function Viewer ( { style }: IViewerProps )
 		// We are done mounting.
 		isMounting.current = false;
 
-		console.log ( `Out handleMount() for viewer component ${id}` );
+		// console.log ( `Out handleMount() for viewer component ${id}` );
 	}, [
 		getOrCreateViewer,
-		id,
+		// id,
 		initDevice,
 	] );
 
@@ -379,18 +408,75 @@ export function Viewer ( { style }: IViewerProps )
 	},
 	[ id, handleMount ] );
 
-	// console.log ( `Rendering viewer component ${id}` );
+	//
+	// Render the progress bar if there is a value.
+	//
+	const renderProgressBar = useCallback ( ( value: number ) =>
+	{
+		// Clamp it to the range the component can handle.
+		value = clampNumber ( ( value * 100 ), 0, 100 );
+
+		// If there is no progress value then we're done.
+		if ( value <= 0 )
+		{
+			return null;
+		}
+
+		// Return the progress bar.
+		return (
+			<Paper
+				style = { {
+					position: "absolute",
+					bottom: "20px",
+					left: "50%",
+					transform: "translateX(-50%)",
+					width: "90%",
+					display: "flex",
+					alignItems: "center",
+					gap: "10px",
+					padding: "0px 8px 0px 8px",
+					borderRadius: "5px",
+				} }
+			>
+				<LinearProgress
+					value = { value }
+					variant = "determinate"
+					sx = { {
+						flex: 1,
+						margin: 0,
+						padding: 0,
+						height: "6px",
+						borderRadius: "2px",
+					} }
+				/>
+				<span
+					style = { {
+						minWidth: "3.5em",
+						textAlign: "right",
+						fontSize: "small",
+					} }
+				>
+					{ value.toFixed ( 1 ) } %
+				</span>
+			</Paper>
+		);
+	}, [] );
+
+	// console.log ( `Viewer component ${id} render count ${componentRenderCount++}` );
 
 	//
 	// Render the components.
 	//
 	return (
-		<canvas
-			style = { style }
-			ref = { canvas }
-			onDragOver = { handleDragOver }
-			onDrop = { handleDroppedFiles }
-		>
-		</canvas>
+		<div>
+			<canvas
+				style = { style }
+				ref = { canvas }
+				onDragOver = { handleDragOver }
+				onDrop = { handleDroppedFiles }
+			>
+			</canvas>
+			{ renderProgressBar ( progress ) }
+		</div>
 	);
 }
