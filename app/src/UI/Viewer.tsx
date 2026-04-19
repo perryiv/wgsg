@@ -13,7 +13,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { buildSceneSpheres } from "../Tools";
+import { LinearProgress } from "@mui/material";
 import { useViewerStore } from "../State";
+import throttle from "throttleit";
 import {
 	CSSProperties,
 	DragEvent,
@@ -24,12 +26,14 @@ import {
 } from "react";
 import {
 	buildBoundingBoxes,
+	clampNumber,
 	Device,
 	DeviceLost,
 	getNextId,
 	getReader,
 	Group,
 	Node as SceneNode,
+	type IVector2,
 	Viewer as InternalViewer,
 } from "../../../lib/src";
 
@@ -54,6 +58,14 @@ export interface IViewerProps
 	style?: CSSProperties;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+//
+//	For debugging.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+let componentRenderCount = 0;
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -69,6 +81,8 @@ export function Viewer ( { style }: IViewerProps )
 	const isMounting = useRef ( false );
 	const getViewer = useViewerStore ( ( state ) => state.getViewer );
 	const setViewer = useViewerStore ( ( state ) => state.setViewer );
+	const [ , setToken ] = useState ( 0 );
+	const progress = useRef < IVector2 > ( [ 0, 0 ] );
 
 	//
 	// Build the test scene.
@@ -82,6 +96,19 @@ export function Viewer ( { style }: IViewerProps )
 		boxes.addsToBounds = false;
 		group.addChild ( boxes );
 		return group;
+	},
+	[] );
+
+	//
+	// An effect that renders the component in an interval.
+	//
+	useEffect ( () =>
+	{
+		if ( progress.current[0] > progress.current[1] )
+		{
+			progress.current[1] = progress.current[0];
+			setToken ( ( token ) => { return ( token + 1 ); } );
+		}
 	},
 	[] );
 
@@ -121,7 +148,7 @@ export function Viewer ( { style }: IViewerProps )
 		}
 
 		// Attach the progress callback.
-		reader.progress = ( value: number, total: number ) =>
+		reader.progress = throttle ( ( value: number, total: number ) =>
 		{
 			// Handle values that are out of range.
 			if ( ( value < 0 ) || ( total <= 0 ) || ( value > total ) )
@@ -130,12 +157,28 @@ export function Viewer ( { style }: IViewerProps )
 				return true;
 			}
 
-			const percent = ( ( value / total ) * 100 ).toFixed ( 2 );
+			// Calculate the fraction, which should be in the range [ 0, 1 ].
+			let fraction = ( value / total );
+
+			const percent = ( fraction * 100 ).toFixed ( 2 );
 			console.log ( `Reading ${percent}% of ${file.name}` );
+
+			// When we get to the end, hide it.
+			if ( fraction >= 1 )
+			{
+				fraction = 0;
+			}
+
+			// Set the new progress value.
+			progress.current = ( ( fraction > 0 ) ?
+				[ fraction, progress.current[0] ] :
+				[ 0, 0 ]
+			);
 
 			// Keep going.
 			return true;
-		}
+		},
+		500 );
 
 		// Initalize the model.
 		let model: ( SceneNode | null ) = null;
@@ -176,9 +219,8 @@ export function Viewer ( { style }: IViewerProps )
 
 		// Render so we see the new model.
 		viewer.requestRender();
-	}, [
-		getViewer
-	] );
+	},
+	[ getViewer ] );
 
 	//
 	// Handle when the mouse drops a file on this component.
@@ -379,18 +421,55 @@ export function Viewer ( { style }: IViewerProps )
 	},
 	[ id, handleMount ] );
 
-	// console.log ( `Rendering viewer component ${id}` );
+	//
+	// Render the progress bar if there is a value.
+	//
+	const renderProgressBar = useCallback ( () =>
+	{
+		// Clamp it to the range the component can handle.
+		const value = clampNumber ( ( progress.current[0] * 100 ), 0, 100 );
+
+		// If there is no progress value then we're done.
+		if ( value <= 0 )
+		{
+			return null;
+		}
+
+		// Return the progress bar.
+		return (
+			<div
+				style = { {
+					position: "absolute",
+					bottom: "20px",
+					left: "50%",
+					transform: "translateX(-50%)",
+					width: "90%",
+				} }
+			>
+				<LinearProgress
+					value = { value }
+					variant = "determinate"
+				/>
+			</div>
+		);
+	},
+	[ progress ] );
+
+	console.log ( `Viewer component ${id} render count ${componentRenderCount++}` );
 
 	//
 	// Render the components.
 	//
 	return (
-		<canvas
-			style = { style }
-			ref = { canvas }
-			onDragOver = { handleDragOver }
-			onDrop = { handleDroppedFiles }
-		>
-		</canvas>
+		<div>
+			<canvas
+				style = { style }
+				ref = { canvas }
+				onDragOver = { handleDragOver }
+				onDrop = { handleDroppedFiles }
+			>
+			</canvas>
+			{ renderProgressBar() }
+		</div>
 	);
 }
