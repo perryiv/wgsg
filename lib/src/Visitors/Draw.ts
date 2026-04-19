@@ -256,7 +256,7 @@ export class Draw extends BaseClass
 		let dt = this.#depthTexture;
 
 		// See if we need to make a new one.
-		if ( !dt || ( ( dt.width !== width ) || ( dt.height !== height ) ) )
+		if ( ( dt?.width !== width ) || ( dt?.height !== height ) )
 		{
 			// Destroy the old one.
 			if ( dt )
