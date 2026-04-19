@@ -18,7 +18,8 @@ import { Indexed } from "../../Scene/Primitives";
 import { parse, ParseStepResult } from "papaparse";
 import { SolidColor } from "../../Shaders";
 import { State } from "../../Scene/State";
-import type { IVector4 } from "../../Types";
+import { vec3 } from "gl-matrix";
+import type { IVector3, IVector4 } from "../../Types";
 import {
 	Geometry,
 	Group,
@@ -59,10 +60,10 @@ class STL extends BaseClass
 	}
 
 	/**
-	 * Return a function that can be used to report progress.
+	 * Return a progress callback function. Make one if needed.
 	 * @returns {Function} A function that can be used report progress.
 	 */
-	protected makeProgressCallback()
+	protected getProgressCallback()
 	{
 		const progress = this.progress;
 
@@ -103,11 +104,13 @@ class STL extends BaseClass
 			let rowCount = 0;
 			let byteCount = 0;
 			let done = false;
-			const onProgress = this.makeProgressCallback();
+
+			// This will get or make a progress callback function.
+			const onProgress = this.getProgressCallback();
 
 			// Shortcuts used below.
 			let px = 0; let py = 0; let pz = 0;
-			let nx = 0; let ny = 0; let nz = 0;
+			const normal: IVector3 = [ 0, 0, 0 ];
 
 			// Allocate the arrays. We make new ones if they get full, and we trim
 			// them when we are done if they are not full.
@@ -218,22 +221,25 @@ class STL extends BaseClass
 						}
 
 						// Read the normal for the whole triangle.
-						nx = parseFloat ( parts[2] );
-						ny = parseFloat ( parts[3] );
-						nz = parseFloat ( parts[4] );
+						normal[0] = parseFloat ( parts[2] );
+						normal[1] = parseFloat ( parts[3] );
+						normal[2] = parseFloat ( parts[4] );
+
+						// Make sure it is a unit vector.
+						vec3.normalize ( normal, normal );
 
 						// We need a normal for each point.
-						normals[normalCount++] = nx;
-						normals[normalCount++] = ny;
-						normals[normalCount++] = nz;
+						normals[normalCount++] = normal[0];
+						normals[normalCount++] = normal[1];
+						normals[normalCount++] = normal[2];
 
-						normals[normalCount++] = nx;
-						normals[normalCount++] = ny;
-						normals[normalCount++] = nz;
+						normals[normalCount++] = normal[0];
+						normals[normalCount++] = normal[1];
+						normals[normalCount++] = normal[2];
 
-						normals[normalCount++] = nx;
-						normals[normalCount++] = ny;
-						normals[normalCount++] = nz;
+						normals[normalCount++] = normal[0];
+						normals[normalCount++] = normal[1];
+						normals[normalCount++] = normal[2];
 
 						break;
 					}
@@ -377,7 +383,8 @@ class STL extends BaseClass
 				fastMode: true,
 				skipEmptyLines: true,
 				step,
-				worker: true, // Use a web-worker.
+				// TODO: Figure out how to move a progress bar when using a worker.
+				worker: false,
 			} );
 		} );
 	}
