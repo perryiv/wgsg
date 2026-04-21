@@ -6,11 +6,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc --build",
+    "compile": "tsc --build",
     "clear": "clear",
     "dev": "vite",
     "lint": "eslint --ext .ts ./src",
-    "watch": "chokidar \"src/**/*.ts\" --initial --silent --command \"yarn run clear && yarn run build && yarn run lint && echo watching ...\""
+    "watch": "chokidar \"src/**/*.ts\" --initial --silent --command \"yarn run clear && yarn run compile && yarn run lint && echo watching ...\""
   },
   "dependencies": {
     "gl-matrix": "^3.4.3"
