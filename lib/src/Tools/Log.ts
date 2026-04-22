@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { BuildEnvironment } from "../Types/Environment";
+import { BUILD_ENVIRONMENT } from "./Environment";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,10 +20,6 @@ import { BuildEnvironment } from "../Types/Environment";
 //	Log constants.
 //
 ///////////////////////////////////////////////////////////////////////////////
-
-// Vite's import.meta.env doesn't have types so cast it.
-// https://vite.dev/guide/env-and-mode
-const BUILD_ENVIRONMENT = ( ( ( import.meta as unknown ) as BuildEnvironment ).env );
 
 // https://www.dash0.com/knowledge/log-levels
 export enum LogLevel

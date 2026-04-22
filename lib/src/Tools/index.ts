@@ -16,6 +16,7 @@ export * from "./Bits";
 export * from "./Color";
 export * from "./Constants";
 export * from "./Device";
+export * from "./Environment";
 export * from "./Errors";
 export * from "./Events";
 export * from "./Functions";
