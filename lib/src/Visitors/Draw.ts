@@ -17,8 +17,8 @@ import { vec4 } from "gl-matrix";
 import { Visitor as BaseClass } from "./Visitor";
 import type { IRenderGraphInfo, IVector4 } from "../Types";
 import {
-	DEVELOPER_BUILD,
 	Device,
+	KEEP_PERFORMANCE_INFO,
 	preMultiplyColor,
 } from "../Tools";
 import {
@@ -607,7 +607,7 @@ export class Draw extends BaseClass
 		);
 
 		// Performance info.
-		if ( DEVELOPER_BUILD )
+		if ( KEEP_PERFORMANCE_INFO )
 		{
 			const info = this.renderGraphInfo;
 			switch ( prims.topology )

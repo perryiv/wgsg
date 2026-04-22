@@ -20,7 +20,7 @@ export default defineConfig ( {
 	plugins: [
 		react()
 	],
-	base: "/wgsg_demo/",
+	base: "/wgsg_demo/", // The output files get copied to the demo repository.
 	build: {
 		sourcemap: true,
 		rollupOptions: {

@@ -20,9 +20,9 @@ import { vec4 } from "gl-matrix";
 import {
 	BUILD_TIME_LOG_LEVEL,
 	clampVec4,
-	DEVELOPER_BUILD,
 	Device,
 	IDENTITY_MATRIX,
+	KEEP_PERFORMANCE_INFO,
 	LogLevel,
 } from "../Tools";
 import {
@@ -870,7 +870,7 @@ export class Surface extends BaseClass
 		};
 
 		// Performance info.
-		if ( DEVELOPER_BUILD )
+		if ( KEEP_PERFORMANCE_INFO )
 		{
 			resetRenderGraphInfo ( this.#info );
 		}
