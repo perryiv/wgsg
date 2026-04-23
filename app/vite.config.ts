@@ -26,9 +26,10 @@ export default defineConfig ( {
 		minify: false, // Easier on the repo size and debugging.
 		rollupOptions: {
 			output: {
-				entryFileNames: "assets/[name]-[hash].js",
-				chunkFileNames: "assets/[name]-[hash].js",
-				assetFileNames: "assets/[name]-[hash][extname]",
+				// Note: Use [name]-[hash] to get a different file name each time.
+				entryFileNames: "assets/[name].js",
+				chunkFileNames: "assets/[name].js",
+				assetFileNames: "assets/[name][extname]",
 			},
 		},
 	},
