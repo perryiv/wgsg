@@ -128,7 +128,8 @@ class STL extends BaseClass
 			// The group node we return.
 			const scene = new Group();
 
-			// This function get called for every line.
+			// This function gets called for every line.
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const innerStep = ( results: ParseStepResult < string[] >, parser: Parser ) =>
 			{
 				++rowCount;
