@@ -12,11 +12,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { buildTriangleEdges } from "../../Builders/Lines"
 import { clampNumber } from "../../Tools";
 import { Indexed } from "../../Scene/Primitives";
 import { parse, Parser, ParseStepResult } from "papaparse";
-import { SolidColor } from "../../Shaders";
+import { PhongShading } from "../../Shaders";
 import { State } from "../../Scene/State";
 import { vec3 } from "gl-matrix";
 import type { IVector3, IVector4 } from "../../Types";
@@ -128,7 +127,8 @@ class STL extends BaseClass
 			// The group node we return.
 			const scene = new Group();
 
-			// This function get called for every line.
+			// This function gets called for every line.
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const innerStep = ( results: ParseStepResult < string[] >, parser: Parser ) =>
 			{
 				++rowCount;
@@ -438,7 +438,7 @@ class STL extends BaseClass
 		}
 
 		// Shortcut.
-		const shader = SolidColor.instance;
+		const shader = PhongShading.instance;
 
 		// The group that we return.
 		const group = new Group()
@@ -454,15 +454,15 @@ class STL extends BaseClass
 
 			// The color of the triangles.
 			const color: IVector4 = [
-				clampNumber ( Math.random(), 0.1, 0.9 ),
-				clampNumber ( Math.random(), 0.1, 0.9 ),
-				clampNumber ( Math.random(), 0.1, 0.9 ),
+				clampNumber ( Math.random(), 0.2, 0.8 ),
+				clampNumber ( Math.random(), 0.2, 0.8 ),
+				clampNumber ( Math.random(), 0.2, 0.8 ),
 				1.0
 			];
 
 			// Add the state.
 			tris.state = new State ( {
-				name: `State with ${color.join(", ")} ${topology}`,
+				name: `State with shader: ${shader.type}, color: ${color.join(", ")}, topology: ${topology}`,
 				shader,
 				topology,
 				apply: ( () =>
@@ -473,31 +473,6 @@ class STL extends BaseClass
 
 			// Add the triangles to the scene.
 			group.addChild ( tris );
-		}
-
-		// Make the lines.
-		{
-			// Make the lines for the triangle edges.
-			const edges = buildTriangleEdges ( tris );
-
-			// If it worked then add state.
-			if ( edges )
-			{
-				const topology = "line-list";
-				const color: IVector4 = [ 0.0, 0.0, 0.0, 1.0 ];
-				edges.state = new State ( {
-					name: `State with ${color.join(", ")} ${topology}`,
-					shader,
-					topology,
-					apply: ( () =>
-					{
-						shader.color = color;
-					} )
-				} );
-			}
-
-			// Add the edges to the scene.
-			group.addChild ( edges );
 		}
 
 		// Return the group.

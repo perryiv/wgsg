@@ -19,7 +19,7 @@ import {
 	Group,
 	Indexed,
 	Node,
-	SolidColor,
+	PhongShading,
 	Sphere,
 	SphereNode,
 	State,
@@ -42,7 +42,7 @@ export const makeSolidColorState = ( { color, topology } :
 	color = [ color[0], color[1], color[2], color[3] ];
 
 	// Shortcut.
-	const shader = SolidColor.instance;
+	const shader = PhongShading.instance;
 
 	// Make the state.
 	return new State ( {

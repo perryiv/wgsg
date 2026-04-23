@@ -8,8 +8,8 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Shader class that renders a solid color.
-//	https://stackoverflow.com/questions/71535213/a-way-to-load-wglsl-files-in-typescript-files-using-esbuild
+//	Shader class that renders with Phong shading.
+//	https://webgpufundamentals.org/webgpu/lessons/webgpu-lighting-directional.html
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -19,7 +19,7 @@ import { vec4 } from "gl-matrix";
 import type { IMatrix44, IVector4 } from "../Types";
 
 // @ts-expect-error TypeScript does not recognize WGSL files.
-import code from "./SolidColor.wgsl?raw";
+import code from "./PhongShading.wgsl?raw";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -28,7 +28,7 @@ import code from "./SolidColor.wgsl?raw";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-interface ISolidColorShaderInput
+interface IPhongShadingShaderInput
 {
 	topology?: GPUPrimitiveTopology;
 }
@@ -41,19 +41,20 @@ interface ISolidColorShaderInput
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class SolidColor extends BaseClass
+export class PhongShading extends BaseClass
 {
-	static #instance: ( SolidColor | null ) = null;
+	static #instance: ( PhongShading | null ) = null;
 	#color: IVector4 = [ 0.5, 0.5, 0.5, 1.0 ];
+	#lightDir: IVector4 = [ 0.0, 0.0, -1.0, 0.0 ];
 	#uniforms: ( GPUBuffer | null ) = null;
 	#bindGroup: ( GPUBindGroup | null ) = null;
 
 	/**
 	 * Construct the class.
 	 * @class
-	 * @param {ISolidColorShaderInput} [input] - The input.
+	 * @param {IPhongShadingShaderInput} [input] - The input.
 	 */
-	protected constructor ( input?: Readonly<ISolidColorShaderInput> )
+	protected constructor ( input?: Readonly<IPhongShadingShaderInput> )
 	{
 		const topology = input?.topology;
 
@@ -88,15 +89,15 @@ export class SolidColor extends BaseClass
 
 	/**
 	 * Get the singleton instance.
-	 * @returns {SolidColor} The singleton instance.
+	 * @returns {PhongShading} The singleton instance.
 	 */
-	public static get instance () : SolidColor
+	public static get instance () : PhongShading
 	{
-		if ( !SolidColor.#instance )
+		if ( !PhongShading.#instance )
 		{
-			SolidColor.#instance = new SolidColor();
+			PhongShading.#instance = new PhongShading();
 		}
-		return SolidColor.#instance;
+		return PhongShading.#instance;
 	}
 
 	/**
@@ -104,10 +105,10 @@ export class SolidColor extends BaseClass
 	 */
 	public static destroy() : void
 	{
-		if ( SolidColor.#instance )
+		if ( PhongShading.#instance )
 		{
-			SolidColor.#instance.destroy();
-			SolidColor.#instance = null;
+			PhongShading.#instance.destroy();
+			PhongShading.#instance = null;
 		}
 	}
 
@@ -117,7 +118,7 @@ export class SolidColor extends BaseClass
 	 */
 	public override getClassName() : string
 	{
-		return "Shaders.SolidColor";
+		return "Shaders.PhongShading";
 	}
 
 	/**
@@ -127,7 +128,8 @@ export class SolidColor extends BaseClass
 	public get name() : string
 	{
 		const color = this.color.join ( ", " );
-		return `${this.type} with color [${color}]`;
+		const lightDir = this.lightDir.join ( ", " );
+		return `${this.type} with color [${color}] and light direction [${lightDir}]`;
 	}
 
 	/**
@@ -171,6 +173,26 @@ export class SolidColor extends BaseClass
 	}
 
 	/**
+	 * Return the light direction.
+	 * @returns {IVector4} The light direction.
+	 */
+	public get lightDir () : IVector4
+	{
+		return [ ...this.#lightDir ];
+	}
+
+	/**
+	 * Set the light direction.
+	 * @param {IVector4} lightDir - The light direction.
+	 */
+	public set lightDir ( lightDir: Readonly<IVector4> )
+	{
+		vec4.copy ( this.#lightDir, lightDir );
+		this.#uniforms = null;
+		this.#bindGroup = null;
+	}
+
+	/**
 	 * Return the uniform buffer.
 	 * @returns {GPUBuffer | null} The uniform buffer.
 	 */
@@ -188,7 +210,7 @@ export class SolidColor extends BaseClass
 			// Create the buffer.
 			buffer = device.createBuffer ( {
 				label: `Uniform buffer for shader ${this.type} ${this.id}`,
-				size: ( 16 + 16 + 4 ) * 4, // Two 4x4 matrices + 4D color, 4 bytes each.
+				size: ( 16 + 16 + 4 + 4 ) * 4, // Two 4x4 matrices + 4D color + 4D light, 4 bytes each.
 				usage: ( GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST )
 			} );
 
@@ -196,12 +218,14 @@ export class SolidColor extends BaseClass
 			const pm = new Float32Array ( this.projMatrix );
 			const vm = new Float32Array ( this.viewMatrix );
 			const color = new Float32Array ( this.#color );
+			const lightDir = new Float32Array ( this.#lightDir );
 
 			// Write the typed array to the buffer.
 			let offset = 0;
-			device.queue.writeBuffer ( buffer, offset, pm ); offset += pm.byteLength;
-			device.queue.writeBuffer ( buffer, offset, vm ); offset += vm.byteLength;
-			device.queue.writeBuffer ( buffer, offset, color );
+			device.queue.writeBuffer ( buffer, offset, pm       ); offset += pm.byteLength;
+			device.queue.writeBuffer ( buffer, offset, vm       ); offset += vm.byteLength;
+			device.queue.writeBuffer ( buffer, offset, color    ); offset += color.byteLength;
+			device.queue.writeBuffer ( buffer, offset, lightDir );
 
 			// Set this for next time.
 			this.#uniforms = buffer;
@@ -238,6 +262,16 @@ export class SolidColor extends BaseClass
 					{
 						// Position
 						shaderLocation: 0,
+						offset: 0,
+						format: "float32x3",
+					} ],
+					arrayStride,
+					stepMode: "vertex",
+				}, {
+					attributes: [
+					{
+						// Normal vector
+						shaderLocation: 1,
 						offset: 0,
 						format: "float32x3",
 					} ],
