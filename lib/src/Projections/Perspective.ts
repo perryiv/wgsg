@@ -45,8 +45,8 @@ export class Perspective extends Projection
 {
 	#fov = 45;
 	#aspect = 1;
-	#near = 0.1;
-	#far = 1000;
+	#near = 0.01;
+	#far = 10000;
 
 	/**
 	 * Construct the class.

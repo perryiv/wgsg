@@ -175,11 +175,9 @@ export function Viewer ( { style }: IViewerProps )
 			console.error ( `Error reading file ${file.name}:`, error );
 			return;
 		}
-		finally
-		{
-			// Hide the progress bar.
-			setProgress ( 0 );
-		}
+
+		// Hide the progress bar.
+		setProgress ( 0 );
 
 		// Handle invalid model.
 		if ( !model )

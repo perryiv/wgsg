@@ -15,7 +15,7 @@
 import { buildTriangleEdges } from "../../Builders/Lines"
 import { clampNumber } from "../../Tools";
 import { Indexed } from "../../Scene/Primitives";
-import { parse, ParseStepResult } from "papaparse";
+import { parse, Parser, ParseStepResult } from "papaparse";
 import { SolidColor } from "../../Shaders";
 import { State } from "../../Scene/State";
 import { vec3 } from "gl-matrix";
@@ -103,7 +103,6 @@ class STL extends BaseClass
 			// Initialize.
 			let rowCount = 0;
 			let byteCount = 0;
-			let done = false;
 
 			// This will get or make a progress callback function.
 			const onProgress = this.getProgressCallback();
@@ -130,34 +129,25 @@ class STL extends BaseClass
 			const scene = new Group();
 
 			// This function get called for every line.
-			const step = ( results: ParseStepResult < string[] > ) =>
+			const innerStep = ( results: ParseStepResult < string[] >, parser: Parser ) =>
 			{
-				// Did we already finish?
-				if ( true === done )
-				{
-					return; // Is there a second solid in the file?
-				}
-
 				++rowCount;
 
 				if ( !results )
 				{
-					done = true;
-					reject ( new Error ( `Row ${rowCount} has no data` ) );
+					throw new Error ( `Row ${rowCount} has no data` );
 				}
 
 				if ( results.errors.length > 0 )
 				{
-					done = true;
-					reject ( new Error ( `Error when parsing row ${rowCount}: ${results.errors[0].message}` ) );
+					throw new Error ( `Error when parsing row ${rowCount}: ${results.errors[0].message}` );
 				}
 
 				const { data: lines } = results;
 
 				if ( false === Array.isArray ( lines ) )
 				{
-					done = true;
-					reject ( new Error ( `Row ${rowCount} is not an array` ) );
+					throw new Error ( `Row ${rowCount} is not an array` );
 				}
 
 				let line = lines[0];
@@ -170,8 +160,7 @@ class STL extends BaseClass
 
 				else // Not a string.
 				{
-					done = true;
-					reject ( new Error ( `Row ${rowCount} array does not contain one string` ) );
+					throw new Error ( `Row ${rowCount} array does not contain one string` );
 				}
 
 				onProgress ( byteCount, size );
@@ -198,8 +187,7 @@ class STL extends BaseClass
 
 						if ( 1 !== solidCount )
 						{
-							done = true;
-							reject ( new Error ( `Keyword 'solid' on line ${rowCount} not balanced with 'endsolid'` ) );
+							throw new Error ( `Keyword 'solid' on line ${rowCount} not balanced with 'endsolid'` );
 						}
 
 						break;
@@ -208,16 +196,14 @@ class STL extends BaseClass
 					{
 						if ( ( 5 !== parts.length ) || ( "normal" !== parts[1].toLowerCase() ) )
 						{
-							done = true;
-							reject ( new Error ( `Invalid facet on line ${rowCount}: ${line}` ) );
+							throw new Error ( `Invalid facet on line ${rowCount}: ${line}` );
 						}
 
 						++facetCount;
 
 						if ( 1 !== facetCount )
 						{
-							done = true;
-							reject ( new Error ( `Keyword 'facet' on line ${rowCount} not balanced with 'endfacet'` ) );
+							throw new Error ( `Keyword 'facet' on line ${rowCount} not balanced with 'endfacet'` );
 						}
 
 						// Read the normal for the whole triangle.
@@ -247,16 +233,14 @@ class STL extends BaseClass
 					{
 						if ( "loop" !== parts[1].toLowerCase() )
 						{
-							done = true;
-							reject ( new Error ( `Keyword 'outer' on line ${rowCount} not followed by 'loop'` ) );
+							throw new Error ( `Keyword 'outer' on line ${rowCount} not followed by 'loop'` );
 						}
 
 						++loopCount;
 
 						if ( 1 !== loopCount )
 						{
-							done = true;
-							reject ( new Error ( `Keyword 'outer' on line ${rowCount} not balanced with 'endloop'` ) );
+							throw new Error ( `Keyword 'outer' on line ${rowCount} not balanced with 'endloop'` );
 						}
 
 						break;
@@ -265,26 +249,22 @@ class STL extends BaseClass
 					{
 						if ( 4 !== parts.length )
 						{
-							done = true;
-							reject ( new Error ( `Invalid vertex on line ${rowCount}: ${line}` ) );
+							throw new Error ( `Invalid vertex on line ${rowCount}: ${line}` );
 						}
 
 						if ( 1 !== solidCount )
 						{
-							done = true;
-							reject ( new Error ( `Keyword 'vertex' on line ${rowCount} not inside a 'solid'` ) );
+							throw new Error ( `Keyword 'vertex' on line ${rowCount} not inside a 'solid'` );
 						}
 
 						if ( 1 !== facetCount )
 						{
-							done = true;
-							reject ( new Error ( `Keyword 'vertex' on line ${rowCount} not inside a 'facet'` ) );
+							throw new Error ( `Keyword 'vertex' on line ${rowCount} not inside a 'facet'` );
 						}
 
 						if ( 1 !== loopCount )
 						{
-							done = true;
-							reject ( new Error ( `Keyword 'vertex' on line ${rowCount} not inside a 'loop'` ) );
+							throw new Error ( `Keyword 'vertex' on line ${rowCount} not inside a 'loop'` );
 						}
 
 						// Read the point into a local variable for easier debugging.
@@ -308,8 +288,7 @@ class STL extends BaseClass
 
 						if ( 0 !== loopCount )
 						{
-							done = true;
-							reject ( new Error ( `Keyword 'endloop' on line ${rowCount} not balanced with 'outer'` ) );
+							throw new Error ( `Keyword 'endloop' on line ${rowCount} not balanced with 'outer'` );
 						}
 
 						break;
@@ -320,15 +299,13 @@ class STL extends BaseClass
 
 						if ( 0 !== facetCount )
 						{
-							done = true;
-							reject ( new Error ( `Keyword 'endfacet' on line ${rowCount} not balanced with 'facet'` ) );
+							throw new Error ( `Keyword 'endfacet' on line ${rowCount} not balanced with 'facet'` );
 						}
 
 						// Did we overflow the array?
 						if ( indexCount > indices.length )
 						{
-							done = true;
-							reject ( new Error ( `Index count ${indexCount} exceeds array length ${indices.length}` ) );
+							throw new Error ( `Index count ${indexCount} exceeds array length ${indices.length}` );
 						}
 
 						// Are the arrays full?
@@ -354,22 +331,45 @@ class STL extends BaseClass
 
 						if ( 0 !== solidCount )
 						{
-							done = true;
-							reject ( new Error ( `Keyword 'endsolid' on line ${rowCount} not balanced with 'solid'` ) );
+							throw new Error ( `Keyword 'endsolid' on line ${rowCount} not balanced with 'solid'` );
 						}
 
-						// Build the final scene, which may be the only one for smaller files.
-						scene.addChild ( this.buildScene (
-							points, normals, indices,
-							pointCount, normalCount, indexCount
-						) );
-
-						done = true;
-						onProgress ( size, size );
-						resolve ( scene );
+						break;
 					}
-
 				}
+			};
+
+			// Wrap the step function to catch all errors.
+			const step = ( results: ParseStepResult < string[] >, parser: Parser ) =>
+			{
+				try
+				{
+					innerStep ( results, parser );
+				}
+				catch ( error )
+				{
+					parser.abort();
+					reject ( ( error instanceof Error )
+						? error
+						: ( new Error ( String ( error ) ) )
+					);
+				}
+			};
+
+			// This gets called when the parsing is done.
+			const complete = () =>
+			{
+				// Build the final scene, which may be the only one for smaller files.
+				scene.addChild ( this.buildScene (
+					points, normals, indices,
+					pointCount, normalCount, indexCount
+				) );
+
+				// Send the final progress notification.
+				onProgress ( size, size );
+
+				// We succeeded.
+				resolve ( scene );
 			};
 
 			// We do not want the lines to be split so using a delimeter
@@ -383,6 +383,7 @@ class STL extends BaseClass
 				fastMode: true,
 				skipEmptyLines: true,
 				step,
+				complete,
 				// TODO: Figure out how to move a progress bar when using a worker.
 				worker: false,
 			} );
