@@ -20,41 +20,14 @@ import {
 	Indexed,
 	Node,
 	PhongShading,
+	SolidColor,
 	Sphere,
 	SphereNode,
-	State,
 	Transform,
 	type IVector2,
 	type IVector3,
 	type IVector4,
 } from "../../../lib/src";
-
-///////////////////////////////////////////////////////////////////////////////
-//
-//	Make a state object with solid color.
-//
-///////////////////////////////////////////////////////////////////////////////
-
-export const makeSolidColorState = ( { color, topology } :
-	{ color: IVector4, topology: GPUPrimitiveTopology } ) : State =>
-{
-	// Make a copy of the color because we capture it below.
-	color = [ color[0], color[1], color[2], color[3] ];
-
-	// Shortcut.
-	const shader = PhongShading.instance;
-
-	// Make the state.
-	return new State ( {
-		name: `State with ${color.join(", ")} ${topology}`,
-		shader,
-		topology,
-		apply: ( () =>
-		{
-			shader.color = color;
-		} )
-	} );
-}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -72,7 +45,7 @@ export const buildSceneSphere = ( sphere: Sphere ) =>
 		radius: sphere.radius,
 		numSubdivisions: 4,
 	} );
-	node.state = makeSolidColorState ( {
+	node.state = PhongShading.makeState ( {
 		color: [ 0.8, 0.2, 0.2, 1.0 ],
 		topology: "triangle-list"
 	} );
@@ -81,7 +54,7 @@ export const buildSceneSphere = ( sphere: Sphere ) =>
 	const lines = buildTriangleEdges ( node );
 	if ( lines )
 	{
-		lines.state = makeSolidColorState ( {
+		lines.state = SolidColor.makeState ( {
 			color: [ 0.0, 0.0, 0.0, 1.0 ],
 			topology: "line-list"
 		} );
@@ -162,7 +135,7 @@ const makeQuad = ( { origin, size, color, topology } :
 	// Were we given a color?
 	if ( color )
 	{
-		geom.state = makeSolidColorState ( { color, topology } );
+		geom.state = SolidColor.makeState ( { color, topology } );
 	}
 
 	// Return the new geometry.
@@ -246,7 +219,7 @@ export const buildSceneQuads = () : Node =>
 			// const lines = buildTriangleEdges ( quads );
 			// if ( lines )
 			// {
-			// 	lines.state = makeSolidColorState ( {
+			// 	lines.state = SolidColor.makeState ( {
 			// 		color: [ 0.0, 0.0, 0.0, 1.0 ],
 			// 		topology: "line-list"
 			// 	} );

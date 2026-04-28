@@ -29,6 +29,8 @@ struct VertexOut
 	@location ( 0 ) normal : vec3f,
 };
 
+@group ( 0 ) @binding ( 1 ) var<uniform> twoSided : u32;
+
 @vertex fn vs ( @location ( 0 ) position: vec4f, @location ( 1 ) normal: vec3f ) -> VertexOut
 {
 	// The answer.
@@ -50,7 +52,8 @@ struct VertexOut
 	let normal = normalize ( fragData.normal );
 
 	// Calculate the diffuse lighting factor.
-	let diffuse = max ( dot ( normal, -uniforms.lightDir ), 0.0 );
+	let dotProduct = dot ( normal, -uniforms.lightDir );
+	let diffuse = select ( max ( dotProduct, 0.0 ), abs ( dotProduct ), twoSided != 0u );
 
 	// Calculate the color, assuming that the canvas is configured
 	// for pre-multiplied alpha.

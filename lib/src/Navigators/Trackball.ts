@@ -83,7 +83,7 @@ export class Trackball extends BaseClass
 {
 	#matrix: ( IMatrix44 | null ) = null;
 	#inverse: ( IMatrix44 | null ) = null;
-	#mode: IRotationMode = "turn_table";
+	#mode: IRotationMode = "track_ball";
 	#state: ITrackballState = makeDefaultTrackballState();
 
 	/**

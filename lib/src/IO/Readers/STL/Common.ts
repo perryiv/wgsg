@@ -16,7 +16,6 @@ import { clampNumber } from "../../../Tools";
 import { Indexed } from "../../../Scene/Primitives";
 import { PhongShading } from "../../../Shaders";
 import { Reader as BaseClass } from "../../Reader";
-import { State } from "../../../Scene/State";
 import type { IVector4 } from "../../../Types";
 import {
 	Geometry,
@@ -123,11 +122,8 @@ export abstract class Common extends BaseClass
 			throw new Error ( `Number of normals, ${normals.length}, is not equal to the number of points, ${points.length}` );
 		}
 
-		// Shortcut.
-		const shader = PhongShading.instance;
-
 		// The group that we return.
-		const group = new Group
+		const group = new Group();
 
 		// The geometry for the triangles.
 		const tris = new Geometry ( { points, normals } );
@@ -147,15 +143,7 @@ export abstract class Common extends BaseClass
 			];
 
 			// Add the state.
-			tris.state = new State ( {
-				name: `State with shader: ${shader.type}, color: ${color.join(", ")}, topology: ${topology}`,
-				shader,
-				topology,
-				apply: ( () =>
-				{
-					shader.color = color;
-				} )
-			} );
+			tris.state = PhongShading.makeState ( { color, twoSided: true, topology } );
 
 			// To speed things up later, calculate the bounds now.
 			tris.getBoundingBox();
