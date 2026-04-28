@@ -90,8 +90,7 @@ export class TextReader extends BaseClass
 			const scene = new Group();
 
 			// This function gets called for every line.
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			const innerStep = ( results: ParseStepResult < string[] >, parser: Parser ) =>
+			const innerStep = ( results: ParseStepResult < string[] > ) =>
 			{
 				++rowCount;
 
@@ -306,7 +305,7 @@ export class TextReader extends BaseClass
 			{
 				try
 				{
-					innerStep ( results, parser );
+					innerStep ( results );
 				}
 				catch ( error )
 				{
