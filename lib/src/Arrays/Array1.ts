@@ -143,7 +143,7 @@ export class Array1 < InternalArrayType extends PossibleArrayType >
   		} );
 
 			// Fill the buffer with the values.
-			device.queue.writeBuffer ( buffer, 0, values );
+			device.queue.writeBuffer ( buffer, 0, values.buffer );
 
 			// Set our member.
 			this.#buffer = buffer;
