@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IDENTITY_MATRIX } from "../Tools";
+import { Color, IDENTITY_MATRIX } from "../Tools";
 import { Multiply as BaseClass } from "../Visitors";
 import { SolidColor } from "../Shaders";
 import { vec3, vec4 } from "gl-matrix";
@@ -242,7 +242,7 @@ class BuildBoxes extends BaseClass
 
 			// Add a state.
 			geom.state = SolidColor.makeState ( {
-				color: [ 0.5, 0.5, 0.5, 1 ],
+				color: [ ...Color.gray ],
 				topology: "line-list"
 			} );
 
@@ -323,7 +323,7 @@ class BuildBoxes extends BaseClass
 		);
 
 		// Initialize the color.
-		const c: IVector4 = [ 0.5, 0.5, 0.5, 1 ];
+		const c: IVector4 = [ ...Color.gray ];
 
 		// Try to get the color.
 		const state = node.state;

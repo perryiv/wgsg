@@ -13,7 +13,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Device } from "../Tools";
+import { Color, Device } from "../Tools";
 import { State } from "../Scene";
 import { vec4 } from "gl-matrix";
 import { WithMatrices as BaseClass } from "./WithMatrices";
@@ -45,7 +45,7 @@ interface IPhongShadingShaderInput
 export class PhongShading extends BaseClass
 {
 	static #instance: ( PhongShading | null ) = null;
-	#color: IVector4 = [ 0.5, 0.5, 0.5, 1.0 ];
+	#color: IVector4 = [ ...Color.gray ];
 	#twoSided = false;
 	#lightDir: IVector4 = [ 0.0, 0.0, -1.0, 0.0 ];
 	#uniforms: ( GPUBuffer | null ) = null;

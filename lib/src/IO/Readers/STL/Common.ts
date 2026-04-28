@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { clampNumber } from "../../../Tools";
+import { Color } from "../../../Tools";
 import { Indexed } from "../../../Scene/Primitives";
 import { PhongShading } from "../../../Shaders";
 import { Reader as BaseClass } from "../../Reader";
@@ -135,12 +135,7 @@ export abstract class Common extends BaseClass
 			tris.primitives = new Indexed ( { topology, indices } );
 
 			// The color of the triangles.
-			const color: IVector4 = [
-				clampNumber ( Math.random(), 0.2, 0.8 ),
-				clampNumber ( Math.random(), 0.2, 0.8 ),
-				clampNumber ( Math.random(), 0.2, 0.8 ),
-				1.0
-			];
+			const color: IVector4 = Color.makeRandomColor ( 0.2, 0.8 );
 
 			// Add the state.
 			tris.state = PhongShading.makeState ( { color, twoSided: true, topology } );

@@ -15,6 +15,7 @@
 import {
 	buildBox,
 	buildTriangleEdges,
+	Color,
 	Geometry,
 	Group,
 	Indexed,
@@ -56,7 +57,7 @@ export const buildSceneSphere = ( sphere: Sphere ) =>
 	if ( lines )
 	{
 		lines.state = SolidColor.makeState ( {
-			color: [ 0.0, 0.0, 0.0, 1.0 ],
+			color: [ ...Color.black ],
 			topology: "line-list"
 		} );
 	}
@@ -205,14 +206,10 @@ export const buildSceneQuads = () : Node =>
 			const x = -1 + ( i * w );
 			const y = -1 + ( j * h );
 
-			const r = ( 0.1 + 0.8 * Math.random() );
-			const g = ( 0.1 + 0.8 * Math.random() );
-			const b = ( 0.1 + 0.8 * Math.random() );
-
 			const quads = makeQuad ( {
 				origin: [ x, y, 0.0 ],
 				size: [ w, h ],
-				color: [ r, g, b, 1.0 ],
+				color: Color.makeRandomColor ( 0.1, 0.9 ),
 				topology: "triangle-list"
 			} );
 			group.addChild ( quads );
@@ -221,7 +218,7 @@ export const buildSceneQuads = () : Node =>
 			// if ( lines )
 			// {
 			// 	lines.state = SolidColor.makeState ( {
-			// 		color: [ 0.0, 0.0, 0.0, 1.0 ],
+			// 		color: [ ...Color.black ],
 			// 		topology: "line-list"
 			// 	} );
 			// }
@@ -278,7 +275,7 @@ export const buildSceneBox = ( sx = 1.0, sy = 1.0, sz = 1.0 ) : Node =>
 	group.addChild ( buildBox ( {
 		center: [ 0.0, 0.0, 0.0 ],
 		size:   [ sx, sy, sz ],
-		color:  [ 0.0, 0.0, 0.0, 1.0 ],
+		color:  [ ...Color.black ],
 		topology: "line-list",
 	} ) );
 

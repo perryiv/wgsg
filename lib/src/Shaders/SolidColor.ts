@@ -13,7 +13,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Device } from "../Tools";
+import { Color, Device } from "../Tools";
 import { State } from "../Scene";
 import { vec4 } from "gl-matrix";
 import { WithMatrices as BaseClass } from "./WithMatrices";
@@ -45,7 +45,7 @@ interface ISolidColorShaderInput
 export class SolidColor extends BaseClass
 {
 	static #instance: ( SolidColor | null ) = null;
-	#color: IVector4 = [ 0.5, 0.5, 0.5, 1.0 ];
+	#color: IVector4 = [ ...Color.gray ];
 	#uniforms: ( GPUBuffer | null ) = null;
 	#bindGroup: ( GPUBindGroup | null ) = null;
 

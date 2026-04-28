@@ -20,6 +20,7 @@ import { vec4 } from "gl-matrix";
 import {
 	BUILD_TIME_LOG_LEVEL,
 	clampVec4,
+	Color,
 	Device,
 	IDENTITY_MATRIX,
 	KEEP_PERFORMANCE_INFO,
@@ -96,7 +97,7 @@ export class Surface extends BaseClass
 	#visitors: ( IVisitors | null ) = null;
 	#root: Root = new Root();
 	#defaultState: ( State | null ) = null;
-	#clearColor: IVector4 = [ 0.0, 0.0, 0.0, 0.0 ]; // Transparent black.
+	#clearColor: IVector4 = [ ...Color.transparent ];
 	#info: IRenderGraphInfo = makeRenderGraphInfo();
 
 	/**
