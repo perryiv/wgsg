@@ -47,6 +47,7 @@ export const buildSceneSphere = ( sphere: Sphere ) =>
 	} );
 	node.state = PhongShading.makeState ( {
 		color: [ 0.8, 0.2, 0.2, 1.0 ],
+		twoSided: false,
 		topology: "triangle-list"
 	} );
 	root.addChild ( node );
