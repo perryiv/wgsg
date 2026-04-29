@@ -15,8 +15,8 @@
 import { Geometry, Indexed } from "../Scene";
 import { IVector4 } from "../Types";
 import { Line } from "../Math";
-import { makeSolidColorState } from "./State";
 import { makeTriangleEdges } from "../Algorithms";
+import { SolidColor } from "../Shaders";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -63,7 +63,7 @@ export const buildLine = ( { line, color }: { line: Readonly<Line>, color?: IVec
 	// Were we given a color?
 	if ( color )
 	{
-		geom.state = makeSolidColorState ( { color, topology } );
+		geom.state = SolidColor.makeState ( { color, topology } );
 	}
 
 	// Return the new geometry.

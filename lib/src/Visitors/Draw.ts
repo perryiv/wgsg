@@ -17,9 +17,9 @@ import { vec4 } from "gl-matrix";
 import { Visitor as BaseClass } from "./Visitor";
 import type { IRenderGraphInfo, IVector4 } from "../Types";
 import {
+	Color,
 	Device,
 	KEEP_PERFORMANCE_INFO,
-	preMultiplyColor,
 } from "../Tools";
 import {
 	Arrays,
@@ -83,7 +83,7 @@ export class Draw extends BaseClass
 {
 	#context: GPUCanvasContext;
 	#depthTexture: ( GPUTexture | null ) = null;
-	#clearColor: IVector4 = [ 0.5, 0.5, 0.5, 1.0 ]; // Grey.
+	#clearColor: IVector4 = [ ...Color.gray ];
 	#renderPassEncoder: ( GPURenderPassEncoder | null ) = null;
 	#commandEncoder: ( GPUCommandEncoder | null ) = null;
 	#geometry: ( Geometry | null ) = null;
@@ -240,7 +240,7 @@ export class Draw extends BaseClass
 	 */
 	public get preMultipliedClearColor () : IVector4
 	{
-		return preMultiplyColor ( this.#clearColor );
+		return Color.preMultiply ( this.#clearColor );
 	}
 
 	/**

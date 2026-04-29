@@ -13,9 +13,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Device } from "../Tools";
-import { WithMatrices as BaseClass } from "./WithMatrices";
+import { Color, Device } from "../Tools";
+import { State } from "../Scene";
 import { vec4 } from "gl-matrix";
+import { WithMatrices as BaseClass } from "./WithMatrices";
 import type { IMatrix44, IVector4 } from "../Types";
 
 // @ts-expect-error TypeScript does not recognize WGSL files.
@@ -44,7 +45,8 @@ interface IPhongShadingShaderInput
 export class PhongShading extends BaseClass
 {
 	static #instance: ( PhongShading | null ) = null;
-	#color: IVector4 = [ 0.5, 0.5, 0.5, 1.0 ];
+	#color: IVector4 = [ ...Color.gray ];
+	#twoSided = false;
 	#lightDir: IVector4 = [ 0.0, 0.0, -1.0, 0.0 ];
 	#uniforms: ( GPUBuffer | null ) = null;
 	#bindGroup: ( GPUBindGroup | null ) = null;
@@ -129,7 +131,7 @@ export class PhongShading extends BaseClass
 	{
 		const color = this.color.join ( ", " );
 		const lightDir = this.lightDir.join ( ", " );
-		return `${this.type} with color [${color}] and light direction [${lightDir}]`;
+		return `${this.type} with color: [${color}], two-sided lighting: ${this.twoSided}, and light direction: [${lightDir}]`;
 	}
 
 	/**
@@ -173,6 +175,26 @@ export class PhongShading extends BaseClass
 	}
 
 	/**
+	 * Return whether to use two-sided lighting.
+	 * @returns {boolean} Whether to use two-sided lighting.
+	 */
+	public get twoSided () : boolean
+	{
+		return this.#twoSided;
+	}
+
+	/**
+	 * Set whether to use two-sided lighting.
+	 * @param {boolean} twoSided - Whether to use two-sided lighting.
+	 */
+	public set twoSided ( twoSided: boolean )
+	{
+		this.#twoSided = twoSided;
+		this.#uniforms = null;
+		this.#bindGroup = null;
+	}
+
+	/**
 	 * Return the light direction.
 	 * @returns {IVector4} The light direction.
 	 */
@@ -210,7 +232,8 @@ export class PhongShading extends BaseClass
 			// Create the buffer.
 			buffer = device.createBuffer ( {
 				label: `Uniform buffer for shader ${this.type} ${this.id}`,
-				size: ( 16 + 16 + 4 + 4 ) * 4, // Two 4x4 matrices + 4D color + 4D light, 4 bytes each.
+				// Two 4x4 matrices + 4D color + 4D light + 1D twoSided, 4 bytes each.
+				size: ( 16 + 16 + 4 + 4 + 1 ) * 4,
 				usage: ( GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST )
 			} );
 
@@ -219,13 +242,15 @@ export class PhongShading extends BaseClass
 			const vm = new Float32Array ( this.viewMatrix );
 			const color = new Float32Array ( this.#color );
 			const lightDir = new Float32Array ( this.#lightDir );
+			const twoSided = new Uint32Array ( [ this.#twoSided ? 1 : 0 ] );
 
 			// Write the typed array to the buffer.
 			let offset = 0;
 			device.queue.writeBuffer ( buffer, offset, pm       ); offset += pm.byteLength;
 			device.queue.writeBuffer ( buffer, offset, vm       ); offset += vm.byteLength;
 			device.queue.writeBuffer ( buffer, offset, color    ); offset += color.byteLength;
-			device.queue.writeBuffer ( buffer, offset, lightDir );
+			device.queue.writeBuffer ( buffer, offset, lightDir ); offset += lightDir.byteLength;
+			device.queue.writeBuffer ( buffer, offset, twoSided ); offset += twoSided.byteLength;
 
 			// Set this for next time.
 			this.#uniforms = buffer;
@@ -346,6 +371,9 @@ export class PhongShading extends BaseClass
 				{
 					binding: 0,
 					resource: { buffer: this.uniforms }
+				}, {
+					binding: 1,
+					resource: { buffer: this.uniforms }
 				} ],
 			} );
 
@@ -368,5 +396,35 @@ export class PhongShading extends BaseClass
 
 		// Set the color buffer.
 		pass.setBindGroup ( 0, this.getBindGroup ( topology ) );
+	}
+
+	/**
+	 * Make and return a state object that uses this shader.
+	 * @param {object} input - The input object.
+	 * @param {IVector4} input.color - The color to use in the state.
+	 * @param {boolean} input.twoSided - Whether to use two-sided lighting.
+	 * @param {GPUPrimitiveTopology} input.topology - The primitive topology.
+	 * @returns {State} The state object.
+	 */
+	public static makeState = ( { color, twoSided = false, topology } :
+	{ color: IVector4, twoSided: boolean, topology: GPUPrimitiveTopology } ) : State =>
+	{
+		// Make a copy of the color because we capture it below.
+		color = [ color[0], color[1], color[2], color[3] ];
+
+		// Shortcut.
+		const shader = PhongShading.instance;
+
+		// Make the state.
+		return new State ( {
+			name: `${shader.type} state with color: ${color.join(", ")}, twoSided: ${twoSided}, topology: ${topology}`,
+			shader,
+			topology,
+			apply: ( () =>
+			{
+				shader.color = color;
+				shader.twoSided = twoSided;
+			} )
+		} );
 	}
 }

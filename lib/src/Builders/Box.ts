@@ -12,8 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IDENTITY_MATRIX } from "../Tools";
-import { makeSolidColorState } from "./State";
+import { Color, IDENTITY_MATRIX } from "../Tools";
 import { Multiply as BaseClass } from "../Visitors";
 import { SolidColor } from "../Shaders";
 import { vec3, vec4 } from "gl-matrix";
@@ -171,7 +170,7 @@ export const buildBox = ( input?: IBoxBuilderInput ) : Geometry =>
 	// Were we given a color?
 	if ( input?.color )
 	{
-		geom.state = makeSolidColorState ( { color: input.color, topology } );
+		geom.state = SolidColor.makeState ( { color: input.color, topology } );
 	}
 
 	// Return the new geometry.
@@ -242,7 +241,10 @@ class BuildBoxes extends BaseClass
 			const geom = new Geometry ( { points, colors, primitives } );
 
 			// Add a state.
-			geom.state = makeSolidColorState ( { color: [ 0.5, 0.5, 0.5, 1 ], topology: "line-list" } );
+			geom.state = SolidColor.makeState ( {
+				color: [ ...Color.gray ],
+				topology: "line-list"
+			} );
 
 			// Save for next time.
 			this.#geom = geom;
@@ -321,7 +323,7 @@ class BuildBoxes extends BaseClass
 		);
 
 		// Initialize the color.
-		const c: IVector4 = [ 0.5, 0.5, 0.5, 1 ];
+		const c: IVector4 = [ ...Color.gray ];
 
 		// Try to get the color.
 		const state = node.state;

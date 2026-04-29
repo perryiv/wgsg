@@ -124,7 +124,7 @@ export const makeTriangleEdges = ( points: Float32Array, indices: ( Uint32Array 
 		l12 = makeKey ( p1, p2 );
 		l20 = makeKey ( p2, p0 );
 
-		// Add the lines that we have not seen it before.
+		// Add the lines that we have not seen before.
 		if ( false === repeats.has ( l01 ) )
 		{
 			repeats.add ( l01 );

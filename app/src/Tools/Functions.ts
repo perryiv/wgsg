@@ -15,46 +15,20 @@
 import {
 	buildBox,
 	buildTriangleEdges,
+	Color,
 	Geometry,
 	Group,
 	Indexed,
 	Node,
 	PhongShading,
+	SolidColor,
 	Sphere,
 	SphereNode,
-	State,
 	Transform,
 	type IVector2,
 	type IVector3,
 	type IVector4,
 } from "../../../lib/src";
-
-///////////////////////////////////////////////////////////////////////////////
-//
-//	Make a state object with solid color.
-//
-///////////////////////////////////////////////////////////////////////////////
-
-export const makeSolidColorState = ( { color, topology } :
-	{ color: IVector4, topology: GPUPrimitiveTopology } ) : State =>
-{
-	// Make a copy of the color because we capture it below.
-	color = [ color[0], color[1], color[2], color[3] ];
-
-	// Shortcut.
-	const shader = PhongShading.instance;
-
-	// Make the state.
-	return new State ( {
-		name: `State with ${color.join(", ")} ${topology}`,
-		shader,
-		topology,
-		apply: ( () =>
-		{
-			shader.color = color;
-		} )
-	} );
-}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -72,8 +46,9 @@ export const buildSceneSphere = ( sphere: Sphere ) =>
 		radius: sphere.radius,
 		numSubdivisions: 4,
 	} );
-	node.state = makeSolidColorState ( {
+	node.state = PhongShading.makeState ( {
 		color: [ 0.8, 0.2, 0.2, 1.0 ],
+		twoSided: false,
 		topology: "triangle-list"
 	} );
 	root.addChild ( node );
@@ -81,8 +56,8 @@ export const buildSceneSphere = ( sphere: Sphere ) =>
 	const lines = buildTriangleEdges ( node );
 	if ( lines )
 	{
-		lines.state = makeSolidColorState ( {
-			color: [ 0.0, 0.0, 0.0, 1.0 ],
+		lines.state = SolidColor.makeState ( {
+			color: [ ...Color.black ],
 			topology: "line-list"
 		} );
 	}
@@ -162,7 +137,7 @@ const makeQuad = ( { origin, size, color, topology } :
 	// Were we given a color?
 	if ( color )
 	{
-		geom.state = makeSolidColorState ( { color, topology } );
+		geom.state = SolidColor.makeState ( { color, topology } );
 	}
 
 	// Return the new geometry.
@@ -231,14 +206,10 @@ export const buildSceneQuads = () : Node =>
 			const x = -1 + ( i * w );
 			const y = -1 + ( j * h );
 
-			const r = ( 0.1 + 0.8 * Math.random() );
-			const g = ( 0.1 + 0.8 * Math.random() );
-			const b = ( 0.1 + 0.8 * Math.random() );
-
 			const quads = makeQuad ( {
 				origin: [ x, y, 0.0 ],
 				size: [ w, h ],
-				color: [ r, g, b, 1.0 ],
+				color: Color.makeRandomColor ( 0.1, 0.9 ),
 				topology: "triangle-list"
 			} );
 			group.addChild ( quads );
@@ -246,8 +217,8 @@ export const buildSceneQuads = () : Node =>
 			// const lines = buildTriangleEdges ( quads );
 			// if ( lines )
 			// {
-			// 	lines.state = makeSolidColorState ( {
-			// 		color: [ 0.0, 0.0, 0.0, 1.0 ],
+			// 	lines.state = SolidColor.makeState ( {
+			// 		color: [ ...Color.black ],
 			// 		topology: "line-list"
 			// 	} );
 			// }
@@ -304,7 +275,7 @@ export const buildSceneBox = ( sx = 1.0, sy = 1.0, sz = 1.0 ) : Node =>
 	group.addChild ( buildBox ( {
 		center: [ 0.0, 0.0, 0.0 ],
 		size:   [ sx, sy, sz ],
-		color:  [ 0.0, 0.0, 0.0, 1.0 ],
+		color:  [ ...Color.black ],
 		topology: "line-list",
 	} ) );
 

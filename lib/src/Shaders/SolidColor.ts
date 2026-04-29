@@ -13,9 +13,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Device } from "../Tools";
-import { WithMatrices as BaseClass } from "./WithMatrices";
+import { Color, Device } from "../Tools";
+import { State } from "../Scene";
 import { vec4 } from "gl-matrix";
+import { WithMatrices as BaseClass } from "./WithMatrices";
 import type { IMatrix44, IVector4 } from "../Types";
 
 // @ts-expect-error TypeScript does not recognize WGSL files.
@@ -44,7 +45,7 @@ interface ISolidColorShaderInput
 export class SolidColor extends BaseClass
 {
 	static #instance: ( SolidColor | null ) = null;
-	#color: IVector4 = [ 0.5, 0.5, 0.5, 1.0 ];
+	#color: IVector4 = [ ...Color.gray ];
 	#uniforms: ( GPUBuffer | null ) = null;
 	#bindGroup: ( GPUBindGroup | null ) = null;
 
@@ -334,5 +335,33 @@ export class SolidColor extends BaseClass
 
 		// Set the color buffer.
 		pass.setBindGroup ( 0, this.getBindGroup ( topology ) );
+	}
+
+	/**
+	 * Make and return a state object that uses this shader.
+	 * @param {object} input - The input object.
+	 * @param {IVector4} input.color - The color to use in the state.
+	 * @param {GPUPrimitiveTopology} input.topology - The primitive topology.
+	 * @returns {State} The state object.
+	 */
+	public static makeState = ( { color, topology } :
+	{ color: IVector4, topology: GPUPrimitiveTopology } ) : State =>
+	{
+		// Make a copy of the color because we capture it below.
+		color = [ color[0], color[1], color[2], color[3] ];
+
+		// Shortcut.
+		const shader = SolidColor.instance;
+
+		// Make the state.
+		return new State ( {
+			name: `${shader.type} state with color: ${color.join(", ")}, topology: ${topology}`,
+			shader,
+			topology,
+			apply: ( () =>
+			{
+				shader.color = color;
+			} )
+		} );
 	}
 }
