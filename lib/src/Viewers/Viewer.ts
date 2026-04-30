@@ -677,16 +677,27 @@ export class Viewer extends BaseClass
 	 */
 	public getCommand ( event: IEvent ) : ( ICommand | null )
 	{
+		// Return early if no input because otherwise debugging is difficult.
+		const { keysDown, buttonsDown } = event;
+		if ( ( keysDown.size <= 0 ) && ( buttonsDown.size <= 0 ) )
+		{
+			return null; // There are no keys or buttons down.
+		}
+
+		// Now try to get the command name.
 		const input = this.makeCommandMapKey ( event );
 		const name = Viewer.#inputToCommand.get ( input );
 
+		// Handle no command name.
 		if ( !name )
 		{
 			return null;
 		}
 
+		// Get the command from the name.
 		const command = Viewer.#commands.get ( name );
 
+		// Return the command or null.
 		return ( command ?? null );
 	}
 

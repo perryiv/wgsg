@@ -42,6 +42,7 @@ export type ICommandName = (
 	| "rotate_py_small"
 	| "rotate_pz_large"
 	| "rotate_pz_small"
+	| "toggle_rotation_mode"
 	| "view_sphere_fit"
 	| "view_sphere_reset"
 );
