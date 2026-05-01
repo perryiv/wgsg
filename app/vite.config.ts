@@ -21,15 +21,18 @@ export default defineConfig ( {
 		react()
 	],
 	base: "/wgsg_demo/", // The output files get copied to the demo repository.
+	define: {
+		BUILD_TIME_STAMP: JSON.stringify ( Date.now() ),
+	},
 	build: {
 		sourcemap: true,
 		minify: false, // Easier on the repo size and debugging.
 		rollupOptions: {
 			output: {
 				// Note: Use [name]-[hash] to get a different file name each time.
-				entryFileNames: "assets/[name].js",
-				chunkFileNames: "assets/[name].js",
-				assetFileNames: "assets/[name][extname]",
+				entryFileNames: "assets/[name]-[hash].js",
+				chunkFileNames: "assets/[name]-[hash].js",
+				assetFileNames: "assets/[name]-[hash][extname]",
 			},
 		},
 	},
