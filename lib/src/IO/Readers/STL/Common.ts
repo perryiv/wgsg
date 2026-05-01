@@ -16,7 +16,8 @@ import { Color } from "../../../Tools";
 import { Indexed } from "../../../Scene/Primitives";
 import { PhongShading } from "../../../Shaders";
 import { Reader as BaseClass } from "../../Reader";
-import type { IVector4 } from "../../../Types";
+import { vec3 } from "gl-matrix";
+import type { IVector3, IVector4 } from "../../../Types";
 import {
 	Geometry,
 	Group,
@@ -33,6 +34,13 @@ import {
 
 export abstract class Common extends BaseClass
 {
+	// These are allocated once here for speed in case they are needed below.
+	#point1: IVector3 = [ 0, 0, 0 ];
+	#point2: IVector3 = [ 0, 0, 0 ];
+	#point3: IVector3 = [ 0, 0, 0 ];
+	#edge1: IVector3 = [ 0, 0, 0 ];
+	#edge2: IVector3 = [ 0, 0, 0 ];
+
 	/**
 	 * Construct the class.
 	 * @abstract
@@ -67,7 +75,7 @@ export abstract class Common extends BaseClass
 	 * @param {number} numTriangles The number of triangles.
 	 * @returns {{ points: Float32Array, normals: Float32Array, indices: Uint32Array }} The allocated arrays.
 	 */
-	public static allocateArrays ( numTriangles: number ) : { points: Float32Array, normals: Float32Array, indices: Uint32Array }
+	protected static allocateArrays ( numTriangles: number ) : { points: Float32Array, normals: Float32Array, indices: Uint32Array }
 	{
 		const indices = new Uint32Array ( numTriangles * 3 );
 		const points = new Float32Array ( indices.length * 3 );
@@ -122,6 +130,18 @@ export abstract class Common extends BaseClass
 			throw new Error ( `Number of normals, ${normals.length}, is not equal to the number of points, ${points.length}` );
 		}
 
+		// The number of indices should be evenly divisible by 3.
+		if ( 0 !== ( indices.length % 3 ) )
+		{
+			throw new Error ( `Number of indices, ${indices.length}, is not evenly divisible by 3` );
+		}
+
+		// There should be 3 times as many points as indices.
+		if ( ( indices.length * 3 ) !== points.length )
+		{
+			throw new Error ( `Number of point coordinates, ${points.length}, is not three times the number of indices, ${indices.length}` );
+		}
+
 		// The group that we return.
 		const group = new Group();
 
@@ -152,5 +172,52 @@ export abstract class Common extends BaseClass
 
 		// Return the group.
 		return group;
+	}
+
+	/**
+	 * Set the normal vector from the cross product of the triangle edges.
+	 * @param {IVector3} normal The normal vector to set.
+	 * @param {Float32Array} points The array of point coordinates.
+	 * @param {number} pointCount The number of points in the points array.
+	 */
+	protected setNormalFromCrossProduct ( normal: IVector3, points: Readonly<Float32Array>, pointCount: Readonly<number> ) : void
+	{
+		// Get the end of data in the points array, not points.length!
+		const end = pointCount;
+
+		// Make sure.
+		if ( ( end < 9 ) || ( 0 !== ( end % 9 ) ) )
+		{
+			throw new Error ( "Not enough points to calculate normal vector" );
+		}
+
+		// Shortcuts.
+		const point1 = this.#point1;
+		const point2 = this.#point2;
+		const point3 = this.#point3;
+		const edge1 = this.#edge1;
+		const edge2 = this.#edge2;
+
+		// Set the three points of the triangle.
+		point1[0] = points[end - 9];
+		point1[1] = points[end - 8];
+		point1[2] = points[end - 7];
+		point2[0] = points[end - 6];
+		point2[1] = points[end - 5];
+		point2[2] = points[end - 4];
+		point3[0] = points[end - 3];
+		point3[1] = points[end - 2];
+		point3[2] = points[end - 1];
+
+		// Set the edges of the triangle.
+		edge1[0] = point2[0] - point1[0];
+		edge1[1] = point2[1] - point1[1];
+		edge1[2] = point2[2] - point1[2];
+		edge2[0] = point3[0] - point1[0];
+		edge2[1] = point3[1] - point1[1];
+		edge2[2] = point3[2] - point1[2];
+
+		// The normal is cross product of the edges.
+		vec3.cross ( normal, edge1, edge2 );
 	}
 }

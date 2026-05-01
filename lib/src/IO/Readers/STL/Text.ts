@@ -172,22 +172,6 @@ export class TextReader extends BaseClass
 						normal[1] = parseFloat ( parts[3] );
 						normal[2] = parseFloat ( parts[4] );
 
-						// Make sure it is a unit vector.
-						vec3.normalize ( normal, normal );
-
-						// We need a normal for each point.
-						normals[normalCount++] = normal[0];
-						normals[normalCount++] = normal[1];
-						normals[normalCount++] = normal[2];
-
-						normals[normalCount++] = normal[0];
-						normals[normalCount++] = normal[1];
-						normals[normalCount++] = normal[2];
-
-						normals[normalCount++] = normal[0];
-						normals[normalCount++] = normal[1];
-						normals[normalCount++] = normal[2];
-
 						break;
 					}
 					case "outer":
@@ -251,6 +235,28 @@ export class TextReader extends BaseClass
 						{
 							throw new Error ( `Keyword 'endloop' on line ${rowCount} not balanced with 'outer'` );
 						}
+
+						// Is the normal vector zero length?
+						if ( ( 0 === normal[0] ) && ( 0 === normal[1] ) && ( 0 === normal[2] ) )
+						{
+							this.setNormalFromCrossProduct ( normal, points, pointCount );
+						}
+
+						// Make sure it is a unit vector.
+						vec3.normalize ( normal, normal );
+
+						// We need a normal for each point.
+						normals[normalCount++] = normal[0];
+						normals[normalCount++] = normal[1];
+						normals[normalCount++] = normal[2];
+
+						normals[normalCount++] = normal[0];
+						normals[normalCount++] = normal[1];
+						normals[normalCount++] = normal[2];
+
+						normals[normalCount++] = normal[0];
+						normals[normalCount++] = normal[1];
+						normals[normalCount++] = normal[2];
 
 						break;
 					}
