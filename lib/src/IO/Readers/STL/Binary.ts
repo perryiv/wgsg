@@ -218,6 +218,12 @@ export class BinaryReader extends BaseClass
 						points[pointCount++] = p3y;
 						points[pointCount++] = p3z;
 
+						// Is the normal vector zero length?
+						if ( ( 0 === normal[0] ) && ( 0 === normal[1] ) && ( 0 === normal[2] ) )
+						{
+							this.setNormalFromCrossProduct ( normal, points, pointCount );
+						}
+
 						// We need a normal for each point.
 						normals[normalCount++] = normal[0];
 						normals[normalCount++] = normal[1];
