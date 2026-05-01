@@ -30,9 +30,9 @@ export default defineConfig ( {
 		rollupOptions: {
 			output: {
 				// Note: Use [name]-[hash] to get a different file name each time.
-				entryFileNames: "assets/[name].js",
-				chunkFileNames: "assets/[name].js",
-				assetFileNames: "assets/[name][extname]",
+				entryFileNames: "assets/[name]-[hash].js",
+				chunkFileNames: "assets/[name]-[hash].js",
+				assetFileNames: "assets/[name]-[hash][extname]",
 			},
 		},
 	},
