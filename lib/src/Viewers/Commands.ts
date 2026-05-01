@@ -182,74 +182,6 @@ export class RotateX extends RotateAxisAngle
 	{
 		super ( [ 1, 0, 0 ], angle );
 	}
-
-	/**
-	 * Execute the command.
-	 * @param {IEvent} event The event.
-	 */
-	public override execute ( event: IEvent ) : void
-	{
-		// Shortcuts.
-		const { viewer } = event;
-		const { navBase } = viewer;
-		const { localUp } = navBase;
-
-		// If we are in trackball mode then just call the base class' function.
-		if ( "track_ball" === navBase.rotationMode )
-		{
-			super.execute ( event );
-			return;
-		}
-
-		// If we get to here then we should be in turn-table mode.
-		if ( "turn_table" !== navBase.rotationMode )
-		{
-			throw new Error ( `Unsupported rotation mode: ${navBase.rotationMode}` );
-		}
-
-		// Save the original angle so that we can restore it later.
-		const originalAngle = this.angle;
-
-		// Loop a reasonable number of times.
-		const numSteps = 10;
-		for ( let i = numSteps; i > 0; --i )
-		{
-			// The fraction of the angle for this iteration.
-			// It will be 0.9, 0.8, ..., 0.1.
-			const angle = originalAngle * ( i / numSteps );
-
-			// Get the model's current y-axis in global space. The transformation
-			// matrix includes translations so we have to operate on points at the
-			// origin and end of the y-axis.
-			const yAxis: IVector3 = [ ...localUp ];
-			const origin: IVector3 = [ 0, 0, 0 ];
-			vec3.transformMat4 ( yAxis, yAxis, navBase.viewMatrix );
-			vec3.transformMat4 ( origin, origin, navBase.viewMatrix );
-			vec3.subtract ( yAxis, yAxis, origin );
-			vec3.normalize ( yAxis, yAxis );
-
-			// Rotate the y-axis by this angle.
-			vec3.rotateX ( yAxis, yAxis, [ 0, 0, 0 ], angle );
-
-			// See if this rotation will "pitch" the model too far.
-			if ( yAxis[1] < 0 )
-			{
-				return;
-			}
-
-			// If we get to here then the rotation is within bounds.
-			this.angle = angle;
-
-			// Call the base class' function to perform the rotation.
-			super.execute ( event );
-
-			// Restore the original angle.
-			this.angle = originalAngle;
-
-			// We're done.
-			return;
-		}
-	}
 }
 
 
@@ -270,32 +202,6 @@ export class RotateY extends RotateAxisAngle
 	public constructor ( angle: number )
 	{
 		super ( [ 0, 1, 0 ], angle );
-	}
-
-	/**
-	 * Execute the command.
-	 * @param {IEvent} event The event.
-	 */
-	public override execute ( event: IEvent ) : void
-	{
-		// Get the navigator interface.
-		const { viewer } = event;
-		const { navBase } = viewer;
-
-		// Get the rotation mode.
-		const mode = navBase.rotationMode;
-
-		// Handle no rotation mode, which means the navigator is not a trackball.
-		if ( !mode )
-		{
-			return;
-		}
-
-		// Set the space based on the rotation mode.
-		this.space = ( ( "turn_table" === mode ) ? "local" : "global" );
-
-		// Now call the base class' function.
-		super.execute ( event );
 	}
 }
 
