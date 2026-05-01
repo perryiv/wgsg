@@ -76,6 +76,22 @@ export function App()
 	[ palette ] );
 
 	//
+	// Get the build-time timestamp as a formatted string.
+	//
+	const buildTimeStamp = useMemo ( () =>
+	{
+		const date = new Date ( BUILD_TIME_STAMP );
+		const Y = date.getFullYear();
+		const M = String ( date.getMonth() + 1 ).padStart ( 2, '0' );
+		const D = String ( date.getDate()      ).padStart ( 2, '0' );
+		const h = String ( date.getHours()     ).padStart ( 2, '0' );
+		const m = String ( date.getMinutes()   ).padStart ( 2, '0' );
+		const s = String ( date.getSeconds()   ).padStart ( 2, '0' );
+		return ( `${Y}-${M}-${D} ${h}:${m}:${s}` );
+	},
+	[] );
+
+	//
 	// Return the formatted viewer render graph info.
 	//
 	const getRenderGraphInfo = useCallback ( () =>
@@ -296,10 +312,22 @@ export function App()
 					>
 						Render stats
 					</Button>
+					{ verticalSpace() }
+					<div
+						style = { {
+							display: "flex",
+							width: "100%",
+							justifyContent: "center",
+							fontSize: "14px",
+						} }
+					>
+						{ buildTimeStamp }
+					</div>
 				</div>
 			</Panel>
 		);
 	}, [
+		buildTimeStamp,
 		handleAllowAnimations,
 		handleShowStats,
 		handleSimulateDeviceLost,
