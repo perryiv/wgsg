@@ -71,6 +71,7 @@ export interface INavigator
 	getInternalState: ( () => INavigationState );
 	setInternalState: ( ( state: Readonly<INavigationState> ) => void );
 
+	rotationMatrix: Readonly<IMatrix44>;
 	viewMatrix: Readonly<IMatrix44>;
 	invViewMatrix: ( Readonly<IMatrix44> | null );
 }

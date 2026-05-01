@@ -986,24 +986,19 @@ export class Trackball extends BaseClass
 
 			// Rotate about the global x-axis.
 			{
-				// Get the model's current y-axis in global space. The transformation
-				// matrix includes translations so we have to operate on points at the
-				// origin and end of the y-axis.
-				const yAxis: IVector3 = [ 0, 1, 0 ];
-				const origin: IVector3 = [ 0, 0, 0 ];
-				vec3.transformMat4 ( yAxis, yAxis, this.viewMatrix );
-				vec3.transformMat4 ( origin, origin, this.viewMatrix );
-				vec3.subtract ( yAxis, yAxis, origin );
-				vec3.normalize ( yAxis, yAxis );
-
 				// The vertical mouse distance determines the angle about the global x-axis.
 				const angle = ( cm[1] - pm[1] ) * DEG_TO_RAD * sensitivity[0] * scale * fraction;
 
-				// Rotate the y-axis by this angle.
-				vec3.rotateX ( yAxis, yAxis, [ 0, 0, 0 ], angle );
+				// Get the model's current up-axis in global space.
+				const globalUp: IVector3 = [ 0, 0, 0 ];
+				vec3.transformMat4 ( globalUp, this.localUp, this.rotationMatrix );
+				vec3.normalize ( globalUp, globalUp );
+
+				// Rotate the global up-axis by this angle.
+				vec3.rotateX ( globalUp, globalUp, [ 0, 0, 0 ], angle );
 
 				// Make sure this rotation will not "pitch" the model too far.
-				if ( yAxis[1] >= 0 )
+				if ( globalUp[1] >= 0 )
 				{
 					// Rotate about the global x-axis.
 					this.rotateAxisAngle ( [ 1, 0, 0 ], angle, "global" );
@@ -1012,10 +1007,10 @@ export class Trackball extends BaseClass
 
 			// Rotate about the local y-axis.
 			{
-				// The horizontal mouse distance determines the angle about the local y-axis.
+				// The horizontal mouse distance determines the angle about the local up-axis.
 				const angle = ( cm[0] - pm[0] ) * DEG_TO_RAD * sensitivity[1] * scale * fraction;
 
-				// Rotate about the local y-axis.
+				// Rotate about the local up-axis.
 				this.rotateAxisAngle ( this.localUp, angle, "local" );
 			}
 		};
