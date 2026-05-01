@@ -23,7 +23,6 @@ import {
 	intersectLinePlane,
 	intersectLineSphere,
 	isFiniteNumber,
-	isValidVec3,
 	Plane,
 	Sphere,
 	type ILineSphereIntersection,
@@ -85,7 +84,7 @@ export class Trackball extends BaseClass
 	#matrix: ( IMatrix44 | null ) = null;
 	#inverse: ( IMatrix44 | null ) = null;
 	#mode: IRotationMode = "track_ball";
-	#up: IVector3 = [ 0, 1, 0 ];
+	#localUp: IVector3 = [ 0, 1, 0 ];
 	#state: ITrackballState = makeDefaultTrackballState();
 
 	/**
@@ -285,7 +284,7 @@ export class Trackball extends BaseClass
 		} );
 
 		// Set the up axis.
-		vec3.copy ( this.#up, dotProducts[0].axis );
+		this.localUp = dotProducts[0].axis;
 	}
 
 	/**
@@ -304,6 +303,24 @@ export class Trackball extends BaseClass
 	public set rotationMode ( mode: IRotationMode )
 	{
 		this.mode = mode;
+	}
+
+	/**
+	 * Get the local up vector.
+	 * @returns {IVector3} The local up vector.
+	 */
+	public get localUp () : Readonly<IVector3>
+	{
+		return this.#localUp;
+	}
+
+	/**
+	 * Set the local up vector.
+	 * @param {IVector3} value - The local up vector.
+	 */
+	public set localUp ( value: Readonly<IVector3> )
+	{
+		vec3.copy ( this.#localUp, value );
 	}
 
 	/**
@@ -391,10 +408,10 @@ export class Trackball extends BaseClass
 	 * @param {number} radians - The angle in radians.
 	 * @param {ICoordinateSystem} space - The rotation space.
 	 */
-	public override rotateAxisAngle ( axis: IVector3, radians: number, space: ICoordinateSystem ) : void
+	public override rotateAxisAngle ( axis: Readonly<IVector3>, radians: number, space: ICoordinateSystem ) : void
 	{
 		// Make sure the axis is normalized.
-		axis = normalizeVec3 ( axis );
+		axis = normalizeVec3 ( [ ...axis ] );
 
 		// Make space for the rotation.
 		let dr: IVector4 = [ 0, 0, 0, 1 ];
@@ -999,7 +1016,7 @@ export class Trackball extends BaseClass
 				const angle = ( cm[0] - pm[0] ) * DEG_TO_RAD * sensitivity[1] * scale * fraction;
 
 				// Rotate about the local y-axis.
-				this.rotateAxisAngle ( this.#up, angle, "local" );
+				this.rotateAxisAngle ( this.localUp, angle, "local" );
 			}
 		};
 

@@ -192,6 +192,7 @@ export class RotateX extends RotateAxisAngle
 		// Shortcuts.
 		const { viewer } = event;
 		const { navBase } = viewer;
+		const { localUp } = navBase;
 
 		// If we are in trackball mode then just call the base class' function.
 		if ( "track_ball" === navBase.rotationMode )
@@ -220,7 +221,7 @@ export class RotateX extends RotateAxisAngle
 			// Get the model's current y-axis in global space. The transformation
 			// matrix includes translations so we have to operate on points at the
 			// origin and end of the y-axis.
-			const yAxis: IVector3 = [ 0, 1, 0 ]; // TODO: Need the trackball's up-axis here.
+			const yAxis: IVector3 = [ ...localUp ];
 			const origin: IVector3 = [ 0, 0, 0 ];
 			vec3.transformMat4 ( yAxis, yAxis, navBase.viewMatrix );
 			vec3.transformMat4 ( origin, origin, navBase.viewMatrix );

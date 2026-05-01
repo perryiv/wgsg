@@ -62,6 +62,9 @@ export interface INavigator
 	translateScreenXY ( input: { current: IVector2, previous: IVector2, scale: number } ) : void;
 	zoom: ( ( scale: number ) => void );
 
+	get localUp(): Readonly<IVector3>;
+	set localUp ( value: Readonly<IVector3> );
+
 	get rotationMode(): ( IRotationMode | null );
 	set rotationMode ( mode: IRotationMode );
 
