@@ -29,6 +29,7 @@ import {
 	Surface as BaseClass,
 } from "./Surface";
 import {
+	DEVELOPER_BUILD,
 	makeLine as makeLineUnderScreenPoint,
 } from "../Tools";
 import type {
@@ -677,16 +678,30 @@ export class Viewer extends BaseClass
 	 */
 	public getCommand ( event: IEvent ) : ( ICommand | null )
 	{
+		// Return early if no input because otherwise debugging is difficult.
+		if ( DEVELOPER_BUILD )
+		{
+			const { type, keysDown, buttonsDown } = event;
+			if ( ( "mouse_wheel" !== type ) && ( keysDown.size <= 0 ) && ( buttonsDown.size <= 0 ) )
+			{
+				return null;
+			}
+		}
+
+		// Try to get the command name.
 		const input = this.makeCommandMapKey ( event );
 		const name = Viewer.#inputToCommand.get ( input );
 
+		// Handle no command name.
 		if ( !name )
 		{
 			return null;
 		}
 
+		// Get the command from the name.
 		const command = Viewer.#commands.get ( name );
 
+		// Return the command or null.
 		return ( command ?? null );
 	}
 

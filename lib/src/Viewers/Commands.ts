@@ -192,6 +192,7 @@ export class RotateX extends RotateAxisAngle
 		// Shortcuts.
 		const { viewer } = event;
 		const { navBase } = viewer;
+		const { localUp } = navBase;
 
 		// If we are in trackball mode then just call the base class' function.
 		if ( "track_ball" === navBase.rotationMode )
@@ -220,7 +221,7 @@ export class RotateX extends RotateAxisAngle
 			// Get the model's current y-axis in global space. The transformation
 			// matrix includes translations so we have to operate on points at the
 			// origin and end of the y-axis.
-			const yAxis: IVector3 = [ 0, 1, 0 ];
+			const yAxis: IVector3 = [ ...localUp ];
 			const origin: IVector3 = [ 0, 0, 0 ];
 			vec3.transformMat4 ( yAxis, yAxis, navBase.viewMatrix );
 			vec3.transformMat4 ( origin, origin, navBase.viewMatrix );
@@ -316,6 +317,65 @@ export class RotateZ extends RotateAxisAngle
 	public constructor ( angle: number )
 	{
 		super ( [ 0, 0, 1 ], angle );
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Toggle the rotation mode of the navigator.
+ * @class
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export class ToggleRotationMode extends Command
+{
+	/**
+	 * Construct the class.
+	 * @class
+	 */
+	public constructor()
+	{
+		super();
+	}
+
+	/**
+	 * Get the class name.
+	 * @returns {string} The class name.
+	 */
+	public override getClassName() : string
+	{
+		return "Viewers.Commands.ToggleRotationMode";
+	}
+
+	/**
+	 * Execute the command.
+	 * @param {IEvent} event The event.
+	 */
+	public execute ( event: IEvent ) : void
+	{
+		// Shortcuts.
+		const { viewer } = event;
+		const { navBase } = viewer;
+
+		// Toggle the rotation mode.
+		switch ( navBase.rotationMode )
+		{
+			case "track_ball":
+			{
+				navBase.rotationMode = "turn_table";
+				break;
+			}
+			case "turn_table":
+			{
+				navBase.rotationMode = "track_ball";
+				break;
+			}
+			default:
+			{
+				throw new Error ( `Unsupported rotation mode: ${navBase.rotationMode}` );
+			}
+		}
 	}
 }
 
@@ -589,6 +649,7 @@ export function makeCommands() : ICommandMap
 		[ "rotate_py_small",       new RotateY ( DEG_TO_RAD *   5 ) ],
 		[ "rotate_pz_large",       new RotateZ ( DEG_TO_RAD *  45 ) ],
 		[ "rotate_pz_small",       new RotateZ ( DEG_TO_RAD *   5 ) ],
+		[ "toggle_rotation_mode",  new ToggleRotationMode()         ],
 		[ "view_sphere_fit",       new ViewSphere ( false )         ],
 		[ "view_sphere_reset",     new ViewSphere ( true  )         ],
 	] );
@@ -650,6 +711,7 @@ export function makeInputToCommandMap() : IInputToCommandNameMap
 	const sr = "ShiftRight";
 	const sp = "Space";
 	const kf = "KeyF";
+	const kt = "KeyT";
 
 	return new Map < string, ICommandName > ( [
 		makeTuple ( "mouse_rotate_large",    "mouse_drag",  [ 0 ], [        ] ),
@@ -672,6 +734,7 @@ export function makeInputToCommandMap() : IInputToCommandNameMap
 		makeTuple ( "rotate_py_large",       "key_down",    [   ], [ ar     ] ),
 		makeTuple ( "rotate_py_small",       "key_down",    [   ], [ sl, ar ] ),
 		makeTuple ( "rotate_py_small",       "key_down",    [   ], [ sr, ar ] ),
+		makeTuple ( "toggle_rotation_mode",  "key_down",    [   ], [ kt     ] ),
 		makeTuple ( "view_sphere_fit",       "key_down",    [   ], [ kf     ] ),
 		makeTuple ( "view_sphere_reset",     "key_down",    [   ], [ sp     ] ),
 	] );

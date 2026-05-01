@@ -49,21 +49,39 @@ export abstract class NavBase extends BaseClass
 
 	/**
 	 * Get the view matrix.
-	 * @returns The view matrix.
+	 * @returns {IMatrix44} The view matrix.
 	 */
 	public abstract get viewMatrix () : Readonly<IMatrix44>;
 
 	/**
 	 * Get the inverse view matrix.
-	 * @returns The inverse view matrix.
+	 * @returns {IMatrix44 | null} The inverse view matrix.
 	 */
 	public abstract get invViewMatrix () : ( Readonly<IMatrix44> | null );
 
 	/**
+	 * Get the rotation part of the view matrix.
+	 * @returns {IMatrix44} The rotation part of the view matrix.
+	 */
+	public abstract get rotationMatrix () : Readonly<IMatrix44>;
+
+	/**
 	 * Get the rotation mode.
-	 * @returns The rotation mode.
+	 * @returns {IRotationMode | null} The rotation mode.
 	 */
 	public abstract get rotationMode () : ( IRotationMode | null );
+
+	/**
+	 * Get the local up vector.
+	 * @returns {IVector3} The local up vector.
+	 */
+	public abstract get localUp () : Readonly<IVector3>;
+
+	/**
+	 * Set the local up vector.
+	 * @param {IVector3} value - The local up vector.
+	 */
+	public abstract set localUp ( value: Readonly<IVector3> );
 
 	/**
 	 * Rotate the navigator.

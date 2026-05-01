@@ -84,6 +84,7 @@ export class Trackball extends BaseClass
 	#matrix: ( IMatrix44 | null ) = null;
 	#inverse: ( IMatrix44 | null ) = null;
 	#mode: IRotationMode = "track_ball";
+	#localUp: IVector3 = [ 0, 1, 0 ];
 	#state: ITrackballState = makeDefaultTrackballState();
 
 	/**
@@ -197,6 +198,24 @@ export class Trackball extends BaseClass
 	}
 
 	/**
+	 * Get the rotation part of the view matrix.
+	 * @returns {IMatrix44} The rotation part of the view matrix.
+	 */
+	public override get rotationMatrix () : Readonly<IMatrix44>
+	{
+		// Make a copy.
+		const rotationMatrix: IMatrix44 = [ ...this.viewMatrix ];
+
+		// Remove the translation.
+		rotationMatrix[12] = 0;
+		rotationMatrix[13] = 0;
+		rotationMatrix[14] = 0;
+
+		// Return the new matrix.
+		return rotationMatrix;
+	}
+
+	/**
 	 * Get the rotation mode.
 	 * @returns {IRotationMode} The rotation mode.
 	 */
@@ -211,7 +230,61 @@ export class Trackball extends BaseClass
 	 */
 	public set mode ( mode: IRotationMode )
 	{
+		// Do nothing if they are the same.
+		if ( mode === this.#mode )
+		{
+			return;
+		}
+
+		// If we get to here then set the new mode.
 		this.#mode = mode;
+
+		// If the new mode is not a turn-table then we're done.
+		if ( "turn_table" !== mode )
+		{
+			return;
+		}
+
+		// If we get to here then figure out the best "up" axis.
+
+		// Get the rotation matrix.
+		const rm = this.rotationMatrix;
+
+		// Local function that returns a new rotated vector.
+		const rotateVector = ( v: Readonly<IVector3> ) : IVector3 =>
+		{
+			const answer: IVector3 = [ 0, 0, 0 ];
+			vec3.transformMat4 ( answer, v, rm );
+			return answer;
+		}
+
+		// Get all of the model's primary axes in global space.
+		const px: Readonly<IVector3> = [  1,  0,  0 ];
+		const py: Readonly<IVector3> = [  0,  1,  0 ];
+		const pz: Readonly<IVector3> = [  0,  0,  1 ];
+		const nx: Readonly<IVector3> = [ -1,  0,  0 ];
+		const ny: Readonly<IVector3> = [  0, -1,  0 ];
+		const nz: Readonly<IVector3> = [  0,  0, -1 ];
+
+		// Get the dot product with the global y-axis.
+		const yAxis = [ 0, 1, 0 ];
+		const dotProducts = [
+			{ dot: vec3.dot ( rotateVector ( px ), yAxis ), axis: px },
+			{ dot: vec3.dot ( rotateVector ( py ), yAxis ), axis: py },
+			{ dot: vec3.dot ( rotateVector ( pz ), yAxis ), axis: pz },
+			{ dot: vec3.dot ( rotateVector ( nx ), yAxis ), axis: nx },
+			{ dot: vec3.dot ( rotateVector ( ny ), yAxis ), axis: ny },
+			{ dot: vec3.dot ( rotateVector ( nz ), yAxis ), axis: nz },
+		];
+
+		// Sort the array using the dot products, from greatest to least.
+		dotProducts.sort ( ( a, b ) =>
+		{
+			return ( b.dot - a.dot );
+		} );
+
+		// Set the up axis.
+		this.localUp = dotProducts[0].axis;
 	}
 
 	/**
@@ -221,6 +294,33 @@ export class Trackball extends BaseClass
 	public get rotationMode () : ( IRotationMode | null )
 	{
 		return this.mode;
+	}
+
+	/**
+	 * Set the rotation mode. This is part of the INavigator interface.
+	 * @param {IRotationMode} mode - The rotation mode.
+	 */
+	public set rotationMode ( mode: IRotationMode )
+	{
+		this.mode = mode;
+	}
+
+	/**
+	 * Get the local up vector.
+	 * @returns {IVector3} The local up vector.
+	 */
+	public get localUp () : Readonly<IVector3>
+	{
+		return this.#localUp;
+	}
+
+	/**
+	 * Set the local up vector.
+	 * @param {IVector3} value - The local up vector.
+	 */
+	public set localUp ( value: Readonly<IVector3> )
+	{
+		vec3.copy ( this.#localUp, value );
 	}
 
 	/**
@@ -308,10 +408,10 @@ export class Trackball extends BaseClass
 	 * @param {number} radians - The angle in radians.
 	 * @param {ICoordinateSystem} space - The rotation space.
 	 */
-	public override rotateAxisAngle ( axis: IVector3, radians: number, space: ICoordinateSystem ) : void
+	public override rotateAxisAngle ( axis: Readonly<IVector3>, radians: number, space: ICoordinateSystem ) : void
 	{
 		// Make sure the axis is normalized.
-		axis = normalizeVec3 ( axis );
+		axis = normalizeVec3 ( [ ...axis ] );
 
 		// Make space for the rotation.
 		let dr: IVector4 = [ 0, 0, 0, 1 ];
@@ -916,7 +1016,7 @@ export class Trackball extends BaseClass
 				const angle = ( cm[0] - pm[0] ) * DEG_TO_RAD * sensitivity[1] * scale * fraction;
 
 				// Rotate about the local y-axis.
-				this.rotateAxisAngle ( [ 0, 1, 0 ], angle, "local" );
+				this.rotateAxisAngle ( this.localUp, angle, "local" );
 			}
 		};
 
