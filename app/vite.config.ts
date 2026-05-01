@@ -21,6 +21,9 @@ export default defineConfig ( {
 		react()
 	],
 	base: "/wgsg_demo/", // The output files get copied to the demo repository.
+	define: {
+		BUILD_TIME_STAMP: JSON.stringify ( Date.now() ),
+	},
 	build: {
 		sourcemap: true,
 		minify: false, // Easier on the repo size and debugging.
