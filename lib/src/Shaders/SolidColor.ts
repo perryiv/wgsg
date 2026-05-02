@@ -345,7 +345,7 @@ export class SolidColor extends BaseClass
 	 * @returns {State} The state object.
 	 */
 	public static makeState = ( { color, topology } :
-	{ color: IVector4, topology: GPUPrimitiveTopology } ) : State =>
+	{ color: Readonly<IVector4>, topology: GPUPrimitiveTopology } ) : State =>
 	{
 		// Make a copy of the color because we capture it below.
 		color = [ color[0], color[1], color[2], color[3] ];

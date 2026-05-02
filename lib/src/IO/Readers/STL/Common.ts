@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Color } from "../../../Tools";
+import { Color, DEVELOPER_BUILD } from "../../../Tools";
 import { Indexed } from "../../../Scene/Primitives";
 import { PhongShading } from "../../../Shaders";
 import { Reader as BaseClass } from "../../Reader";
@@ -34,6 +34,14 @@ import {
 
 export abstract class Common extends BaseClass
 {
+	// The default color is random in a developer build and gray in production.
+	// If the file has color as described in the "Materialise Magics software"
+	// then it will be reset. See: https://en.wikipedia.org/wiki/STL_(file_format)
+	#color: IVector4 = ( ( DEVELOPER_BUILD ) ?
+		Color.makeRandomColor ( 0.2, 0.8 ) :
+		[ 0.5, 0.5, 0.5, 1 ]
+	);
+
 	// These are allocated once here for speed in case they are needed below.
 	#point1: IVector3 = [ 0, 0, 0 ];
 	#point2: IVector3 = [ 0, 0, 0 ];
@@ -48,6 +56,24 @@ export abstract class Common extends BaseClass
 	protected constructor()
 	{
 		super();
+	}
+
+	/**
+	 * Get the color.
+	 * @returns {IVector4} The color.
+	 */
+	public get color() : Readonly<IVector4>
+	{
+		return this.#color;
+	}
+
+	/**
+	 * Set the color.
+	 * @param {IVector4} color The color to set.
+	 */
+	public set color ( color: Readonly<IVector4> )
+	{
+		vec3.copy ( this.#color, color );
 	}
 
 	/**
@@ -155,7 +181,7 @@ export abstract class Common extends BaseClass
 			tris.primitives = new Indexed ( { topology, indices } );
 
 			// The color of the triangles.
-			const color: IVector4 = Color.makeRandomColor ( 0.2, 0.8 );
+			const color = this.color;
 
 			// Add the state.
 			tris.state = PhongShading.makeState ( { color, twoSided: true, topology } );
