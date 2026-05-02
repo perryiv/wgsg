@@ -12,10 +12,16 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Color, DEVELOPER_BUILD } from "../../../Tools";
 import { Common as BaseClass } from "./Common";
 import { Group, Node as SceneNode } from "../../../Scene/Nodes";
 import { vec3 } from "gl-matrix";
-import type { IVector3 } from "../../../Types";
+import type { IVector3, IVector4 } from "../../../Types";
+
+const STL_HEADER_LENGTH = 80;
+const STL_TRIANGLE_COUNT_LENGTH = 4;
+const STL_START_OF_DATA = STL_HEADER_LENGTH + STL_TRIANGLE_COUNT_LENGTH;
+const STL_RECORD_LENGTH = 50;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -46,6 +52,34 @@ export class BinaryReader extends BaseClass
 	}
 
 	/**
+	 * Get the color data, if any.
+	 * @param {File} file The file to read.
+	 * @returns {Promise<IVector4|null>} A promise that resolves to the color data, or null if there is none.
+	 */
+	protected async getColorData ( file: File ) : Promise < IVector4 | null >
+	{
+		const header = await ( file.slice ( 0, STL_HEADER_LENGTH ) ).text();
+		let index = header.indexOf ( "COLOR=" );
+
+		if ( -1 === index )
+		{
+			return null;
+		}
+
+		index += 6; // Skip "COLOR=".
+		const data = await ( file.slice ( index, index + 12 ) ).arrayBuffer();
+		const view = new DataView ( data );
+		const color: IVector4 = [
+			( view.getUint8 ( 0 ) / 255 ),
+			( view.getUint8 ( 1 ) / 255 ),
+			( view.getUint8 ( 2 ) / 255 ),
+			( view.getUint8 ( 3 ) / 255 )
+		];
+
+		return color;
+	}
+
+	/**
 	 * Read the file and return a promise that resolves to the scene node.
 	 * @param {File} file The file to read.
 	 * @returns {Promise<SceneNode>} A promise that resolves to the scene node.
@@ -54,8 +88,37 @@ export class BinaryReader extends BaseClass
 	{
 		return new Promise ( ( resolve, reject ) =>
 		{
-			const recordSize = 50;
-			const offset = 84; // Start after the header and triangle count.
+			this.getColorData ( file )
+			.then ( ( color ) =>
+			{
+				this.color = ( color ?? this.color );
+				this.internalRead ( file )
+				.then ( ( scene ) =>
+				{
+					resolve ( scene );
+				} )
+				.catch ( ( error ) =>
+				{
+					reject ( new Error ( `Error reading STL file: ${error}` ) );
+				} );
+			} ).catch ( ( error ) =>
+			{
+				reject ( new Error ( `Error trying to read color information from STL file: ${error}` ) );
+			} );
+		} );
+	}
+
+	/**
+	 * Read the file and return a promise that resolves to the scene node.
+	 * @param {File} file The file to read.
+	 * @returns {Promise<SceneNode>} A promise that resolves to the scene node.
+	 */
+	protected internalRead ( file: File ) : Promise < SceneNode >
+	{
+		return new Promise ( ( resolve, reject ) =>
+		{
+			const recordSize = STL_RECORD_LENGTH;
+			const offset = STL_START_OF_DATA; // After the header and triangle count.
 			const dataSize = file.size - offset;
 
 			// Make sure the sizes make sense.
@@ -203,6 +266,12 @@ export class BinaryReader extends BaseClass
 							normals = newArrays.normals;
 							indices = newArrays.indices;
 							pointCount = normalCount = indexCount = 0;
+
+							// Set a new color if this is a developer build.
+							if ( DEVELOPER_BUILD )
+							{
+								this.color = Color.makeRandomColor ( 0.2, 0.8 );
+							}
 						}
 
 						// Save the points.
