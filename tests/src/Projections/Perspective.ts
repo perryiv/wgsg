@@ -34,16 +34,17 @@ export function test ()
 		it ( "Default construction should have correct properties", function ()
 		{
 			const proj = new Perspective();
+			console.log ( "proj.matrix:", proj.matrix );
 			expect ( proj.type ).to.be.equal ( "Projections.Perspective" );
 			expect ( proj.fov ).to.be.equal ( 45 );
 			expect ( proj.aspect ).to.be.equal ( 1 );
-			expect ( proj.near ).to.be.equal ( 0.1 );
-			expect ( proj.far ).to.be.equal ( 1000 );
+			expect ( proj.near ).to.be.equal ( 0.01 );
+			expect ( proj.far ).to.be.equal ( 10000 );
 			expect ( proj.matrix ).to.be.deep.equal ( [
 				1.792590986919304, 0, 0, 0,
 				0, 1.792590986919304, 0, 0,
-				0, 0, -1.0002000200020003, -1,
-				0, 0, -0.2000200020002, 0
+				0, 0, -1.000002000002, -1,
+				0, 0, -0.02000002000002, 0
 			] );
 		} );
 
@@ -99,8 +100,8 @@ export function test ()
 
 			expect ( proj.fov ).to.be.equal ( 45 );
 			expect ( proj.aspect ).to.be.equal ( 1 );
-			expect ( proj.near ).to.be.equal ( 0.1 );
-			expect ( proj.far ).to.be.equal ( 1000 );
+			expect ( proj.near ).to.be.equal ( 0.01 );
+			expect ( proj.far ).to.be.equal ( 10000 );
 
 			proj.fov = 55;
 			proj.aspect = 1.5;
@@ -119,8 +120,8 @@ export function test ()
 
 			expect ( proj.fov ).to.be.equal ( 45 );
 			expect ( proj.aspect ).to.be.equal ( 1 );
-			expect ( proj.near ).to.be.equal ( 0.1 );
-			expect ( proj.far ).to.be.equal ( 1000 );
+			expect ( proj.near ).to.be.equal ( 0.01 );
+			expect ( proj.far ).to.be.equal ( 10000 );
 
 			expect ( () => { proj.fov =  0; } ).to.throw ( "Given field-of-view '0' is not a positive finite number" );
 			expect ( () => { proj.fov = -1; } ).to.throw ( "Given field-of-view '-1' is not a positive finite number" );
