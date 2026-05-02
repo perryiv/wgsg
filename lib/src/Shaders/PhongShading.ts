@@ -407,7 +407,7 @@ export class PhongShading extends BaseClass
 	 * @returns {State} The state object.
 	 */
 	public static makeState = ( { color, twoSided = false, topology } :
-	{ color: IVector4, twoSided: boolean, topology: GPUPrimitiveTopology } ) : State =>
+	{ color: Readonly<IVector4>, twoSided: boolean, topology: GPUPrimitiveTopology } ) : State =>
 	{
 		// Make a copy of the color because we capture it below.
 		color = [ color[0], color[1], color[2], color[3] ];
