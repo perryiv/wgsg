@@ -177,28 +177,28 @@ export function test ()
 		{
 			const radius = 1.0;
 			const tr = new Transform();
-			let box = tr.getBoundingBox();
+			let box = tr.box;
 			expect ( box.valid ).to.be.false;
 
 			const sphere = new SphereNode ( { center: [ 0, 0, 0 ], radius } )
-			box = sphere.getBoundingBox();
+			box = sphere.box;
 			expect ( box.valid ).to.be.true;
 			expect ( box.min ).to.be.deep.equal ( [ -1, -1, -1 ] );
 			expect ( box.max ).to.be.deep.equal ( [  1,  1,  1 ] );
 
 			tr.addChild ( sphere );
-			box = tr.getBoundingBox();
+			box = tr.box;
 			expect ( box.min ).to.be.deep.equal ( [ -1, -1, -1 ] );
 			expect ( box.max ).to.be.deep.equal ( [  1,  1,  1 ] );
 
 			tr.translate ( [ 10, 0, 0 ] );
 			tr.dirtyBounds();
-			box = tr.getBoundingBox();
+			box = tr.box;
 			expect ( box.min ).to.be.deep.equal ( [  9, -1, -1 ] );
 			expect ( box.max ).to.be.deep.equal ( [ 11,  1,  1 ] );
 
 			tr.addChild ( new SphereNode ( { center: [ 2, 0, 0 ], radius } ) );
-			box = tr.getBoundingBox();
+			box = tr.box;
 			expect ( box.min ).to.be.deep.equal ( [  9, -1, -1 ] );
 			expect ( box.max ).to.be.deep.equal ( [ 13,  1,  1 ] );
 		} );

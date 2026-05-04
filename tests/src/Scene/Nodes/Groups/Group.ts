@@ -292,17 +292,23 @@ export function test ()
 		{
 			const radius = 1.0;
 			const group = new Group();
-			group.addChild ( new SphereNode ( { center: [ 0, 0, 0 ], radius } ) );
-			let box = group.getBoundingBox();
 
-			expect ( box.min ).to.be.deep.equal ( [ -1, -1, -1 ] );
-			expect ( box.max ).to.be.deep.equal ( [  1,  1,  1 ] );
+			{
+				group.addChild ( new SphereNode ( { center: [ 0, 0, 0 ], radius } ) );
+				const { box } = group;
+				const { min, max } = box;
 
-			group.addChild ( new SphereNode ( { center: [ 2, 0, 0 ], radius } ) );
-			box = group.getBoundingBox();
+				expect ( min ).to.be.deep.equal ( [ -1, -1, -1 ] );
+				expect ( max ).to.be.deep.equal ( [  1,  1,  1 ] );
+			}
+			{
+				group.addChild ( new SphereNode ( { center: [ 2, 0, 0 ], radius } ) );
+				const { box } = group;
+				const { min, max } = box;
 
-			expect ( box.min ).to.be.deep.equal ( [ -1, -1, -1 ] );
-			expect ( box.max ).to.be.deep.equal ( [  3,  1,  1 ] );
+				expect ( min ).to.be.deep.equal ( [ -1, -1, -1 ] );
+				expect ( max ).to.be.deep.equal ( [  3,  1,  1 ] );
+			}
 		} );
 	} );
 };

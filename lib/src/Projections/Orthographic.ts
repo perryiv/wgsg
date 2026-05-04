@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { IMatrix44, IViewport } from "../Types";
-import { isPositiveFiniteNumber } from "../Math";
+import { isPositiveFiniteNumber, Sphere } from "../Math";
 import { makeIdentity } from "../Tools";
 import { mat4 } from "gl-matrix";
 import { Projection } from "./Projection";
@@ -94,6 +94,34 @@ export class Orthographic extends Projection
 
 		// Return the new matrix.
 		return answer;
+	}
+
+	/**
+	 * Update the projection's near and far distances.
+	 * @param {Sphere} sphere - The bounding sphere to use when updating the distances.
+	 */
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	public override updateNearFar ( sphere: Readonly<Sphere> ) : void
+	{
+		// TODO: Update the distances.
+	}
+
+	/**
+	 * Get the near distance.
+	 * @returns {number} The near distance.
+	 */
+	public override get near() : number
+	{
+		return this.#near;
+	}
+
+	/**
+	 * Get the far distance.
+	 * @returns {number} The far distance.
+	 */
+	public override get far() : number
+	{
+		return this.#far;
 	}
 
 	/**

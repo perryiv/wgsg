@@ -742,6 +742,9 @@ export class Surface extends BaseClass
 		// The update visitor does several things before and after visiting the
 		// scene so call its function to handle that.
 		uv.update ( scene );
+
+		// Now update the near and far distances of the projection.
+		this.projection.updateNearFar ( scene.box );
 	}
 
 	/**

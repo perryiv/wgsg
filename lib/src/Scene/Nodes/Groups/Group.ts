@@ -74,7 +74,7 @@ export class Group extends Node
 	 * Get the bounding box of this node.
 	 * @returns {Box} The bounding box of this node.
 	 */
-	public override getBoundingBox() : Box
+	protected override getBoundingBox() : Box
 	{
 		// Return the bounding box if it is valid.
 		if ( true === this.#box.valid )
@@ -117,7 +117,7 @@ export class Group extends Node
 			}
 
 			// Get the child's box.
-			const box = child.getBoundingBox();
+			const { box } = child;
 
 			// If the child has an invalid box then skip it.
 			if ( false === box.valid )

@@ -314,7 +314,7 @@ export abstract class Node extends Base
 	public getBoundingSphere() : Sphere
 	{
 		// Shortcut.
-		const box = this.getBoundingBox();
+		const { box } = this;
 
 		// Return an invalid sphere if the box is not valid.
 		if ( false === box.valid )
@@ -332,7 +332,7 @@ export abstract class Node extends Base
 	 * @abstract
 	 * @returns {Box} The bounding box of this node.
 	 */
-	public abstract getBoundingBox() : Box;
+	protected abstract getBoundingBox() : Box;
 
 	/**
 	 * Calculate the bounding box of this node.
@@ -340,6 +340,15 @@ export abstract class Node extends Base
 	 * @returns {Box} The bounding box of this node.
 	 */
 	protected abstract calculateBoundingBox() : Box;
+
+	/**
+	 * Get the bounding box of this node.
+	 * @returns {Box} The bounding box of this node.
+	 */
+	public get box() : Box
+	{
+		return this.getBoundingBox();
+	}
 
 	/**
 	 * Dirty the bounds of this node.

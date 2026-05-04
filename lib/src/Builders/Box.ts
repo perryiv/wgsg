@@ -262,7 +262,7 @@ class BuildBoxes extends BaseClass
 	protected addBox ( node: SceneNode, viewMatrix: Readonly<IMatrix44> ) : void
 	{
 		// Get the bounding box in local space.
-		const box = node.getBoundingBox();
+		const { box } = node;
 
 		// Handle invalid box
 		if ( false === box.valid )

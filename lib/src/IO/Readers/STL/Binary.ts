@@ -346,7 +346,7 @@ export class BinaryReader extends BaseClass
 						onProgress ( numTriangles, numTriangles );
 
 						// To speed things up later, calculate the bounds now.
-						scene.getBoundingBox();
+						void scene.box;
 
 						// We succeeded.
 						resolve ( scene );

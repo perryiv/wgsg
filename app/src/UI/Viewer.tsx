@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { buildSceneSpheres } from "../Tools";
+import { buildSceneSphere, buildSceneSpheres } from "../Tools";
 import { LinearProgress, Paper } from "@mui/material";
 import { useViewerStore } from "../State";
 import throttle from "throttleit";
@@ -34,6 +34,8 @@ import {
 	Group,
 	Node as SceneNode,
 	Viewer as InternalViewer,
+	SphereNode,
+	Sphere,
 } from "../../../lib/src";
 
 
@@ -87,13 +89,15 @@ export function Viewer ( { style }: IViewerProps )
 	//
 	const buildTestScene = useCallback ( () : SceneNode =>
 	{
-		const group = new Group();
-		const spheres = buildSceneSpheres();
-		group.addChild ( spheres );
-		const boxes = buildBoundingBoxes ( spheres );
-		boxes.addsToBounds = false;
-		group.addChild ( boxes );
-		return group;
+		return buildSceneSphere ( new Sphere ( [ 0, 0, 0 ], 1 ) );
+
+		// const group = new Group();
+		// const spheres = buildSceneSpheres();
+		// group.addChild ( spheres );
+		// const boxes = buildBoundingBoxes ( spheres );
+		// boxes.addsToBounds = false;
+		// group.addChild ( boxes );
+		// return group;
 	},
 	[] );
 
@@ -197,7 +201,7 @@ export function Viewer ( { style }: IViewerProps )
 		}
 
 		// To speed things up later, calculate the bounds now.
-		model.getBoundingBox();
+		void model.box;
 
 		// Add the model to the scene.
 		viewer.modelScene = model;

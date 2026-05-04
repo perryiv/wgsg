@@ -117,7 +117,7 @@ export class Geometry extends Shape
 	 * Get the bounding box of this node.
 	 * @returns {Box} The bounding box of this node.
 	 */
-	public override getBoundingBox() : Box
+	protected override getBoundingBox() : Box
 	{
 		// Return the bounding box if it is valid.
 		if ( true === this.#box.valid )

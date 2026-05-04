@@ -187,14 +187,14 @@ export abstract class Common extends BaseClass
 			tris.state = PhongShading.makeState ( { color, twoSided: true, topology } );
 
 			// To speed things up later, calculate the bounds now.
-			tris.getBoundingBox();
+			void tris.box;
 
 			// Add the triangles to the scene.
 			group.addChild ( tris );
 		}
 
 		// To speed things up later, calculate the bounds now.
-		group.getBoundingBox();
+		void group.box;
 
 		// Return the group.
 		return group;
