@@ -544,7 +544,7 @@ export class Viewer extends BaseClass
 	 * @param {boolean} [input.resetRotation] - Whether or not to reset the rotation.
 	 * @param {boolean} [input.animate] - Whether or not to animate the navigation.
 	 */
-	public viewSphere ( input: { sphere: Sphere, resetRotation?: boolean, animate?: boolean } ) : void
+	public viewSphere ( input: { sphere: Readonly<Sphere>, resetRotation?: boolean, animate?: boolean } ) : void
 	{
 		// Shortcuts.
 		const { sphere, resetRotation, animate } = input;
@@ -596,7 +596,7 @@ export class Viewer extends BaseClass
 	 */
 	public viewAll ( options?: { resetRotation?: boolean, animate?: boolean } ) : void
 	{
-		const sphere = this.modelScene?.getBoundingSphere();
+		const sphere = this.modelScene?.bounds;
 		if ( sphere )
 		{
 			const resetRotation = options?.resetRotation;

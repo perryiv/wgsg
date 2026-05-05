@@ -76,14 +76,15 @@ export function test ()
 				numSubdivisions: 1,
 			} );
 			sphere.update();
-			const box = sphere.getBoundingBox();
+			const { box } = sphere;
+			const { min, max } = box;
 
-			expect ( box.min[0] ).to.be.equal ( -1 );
-			expect ( box.min[1] ).to.be.equal ( -1 );
-			expect ( box.min[2] ).to.be.equal ( -1 );
-			expect ( box.max[0] ).to.be.equal (  1 );
-			expect ( box.max[1] ).to.be.equal (  1 );
-			expect ( box.max[2] ).to.be.equal (  1 );
+			expect ( min[0] ).to.be.equal ( -1 );
+			expect ( min[1] ).to.be.equal ( -1 );
+			expect ( min[2] ).to.be.equal ( -1 );
+			expect ( max[0] ).to.be.equal (  1 );
+			expect ( max[1] ).to.be.equal (  1 );
+			expect ( max[2] ).to.be.equal (  1 );
 		} );
 
 		it ( "Should have the correct bounding sphere", function ()

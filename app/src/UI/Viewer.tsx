@@ -197,7 +197,7 @@ export function Viewer ( { style }: IViewerProps )
 		}
 
 		// To speed things up later, calculate the bounds now.
-		model.getBoundingBox();
+		void model.bounds;
 
 		// Add the model to the scene.
 		viewer.modelScene = model;

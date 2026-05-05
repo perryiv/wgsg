@@ -20,8 +20,10 @@ import {
 	getNextId,
 	IDENTITY_MATRIX,
 	IMatrix44,
+	IVector3,
 	Perspective,
 	Sphere,
+	SphereNode,
 	Viewer,
 } from "../wgsg";
 
@@ -135,6 +137,69 @@ export function test ()
 			const dm: IMatrix44 = [ ...IDENTITY_MATRIX ];
 			mat4.translate ( dm, IDENTITY_MATRIX, [ 0, 0, -hypotenuse ] );
 			expect ( viewer.viewMatrix ).to.deep.equal ( dm );
+		} );
+
+		it ( "Should be able to find ideal near and far clipping planes", function ()
+		{
+			const canvas = document.createElement ( "canvas" );
+			const viewer = new Viewer ( { canvas } );
+			viewer.resize ( 1000, 1000 );
+
+			// The view matrix should still be identity.
+			expect ( viewer.viewMatrix ).to.deep.equal ( IDENTITY_MATRIX );
+
+			// Make the viewer's scene be a sphere at the origin.
+			const center: IVector3 = [ 0, 0, 0 ];
+			const radius = 1;
+			const sphere = new SphereNode ( { center, radius } );
+			viewer.modelScene = sphere;
+
+			// Perspective projection should be the default.
+			expect ( viewer.projection ).to.exist;
+			expect ( viewer.projection instanceof Perspective ).to.be.true;
+
+			// The bounds should be the same as the scene's sphere.
+			let bounds = viewer.modelScene.getBoundingSphere();
+			expect ( bounds ).to.exist;
+			expect ( bounds.center ).to.deep.equal ( sphere.center );
+			expect ( bounds.radius ).to.equal ( sphere.radius );
+
+			// The projection should have the default near and far distances.
+			const proj = ( viewer.projection as Perspective );
+			const { fov, near: n1, far: f1 } = proj;
+			expect ( n1 ).to.be.equal ( 0.01 );
+			expect ( f1 ).to.be.equal ( 10000 );
+
+			// This should change the view matrix.
+			viewer.viewAll ( { animate: false } );
+
+			// See Trackball viewSphere() why this equation is used here.
+			const distance = radius / Math.sin ( fov * 0.5 * DEG_TO_RAD );
+			expect ( viewer.viewMatrix ).to.deep.equal ( [
+				1, 0, 0, 0,
+				0, 1, 0, 0,
+				0, 0, 1, 0,
+				0, 0, -distance, 1
+			] );
+
+			// The bounds should not change because it's in the model's space.
+			bounds = viewer.modelScene.getBoundingSphere();
+			expect ( bounds ).to.exist;
+			expect ( bounds.center ).to.deep.equal ( sphere.center );
+			expect ( bounds.radius ).to.equal ( sphere.radius );
+
+			// The projection should be the same.
+			const { near: n2, far: f2 } = proj;
+			expect ( n2 ).to.be.equal ( n1 );
+			expect ( f2 ).to.be.equal ( f1 );
+
+			// This should change the projection's near and far distances.
+			viewer.update();
+
+			const { near: n3, far: f3 } = proj;
+			expect ( n3 ).to.be.equal ( distance - radius );
+			// expect ( n3 ).to.be.lessThan ( n1 );
+			// expect ( f3 ).to.be.greaterThan ( f1 );
 		} );
 	} );
 };

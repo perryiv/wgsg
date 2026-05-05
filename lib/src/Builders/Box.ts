@@ -22,8 +22,11 @@ import {
 	Group,
 	Indexed,
 	Node as SceneNode,
+	Shape,
+	State,
 	Transform,
 } from "../Scene";
+import { Box } from "../Math";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -31,6 +34,8 @@ import {
 //	Types used below.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+type IBoxMap = Map < number, Box >;
 
 interface IBoxBuilderTopologyInput
 {
@@ -190,6 +195,7 @@ class BuildBoxes extends BaseClass
 	#points: number[] = [];
 	#colors: number[] = [];
 	#geom: ( Geometry | null ) = null;
+	#boxes: IBoxMap = new Map < number,Box > ();
 
 	/**
 	 * Construct the class.
@@ -218,6 +224,7 @@ class BuildBoxes extends BaseClass
 		this.#points = [];
 		this.#colors = [];
 		this.#geom = null;
+		this.#boxes.clear();
 	}
 
 	/**
@@ -256,23 +263,17 @@ class BuildBoxes extends BaseClass
 
 	/**
 	 * Add the box.
-	 * @param {SceneNode} node - The scene node.
+	 * @param {Box} box - The box to add.
+	 * @param {State | null} state - The state of the corresponding shape.
 	 * @param {IMatrix44} [viewMatrix] - The view matrix.
 	 */
-	protected addBox ( node: SceneNode, viewMatrix: Readonly<IMatrix44> ) : void
+	protected addBox ( box: Readonly<Box>, state: ( Readonly<State> | null ), viewMatrix: Readonly<IMatrix44> ) : void
 	{
-		// Get the bounding box in local space.
-		const box = node.getBoundingBox();
-
 		// Handle invalid box
 		if ( false === box.valid )
 		{
 			return;
 		}
-
-		// You need the bounding boxes in local space because you transform the
-		// corner points here to top-level model space. However, when
-		// you get a bounding box from a transform node, it gets transformed.
 
 		// Shortcuts.
 		const corners = { ...box.corners };
@@ -326,10 +327,9 @@ class BuildBoxes extends BaseClass
 		const c: IVector4 = [ ...Color.gray ];
 
 		// Try to get the color.
-		const state = node.state;
 		if ( state )
 		{
-			const shader = state.shader;
+			const { shader } = state;
 			if ( shader instanceof SolidColor )
 			{
 				vec4.copy ( c, shader.color );
@@ -350,13 +350,43 @@ class BuildBoxes extends BaseClass
 	}
 
 	/**
-	 * Visit the node.
-	 * @param {Geometry} geom - The geometry node.
+	 * Make a box that holds all the boxes of the child nodes.
+	 * @param {Group} group - The group to get the box for.
+	 * @returns {Box} The box holding the group's children's boxes.
 	 */
-	public override visitGeometry ( geom: Geometry ) : void
+	protected makeGroupBox ( group: Readonly<Group> ) : Box
 	{
-		this.addBox ( geom, this.viewMatrix );
-		super.visitGeometry ( geom );
+		// The box we make for the group.
+		const box = new Box();
+
+		// Loop through the group's children.
+		group.forEachChild ( child =>
+		{
+			// Get this child's box from the map.
+			const cb = this.#boxes.get ( child.id );
+
+			// Grow our box by the child's box if we have it.
+			if ( cb )
+			{
+				box.growByBox ( cb );
+			}
+		} );
+
+		// Return the group's box.
+		return box;
+	}
+
+	/**
+	 * Visit the node.
+	 * @param {Shape} shape - The shape node.
+	 */
+	public override visitGeometry ( shape: Shape ) : void
+	{
+		// Do this first to be consistent with the other visit methods.
+		super.visitShape ( shape );
+
+		// Make a box for this shape.
+		this.addBox ( shape.box, shape.state, this.viewMatrix );
 	}
 
 	/**
@@ -365,8 +395,17 @@ class BuildBoxes extends BaseClass
 	 */
 	public override visitGroup ( group: Group ) : void
 	{
-		this.addBox ( group, this.viewMatrix );
+		// Do this first so that the map of boxes gets populated.
 		super.visitGroup ( group );
+
+		// Make box for this group.
+		const box = this.makeGroupBox ( group );
+
+		// Add our box to the map.
+		this.#boxes.set ( group.id, box );
+
+		// Add our box geometry to the scene.
+		this.addBox ( box, group.state, this.viewMatrix );
 	}
 
 	/**
@@ -375,8 +414,18 @@ class BuildBoxes extends BaseClass
 	 */
 	public override visitTransform ( tr: Transform ) : void
 	{
-		this.addBox ( tr, IDENTITY_MATRIX ); // The box is already transformed.
+		// Do this first so that the map of boxes gets populated.
 		super.visitTransform ( tr );
+
+		// Make box for this group.
+		const box = this.makeGroupBox ( tr );
+
+		// Add our box to the map.
+		this.#boxes.set ( tr.id, box );
+
+		// Add our box geometry to the scene.
+		// The box is already transformed so we pass identity.
+		this.addBox ( box, tr.state, IDENTITY_MATRIX );
 	}
 }
 

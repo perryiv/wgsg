@@ -12,11 +12,23 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IMatrix44, IViewport } from "../Types";
-import { isPositiveFiniteNumber } from "../Math";
 import { IDENTITY_MATRIX } from "../Tools";
+import { isPositiveFiniteNumber, Sphere } from "../Math";
 import { mat4 } from "gl-matrix";
 import { Projection } from "./Projection";
+import type { IMatrix44, IViewport } from "../Types";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Constants used below.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+const MIN_NEAR_DISTANCE = ( 0.01 );
+const MAX_FAR_DISTANCE  = ( 10000 );
+const DEFAULT_NEAR_DISTANCE = MIN_NEAR_DISTANCE;
+const DEFAULT_FAR_DISTANCE = MAX_FAR_DISTANCE;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -45,8 +57,8 @@ export class Perspective extends Projection
 {
 	#fov = 45;
 	#aspect = 1;
-	#near = 0.01;
-	#far = 10000;
+	#near = DEFAULT_NEAR_DISTANCE;
+	#far = DEFAULT_FAR_DISTANCE;
 
 	/**
 	 * Construct the class.
@@ -142,10 +154,10 @@ export class Perspective extends Projection
 		// If we get to here then set all the values.
 		// We did so much checking above that we don't need to use the setter
 		// functions, which have even more error checking.
-		this.#fov = fov;
-		this.#aspect = aspect;
-		this.#near = near;
-		this.#far = far;
+		this.fov = fov;
+		this.aspect = aspect;
+		this.near = near;
+		this.far = far;
 	}
 
 	/**
@@ -174,6 +186,49 @@ export class Perspective extends Projection
 
 		// Return the new matrix.
 		return answer;
+	}
+
+	/**
+	 * Update the projection's near and far distances.
+	 * @param {Sphere} sphere - The bounding sphere to use when updating the distances.
+	 */
+	public override updateNearFar ( sphere: Readonly<Sphere> ) : void
+	{
+		// Handle invalid sphere.
+		if ( false === sphere.valid )
+		{
+			return;
+		}
+
+		// It's easier to think about if we flip the z axis.
+		const cz = sphere.center[2] * -1;
+		const r = sphere.radius;
+
+		// console.log ( "Sphere:", cz, r );
+
+		// Get the z min and max of the sphere.
+		const minZ = ( cz - r ) * 0.5; // TODO: Why is this necessary?
+		const maxZ = ( cz + r ) * 1.5; // TODO: Is this a good amount?
+
+		// console.log ( "Min and max z:", minZ, maxZ );
+
+		// Get the minimum and maximum z values.
+		const near = Math.max ( minZ, MIN_NEAR_DISTANCE );
+		const far  = Math.min ( maxZ, MAX_FAR_DISTANCE );
+
+		// Did we get it wrong?
+		if ( ( near <= 0 ) || ( far <= 0 ) || ( near >= far ) )
+		{
+			return;
+		}
+
+		// console.log ( "New near and far distances:", near, far );
+
+		// Set the new distances.
+		this.near = near;
+		this.far = far;
+
+		// console.log ( "Updated near and far distances:", this.near, this.far );
 	}
 
 	/**
@@ -242,7 +297,8 @@ export class Perspective extends Projection
 			throw new Error ( `Given near distance '${near}' is not a positive finite number` );
 		}
 
-		this.#near = near;
+		// Do not let the near distance become smaller than the minimum.
+		this.#near = ( ( near >= MIN_NEAR_DISTANCE ) ? near : MIN_NEAR_DISTANCE );
 	}
 
 	/**
@@ -265,7 +321,8 @@ export class Perspective extends Projection
 			throw new Error ( `Given far distance '${far}' is not a positive finite number` );
 		}
 
-		this.#far = far;
+		// Do not let the far distance become larger than the maximum.
+		this.#far = ( ( far <= MAX_FAR_DISTANCE ) ? far : MAX_FAR_DISTANCE );
 	}
 
 	/**

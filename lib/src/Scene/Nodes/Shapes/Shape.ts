@@ -12,6 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Box, Sphere } from "../../../Math";
 import {
 	Node,
 	type INodeConstructorInput,
@@ -36,6 +37,42 @@ export abstract class Shape extends Node
 	constructor ( input?: INodeConstructorInput )
 	{
 		super ( input );
+	}
+
+	/**
+	 * Get the bounding box of this node.
+	 * @abstract
+	 * @returns {Box} The bounding box of this node.
+	 */
+	protected abstract getBoundingBox() : Readonly<Box>;
+
+	/**
+	 * Get the bounding box of this node.
+	 * @returns {Box} The bounding box of this node.
+	 */
+	public get box() : Readonly<Box>
+	{
+		return this.getBoundingBox();
+	}
+
+	/**
+	 * Get the bounding sphere of this node.
+	 * @returns {Sphere} The bounding sphere of this node.
+	 */
+	protected override getBoundingSphere() : Sphere
+	{
+		// Shortcut.
+		const { box } = this;
+
+		// Return an invalid sphere if the box is not valid.
+		if ( false === box.valid )
+		{
+			return new Sphere();
+		}
+
+		// Get the sphere that encloses the box.
+		const { center, radius } = box;
+		return new Sphere ( center, radius );
 	}
 
 	/**

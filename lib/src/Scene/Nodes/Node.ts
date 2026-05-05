@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base } from "../../Base/Base";
-import { Box, Sphere } from "../../Math";
+import { Sphere } from "../../Math";
 import { Group } from "./Groups/Group";
 import { hasBits, setBits } from "../../Tools";
 import { State } from "../State";
@@ -311,35 +311,16 @@ export abstract class Node extends Base
 	 * Get the bounding sphere of this node.
 	 * @returns {Sphere} The bounding sphere of this node.
 	 */
-	public getBoundingSphere() : Sphere
+	protected abstract getBoundingSphere() : Readonly<Sphere>;
+
+	/**
+	 * Get the bounding sphere of this node.
+	 * @returns {Sphere} The bounding sphere of this node.
+	 */
+	public get bounds() : Readonly<Sphere>
 	{
-		// Shortcut.
-		const box = this.getBoundingBox();
-
-		// Return an invalid sphere if the box is not valid.
-		if ( false === box.valid )
-		{
-			return new Sphere();
-		}
-
-		// Get the sphere that encloses the box.
-		const { center, radius } = box;
-		return new Sphere ( center, radius );
+		return this.getBoundingSphere();
 	}
-
-	/**
-	 * Get the bounding box of this node.
-	 * @abstract
-	 * @returns {Box} The bounding box of this node.
-	 */
-	public abstract getBoundingBox() : Box;
-
-	/**
-	 * Calculate the bounding box of this node.
-	 * @abstract
-	 * @returns {Box} The bounding box of this node.
-	 */
-	protected abstract calculateBoundingBox() : Box;
 
 	/**
 	 * Dirty the bounds of this node.

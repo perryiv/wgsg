@@ -12,9 +12,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Visitor } from "../../../Visitors/Visitor";
-import { Box } from "../../../Math";
 import { hasBits } from "../../../Tools";
+import { Sphere } from "../../../Math";
+import { Visitor } from "../../../Visitors/Visitor";
 import {
 	Flags,
 	Node,
@@ -41,7 +41,7 @@ export type IGroupCallback = ( ( node: Node ) => void );
 export class Group extends Node
 {
 	#children: Node[] = [];
-	#box: Box = new Box();
+	#sphere: Sphere = new Sphere();
 
 	/**
 	 * Construct the class.
@@ -71,19 +71,19 @@ export class Group extends Node
 	}
 
 	/**
-	 * Get the bounding box of this node.
-	 * @returns {Box} The bounding box of this node.
+	 * Get the bounding sphere of this node.
+	 * @returns {Sphere} The bounding sphere of this node.
 	 */
-	public override getBoundingBox() : Box
+	protected override getBoundingSphere() : Sphere
 	{
-		// Return the bounding box if it is valid.
-		if ( true === this.#box.valid )
+		// Return the bounding sphere if it is valid.
+		if ( true === this.#sphere.valid )
 		{
-			return this.#box;
+			return this.#sphere;
 		}
 
-		// Get the new bounding box.
-		const answer = this.calculateBoundingBox();
+		// Get the new bounding sphere.
+		const answer = this.calculateBoundingSphere();
 
 		// If it's invalid then don't store it.
 		if ( false === answer.valid )
@@ -92,22 +92,22 @@ export class Group extends Node
 		}
 
 		// If we get to here then save the answer for next time.
-		this.#box = answer;
+		this.#sphere = answer;
 
 		// Return the answer.
 		return answer;
 	}
 
 	/**
-	 * Calculate the bounding box of this node.
-	 * @returns {Box} The bounding box of this node.
+	 * Calculate the bounding sphere of this node.
+	 * @returns {Sphere} The bounding sphere of this node.
 	 */
-	protected override calculateBoundingBox() : Box
+	protected calculateBoundingSphere() : Sphere
 	{
-		// Make a new box.
-		const answer = new Box();
+		// Make a new sphere.
+		const answer = new Sphere();
 
-		// Add each child's box to ours.
+		// Add each child's sphere to ours.
 		this.forEachChild ( ( child: Node ) =>
 		{
 			// Handle when the child node does not add to the bounds.
@@ -116,17 +116,17 @@ export class Group extends Node
 				return;
 			}
 
-			// Get the child's box.
-			const box = child.getBoundingBox();
+			// Get the child's bounding sphere.
+			const { bounds } = child;
 
-			// If the child has an invalid box then skip it.
-			if ( false === box.valid )
+			// If the child has an invalid sphere then skip it.
+			if ( false === bounds.valid )
 			{
 				return;
 			}
 
-			// Grow the answer by the box.
-			answer.growByBox ( box );
+			// Grow the answer by the sphere.
+			answer.growBySphere ( bounds );
 		} );
 
 		// Return the answer.
@@ -138,10 +138,10 @@ export class Group extends Node
 	 */
 	public override dirtyBounds (): void
 	{
-		// Make a new invalid box.
-		this.#box = new Box();
+		// Make a new invalid sphere.
+		this.#sphere = new Sphere();
 
-		// Let the parents know that their bounding boxes are now invalid.
+		// Let the parents know that their bounds are now invalid.
 		this.forEachParent ( ( parent: Node ) =>
 		{
 			parent.dirtyBounds();

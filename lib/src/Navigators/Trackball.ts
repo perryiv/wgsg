@@ -576,7 +576,7 @@ export class Trackball extends BaseClass
 	 * @param {Projection} input.projection - The projection to use.
 	 * @param {boolean} [input.resetRotation] - Whether to or not reset the rotation.
 	 */
-	public override viewSphere ( input: { sphere: Sphere, projection: Projection, resetRotation?: boolean } ) : void
+	public override viewSphere ( input: { sphere: Readonly<Sphere>, projection: Readonly<Projection>, resetRotation?: boolean } ) : void
 	{
 		// Get the input.
 		const { sphere, projection, resetRotation } = input;
