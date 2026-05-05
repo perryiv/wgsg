@@ -9,7 +9,14 @@ As of now, there are a lot of unfinished, basic features and rough edges; it's n
 That said, for the curious, there is an
 [online demo](https://perryiv.github.io/wgsg_demo/)
 available.
-When the viewer first loads there will be a simple, programatically created scene. Left mouse rotates, right mouse "pans" (translates in the plane of the screen), and the mouse wheel will "zoom" (translate along the global z-axis).
+Make sure you are using a browser that
+[supports WebGPU](https://github.com/gpuweb/gpuweb/wiki/Implementation-Status).
+For the under-the-hood details visit [WebGPU Report](https://webgpureport.org/).
+
+When the
+[viewer](https://perryiv.github.io/wgsg_demo/)
+first loads there will be a simple, programatically created scene.
+Left mouse rotates, right mouse "pans" (translates in the plane of the screen), and the mouse wheel will "zoom" (translate along the global z-axis).
 
 Drag-and-drop an
 [STL](https://en.wikipedia.org/wiki/STL_(file_format))
