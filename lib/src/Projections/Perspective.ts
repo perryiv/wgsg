@@ -200,17 +200,17 @@ export class Perspective extends Projection
 			return;
 		}
 
-		// It's easier to think about if we flip the the z axis.
+		// It's easier to think about if we flip the z axis.
 		const cz = sphere.center[2] * -1;
-		const r = sphere.radius * 1; // Add a little padding to the radius.
+		const r = sphere.radius;
 
-		console.log ( "Sphere:", cz, r );
+		// console.log ( "Sphere:", cz, r );
 
 		// Get the z min and max of the sphere.
-		const minZ = cz - r;
-		const maxZ = cz + r;
+		const minZ = ( cz - r ) * 0.5; // TODO: Why is this necessary?
+		const maxZ = ( cz + r ) * 1.5; // TODO: Is this a good amount?
 
-		console.log ( "Min and max z:", minZ, maxZ );
+		// console.log ( "Min and max z:", minZ, maxZ );
 
 		// Get the minimum and maximum z values.
 		const near = Math.max ( minZ, MIN_NEAR_DISTANCE );
@@ -222,13 +222,13 @@ export class Perspective extends Projection
 			return;
 		}
 
-		console.log ( "New near and far distances:", near, far );
+		// console.log ( "New near and far distances:", near, far );
 
 		// Set the new distances.
 		this.near = near;
 		this.far = far;
 
-		console.log ( "Updated near and far distances:", this.near, this.far );
+		// console.log ( "Updated near and far distances:", this.near, this.far );
 	}
 
 	/**
