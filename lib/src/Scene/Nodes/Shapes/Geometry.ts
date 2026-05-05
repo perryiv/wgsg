@@ -145,7 +145,7 @@ export class Geometry extends Shape
 	 * Calculate the bounding box of this node.
 	 * @returns {Box} The bounding box of this node.
 	 */
-	protected override calculateBoundingBox() : Box
+	protected calculateBoundingBox() : Box
 	{
 		// Make a new bounds.
 		const answer = new Box();

@@ -12,11 +12,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Box, isValidMatrix } from "../../../Math";
 import { Group } from "./Group";
 import { IDENTITY_MATRIX } from "../../../Tools";
 import { IMatrix44, IVector3 } from "../../../Types";
 import { mat4 } from "gl-matrix";
+import { Sphere, isValidMatrix } from "../../../Math";
 import { Visitor } from "../../../Visitors/Visitor";
 
 
@@ -128,21 +128,21 @@ export class Transform extends Group
 	}
 
 	/**
-	 * Calculate the bounding box of this node.
-	 * @returns {Box} The bounding box of this node.
+	 * Calculate the bounding sphere of this node.
+	 * @returns {Sphere} The bounding sphere of this node.
 	 */
-	protected override calculateBoundingBox() : Box
+	protected override calculateBoundingSphere() : Sphere
 	{
-		// Calculate the bounding box using the base class' function.
-		const answer = super.calculateBoundingBox();
+		// Calculate the bounding sphere using the base class' function.
+		const sphere = super.calculateBoundingSphere();
 
 		// Handle when it's invalid.
-		if ( false === answer.valid )
+		if ( false === sphere.valid )
 		{
-			return answer;
+			return sphere;
 		}
 
-		// Transform the box and return it.
-		return Box.transform ( answer, this.#matrix );
+		// Transform the sphere and return it.
+		return Sphere.transform ( sphere, this.#matrix );
 	}
 }

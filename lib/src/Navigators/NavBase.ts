@@ -163,5 +163,5 @@ export abstract class NavBase extends BaseClass
 	 * @param {Projection} input.projection - The projection to use.
 	 * @param {boolean} [input.resetRotation] - Whether to or not reset the rotation.
 	 */
-	public abstract viewSphere ( input: { sphere: Sphere, projection: Projection, resetRotation?: boolean } ) : void;
+	public abstract viewSphere ( input: { sphere: Readonly<Sphere>, projection: Readonly<Projection>, resetRotation?: boolean } ) : void;
 }

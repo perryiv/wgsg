@@ -194,7 +194,7 @@ export abstract class Common extends BaseClass
 		}
 
 		// To speed things up later, calculate the bounds now.
-		void group.box;
+		void group.bounds;
 
 		// Return the group.
 		return group;

@@ -248,18 +248,15 @@ export class Sphere
 
 	/**
 	 * Transform the sphere by a matrix.
-	 * @param {Sphere} out - The output sphere.
+	 * @param {Sphere} sphere - The input sphere.
 	 * @param {IMatrix44} m - The transformation matrix.
-	 * @param {Sphere} a - The input sphere.
 	 * @returns {Sphere} The transformed sphere.
 	 */
-	public static transform ( out: Sphere, m: Readonly<IMatrix44>, a: Readonly<Sphere> ): Sphere
+	public static transform ( sphere: Readonly<Sphere>, m: Readonly<IMatrix44> ): Sphere
 	{
-		const center: IVector3 = [ ...out.center ];
-		vec3.transformMat4 ( center, a.center, m );
-		out.center = center;
-		out.radius = a.radius;
-		return out;
+		const center: IVector3 = [ 0, 0, 0 ];
+		vec3.transformMat4 ( center, sphere.center, m );
+		return new Sphere ( center, sphere.radius );
 	}
 
   /**
@@ -268,7 +265,9 @@ export class Sphere
    */
   public transform ( m: Readonly<IMatrix44> ): void
   {
-    Sphere.transform ( this, m, this );
+    const sphere = Sphere.transform ( this, m );
+    this.center = sphere.center;
+    this.radius = sphere.radius;
   }
 
 	/**
