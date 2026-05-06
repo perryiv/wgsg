@@ -173,34 +173,52 @@ export function test ()
 			] );
 		} );
 
-		it ( "Should have the correct bounding box", function ()
+		it ( "Should have the correct bounding sphere", function ()
 		{
 			const radius = 1.0;
 			const tr = new Transform();
-			let box = tr.box;
-			expect ( box.valid ).to.be.false;
 
-			const sphere = new SphereNode ( { center: [ 0, 0, 0 ], radius } )
-			box = sphere.box;
-			expect ( box.valid ).to.be.true;
-			expect ( box.min ).to.be.deep.equal ( [ -1, -1, -1 ] );
-			expect ( box.max ).to.be.deep.equal ( [  1,  1,  1 ] );
+			{
+				const { bounds } = tr;
+				const { valid } = bounds;
+				expect ( valid ).to.be.false;
+			}
+			{
+				tr.addChild ( new SphereNode ( { center: [ 0, 0, 0 ], radius } ) );
+				const { bounds } = tr;
+				const { valid, center: c, radius: r } = bounds;
 
-			tr.addChild ( sphere );
-			box = tr.box;
-			expect ( box.min ).to.be.deep.equal ( [ -1, -1, -1 ] );
-			expect ( box.max ).to.be.deep.equal ( [  1,  1,  1 ] );
+				expect ( valid ).to.be.true;
+				expect ( c ).to.be.deep.equal ( [ 0, 0, 0 ] );
+				expect ( r ).to.equal ( 1 );
+			}
+			{
+				tr.addChild ( new SphereNode ( { center: [ 2, 0, 0 ], radius } ) );
+				const { bounds } = tr;
+				const { valid, center: c, radius: r } = bounds;
 
-			tr.translate ( [ 10, 0, 0 ] );
-			tr.dirtyBounds();
-			box = tr.box;
-			expect ( box.min ).to.be.deep.equal ( [  9, -1, -1 ] );
-			expect ( box.max ).to.be.deep.equal ( [ 11,  1,  1 ] );
+				expect ( valid ).to.be.true;
+				expect ( c ).to.be.deep.equal ( [ 1, 0, 0 ] );
+				expect ( r ).to.equal ( 2 );
+			}
+			{
+				tr.translate ( [ 10, 0, 0 ] );
+				const { bounds } = tr;
+				const { valid, center: c, radius: r } = bounds;
 
-			tr.addChild ( new SphereNode ( { center: [ 2, 0, 0 ], radius } ) );
-			box = tr.box;
-			expect ( box.min ).to.be.deep.equal ( [  9, -1, -1 ] );
-			expect ( box.max ).to.be.deep.equal ( [ 13,  1,  1 ] );
+				expect ( valid ).to.be.true;
+				expect ( c ).to.be.deep.equal ( [ 11, 0, 0 ] );
+				expect ( r ).to.equal ( 2 );
+			}
+			{
+				tr.addChild ( new SphereNode ( { center: [ 4, 0, 0 ], radius } ) );
+				const { bounds } = tr;
+				const { valid, center: c, radius: r } = bounds;
+
+				expect ( valid ).to.be.true;
+				expect ( c ).to.be.deep.equal ( [ 12, 0, 0 ] );
+				expect ( r ).to.equal ( 3 );
+			}
 		} );
 	} );
 };
