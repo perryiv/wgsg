@@ -40,3 +40,9 @@ export const KEEP_PERFORMANCE_INFO: boolean = (
 	( "true" === ( BUILD_ENVIRONMENT.VITE_KEEP_PERFORMANCE_INFO as string ).toLowerCase() ) :
 	( false )
 );
+
+// Constants used in projections.
+export const MIN_NEAR_DISTANCE = ( 0.01 );
+export const MAX_FAR_DISTANCE  = ( 10000 );
+export const DEFAULT_NEAR_DISTANCE = MIN_NEAR_DISTANCE;
+export const DEFAULT_FAR_DISTANCE = MAX_FAR_DISTANCE;

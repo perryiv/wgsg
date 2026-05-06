@@ -17,19 +17,12 @@ import { isPositiveFiniteNumber, Sphere } from "../Math";
 import { mat4 } from "gl-matrix";
 import { Projection } from "./Projection";
 import type { IMatrix44, IViewport } from "../Types";
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
-//	Constants used below.
-//
-///////////////////////////////////////////////////////////////////////////////
-
-const MIN_NEAR_DISTANCE = ( 0.01 );
-const MAX_FAR_DISTANCE  = ( 10000 );
-const DEFAULT_NEAR_DISTANCE = MIN_NEAR_DISTANCE;
-const DEFAULT_FAR_DISTANCE = MAX_FAR_DISTANCE;
-
+import {
+	DEFAULT_FAR_DISTANCE,
+	DEFAULT_NEAR_DISTANCE,
+	MAX_FAR_DISTANCE,
+	MIN_NEAR_DISTANCE,
+} from "../Tools/Constants";
 
 ///////////////////////////////////////////////////////////////////////////////
 //

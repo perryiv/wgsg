@@ -21,6 +21,8 @@ import {
 	IDENTITY_MATRIX,
 	IMatrix44,
 	IVector3,
+	MAX_FAR_DISTANCE,
+	MIN_NEAR_DISTANCE,
 	Perspective,
 	Sphere,
 	SphereNode,
@@ -159,10 +161,10 @@ export function test ()
 			expect ( viewer.projection instanceof Perspective ).to.be.true;
 
 			// The bounds should be the same as the scene's sphere.
-			let bounds = viewer.modelScene.getBoundingSphere();
-			expect ( bounds ).to.exist;
-			expect ( bounds.center ).to.deep.equal ( sphere.center );
-			expect ( bounds.radius ).to.equal ( sphere.radius );
+			const { bounds: b1 } = viewer.modelScene;
+			expect ( b1 ).to.exist;
+			expect ( b1.center ).to.deep.equal ( sphere.center );
+			expect ( b1.radius ).to.equal ( sphere.radius );
 
 			// The projection should have the default near and far distances.
 			const proj = ( viewer.projection as Perspective );
@@ -173,7 +175,7 @@ export function test ()
 			// This should change the view matrix.
 			viewer.viewAll ( { animate: false } );
 
-			// See Trackball viewSphere() why this equation is used here.
+			// See Trackball viewSphere() for why this equation is used here.
 			const distance = radius / Math.sin ( fov * 0.5 * DEG_TO_RAD );
 			expect ( viewer.viewMatrix ).to.deep.equal ( [
 				1, 0, 0, 0,
@@ -183,10 +185,10 @@ export function test ()
 			] );
 
 			// The bounds should not change because it's in the model's space.
-			bounds = viewer.modelScene.getBoundingSphere();
-			expect ( bounds ).to.exist;
-			expect ( bounds.center ).to.deep.equal ( sphere.center );
-			expect ( bounds.radius ).to.equal ( sphere.radius );
+			const { bounds: b2 } = viewer.modelScene;
+			expect ( b2 ).to.exist;
+			expect ( b2.center ).to.deep.equal ( sphere.center );
+			expect ( b2.radius ).to.equal ( sphere.radius );
 
 			// The projection should be the same.
 			const { near: n2, far: f2 } = proj;
@@ -194,12 +196,14 @@ export function test ()
 			expect ( f2 ).to.be.equal ( f1 );
 
 			// This should change the projection's near and far distances.
-			viewer.update();
+			viewer.render();
 
+			// The distances should not be the extremes, and not intersect the sphere.
 			const { near: n3, far: f3 } = proj;
-			expect ( n3 ).to.be.equal ( distance - radius );
-			// expect ( n3 ).to.be.lessThan ( n1 );
-			// expect ( f3 ).to.be.greaterThan ( f1 );
+			expect ( n3, "Line 202" ).to.be.lessThan ( distance - radius );
+			expect ( n3, "Line 203" ).to.be.greaterThan ( MIN_NEAR_DISTANCE );
+			expect ( f3, "Line 204" ).to.be.greaterThan ( distance + radius );
+			expect ( f3, "Line 205" ).to.be.lessThan ( MAX_FAR_DISTANCE );
 		} );
 	} );
 };

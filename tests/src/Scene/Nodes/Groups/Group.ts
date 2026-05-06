@@ -288,26 +288,33 @@ export function test ()
 			expect ( child11.dirty ).to.be.false;
 		} );
 
-		it ( "Should have the correct bounding box", function ()
+		it ( "Should have the correct bounding sphere", function ()
 		{
 			const radius = 1.0;
 			const group = new Group();
 
 			{
+				const { bounds } = group;
+				const { valid } = bounds;
+				expect ( valid ).to.be.false;
+			}
+			{
 				group.addChild ( new SphereNode ( { center: [ 0, 0, 0 ], radius } ) );
-				const { box } = group;
-				const { min, max } = box;
+				const { bounds } = group;
+				const { valid, center: c, radius: r } = bounds;
 
-				expect ( min ).to.be.deep.equal ( [ -1, -1, -1 ] );
-				expect ( max ).to.be.deep.equal ( [  1,  1,  1 ] );
+				expect ( valid ).to.be.true;
+				expect ( c ).to.be.deep.equal ( [ 0, 0, 0 ] );
+				expect ( r ).to.equal ( 1 );
 			}
 			{
 				group.addChild ( new SphereNode ( { center: [ 2, 0, 0 ], radius } ) );
-				const { box } = group;
-				const { min, max } = box;
+				const { bounds } = group;
+				const { valid, center: c, radius: r } = bounds;
 
-				expect ( min ).to.be.deep.equal ( [ -1, -1, -1 ] );
-				expect ( max ).to.be.deep.equal ( [  3,  1,  1 ] );
+				expect ( valid ).to.be.true;
+				expect ( c ).to.be.deep.equal ( [ 1, 0, 0 ] );
+				expect ( r ).to.equal ( 2 );
 			}
 		} );
 	} );
