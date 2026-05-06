@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { buildSceneSpheres } from "../Tools";
-import { LinearProgress, Paper } from "@mui/material";
+import { Card, LinearProgress, Paper } from "@mui/material";
 import { useViewerStore } from "../State";
 import throttle from "throttleit";
 import {
@@ -81,6 +81,7 @@ export function Viewer ( { style }: IViewerProps )
 	const getViewer = useViewerStore ( ( state ) => state.getViewer );
 	const setViewer = useViewerStore ( ( state ) => state.setViewer );
 	const [ progress, setProgress ] = useState < number > ( 0 );
+	const [ supported, setSupported ] = useState < boolean | null > ( null );
 
 	//
 	// Build the test scene.
@@ -362,6 +363,24 @@ export function Viewer ( { style }: IViewerProps )
 	{
 		// console.log ( `In handleMount() for viewer component ${id}` );
 
+		// Is WebGPU supported?
+		if ( null === supported )
+		{
+			if ( false === await Device.isSupported() )
+			{
+				console.warn ( "WebGPU is not supported in this browser" );
+				setSupported ( false );
+				return;
+			}
+			setSupported ( true );
+		}
+
+		// Is WebGPU supported?
+		if ( false === supported )
+		{
+			return;
+		}
+
 		// Are we still in the middle of the first mount?
 		if ( true === isMounting.current )
 		{
@@ -385,8 +404,8 @@ export function Viewer ( { style }: IViewerProps )
 		// console.log ( `Out handleMount() for viewer component ${id}` );
 	}, [
 		getOrCreateViewer,
-		// id,
 		initDevice,
+		supported,
 	] );
 
 	//
@@ -463,6 +482,57 @@ export function Viewer ( { style }: IViewerProps )
 		);
 	}, [] );
 
+	//
+	// Render a message if WebGPU is not supported.
+	//
+	const renderNotSupported = useCallback ( () =>
+	{
+		if ( true === supported )
+		{
+			return null;
+		}
+
+		return (
+			<Card
+				style = { {
+					position: "absolute",
+					top: "33%",
+					left: "50%",
+					transform: "translate(-50%, -50%)",
+					padding: "20px",
+					textAlign: "center",
+				} }
+			>
+				<h1
+					style = { {
+						transform: "rotate(90deg)",
+					} }
+				>
+					:-(
+				</h1>
+				<span>WebGPU is not supported in this browser</span>
+				<br />
+				<span>You can check browser support&nbsp;</span>
+				<a
+					href="https://github.com/gpuweb/gpuweb/wiki/Implementation-Status"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					here
+				</a>
+				<span>&nbsp;and&nbsp;</span>
+				<a
+					href="https://caniuse.com/webgpu"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					here
+				</a>
+			</Card>
+		);
+	},
+	[ supported ] );
+
 	// console.log ( `Viewer component ${id} render count ${componentRenderCount++}` );
 
 	//
@@ -477,6 +547,7 @@ export function Viewer ( { style }: IViewerProps )
 				onDrop = { handleDroppedFiles }
 			>
 			</canvas>
+			{ renderNotSupported() }
 			{ renderProgressBar ( progress ) }
 		</div>
 	);

@@ -24,6 +24,7 @@ import {
 	MIN_NEAR_DISTANCE,
 } from "../Tools/Constants";
 
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	The data that defines a perspective projection.
