@@ -179,10 +179,25 @@ export class Device extends Base
 	 * Check for WebGPU support.
 	 * @returns {boolean} True if WebGPU is supported, false otherwise.
 	 */
-	public static get supported() : boolean
+	public static async isSupported() : Promise<boolean>
 	{
 		const { gpu } = globalThis.navigator;
-		return ( !!gpu );
+		if ( !gpu )
+		{
+			return false;
+		}
+
+		try
+		{
+			const adapter = await gpu.requestAdapter();
+			return ( !!adapter );
+		}
+
+		catch ( error )
+		{
+			console.error ( "Error while checking for WebGPU support:", error );
+			return false;
+		}
 	}
 
 	/**
