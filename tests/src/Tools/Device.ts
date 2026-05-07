@@ -26,9 +26,9 @@ export function test ()
 {
 	describe ( "Device", function ()
 	{
-		it ( "Make sure WebGPU is supported", function ()
+		it ( "Make sure WebGPU is supported", async function ()
 		{
-			expect ( Device.supported ).to.be.true;
+			expect ( await Device.isSupported() ).to.be.true;
 			expect ( globalThis.navigator instanceof Navigator ).to.be.true;
 			const { gpu } = globalThis.navigator;
 			expect ( gpu ).to.exist;
