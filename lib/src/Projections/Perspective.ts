@@ -21,6 +21,7 @@ import {
 	DEFAULT_FAR_DISTANCE,
 	DEFAULT_NEAR_DISTANCE,
 	MAX_FAR_DISTANCE,
+	MAX_FAR_OVER_NEAR_RATIO,
 	MIN_NEAR_DISTANCE,
 } from "../Tools/Constants";
 
@@ -207,8 +208,15 @@ export class Perspective extends Projection
 		// console.log ( "Min and max z:", minZ, maxZ );
 
 		// Get the minimum and maximum z values.
-		const near = Math.max ( minZ, MIN_NEAR_DISTANCE );
-		const far  = Math.min ( maxZ, MAX_FAR_DISTANCE );
+		let near =  Math.max ( minZ, MIN_NEAR_DISTANCE );
+		const far = Math.min ( maxZ, MAX_FAR_DISTANCE );
+
+		// Do not let the near distance become too small compared to the far.
+		// Otherwise, we will have z-fighting.
+		if ( ( far / near ) > MAX_FAR_OVER_NEAR_RATIO )
+		{
+			near = ( far / MAX_FAR_OVER_NEAR_RATIO );
+		}
 
 		// Did we get it wrong?
 		if ( ( near <= 0 ) || ( far <= 0 ) || ( near >= far ) )
