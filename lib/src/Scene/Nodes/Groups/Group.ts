@@ -17,7 +17,8 @@ import { Sphere } from "../../../Math";
 import { Visitor } from "../../../Visitors/Visitor";
 import {
 	Flags,
-	Node,
+	Node as BaseClass,
+	Node as ChildType,
 	type INodeTraverseCallback,
 } from "../Node";
 
@@ -28,7 +29,8 @@ import {
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export type IGroupCallback = ( ( node: Node ) => void );
+export type IGroupCallback = ( ( node: ChildType ) => void );
+export type IGroupPredicate = ( ( node: Readonly<ChildType>, index: number ) => boolean );
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -38,9 +40,9 @@ export type IGroupCallback = ( ( node: Node ) => void );
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Group extends Node
+export class Group extends BaseClass
 {
-	#children: Node[] = [];
+	#children: ChildType[] = [];
 	#sphere: Sphere = new Sphere();
 
 	/**
@@ -108,7 +110,7 @@ export class Group extends Node
 		const answer = new Sphere();
 
 		// Add each child's sphere to ours.
-		this.forEachChild ( ( child: Node ) =>
+		this.forEachChild ( ( child: ChildType ) =>
 		{
 			// Handle when the child node does not add to the bounds.
 			if ( false === hasBits ( child.flags, Flags.ADDS_TO_BOUNDS ) )
@@ -134,6 +136,50 @@ export class Group extends Node
 	}
 
 	/**
+	 * Find the index of the child that matched the given predicate.
+	 * @param {IGroupPredicate} predicate - The function that tests each child node.
+	 * @returns {number} The index of the child node that matches the predicate or -1.
+	 */
+	public findChild ( predicate: IGroupPredicate ) : number
+	{
+		// Shortcuts.
+		const children = this.#children;
+		const numChildren = children.length;
+
+		// Loop through the children.
+		for ( let i = 0; i < numChildren; ++i )
+		{
+			if ( predicate ( children[i], i ) )
+			{
+				return i;
+			}
+		}
+
+		// We didn't find it.
+		return -1;
+	}
+
+	/**
+	 * Find the index of the child.
+	 * @param {ChildType | null | undefined} child - The child node to find.
+	 * @returns {number} The index of the child node or -1.
+	 */
+	public indexOf ( child: ( Readonly<ChildType> | null | undefined ) ) : number
+	{
+		// Handle invalid child.
+		if ( !child )
+		{
+			return -1;
+		}
+
+		// Use a predicate to find the index of the child.
+		return this.findChild ( ( current: Readonly<ChildType> ) =>
+		{
+			return ( current === child );
+		} );
+	}
+
+	/**
 	 * Dirty the bounds of this node.
 	 */
 	public override dirtyBounds (): void
@@ -142,7 +188,7 @@ export class Group extends Node
 		this.#sphere = new Sphere();
 
 		// Let the parents know that their bounds are now invalid.
-		this.forEachParent ( ( parent: Node ) =>
+		this.forEachParent ( ( parent: ChildType ) =>
 		{
 			parent.dirtyBounds();
 		} );
@@ -173,7 +219,7 @@ export class Group extends Node
 	public override traverse ( cb: INodeTraverseCallback ) : void
 	{
 		cb ( this );
-		this.forEachChild ( ( child: Node ) =>
+		this.forEachChild ( ( child: ChildType ) =>
 		{
 			child.traverse ( cb );
 		} );
@@ -193,9 +239,9 @@ export class Group extends Node
 
 	/**
 	 * Add a child node.
-	 * @param {Node | null | undefined} node - The node to add to the group.
+	 * @param {ChildType | null | undefined} node - The node to add to the group.
 	 */
-	public addChild ( node: ( Node | null | undefined ) )
+	public addChild ( node: ( ChildType | null | undefined ) )
 	{
 		// Quietly handle invalid nodes.
 		if ( !node )
