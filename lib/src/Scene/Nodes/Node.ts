@@ -82,6 +82,7 @@ export abstract class Node extends Base
 		Flags.CLIPPED |
 		Flags.DIRTY
 	);
+	#userData: unknown = null;
 
 	/**
 	 * Construct the class.
@@ -132,6 +133,24 @@ export abstract class Node extends Base
 	public set state ( state: ( State | null ) )
 	{
 		this.#state = state;
+	}
+
+	/**
+	 * Get the user data.
+	 * @returns {unknown} The user data.
+	 */
+	public get userData() : unknown
+	{
+		return this.#userData;
+	}
+
+	/**
+	 * Set the user data.
+	 * @param {unknown} data - The new user data.
+	 */
+	public set userData ( data: unknown )
+	{
+		this.#userData = data;
 	}
 
 	/**
