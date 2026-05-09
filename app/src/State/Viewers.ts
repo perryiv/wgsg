@@ -31,6 +31,13 @@ export interface IViewerStore
 	clearViewers: () => void;
 }
 
+export interface IViewerState
+{
+	boxesVisible: boolean;
+	getBoundingBoxesVisible: () => boolean;
+	setBoundingBoxesVisible: ( visible: boolean ) => void;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -76,9 +83,45 @@ export const useViewerStore = create < IViewerStore > () ( ( set, get ) => (
 
 	clearViewers: () =>
 	{
-		set ( () => (
+		set ( () =>
 		{
-			viewers: new Map < string, Viewer > ()
-		} ) );
+			return (
+			{
+				viewers: new Map < string, Viewer > ()
+			} );
+		} );
+	}
+} ) );
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Make the map of viewer state.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export const useViewerState = create < IViewerState > () ( ( set, get ) => (
+{
+	boxesVisible: false,
+
+	getBoundingBoxesVisible: () : boolean =>
+	{
+		const store = get();
+		return store.boxesVisible;
+	},
+
+	setBoundingBoxesVisible: ( visible: boolean ) =>
+	{
+		const store = get();
+		if ( visible !== store.boxesVisible )
+		{
+			set ( () =>
+			{
+				return (
+				{
+					boxesVisible: visible
+				} )
+		 } );
+		}
 	}
 } ) );
