@@ -14,7 +14,7 @@
 
 import { buildSceneSpheres } from "../Tools";
 import { Card, LinearProgress, Paper } from "@mui/material";
-import { useViewerStore } from "../State";
+import { useViewerState, useViewerStore } from "../State";
 import throttle from "throttleit";
 import {
 	CSSProperties,
@@ -31,7 +31,6 @@ import {
 	DeviceLost,
 	getNextId,
 	getReader,
-	Group,
 	Node as SceneNode,
 	Viewer as InternalViewer,
 } from "../../../lib/src";
@@ -78,25 +77,95 @@ export function Viewer ( { style }: IViewerProps )
 	const [ id, ] = useState < number > ( getNextId ( "Viewer Component" ) );
 	const canvas = useRef < HTMLCanvasElement | null > ( null );
 	const isMounting = useRef ( false );
-	const getViewer = useViewerStore ( ( state ) => state.getViewer );
-	const setViewer = useViewerStore ( ( state ) => state.setViewer );
+	const [ boxesScene, setBoxesScene ] = useState < SceneNode | null > ( null );
 	const [ progress, setProgress ] = useState < number > ( 0 );
 	const [ supported, setSupported ] = useState < boolean | null > ( null );
+	const { getViewer, setViewer } = useViewerStore ( ( state ) => state );
+	const { getBoundingBoxesVisible } = useViewerState ( ( state ) => state );
+
+	// Get the viewer.
+	const viewer = getViewer ( VIEWER_NAME );
+
+	// Are the bounding boxes visible?
+	const boundingBoxesVisible = getBoundingBoxesVisible();
 
 	//
 	// Build the test scene.
 	//
 	const buildTestScene = useCallback ( () : SceneNode =>
 	{
-		const group = new Group();
-		const spheres = buildSceneSpheres();
-		group.addChild ( spheres );
-		const boxes = buildBoundingBoxes ( spheres );
-		boxes.addsToBounds = false;
-		group.addChild ( boxes );
-		return group;
+		return buildSceneSpheres();
 	},
 	[] );
+
+	//
+	// Adjust the scene for bounding boxes if necessary.
+	//
+	useEffect ( () =>
+	{
+		// Handle no viewer.
+		if ( !viewer )
+		{
+			return;
+		}
+
+		// If the boxes are not supposed to be visible ...
+		if ( false === boundingBoxesVisible )
+		{
+			// And they are not ...
+			if ( !boxesScene )
+			{
+				return; // There is nothing to do.
+			}
+
+			// Remove the existing scene.
+			const extraScene = viewer.extraScene;
+			extraScene.removeChild ( extraScene.indexOf ( boxesScene ) );
+
+			// Set this for next time.
+			setBoxesScene ( null );
+
+			// Render so that we see the change.
+			viewer.requestRender();
+
+			// We're done.
+			return;
+		}
+
+		// If we get to here then the boxes are supposed to be visible.
+
+		// Are they already visible?
+		if ( boxesScene )
+		{
+			return; // There is nothing to do.
+		}
+
+		// If we get to here then we need a model scene.
+		const modelScene = viewer.modelScene;
+		if ( !modelScene )
+		{
+			return;
+		}
+
+		// Make the scene for the boxes.
+		const boxes = buildBoundingBoxes ( modelScene );
+
+		// It should not contribute to the bounds.
+		boxes.addsToBounds = false;
+
+		// Add the scene for the boxes.
+		viewer.extraScene.addChild ( boxes );
+
+		// Save it for next time.
+		setBoxesScene ( boxes );
+
+		// Render so that we see the change.
+		viewer.requestRender();
+	}, [
+		boxesScene,
+		boundingBoxesVisible,
+		viewer,
+	] );
 
 	//
 	// Handle when the mouse drags a file over this component.
@@ -187,9 +256,6 @@ export function Viewer ( { style }: IViewerProps )
 			return;
 		}
 
-		// Get the viewer.
-		const viewer = getViewer ( VIEWER_NAME );
-
 		// Handle no viewer.
 		if ( !viewer )
 		{
@@ -203,13 +269,20 @@ export function Viewer ( { style }: IViewerProps )
 		// Add the model to the scene.
 		viewer.modelScene = model;
 
+		// Make sure we don't have any boxes from the previous model.
+		const extraScene = viewer.extraScene;
+		extraScene.removeChild ( extraScene.indexOf ( boxesScene ) );
+		setBoxesScene ( null );
+
 		// Move the camera so we see the new model.
 		viewer.viewAll ( { animate: false } );
 
 		// Render so we see the new model.
 		viewer.requestRender();
-	},
-	[ getViewer ] );
+	}, [
+		boxesScene,
+		viewer,
+	] );
 
 	//
 	// Handle when the mouse drops a file on this component.
@@ -243,9 +316,6 @@ export function Viewer ( { style }: IViewerProps )
 	{
 		// console.log ( "In handleNewDevice()" );
 
-		// Get the viewer.
-		const viewer = getViewer ( VIEWER_NAME );
-
 		// Handle no viewer.
 		if ( !viewer )
 		{
@@ -275,7 +345,7 @@ export function Viewer ( { style }: IViewerProps )
 
 		// console.log ( "Out handleNewDevice()" );
 	},
-	[ getViewer ] );
+	[ viewer ] );
 
 	//
 	// Initialize the device.
@@ -330,29 +400,29 @@ export function Viewer ( { style }: IViewerProps )
 			throw new Error ( "Invalid canvas element" );
 		}
 
-		// Try to get the viewer from the store.
-		let viewer = getViewer ( VIEWER_NAME );
-
-		// Make the viewer if we have to.
-		if ( !viewer )
+		// Return the existing viewer if we have it.
+		if ( viewer )
 		{
-			viewer = new InternalViewer ( { canvas: canvas.current } );
-			setViewer ( VIEWER_NAME, viewer );
-			console.log ( `Internal viewer ${viewer.id} created` );
-
-			// Build the scene.
-			viewer.modelScene = buildTestScene();
-			viewer.viewAll ( { animate: false } );
+			return viewer;
 		}
+
+		// Make the viewer.
+		const newViewer = new InternalViewer ( { canvas: canvas.current } );
+		setViewer ( VIEWER_NAME, newViewer );
+		console.log ( `Internal viewer ${newViewer.id} created` );
+
+		// Build the scene.
+		newViewer.modelScene = buildTestScene();
+		newViewer.viewAll ( { animate: false } );
 
 		// console.log ( "Out getOrCreateViewer()" );
 
 		// Return the viewer.
-		return viewer;
+		return newViewer;
 	}, [
 		buildTestScene,
-		getViewer,
 		setViewer,
+		viewer,
 	] );
 
 	//
@@ -395,8 +465,7 @@ export function Viewer ( { style }: IViewerProps )
 		await initDevice();
 
 		// Get the viewer or make it if we have to.
-		const viewer = getOrCreateViewer();
-		viewer.requestRender();
+		getOrCreateViewer().requestRender();
 
 		// We are done mounting.
 		isMounting.current = false;
@@ -487,7 +556,10 @@ export function Viewer ( { style }: IViewerProps )
 	//
 	const renderNotSupported = useCallback ( () =>
 	{
-		if ( true === supported )
+		// There are 3 states, true, false, and unknown (null). Do it this way
+		// because we only want to see the message if it's not supported.
+		// If it's still being figured out (i.e., null) then do nothing.
+		if ( false !== supported )
 		{
 			return null;
 		}

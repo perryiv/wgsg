@@ -15,7 +15,7 @@
 import { useTheme } from "@mui/material";
 import { Button } from "./Button";
 import { Panel } from "./Panel";
-import { useViewerStore } from "../State";
+import { useViewerState, useViewerStore } from "../State";
 import { Viewer, VIEWER_NAME } from "./Viewer";
 import {
 	useCallback,
@@ -58,9 +58,13 @@ const defaultRenderGraphInfo: IRenderGraphInfo = {
 export function App()
 {
 	// Get state.
-	const viewers = useViewerStore ( ( state ) => state.viewers );
+	const { getViewer } = useViewerStore ( ( state ) => state );
 	const [ count, setCount ] = useState ( 0 );
 	const [ showStats, setShowStats ] = useState ( false );
+	const { getBoundingBoxesVisible, setBoundingBoxesVisible } = useViewerState ( ( state ) => state );
+
+	// Get the current viewer.
+	const viewer = getViewer ( VIEWER_NAME );
 
 	// Get the application state.
 	const { palette } = useTheme();
@@ -96,21 +100,18 @@ export function App()
 	//
 	const getRenderGraphInfo = useCallback ( () =>
 	{
-		const viewer = viewers.get ( VIEWER_NAME );
-
 		return ( ( viewer )
 			? viewer.cullVisitor.renderGraphInfo
 			: defaultRenderGraphInfo
 		);
 	},
-	[ viewers ] );
+	[ viewer ] );
 
 	//
 	// Handle the "allow animations" button.
 	//
 	const handleAllowAnimations = useCallback ( () =>
 	{
-		const viewer = viewers.get ( VIEWER_NAME );
 		if ( viewer )
 		{
 			const { animations } = viewer.options;
@@ -119,70 +120,70 @@ export function App()
 			console.log ( `Allow animations: ${animations.allow}` );
 		}
 	},
-	[ count, viewers ] );
+	[ count, viewer ] );
 
 	//
 	// Handle the trackball mode button.
 	//
 	const handleTrackballMode = useCallback ( () =>
 	{
-		const viewer = viewers.get ( VIEWER_NAME );
-		if ( viewer )
+		if ( !viewer )
 		{
-			const { navBase: trackball } = viewer;
-			if ( trackball instanceof Trackball )
-			{
-				trackball.mode = "track_ball";
-				setCount ( count + 1 );
-			}
+			return;
+		}
+
+		const { navBase: trackball } = viewer;
+		if ( trackball instanceof Trackball )
+		{
+			trackball.mode = "track_ball";
+			setCount ( count + 1 );
 		}
 	},
-	[ count, viewers ] );
+	[ count, viewer ] );
 
 	//
 	// Handle the turntable mode button.
 	//
 	const handleTurntableMode = useCallback ( () =>
 	{
-		const viewer = viewers.get ( VIEWER_NAME );
-		if ( viewer )
+		if ( !viewer )
 		{
-			const { navBase: trackball } = viewer;
-			if ( trackball instanceof Trackball )
-			{
-				trackball.mode = "turn_table";
-				setCount ( count + 1 );
-			}
+			return;
+		}
+
+		const { navBase: trackball } = viewer;
+		if ( trackball instanceof Trackball )
+		{
+			trackball.mode = "turn_table";
+			setCount ( count + 1 );
 		}
 	},
-	[ count, viewers ] );
+	[ count, viewer ] );
 
 	//
 	// Render the 3D viewer.
 	//
 	const handleViewerRender = useCallback ( () =>
 	{
-		const viewer = viewers.get ( VIEWER_NAME );
 		if ( viewer )
 		{
 			viewer.requestRender();
 		}
 	},
-	[ viewers ] );
+	[ viewer ] );
 
 	//
 	// Reset the viewer's camera.
 	//
 	const handleViewerReset = useCallback ( () =>
 	{
-		const viewer = viewers.get ( VIEWER_NAME );
 		if ( viewer )
 		{
 			viewer.viewAll ( { resetRotation: true } );
 			viewer.requestRender();
 		}
 	},
-	[ viewers ] );
+	[ viewer ] );
 
 	//
 	// Simulate a lost device.
@@ -210,6 +211,18 @@ export function App()
 	[] );
 
 	//
+	// Handle the show bounding boxes button.
+	//
+	const handleShowBoundingBoxes = useCallback ( () =>
+	{
+		const current = getBoundingBoxesVisible();
+		setBoundingBoxesVisible ( !current );
+	}, [
+		getBoundingBoxesVisible,
+		setBoundingBoxesVisible,
+	] );
+
+	//
 	// Called when the component mounts.
 	//
 	useEffect ( () =>
@@ -217,7 +230,6 @@ export function App()
 		// console.log ( "App component mounted" );
 
 		// When the viewer renders we want to re-render this component.
-		const viewer = viewers.get ( VIEWER_NAME );
 		if ( viewer )
 		{
 			viewer.clientListeners.add ( "post_render", () =>
@@ -231,7 +243,7 @@ export function App()
 			// console.log ( "App component unmounted" );
 		} );
 	},
-	[ viewers ] );
+	[ viewer ] );
 
 	// console.log ( "Rendering app" );
 
@@ -253,8 +265,6 @@ export function App()
 	//
 	const renderPanel1 = useCallback ( () =>
 	{
-		const viewer = viewers.get ( VIEWER_NAME );
-
 		// If there's no viewer then do not render the panel.
 		if ( !viewer )
 		{
@@ -312,6 +322,12 @@ export function App()
 					>
 						Render stats
 					</Button>
+					<Button
+						onClick = { handleShowBoundingBoxes }
+						value = { getBoundingBoxesVisible() }
+					>
+						Bounding boxes
+					</Button>
 					{ verticalSpace() }
 					<div
 						style = { {
@@ -328,7 +344,9 @@ export function App()
 		);
 	}, [
 		buildTimeStamp,
+		getBoundingBoxesVisible,
 		handleAllowAnimations,
+		handleShowBoundingBoxes,
 		handleShowStats,
 		handleSimulateDeviceLost,
 		handleTrackballMode,
@@ -338,7 +356,7 @@ export function App()
 		panelBackground,
 		showStats,
 		verticalSpace,
-		viewers,
+		viewer,
 	] );
 
 	//
@@ -346,8 +364,6 @@ export function App()
 	//
 	const renderPanel2 = useCallback ( () =>
 	{
-		const viewer = viewers.get ( VIEWER_NAME );
-
 		// If there's no viewer then do not render the panel.
 		if ( !viewer )
 		{
@@ -426,7 +442,7 @@ export function App()
 		getRenderGraphInfo,
 		panelBackground,
 		showStats,
-		viewers,
+		viewer,
 	] );
 
 	//
