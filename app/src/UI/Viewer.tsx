@@ -13,8 +13,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { buildSceneSpheres } from "../Tools";
-import { Card, LinearProgress, Paper } from "@mui/material";
 import { useViewerState, useViewerStore } from "../State";
+import CloseIcon from "@mui/icons-material/Close";
+import {
+	Card,
+	IconButton,
+	LinearProgress,
+	Paper,
+} from "@mui/material";
 import {
 	CSSProperties,
 	DragEvent,
@@ -56,11 +62,6 @@ export const VIEWER_NAME = "main_viewer";
 export interface IViewerProps
 {
 	style?: CSSProperties;
-}
-
-interface ILoader
-{
-	reader: ( Reader | null );
 }
 
 
@@ -119,7 +120,7 @@ export function Viewer ( { style }: IViewerProps )
 	const { getViewer, setViewer } = useViewerStore ( ( state ) => state );
 	const canvas = useRef < HTMLCanvasElement | null > ( null );
 	const isMounting = useRef ( false );
-	const loader = useRef < ILoader > ( { reader: null } );
+	const loader = useRef < Reader > ( null );
 
 	// Get the viewer.
 	const viewer = getViewer ( VIEWER_NAME );
@@ -244,7 +245,7 @@ export function Viewer ( { style }: IViewerProps )
 		reader.progress = throttle ( ( value: number, total: number ): boolean =>
 		{
 			// Did the reader change?
-			if ( reader !== loader.current.reader )
+			if ( reader !== loader.current )
 			{
 				// This is supposed to stop the reader.
 				return false;
@@ -281,7 +282,7 @@ export function Viewer ( { style }: IViewerProps )
 		let model: ( SceneNode | null ) = null;
 
 		// Set the reader that we are now using.
-		loader.current = { reader };
+		loader.current = reader;
 
 		try
 		{
@@ -355,7 +356,7 @@ export function Viewer ( { style }: IViewerProps )
 		}
 
 		// Stop any previous file reading.
-		loader.current = { reader: null };
+		loader.current = null;
 
 		// Just read the first file.
 		const file = files[0];
@@ -367,6 +368,19 @@ export function Viewer ( { style }: IViewerProps )
 	}, [
 		handleFileRead
 	] );
+
+	//
+	// Handle the progress bar's close button being pressed
+	//
+	const handleProgressBarClose = useCallback ( () =>
+	{
+		// This is supposed to stop the reader.
+		loader.current = null;
+
+		// Hide the progress bar.
+		setProgress ( 0 );
+	},
+	[] );
 
 	//
 	// Handle getting or creating the viewer.
@@ -569,9 +583,22 @@ export function Viewer ( { style }: IViewerProps )
 				>
 					{ value.toFixed ( 1 ) } %
 				</span>
+				<IconButton
+					size = "small"
+					onClick = { handleProgressBarClose }
+				>
+					<CloseIcon
+						style = { {
+							fontSize: "small",
+						} }
+						sx = { {
+							color: "error.main",
+						} }
+					/>
+				</IconButton>
 			</Paper>
 		);
-	}, [] );
+	}, [ handleProgressBarClose ] );
 
 	//
 	// Render a message if WebGPU is not supported.
