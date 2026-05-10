@@ -14,6 +14,7 @@
 
 import { addReader, ReaderFactory as Factory } from "../Reader";
 import { BinaryReader } from "./STL/Binary";
+import { Cancelled } from "../Cancelled";
 import { Common as BaseClass } from "./STL/Common";
 import { Node as SceneNode } from "../../Scene/Nodes";
 import { TextReader } from "./STL/Text";
@@ -105,7 +106,7 @@ class STL extends BaseClass
 			} )
 			.catch ( ( error ) =>
 			{
-				reject ( ( error instanceof Error )
+				reject ( ( ( error instanceof Error ) || ( error instanceof Cancelled ) )
 					? error
 					: ( new Error ( String ( error ) ) )
 				);
