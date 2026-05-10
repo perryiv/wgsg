@@ -12,6 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Cancelled } from "../../Cancelled";
 import { Color, DEVELOPER_BUILD } from "../../../Tools";
 import { Common as BaseClass } from "./Common";
 import { Group, Node as SceneNode } from "../../../Scene/Nodes";
@@ -311,8 +312,13 @@ export class BinaryReader extends BaseClass
 						indices[indexCount] = indexCount++;
 						indices[indexCount] = indexCount++;
 
-						// Report progress.
-						onProgress ( triangleCount, numTriangles );
+						// Report progress and check to see if reading was cancelled.
+						if ( false === onProgress ( triangleCount, numTriangles ) )
+						{
+							reader.abort();
+							reject ( new Cancelled ( "File reading was cancelled by the progress callback" ) );
+							return;
+						}
 
 						// We have processed another triangle.
 						triangleCount++;
@@ -343,7 +349,11 @@ export class BinaryReader extends BaseClass
 						) );
 
 						// Send the final progress notification.
-						onProgress ( numTriangles, numTriangles );
+						if ( false === onProgress ( numTriangles, numTriangles ) )
+						{
+							reject ( new Error ( "File reading was cancelled by the progress callback" ) );
+							return;
+						}
 
 						// To speed things up later, calculate the bounds now.
 						void scene.bounds;

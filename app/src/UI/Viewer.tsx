@@ -15,7 +15,6 @@
 import { buildSceneSpheres } from "../Tools";
 import { Card, LinearProgress, Paper } from "@mui/material";
 import { useViewerState, useViewerStore } from "../State";
-import throttle from "throttleit";
 import {
 	CSSProperties,
 	DragEvent,
@@ -32,7 +31,10 @@ import {
 	getNextId,
 	getReader,
 	Node as SceneNode,
+	Reader,
+	throttle,
 	Viewer as InternalViewer,
+	Cancelled,
 } from "../../../lib/src";
 
 
@@ -55,6 +57,12 @@ export interface IViewerProps
 {
 	style?: CSSProperties;
 }
+
+interface ILoader
+{
+	reader: ( Reader | null );
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -103,14 +111,15 @@ const handleNewDevice = ( viewer: InternalViewer ) =>
 export function Viewer ( { style }: IViewerProps )
 {
 	// Get state.
-	const [ id, ] = useState < number > ( getNextId ( "Viewer Component" ) );
-	const canvas = useRef < HTMLCanvasElement | null > ( null );
-	const isMounting = useRef ( false );
 	const [ boxesScene, setBoxesScene ] = useState < SceneNode | null > ( null );
+	const [ id, ] = useState < number > ( getNextId ( "Viewer Component" ) );
 	const [ progress, setProgress ] = useState < number > ( 0 );
 	const [ supported, setSupported ] = useState < boolean | null > ( null );
-	const { getViewer, setViewer } = useViewerStore ( ( state ) => state );
 	const { getBoundingBoxesVisible } = useViewerState ( ( state ) => state );
+	const { getViewer, setViewer } = useViewerStore ( ( state ) => state );
+	const canvas = useRef < HTMLCanvasElement | null > ( null );
+	const isMounting = useRef ( false );
+	const loader = useRef < ILoader > ( { reader: null } );
 
 	// Get the viewer.
 	const viewer = getViewer ( VIEWER_NAME );
@@ -232,8 +241,15 @@ export function Viewer ( { style }: IViewerProps )
 		}
 
 		// Attach the progress callback.
-		reader.progress = throttle ( ( value: number, total: number ) =>
+		reader.progress = throttle ( ( value: number, total: number ): boolean =>
 		{
+			// Did the reader change?
+			if ( reader !== loader.current.reader )
+			{
+				// This is supposed to stop the reader.
+				return false;
+			}
+
 			// Handle values that are out of range.
 			if ( ( value < 0 ) || ( total <= 0 ) || ( value > total ) )
 			{
@@ -264,6 +280,9 @@ export function Viewer ( { style }: IViewerProps )
 		// Initalize the model.
 		let model: ( SceneNode | null ) = null;
 
+		// Set the reader that we are now using.
+		loader.current = { reader };
+
 		try
 		{
 			// Read the file.
@@ -271,7 +290,14 @@ export function Viewer ( { style }: IViewerProps )
 		}
 		catch ( error )
 		{
-			console.error ( `Error reading file ${file.name}:`, error );
+			if ( error instanceof Cancelled )
+			{
+				console.log ( `Reading was cancelled for file: ${file.name}` );
+			}
+			else
+			{
+				console.error ( `Error reading file ${file.name}:`, error );
+			}
 			return;
 		}
 
@@ -328,15 +354,19 @@ export function Viewer ( { style }: IViewerProps )
 			return;
 		}
 
-		// Loop through the files.
-		for ( const file of files )
-		{
-			console.log ( "Dropped file name:", file.name );
+		// Stop any previous file reading.
+		loader.current = { reader: null };
 
-			// Handle reading the file. We don't need to wait for it.
-			void handleFileRead ( file );
-		}
-	}, [ handleFileRead ] );
+		// Just read the first file.
+		const file = files[0];
+
+		console.log ( "Dropped file name:", file.name );
+
+		// Handle reading the file. We don't need to wait for it.
+		void handleFileRead ( file );
+	}, [
+		handleFileRead
+	] );
 
 	//
 	// Handle getting or creating the viewer.

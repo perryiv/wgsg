@@ -20,6 +20,7 @@ import {
 	Group,
 	Node as SceneNode,
 } from "../../../Scene/Nodes";
+import { Cancelled } from "../../Cancelled";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -90,7 +91,7 @@ export class TextReader extends BaseClass
 			const scene = new Group();
 
 			// This function gets called for every line.
-			const innerStep = ( results: ParseStepResult < string[] > ) =>
+			const innerStep = ( results: ParseStepResult < string[] >, parser: Parser ) =>
 			{
 				++rowCount;
 
@@ -124,7 +125,12 @@ export class TextReader extends BaseClass
 					throw new Error ( `Row ${rowCount} array does not contain one string` );
 				}
 
-				onProgress ( byteCount, size );
+				if ( false === onProgress ( byteCount, size ) )
+				{
+					parser.abort();
+					reject ( new Cancelled ( "File reading was cancelled by the progress callback" ) );
+					return;
+				}
 
 				if ( line.length <= 0 )
 				{
@@ -311,7 +317,7 @@ export class TextReader extends BaseClass
 			{
 				try
 				{
-					innerStep ( results );
+					innerStep ( results, parser );
 				}
 				catch ( error )
 				{
@@ -333,7 +339,11 @@ export class TextReader extends BaseClass
 				) );
 
 				// Send the final progress notification.
-				onProgress ( size, size );
+				if ( false === onProgress ( size, size ) )
+				{
+					reject ( new Cancelled ( "File reading was cancelled by the progress callback" ) );
+					return;
+				}
 
 				// We succeeded.
 				resolve ( scene );

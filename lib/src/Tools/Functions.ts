@@ -12,6 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { IProgressCallback } from "../Types";
 import { DEVELOPER_BUILD } from "./Constants";
 
 
@@ -101,4 +102,29 @@ export function getNumElements < T extends { length: Readonly<number> } > ( arra
 
 	// Return the number of elements.
 	return ( array.length / dimension );
+}
+
+
+/**
+ * Throttle the given progress callback.
+ * @param {IProgressCallback} func - The progress callback to throttle.
+ * @param {number} delay - The delay in milliseconds.
+ * @returns {IProgressCallback} The throttled progress callback.
+ */
+export function throttle ( func: IProgressCallback, delay: Readonly<number> ) : IProgressCallback
+{
+	let lastCall = 0;
+
+	return ( ( value: number, total: number ) : boolean =>
+	{
+		const now = Date.now();
+
+		if ( ( now - lastCall ) >= delay )
+		{
+			lastCall = now;
+			return func ( value, total );
+		}
+
+		return true; // Keep going.
+	} );
 }
