@@ -13,8 +13,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { buildSceneSpheres } from "../Tools";
-import { Card, LinearProgress, Paper } from "@mui/material";
 import { useViewerState, useViewerStore } from "../State";
+import CloseIcon from "@mui/icons-material/Close";
+import {
+	Card,
+	IconButton,
+	LinearProgress,
+	Paper,
+} from "@mui/material";
 import {
 	CSSProperties,
 	DragEvent,
@@ -369,6 +375,19 @@ export function Viewer ( { style }: IViewerProps )
 	] );
 
 	//
+	// Handle the progress bar's close button being pressed
+	//
+	const handleProgressBarClose = useCallback ( () =>
+	{
+		// This is supposed to stop the reader.
+		loader.current.reader = null;
+
+		// Hide the progress bar.
+		setProgress ( 0 );
+	},
+	[] );
+
+	//
 	// Handle getting or creating the viewer.
 	//
 	const getOrCreateViewer = useCallback ( () =>
@@ -569,6 +588,19 @@ export function Viewer ( { style }: IViewerProps )
 				>
 					{ value.toFixed ( 1 ) } %
 				</span>
+				<IconButton
+					size = "small"
+					onClick = { handleProgressBarClose }
+				>
+					<CloseIcon
+						style = { {
+							fontSize: "small",
+						} }
+						sx = { {
+							color: "error.main",
+						} }
+					/>
+				</IconButton>
 			</Paper>
 		);
 	}, [] );
