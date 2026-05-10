@@ -12,9 +12,25 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Base } from "../Base/Base";
+import { Base as BaseClass } from "../Base/Base";
+import { DEFAULT_FAR_DISTANCE, DEFAULT_NEAR_DISTANCE } from "../Tools";
 import { Sphere } from "../Math";
 import type { IMatrix44, IViewport } from "../Types";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Types used in projections.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export interface IProjectionNearFar
+{
+	near: number;
+	far: number;
+}
+
+export type IUpdateNearFarCallback = ( values: IProjectionNearFar ) => IProjectionNearFar;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -24,8 +40,12 @@ import type { IMatrix44, IViewport } from "../Types";
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export abstract class Projection extends Base
+export abstract class Projection extends BaseClass
 {
+	#near = DEFAULT_NEAR_DISTANCE;
+	#far = DEFAULT_FAR_DISTANCE;
+	#onUpdateNearFar: ( IUpdateNearFarCallback | null ) = null;
+
 	/**
 	 * Construct the class.
 	 * @class
@@ -52,13 +72,55 @@ export abstract class Projection extends Base
 	 * Get the near distance.
 	 * @returns {number} The near distance.
 	 */
-	public abstract get near() : number;
+	public get near() : number
+	{
+		return this.#near;
+	}
+
+	/**
+	 * Set the near distance.
+	 * @param {number} near - The near distance.
+	 */
+	public set near ( near: number )
+	{
+		this.#near = near;
+	}
 
 	/**
 	 * Get the far distance.
 	 * @returns {number} The far distance.
 	 */
-	public abstract get far() : number;
+	public get far() : number
+	{
+		return this.#far;
+	}
+
+	/**
+	 * Set the far distance.
+	 * @param {number} far - The far distance.
+	 */
+	public set far ( far: number )
+	{
+		this.#far = far;
+	}
+
+	/**
+	 * Get the callback that is called when the near and far distances are updated.
+	 * @returns {IUpdateNearFarCallback | null} The callback that is called when the near and far distances are updated.
+	 */
+	public get onUpdateNearFar() : ( IUpdateNearFarCallback | null )
+	{
+		return this.#onUpdateNearFar;
+	}
+
+	/**
+	 * Set the callback that is called when the near and far distances are updated.
+	 * @param {IUpdateNearFarCallback | null} callback - The callback that is called when the near and far distances are updated.
+	 */
+	public set onUpdateNearFar ( callback: ( IUpdateNearFarCallback | null ) )
+	{
+		this.#onUpdateNearFar = callback;
+	}
 
 	/**
 	 * Let the projection know about the new viewport.

@@ -13,10 +13,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { IMatrix44, IViewport } from "../Types";
-import { isPositiveFiniteNumber, Sphere } from "../Math";
 import { makeIdentity } from "../Tools";
 import { mat4 } from "gl-matrix";
 import { Projection } from "./Projection";
+import {
+	isFiniteNumber,
+	isPositiveFiniteNumber,
+	Sphere,
+} from "../Math";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -32,8 +36,6 @@ export class Orthographic extends Projection
 	#bottom = -100;
 	#left   = -100;
 	#right  =  100;
-	#near   = -1;
-	#far    =  1;
 
 	/**
 	 * Construct the class.
@@ -55,18 +57,125 @@ export class Orthographic extends Projection
 	}
 
 	/**
+	 * Get the top value.
+	 * @returns {number} The top value.
+	 */
+	public get top() : number
+	{
+		return this.#top;
+	}
+
+	/**
+	 * Set the top value.
+	 * @param {number} t - The new top value.
+	 */
+	public set top ( t: number )
+	{
+		if ( false === isFiniteNumber ( t ) )
+		{
+			throw new Error ( `Given top value '${t}' is not a finite number` );
+		}
+		this.#top = t;
+	}
+
+	/**
+	 * Get the bottom value.
+	 * @returns {number} The bottom value.
+	 */
+	public get bottom() : number
+	{
+		return this.#bottom;
+	}
+
+	/**
+	 * Set the bottom value.
+	 * @param {number} b - The new bottom value.
+	 */
+	public set bottom ( b: number )
+	{
+		if ( false === isFiniteNumber ( b ) )
+		{
+			throw new Error ( `Given bottom value '${b}' is not a finite number` );
+		}
+		this.#bottom = b;
+	}
+
+	/**
+	 * Get the left value.
+	 * @returns {number} The left value.
+	 */
+	public get left() : number
+	{
+		return this.#left;
+	}
+
+	/**
+	 * Set the left value.
+	 * @param {number} l - The new left value.
+	 */
+	public set left ( l: number )
+	{
+		if ( false === isFiniteNumber ( l ) )
+		{
+			throw new Error ( `Given left value '${l}' is not a finite number` );
+		}
+		this.#left = l;
+	}
+
+	/**
+	 * Get the right value.
+	 * @returns {number} The right value.
+	 */
+	public get right() : number
+	{
+		return this.#right;
+	}
+
+	/**
+	 * Set the right value.
+	 * @param {number} r - The new right value.
+	 */
+	public set right ( r: number )
+	{
+		if ( false === isFiniteNumber ( r ) )
+		{
+			throw new Error ( `Given right value '${r}' is not a finite number` );
+		}
+		this.#right = r;
+	}
+
+	/**
+	 * Get the near distance.
+	 * @returns {number} The near distance.
+	 */
+	public override get near() : number
+	{
+		// Prevent this from quietly failing:
+		// const { near } = this;
+		// Just inheriting the getter function is not enough.
+		return super.near;
+	}
+
+	/**
+	 * Get the far distance.
+	 * @returns {number} The far distance.
+	 */
+	public override get far() : number
+	{
+		// Prevent this from quietly failing:
+		// const { far } = this;
+		// Just inheriting the getter function is not enough.
+		return super.far;
+	}
+
+	/**
 	 * Return the projection matrix.
 	 * @returns {IMatrix44} The projection matrix.
 	 */
 	public override get matrix() : Readonly<IMatrix44>
 	{
 		// Shortcuts.
-		const top = this.#top;
-		const bottom = this.#bottom;
-		const left = this.#left;
-		const right = this.#right;
-		const near = this.#near;
-		const far = this.#far;
+		const { top, bottom, left, right, near, far } = this;
 
 		// Make sure near is closer than far.
 		if ( near >= far )
@@ -104,24 +213,6 @@ export class Orthographic extends Projection
 	public override updateNearFar ( sphere: Readonly<Sphere> ) : void
 	{
 		// TODO: Update the distances.
-	}
-
-	/**
-	 * Get the near distance.
-	 * @returns {number} The near distance.
-	 */
-	public override get near() : number
-	{
-		return this.#near;
-	}
-
-	/**
-	 * Get the far distance.
-	 * @returns {number} The far distance.
-	 */
-	public override get far() : number
-	{
-		return this.#far;
 	}
 
 	/**

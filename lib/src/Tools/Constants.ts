@@ -44,5 +44,6 @@ export const KEEP_PERFORMANCE_INFO: boolean = (
 // Constants used in projections.
 export const MIN_NEAR_DISTANCE = ( 0.001 );
 export const MAX_FAR_DISTANCE  = ( 1e6 );
-export const DEFAULT_NEAR_DISTANCE = 0.01;
+export const MAX_FAR_OVER_NEAR_RATIO = ( 1e4 );
+export const DEFAULT_NEAR_DISTANCE = 0.1;
 export const DEFAULT_FAR_DISTANCE = 1e4;

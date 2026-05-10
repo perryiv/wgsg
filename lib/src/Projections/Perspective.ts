@@ -18,9 +18,8 @@ import { mat4 } from "gl-matrix";
 import { Projection } from "./Projection";
 import type { IMatrix44, IViewport } from "../Types";
 import {
-	DEFAULT_FAR_DISTANCE,
-	DEFAULT_NEAR_DISTANCE,
 	MAX_FAR_DISTANCE,
+	MAX_FAR_OVER_NEAR_RATIO,
 	MIN_NEAR_DISTANCE,
 } from "../Tools/Constants";
 
@@ -51,8 +50,6 @@ export class Perspective extends Projection
 {
 	#fov = 45;
 	#aspect = 1;
-	#near = DEFAULT_NEAR_DISTANCE;
-	#far = DEFAULT_FAR_DISTANCE;
 
 	/**
 	 * Construct the class.
@@ -96,10 +93,10 @@ export class Perspective extends Projection
 
 		// Initialize the new values.
 		// If the property is undefined then we use the existing value.
-		const fov    = ( ( "undefined" !== typeof ( input.fov    ) ) ? input.fov    : this.#fov    );
-		const aspect = ( ( "undefined" !== typeof ( input.aspect ) ) ? input.aspect : this.#aspect );
-		const near   = ( ( "undefined" !== typeof ( input.near   ) ) ? input.near   : this.#near   );
-		const far    = ( ( "undefined" !== typeof ( input.far    ) ) ? input.far    : this.#far    );
+		const fov    = ( ( "undefined" !== typeof ( input.fov    ) ) ? input.fov    : this.fov    );
+		const aspect = ( ( "undefined" !== typeof ( input.aspect ) ) ? input.aspect : this.aspect );
+		const near   = ( ( "undefined" !== typeof ( input.near   ) ) ? input.near   : this.near   );
+		const far    = ( ( "undefined" !== typeof ( input.far    ) ) ? input.far    : this.far    );
 
 		// When we get to here TypeScript thinks that all the values are numbers.
 		// Do the following run-time checks anyway because this function is
@@ -161,10 +158,25 @@ export class Perspective extends Projection
 	public override get matrix() : Readonly<IMatrix44>
 	{
 		// Shortcuts.
-		const fov = this.#fov;
-		const aspect = this.#aspect;
-		const near = this.#near;
-		const far = this.#far;
+		const { fov, aspect, near, far } = this;
+
+		// Make sure they are all valid numbers.
+		if ( false === isPositiveFiniteNumber ( fov ) )
+		{
+			throw new Error ( `Invalid field-of-view: ${fov}` );
+		}
+		if ( false === isPositiveFiniteNumber ( aspect ) )
+		{
+			throw new Error ( `Invalid aspect ratio: ${aspect}` );
+		}
+		if ( false === isPositiveFiniteNumber ( near ) )
+		{
+			throw new Error ( `Invalid near distance: ${near}` );
+		}
+		if ( false === isPositiveFiniteNumber ( far ) )
+		{
+			throw new Error ( `Invalid far distance: ${far}` );
+		}
 
 		// Make sure near is closer than far.
 		if ( near >= far )
@@ -207,8 +219,24 @@ export class Perspective extends Projection
 		// console.log ( "Min and max z:", minZ, maxZ );
 
 		// Get the minimum and maximum z values.
-		const near = Math.max ( minZ, MIN_NEAR_DISTANCE );
-		const far  = Math.min ( maxZ, MAX_FAR_DISTANCE );
+		let near =  Math.max ( minZ, MIN_NEAR_DISTANCE );
+		let far =   Math.min ( maxZ, MAX_FAR_DISTANCE );
+
+		// Do not let the near distance become too small compared to the far.
+		// Otherwise, we will have z-fighting.
+		if ( ( far / near ) > MAX_FAR_OVER_NEAR_RATIO )
+		{
+			near = ( far / MAX_FAR_OVER_NEAR_RATIO );
+		}
+
+		// Is there a callback?
+		if ( this.onUpdateNearFar )
+		{
+			// The callback gets a chance to change the values.
+			const { near: n2, far: f2 } = this.onUpdateNearFar ( { near, far } );
+			near = n2;
+			far = f2;
+		}
 
 		// Did we get it wrong?
 		if ( ( near <= 0 ) || ( far <= 0 ) || ( near >= far ) )
@@ -275,16 +303,19 @@ export class Perspective extends Projection
 	 * Get the near distance.
 	 * @returns {number} The near distance.
 	 */
-	public get near() : number
+	public override get near() : number
 	{
-		return this.#near;
+		// Prevent this from quietly failing:
+		// const { near } = this;
+		// Just inheriting the getter function is not enough.
+		return super.near;
 	}
 
 	/**
 	 * Set the near distance.
 	 * @param {number} near - The near distance.
 	 */
-	public set near ( near: Readonly<number> )
+	public override set near ( near: Readonly<number> )
 	{
 		if ( false === isPositiveFiniteNumber ( near ) )
 		{
@@ -292,23 +323,26 @@ export class Perspective extends Projection
 		}
 
 		// Do not let the near distance become smaller than the minimum.
-		this.#near = ( ( near >= MIN_NEAR_DISTANCE ) ? near : MIN_NEAR_DISTANCE );
+		super.near = ( ( near >= MIN_NEAR_DISTANCE ) ? near : MIN_NEAR_DISTANCE );
 	}
 
 	/**
 	 * Get the far distance.
 	 * @returns {number} The far distance.
 	 */
-	public get far() : number
+	public override get far() : number
 	{
-		return this.#far;
+		// Prevent this from quietly failing:
+		// const { far } = this;
+		// Just inheriting the getter function is not enough.
+		return super.far;
 	}
 
 	/**
 	 * Set the far distance.
 	 * @param {number} far - The far distance.
 	 */
-	public set far ( far: Readonly<number> )
+	public override set far ( far: Readonly<number> )
 	{
 		if ( false === isPositiveFiniteNumber ( far ) )
 		{
@@ -316,7 +350,7 @@ export class Perspective extends Projection
 		}
 
 		// Do not let the far distance become larger than the maximum.
-		this.#far = ( ( far <= MAX_FAR_DISTANCE ) ? far : MAX_FAR_DISTANCE );
+		super.far = ( ( far <= MAX_FAR_DISTANCE ) ? far : MAX_FAR_DISTANCE );
 	}
 
 	/**
