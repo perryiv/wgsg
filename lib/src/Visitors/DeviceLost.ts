@@ -12,14 +12,29 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Base as BaseObject } from "../Base";
 import { Visitor as BaseClass } from "./Visitor";
 import {
 	Geometry,
 	Group,
-	Node,
+	Node as SceneNode,
 	Shape,
 	type IPrimitiveList,
 } from "../Scene";
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Return a key that will be unique for the given type.
+ * @param {BaseObject} base - The object to get the key for.
+ * @returns {string} The key.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+const makeKeyForType = ( base: BaseObject ) : string =>
+{
+	return `${base.type}.${base.id}`;
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -31,8 +46,8 @@ import {
 
 export class DeviceLost extends BaseClass
 {
-	#states = new Set < number > ();
-	#shaders = new Set < number > ();
+	#states  = new Set < string > ();
+	#shaders = new Set < string > ();
 
 	/**
 	 * Construct the class.
@@ -54,9 +69,9 @@ export class DeviceLost extends BaseClass
 
 	/**
 	 * Handle when the device is lost.
-	 * @param {Node} scene - The scene node.
+	 * @param {SceneNode} scene - The scene node.
 	 */
-	public handle ( scene: Node ) : void
+	public handle ( scene: SceneNode ) : void
 	{
 		// Have the scene accept the visitor.
 		scene.accept ( this );
@@ -106,24 +121,38 @@ export class DeviceLost extends BaseClass
 		// Get the state.
 		const state = shape.state;
 
-		// There has to be a valid state that we have not seen before.
-		if ( ( state ) && ( false === states.has ( state.id ) ) )
+		// If there is a valid state ...
+		if ( state )
 		{
-			// Set this for next time.
-			states.add ( state.id );
+			// Make a unique key for this type.
+			const key1 = makeKeyForType ( state );
 
-			// Get the shader.
-			const shader = state.shader;
-
-			// There has to be a valid shader that we have not seen before.
-			if ( ( shader ) && ( false === shaders.has ( shader.id ) ) )
+			// If we have not seen this object before ...
+			if ( false === states.has ( key1 ) )
 			{
 				// Set this for next time.
-				shaders.add ( shader.id );
+				states.add ( key1 );
 
-				// Reset the shader. It will rebuild later when needed.
-				shader.reset();
-				console.log ( `Reset shader ${shader.id} module after device was lost` );
+				// Get the shader.
+				const shader = state.shader;
+
+				// If there is a valid shader ...
+				if ( shader )
+				{
+					// Make a unique key for this type.
+					const key2 = makeKeyForType ( shader );
+
+					// If we have not seen this object before ...
+					if ( false === shaders.has ( key2 ) )
+					{
+						// Set this for next time.
+						shaders.add ( key2 );
+
+						// Reset the shader. It will rebuild later when needed.
+						shader.reset();
+						console.log ( `Reset shader '${key2}' module after device was lost` );
+					}
+				}
 			}
 		}
 

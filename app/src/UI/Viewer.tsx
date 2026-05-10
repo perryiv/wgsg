@@ -67,6 +67,35 @@ export interface IViewerProps
 
 ///////////////////////////////////////////////////////////////////////////////
 //
+//	Handle when there is a new device.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+const handleNewDevice = ( viewer: InternalViewer ) =>
+{
+	// Tell the viewer to handle the new device.
+	viewer.handleNewDevice();
+
+	// Get the scene.
+	const { scene } = viewer;
+
+	// Handle no scene.
+	if ( !scene )
+	{
+		return;
+	}
+
+	// Visit the scene.
+	const visitor = new DeviceLost();
+	visitor.handle ( scene );
+
+	// Render again so that we see the rebuilt scene.
+	viewer.requestRender();
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
 //	Viewer component.
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -310,42 +339,43 @@ export function Viewer ( { style }: IViewerProps )
 	}, [ handleFileRead ] );
 
 	//
-	// Handle when there is a new device.
+	// Handle getting or creating the viewer.
 	//
-	const handleNewDevice = useCallback ( () =>
+	const getOrCreateViewer = useCallback ( () =>
 	{
-		// console.log ( "In handleNewDevice()" );
+		// console.log ( "In getOrCreateViewer()" );
 
-		// Handle no viewer.
-		if ( !viewer )
+		// This should never happen.
+		if ( !canvas.current )
 		{
-			// console.log ( "Out handleNewDevice(), no viewer" );
-			return;
+			throw new Error ( "Invalid canvas element" );
 		}
 
-		// Tell the viewer to handle the new device.
-		viewer.handleNewDevice();
-
-		// Get the scene.
-		const { scene } = viewer;
-
-		// Handle no scene.
-		if ( !scene )
+		// Return the existing viewer if we have it.
+		const existing = getViewer ( VIEWER_NAME );
+		if ( existing )
 		{
-			// console.log ( "Out handleNewDevice(), no scene" );
-			return;
+			return existing;
 		}
 
-		// Visit the scene.
-		const visitor = new DeviceLost();
-		visitor.handle ( scene );
+		// Make the viewer.
+		const newViewer = new InternalViewer ( { canvas: canvas.current } );
+		setViewer ( VIEWER_NAME, newViewer );
+		console.log ( `Internal viewer ${newViewer.id} created` );
 
-		// Render again so that we see the rebuilt scene.
-		viewer.requestRender();
+		// Build the scene.
+		newViewer.modelScene = buildTestScene();
+		newViewer.viewAll ( { animate: false } );
 
-		// console.log ( "Out handleNewDevice()" );
-	},
-	[ viewer ] );
+		// console.log ( "Out getOrCreateViewer()" );
+
+		// Return the viewer.
+		return newViewer;
+	}, [
+		buildTestScene,
+		getViewer,
+		setViewer,
+	] );
 
 	//
 	// Initialize the device.
@@ -382,48 +412,10 @@ export function Viewer ( { style }: IViewerProps )
 			await initDevice();
 
 			// This will rebuild the resources.
-			handleNewDevice();
+			handleNewDevice ( getOrCreateViewer() );
 		} );
 	},
-	[ handleNewDevice ] );
-
-	//
-	// Handle getting or creating the viewer.
-	//
-	const getOrCreateViewer = useCallback ( () =>
-	{
-		// console.log ( "In getOrCreateViewer()" );
-
-		// This should never happen.
-		if ( !canvas.current )
-		{
-			throw new Error ( "Invalid canvas element" );
-		}
-
-		// Return the existing viewer if we have it.
-		if ( viewer )
-		{
-			return viewer;
-		}
-
-		// Make the viewer.
-		const newViewer = new InternalViewer ( { canvas: canvas.current } );
-		setViewer ( VIEWER_NAME, newViewer );
-		console.log ( `Internal viewer ${newViewer.id} created` );
-
-		// Build the scene.
-		newViewer.modelScene = buildTestScene();
-		newViewer.viewAll ( { animate: false } );
-
-		// console.log ( "Out getOrCreateViewer()" );
-
-		// Return the viewer.
-		return newViewer;
-	}, [
-		buildTestScene,
-		setViewer,
-		viewer,
-	] );
+	[ getOrCreateViewer ] );
 
 	//
 	// Local function to handle when this component is mounted.
