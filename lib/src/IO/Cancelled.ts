@@ -1,19 +1,27 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Copyright (c) 2025, Perry L Miller IV
+//	Copyright (c) 2026, Perry L Miller IV
 //	All rights reserved.
 //	MIT License: https://opensource.org/licenses/mit-license.html
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
-//
-//	Export the modules in this directory.
-//
+/**
+ * Class representing a cancelled reader.
+ * @class
+ */
 ///////////////////////////////////////////////////////////////////////////////
 
-export * from "./Cancelled";
-export * from "./Reader";
-
-// Import the concrete readers to load them into memory. Do not export them.
-import "./Readers";
+export class Cancelled extends Error
+{
+	/**
+	 * Construct the class.
+	 * @param {string} [message] - An optional message for the error.
+	 */
+	public constructor ( message?: string )
+	{
+		super ( message );
+		this.name = "Cancelled";
+	}
+}
