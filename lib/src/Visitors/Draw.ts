@@ -88,6 +88,7 @@ export class Draw extends BaseClass
 	#commandEncoder: ( GPUCommandEncoder | null ) = null;
 	#geometry: ( Geometry | null ) = null;
 	#info: ( IRenderGraphInfo | null ) = null;
+	#device: ( number | null ) = null;
 
 	/**
 	 * Construct the class.
@@ -291,6 +292,18 @@ export class Draw extends BaseClass
 		{
 			console.warn ( "Cannot draw because the device is not valid" );
 			return;
+		}
+
+		// The first time in here we set the device id.
+		if ( null === this.#device )
+		{
+			this.#device = Device.instance.id;
+		}
+
+		// Make sure the current device is the same as the one we used before.
+		if ( this.#device !== Device.instance.id )
+		{
+			throw new Error ( `Device was ${this.#device} but now it is ${Device.instance.id}` );
 		}
 
 		// Shortcut.
