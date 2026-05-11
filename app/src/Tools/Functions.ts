@@ -37,10 +37,8 @@ import {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export const buildSceneSphere = ( sphere: Sphere ) =>
+export const buildSceneSphere = ( sphere: Sphere, edges: boolean ) =>
 {
-	const root = new Group();
-
 	const node = new SphereNode ( {
 		center: sphere.center,
 		radius: sphere.radius,
@@ -51,6 +49,13 @@ export const buildSceneSphere = ( sphere: Sphere ) =>
 		twoSided: false,
 		topology: "triangle-list"
 	} );
+
+	if ( false === edges )
+	{
+		return node;
+	}
+
+	const root = new Group();
 	root.addChild ( node );
 
 	const lines = buildTriangleEdges ( node );
@@ -81,18 +86,18 @@ export const buildSceneSpheres = () =>
 	{
 		const tr = new Transform();
 		tr.translate ( [ 10, 0, 0 ] );
-		tr.addChild ( buildSceneSphere ( new Sphere ( [ 0, 0, 0 ], radius ) ) );
-		tr.addChild ( buildSceneSphere ( new Sphere ( [ 3, 0, 0 ], radius ) ) );
+		tr.addChild ( buildSceneSphere ( new Sphere ( [ 0, 0, 0 ], radius ), true ) );
+		tr.addChild ( buildSceneSphere ( new Sphere ( [ 3, 0, 0 ], radius ), true ) );
 		root.addChild ( tr );
 	}
 
 	{
 		const tr = new Transform();
 		tr.translate ( [ 10, 3, 0 ] );
-		tr.addChild ( buildSceneSphere ( new Sphere ( [ 0, 0, 0 ], radius ) ) );
-		tr.addChild ( buildSceneSphere ( new Sphere ( [ 3, 0, 0 ], radius ) ) );
-		tr.addChild ( buildSceneSphere ( new Sphere ( [ 6, 0, 0 ], radius ) ) );
-		tr.addChild ( buildSceneSphere ( new Sphere ( [ 9, 0, 0 ], radius ) ) );
+		tr.addChild ( buildSceneSphere ( new Sphere ( [ 0, 0, 0 ], radius ), true ) );
+		tr.addChild ( buildSceneSphere ( new Sphere ( [ 3, 0, 0 ], radius ), true ) );
+		tr.addChild ( buildSceneSphere ( new Sphere ( [ 6, 0, 0 ], radius ), true ) );
+		tr.addChild ( buildSceneSphere ( new Sphere ( [ 9, 0, 0 ], radius ), true ) );
 		root.addChild ( tr );
 	}
 
