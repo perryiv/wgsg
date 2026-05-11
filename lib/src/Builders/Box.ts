@@ -12,11 +12,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Color, IDENTITY_MATRIX } from "../Tools";
+import { Color } from "../Tools";
 import { Multiply as BaseClass } from "../Visitors";
 import { SolidColor } from "../Shaders";
-import { vec3, vec4 } from "gl-matrix";
-import type { IMatrix44, IVector3, IVector4 } from "../Types";
+import { vec4 } from "gl-matrix";
+import type { IVector3, IVector4 } from "../Types";
 import {
 	Geometry,
 	Group,
@@ -35,7 +35,7 @@ import { Box } from "../Math";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-type IBoxMap = Map < number, Box >;
+type IBoxMap = Map < number, Readonly<Box> >;
 
 interface IBoxBuilderTopologyInput
 {
@@ -195,7 +195,7 @@ class BuildBoxes extends BaseClass
 	#points: number[] = [];
 	#colors: number[] = [];
 	#geom: ( Geometry | null ) = null;
-	#boxes: IBoxMap = new Map < number,Box > ();
+	#boxes: IBoxMap = new Map < number, Readonly<Box> > ();
 
 	/**
 	 * Construct the class.
@@ -265,9 +265,8 @@ class BuildBoxes extends BaseClass
 	 * Add the box.
 	 * @param {Box} box - The box to add.
 	 * @param {State | null} state - The state of the corresponding shape.
-	 * @param {IMatrix44} [viewMatrix] - The view matrix.
 	 */
-	protected addBox ( box: Readonly<Box>, state: ( Readonly<State> | null ), viewMatrix: Readonly<IMatrix44> ) : void
+	protected addBox ( box: Readonly<Box>, state: ( Readonly<State> | null ) ) : void
 	{
 		// Handle invalid box
 		if ( false === box.valid )
@@ -276,18 +275,7 @@ class BuildBoxes extends BaseClass
 		}
 
 		// Shortcuts.
-		const corners = { ...box.corners };
-
-		// Transform the corner points.
-		const { llb, llf, lrb, lrf, ulb, ulf, urb, urf } = corners;
-		vec3.transformMat4 ( llb as IVector3, llb, viewMatrix );
-		vec3.transformMat4 ( llf as IVector3, llf, viewMatrix );
-		vec3.transformMat4 ( lrb as IVector3, lrb, viewMatrix );
-		vec3.transformMat4 ( lrf as IVector3, lrf, viewMatrix );
-		vec3.transformMat4 ( ulb as IVector3, ulb, viewMatrix );
-		vec3.transformMat4 ( ulf as IVector3, ulf, viewMatrix );
-		vec3.transformMat4 ( urb as IVector3, urb, viewMatrix );
-		vec3.transformMat4 ( urf as IVector3, urf, viewMatrix );
+		const { llb, llf, lrb, lrf, ulb, ulf, urb, urf } = box.corners;
 
 		// Shortcuts.
 		const points = this.#points;
@@ -385,8 +373,15 @@ class BuildBoxes extends BaseClass
 		// Do this first to be consistent with the other visit methods.
 		super.visitShape ( shape );
 
+		// Transform the box to global space.
+		const box = shape.box.clone();
+		box.transform ( this.viewMatrix );
+
+		// Add our box to the map.
+		this.#boxes.set ( shape.id, box );
+
 		// Make a box for this shape.
-		this.addBox ( shape.box, shape.state, this.viewMatrix );
+		this.addBox ( box, shape.state );
 	}
 
 	/**
@@ -405,7 +400,7 @@ class BuildBoxes extends BaseClass
 		this.#boxes.set ( group.id, box );
 
 		// Add our box geometry to the scene.
-		this.addBox ( box, group.state, this.viewMatrix );
+		this.addBox ( box, group.state );
 	}
 
 	/**
@@ -425,7 +420,7 @@ class BuildBoxes extends BaseClass
 
 		// Add our box geometry to the scene.
 		// The box is already transformed so we pass identity.
-		this.addBox ( box, tr.state, IDENTITY_MATRIX );
+		this.addBox ( box, tr.state );
 	}
 }
 
