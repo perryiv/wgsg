@@ -12,6 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Box } from "../Math";
 import { Color } from "../Tools";
 import { Multiply as BaseClass } from "../Visitors";
 import { SolidColor } from "../Shaders";
@@ -22,11 +23,9 @@ import {
 	Group,
 	Indexed,
 	Node as SceneNode,
-	Shape,
 	State,
 	Transform,
 } from "../Scene";
-import { Box } from "../Math";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -366,22 +365,22 @@ class BuildBoxes extends BaseClass
 
 	/**
 	 * Visit the node.
-	 * @param {Shape} shape - The shape node.
+	 * @param {Geometry} geom - The shape node.
 	 */
-	public override visitGeometry ( shape: Shape ) : void
+	public override visitGeometry ( geom: Geometry ) : void
 	{
 		// Do this first to be consistent with the other visit methods.
-		super.visitShape ( shape );
+		super.visitShape ( geom );
 
 		// Transform the box to global space.
-		const box = shape.box.clone();
+		const box = geom.box.clone();
 		box.transform ( this.viewMatrix );
 
 		// Add our box to the map.
-		this.#boxes.set ( shape.id, box );
+		this.#boxes.set ( geom.id, box );
 
 		// Make a box for this shape.
-		this.addBox ( box, shape.state );
+		this.addBox ( box, geom.state );
 	}
 
 	/**
