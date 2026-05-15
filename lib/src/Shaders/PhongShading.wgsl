@@ -29,6 +29,7 @@ struct VertexOut
 	@builtin ( position ) position : vec4f,
 	@location ( 0 ) normal : vec3f,
 };
+
 @vertex fn vs ( @location ( 0 ) position: vec4f, @location ( 1 ) normal: vec3f ) -> VertexOut
 {
 	// The answer.

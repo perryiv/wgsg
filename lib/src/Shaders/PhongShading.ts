@@ -371,7 +371,7 @@ export class PhongShading extends BaseClass
 				entries: [
 				{
 					binding: 0,
-					resource: { buffer: this.uniforms, offset: 0, size: 160 }
+					resource: { buffer: this.uniforms }
 				} ],
 			} );
 
