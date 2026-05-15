@@ -232,8 +232,8 @@ export class PhongShading extends BaseClass
 			// Create the buffer.
 			buffer = device.createBuffer ( {
 				label: `Uniform buffer for shader ${this.type} ${this.id}`,
-				// Two 4x4 matrices + 4D color + 4D light + 1D twoSided, 4 bytes each.
-				size: ( 16 + 16 + 4 + 4 + 1 ) * 4,
+				// Two 4x4 matrices + 4D color + 3D light + 1D twoSided, padded to 16-byte alignment.
+				size: 160,
 				usage: ( GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST )
 			} );
 
@@ -241,7 +241,7 @@ export class PhongShading extends BaseClass
 			const pm = new Float32Array ( this.projMatrix );
 			const vm = new Float32Array ( this.viewMatrix );
 			const color = new Float32Array ( this.#color );
-			const lightDir = new Float32Array ( this.#lightDir );
+			const lightDir = new Float32Array ( [ this.#lightDir[0], this.#lightDir[1], this.#lightDir[2] ] );
 			const twoSided = new Uint32Array ( [ this.#twoSided ? 1 : 0 ] );
 
 			// Write the typed array to the buffer.
@@ -371,10 +371,7 @@ export class PhongShading extends BaseClass
 				entries: [
 				{
 					binding: 0,
-					resource: { buffer: this.uniforms }
-				}, {
-					binding: 1,
-					resource: { buffer: this.uniforms }
+					resource: { buffer: this.uniforms, offset: 0, size: 160 }
 				} ],
 			} );
 

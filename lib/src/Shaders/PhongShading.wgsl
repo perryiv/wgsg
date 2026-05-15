@@ -19,6 +19,7 @@ struct Uniforms
 	viewMatrix: mat4x4f,
 	color: vec4f,
 	lightDir: vec3f,
+	twoSided: u32,
 };
 
 @group ( 0 ) @binding ( 0 ) var<uniform> uniforms : Uniforms;
@@ -28,9 +29,6 @@ struct VertexOut
 	@builtin ( position ) position : vec4f,
 	@location ( 0 ) normal : vec3f,
 };
-
-@group ( 0 ) @binding ( 1 ) var<uniform> twoSided : u32;
-
 @vertex fn vs ( @location ( 0 ) position: vec4f, @location ( 1 ) normal: vec3f ) -> VertexOut
 {
 	// The answer.
@@ -53,7 +51,7 @@ struct VertexOut
 
 	// Calculate the diffuse lighting factor.
 	let dotProduct = dot ( normal, -uniforms.lightDir );
-	let diffuse = select ( max ( dotProduct, 0.0 ), abs ( dotProduct ), twoSided != 0u );
+	let diffuse = select ( max ( dotProduct, 0.0 ), abs ( dotProduct ), ( uniforms.twoSided != 0u ) );
 
 	// Calculate the color, assuming that the canvas is configured
 	// for pre-multiplied alpha.
