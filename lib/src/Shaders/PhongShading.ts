@@ -270,9 +270,10 @@ export class PhongShading extends BaseClass
 		// Shortcuts
 		const { device, preferredFormat } = Device.instance;
 
-		// Define the array stride.
+		// Define the array strides.
 		// https://www.w3.org/TR/webgpu/#enumdef-gpuvertexstepmode
-		const arrayStride = 12; // 3 floats * 4 bytes each.
+		const positionStride = 12; // 3 floats * 4 bytes each.
+		const normalStride   = 12; // 3 floats * 4 bytes each.
 
 		// Make the pipeline.
 		const pipeline = device.createRenderPipeline ( {
@@ -290,7 +291,7 @@ export class PhongShading extends BaseClass
 						offset: 0,
 						format: "float32x3",
 					} ],
-					arrayStride,
+					arrayStride: positionStride,
 					stepMode: "vertex",
 				}, {
 					attributes: [
@@ -300,7 +301,7 @@ export class PhongShading extends BaseClass
 						offset: 0,
 						format: "float32x3",
 					} ],
-					arrayStride,
+					arrayStride: normalStride,
 					stepMode: "vertex",
 				} ]
 			},
