@@ -34,6 +34,9 @@ export interface IViewerStore
 export interface IViewerState
 {
 	boxesVisible: boolean;
+	edgesVisible: boolean;
+	getTriangleEdgesVisible: () => boolean;
+	setTriangleEdgesVisible: ( visible: boolean ) => void;
 	getBoundingBoxesVisible: () => boolean;
 	setBoundingBoxesVisible: ( visible: boolean ) => void;
 }
@@ -103,6 +106,7 @@ export const useViewerStore = create < IViewerStore > () ( ( set, get ) => (
 export const useViewerState = create < IViewerState > () ( ( set, get ) => (
 {
 	boxesVisible: false,
+	edgesVisible: false,
 
 	getBoundingBoxesVisible: () : boolean =>
 	{
@@ -120,6 +124,27 @@ export const useViewerState = create < IViewerState > () ( ( set, get ) => (
 				return (
 				{
 					boxesVisible: visible
+				} )
+		 } );
+		}
+	},
+
+	getTriangleEdgesVisible: () : boolean =>
+	{
+		const store = get();
+		return store.edgesVisible;
+	},
+
+	setTriangleEdgesVisible: ( visible: boolean ) =>
+	{
+		const store = get();
+		if ( visible !== store.edgesVisible )
+		{
+			set ( () =>
+			{
+				return (
+				{
+					edgesVisible: visible
 				} )
 		 } );
 		}

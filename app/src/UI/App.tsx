@@ -61,7 +61,10 @@ export function App()
 	const { getViewer } = useViewerStore ( ( state ) => state );
 	const [ count, setCount ] = useState ( 0 );
 	const [ showStats, setShowStats ] = useState ( false );
-	const { getBoundingBoxesVisible, setBoundingBoxesVisible } = useViewerState ( ( state ) => state );
+	const {
+		getBoundingBoxesVisible, setBoundingBoxesVisible,
+		getTriangleEdgesVisible, setTriangleEdgesVisible
+	} = useViewerState ( ( state ) => state );
 
 	// Get the current viewer.
 	const viewer = getViewer ( VIEWER_NAME );
@@ -223,6 +226,18 @@ export function App()
 	] );
 
 	//
+	// Handle the show triangle edges button.
+	//
+	const handleShowTriangleEdges = useCallback ( () =>
+	{
+		const current = getTriangleEdgesVisible();
+		setTriangleEdgesVisible ( !current );
+	}, [
+		getTriangleEdgesVisible,
+		setTriangleEdgesVisible,
+	] );
+
+	//
 	// Called when the component mounts.
 	//
 	useEffect ( () =>
@@ -327,6 +342,12 @@ export function App()
 						value = { getBoundingBoxesVisible() }
 					>
 						Bounding boxes
+					</Button>
+					<Button
+						onClick = { handleShowTriangleEdges }
+						value = { getTriangleEdgesVisible() }
+					>
+						Triangle edges
 					</Button>
 					{ verticalSpace() }
 					<div

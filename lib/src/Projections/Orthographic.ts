@@ -209,10 +209,10 @@ export class Orthographic extends Projection
 	 * Update the projection's near and far distances.
 	 * @param {Sphere} sphere - The bounding sphere to use when updating the distances.
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public override updateNearFar ( sphere: Readonly<Sphere> ) : void
 	{
 		// TODO: Update the distances.
+		void sphere;
 	}
 
 	/**

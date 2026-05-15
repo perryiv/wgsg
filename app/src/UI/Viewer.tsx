@@ -31,6 +31,8 @@ import {
 } from "react";
 import {
 	buildBoundingBoxes,
+	buildWireframeScene,
+	Cancelled,
 	clampNumber,
 	Device,
 	DeviceLost,
@@ -40,7 +42,6 @@ import {
 	Reader,
 	throttle,
 	Viewer as InternalViewer,
-	Cancelled,
 } from "../../../lib/src";
 
 
@@ -113,10 +114,11 @@ export function Viewer ( { style }: IViewerProps )
 {
 	// Get state.
 	const [ boxesScene, setBoxesScene ] = useState < SceneNode | null > ( null );
+	const [ edgesScene, setEdgesScene ] = useState < SceneNode | null > ( null );
 	const [ id, ] = useState < number > ( getNextId ( "Viewer Component" ) );
 	const [ progress, setProgress ] = useState < number > ( 0 );
 	const [ supported, setSupported ] = useState < boolean | null > ( null );
-	const { getBoundingBoxesVisible } = useViewerState ( ( state ) => state );
+	const { getBoundingBoxesVisible, getTriangleEdgesVisible } = useViewerState ( ( state ) => state );
 	const { getViewer, setViewer } = useViewerStore ( ( state ) => state );
 	const canvas = useRef < HTMLCanvasElement | null > ( null );
 	const isMounting = useRef ( false );
@@ -125,8 +127,9 @@ export function Viewer ( { style }: IViewerProps )
 	// Get the viewer.
 	const viewer = getViewer ( VIEWER_NAME );
 
-	// Are the bounding boxes visible?
+	// Are these things visible?
 	const boundingBoxesVisible = getBoundingBoxesVisible();
+	const triangleEdgesVisible = getTriangleEdgesVisible();
 
 	//
 	// Build the test scene.
@@ -203,6 +206,81 @@ export function Viewer ( { style }: IViewerProps )
 	}, [
 		boxesScene,
 		boundingBoxesVisible,
+		viewer,
+	] );
+
+	//
+	// Adjust the scene for triangle edges if necessary.
+	//
+	useEffect ( () =>
+	{
+		// Handle no viewer.
+		if ( !viewer )
+		{
+			return;
+		}
+
+		// If the triangle edges are not supposed to be visible ...
+		if ( false === triangleEdgesVisible )
+		{
+			// And they are not ...
+			if ( !edgesScene )
+			{
+				return; // There is nothing to do.
+			}
+
+			// Remove the existing scene.
+			const extraScene = viewer.extraScene;
+			extraScene.removeChild ( extraScene.indexOf ( edgesScene ) );
+
+			// Set this for next time.
+			setEdgesScene ( null );
+
+			// Render so that we see the change.
+			viewer.requestRender();
+
+			// We're done.
+			return;
+		}
+
+		// If we get to here then the triangle edges are supposed to be visible.
+
+		// Are they already visible?
+		if ( edgesScene )
+		{
+			return; // There is nothing to do.
+		}
+
+		// If we get to here then we need a model scene.
+		const modelScene = viewer.modelScene;
+		if ( !modelScene )
+		{
+			return;
+		}
+
+		// Make the scene for the triangle edges.
+		const edges = buildWireframeScene ( modelScene );
+
+		// Handle no edges.
+		if ( !edges )
+		{
+			return;
+		}
+
+		// It should not contribute to the bounds.
+		edges.addsToBounds = false;
+
+		// Add the scene for the triangle edges.
+		viewer.extraScene.addChild ( edges );
+
+		// Save it for next time.
+		setEdgesScene ( edges );
+
+		// Render so that we see the change.
+		viewer.requestRender();
+	}, [
+		edgesScene,
+		triangleEdgesVisible,
 		viewer,
 	] );
 
