@@ -13,12 +13,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Box } from "../Math";
-import { Color } from "../Tools";
+import { ColorTool } from "../Tools";
 import { Multiply as BaseClass } from "../Visitors";
 import { SolidColor } from "../Shaders";
 import { vec4 } from "gl-matrix";
 import type { IVector3, IVector4 } from "../Types";
 import {
+	ColorAttribute,
 	Geometry,
 	Group,
 	Indexed,
@@ -174,7 +175,9 @@ export const buildBox = ( input?: IBoxBuilderInput ) : Geometry =>
 	// Were we given a color?
 	if ( input?.color )
 	{
-		geom.state = SolidColor.makeState ( { color: input.color, topology } );
+		const state = SolidColor.makeState ( { topology } );
+		state.addAttribute ( new ColorAttribute ( input.color ) );
+		geom.state = state;
 	}
 
 	// Return the new geometry.
@@ -247,10 +250,9 @@ class BuildBoxes extends BaseClass
 			const geom = new Geometry ( { points, colors, primitives } );
 
 			// Add a state.
-			geom.state = SolidColor.makeState ( {
-				color: [ ...Color.gray ],
-				topology: "line-list"
-			} );
+			const state = SolidColor.makeState ( { topology: "line-list" } );
+			state.addAttribute ( new ColorAttribute ( [ ...ColorTool.gray ] ) );
+			geom.state = state;
 
 			// Save for next time.
 			this.#geom = geom;
@@ -311,7 +313,7 @@ class BuildBoxes extends BaseClass
 		);
 
 		// Initialize the color.
-		const c: IVector4 = [ ...Color.gray ];
+		const c: IVector4 = [ ...ColorTool.gray ];
 
 		// Try to get the color.
 		if ( state )

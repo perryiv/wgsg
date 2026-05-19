@@ -13,14 +13,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Color, Device } from "../Tools";
+import { ColorTool as Color, Device } from "../Tools";
 import { State } from "../Scene";
 import { vec4 } from "gl-matrix";
 import { WithMatrices as BaseClass } from "./WithMatrices";
-import type { IMatrix44, IVector4 } from "../Types";
-
-// @ts-expect-error TypeScript does not recognize WGSL files.
 import code from "./SolidColor.wgsl?raw";
+import type { IMatrix44, IVector4 } from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -59,7 +57,7 @@ export class SolidColor extends BaseClass
 		const topology = input?.topology;
 
 		super ( {
-			code: ( code as string ),
+			code,
 			topology: ( topology ?? "triangle-list" )
 		} );
 	}
@@ -125,11 +123,11 @@ export class SolidColor extends BaseClass
 	 * Get the name.
 	 * @returns {string} The name of the shader.
 	 */
-	public get name() : string
-	{
-		const color = this.color.join ( ", " );
-		return `${this.type} with color [${color}]`;
-	}
+	// public get name() : string
+	// {
+	// 	const color = this.color.join ( ", " );
+	// 	return `${this.type} with color [${color}]`;
+	// }
 
 	/**
 	 * Get the view matrix.
@@ -340,28 +338,15 @@ export class SolidColor extends BaseClass
 	/**
 	 * Make and return a state object that uses this shader.
 	 * @param {object} input - The input object.
-	 * @param {IVector4} input.color - The color to use in the state.
 	 * @param {GPUPrimitiveTopology} input.topology - The primitive topology.
 	 * @returns {State} The state object.
 	 */
-	public static makeState = ( { color, topology } :
-	{ color: Readonly<IVector4>, topology: GPUPrimitiveTopology } ) : State =>
+	public static makeState = ( { topology } : { topology: GPUPrimitiveTopology } ) : State =>
 	{
-		// Make a copy of the color because we capture it below.
-		color = [ color[0], color[1], color[2], color[3] ];
-
 		// Shortcut.
 		const shader = SolidColor.instance;
 
-		// Make the state.
-		return new State ( {
-			name: `${shader.type} state with color: ${color.join(", ")}, topology: ${topology}`,
-			shader,
-			topology,
-			apply: ( () =>
-			{
-				shader.color = color;
-			} )
-		} );
+		// Return the new state.
+		return new State ( { shader, topology } );
 	}
 }

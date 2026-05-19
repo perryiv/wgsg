@@ -39,6 +39,7 @@ import {
 	getNextId,
 	getReader,
 	Node as SceneNode,
+	TwoSidedLight,
 	Reader,
 	throttle,
 	Viewer as InternalViewer,
@@ -118,11 +119,15 @@ export function Viewer ( { style }: IViewerProps )
 	const [ id, ] = useState < number > ( getNextId ( "Viewer Component" ) );
 	const [ progress, setProgress ] = useState < number > ( 0 );
 	const [ supported, setSupported ] = useState < boolean | null > ( null );
-	const { getBoundingBoxesVisible, getTriangleEdgesVisible } = useViewerState ( ( state ) => state );
 	const { getViewer, setViewer } = useViewerStore ( ( state ) => state );
 	const canvas = useRef < HTMLCanvasElement | null > ( null );
 	const isMounting = useRef ( false );
 	const loader = useRef < Reader > ( null );
+	const {
+		getBoundingBoxesVisible,
+		getTriangleEdgesVisible,
+		getTwoSidedLighting,
+	} = useViewerState ( ( state ) => state );
 
 	// Get the viewer.
 	const viewer = getViewer ( VIEWER_NAME );
@@ -130,6 +135,7 @@ export function Viewer ( { style }: IViewerProps )
 	// Are these things visible?
 	const boundingBoxesVisible = getBoundingBoxesVisible();
 	const triangleEdgesVisible = getTriangleEdgesVisible();
+	const twoSidedLighting = getTwoSidedLighting();
 
 	//
 	// Build the test scene.
@@ -281,6 +287,49 @@ export function Viewer ( { style }: IViewerProps )
 	}, [
 		edgesScene,
 		triangleEdgesVisible,
+		viewer,
+	] );
+
+
+	//
+	// Adjust the scene for two-sided lighting if necessary.
+	//
+	useEffect ( () =>
+	{
+		// Handle no viewer.
+		if ( !viewer )
+		{
+			return;
+		}
+
+		// Get the model scene.
+		const modelScene = viewer.modelScene;
+
+		// Handle no model scene.
+		if ( !modelScene )
+		{
+			return;
+		}
+
+		// Traverse the scene and set the two-sided lighting flag.
+		modelScene.traverse ( ( node: SceneNode ) =>
+		{
+			const { state } = node;
+			if ( state )
+			{
+				const type = TwoSidedLight.getClassName();
+				const twoSidedLight = ( state.getAttribute ( type ) as ( TwoSidedLight | null ) );
+				if ( twoSidedLight )
+				{
+					twoSidedLight.value = twoSidedLighting;
+				}
+			}
+		} );
+
+		// Render so that we see the change.
+		viewer.requestRender();
+	}, [
+		twoSidedLighting,
 		viewer,
 	] );
 

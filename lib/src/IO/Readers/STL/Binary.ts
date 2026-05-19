@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Cancelled } from "../../Cancelled";
-import { Color, DEVELOPER_BUILD } from "../../../Tools";
+import { ColorTool as Color, DEVELOPER_BUILD } from "../../../Tools";
 import { Common as BaseClass } from "./Common";
 import { Group, Node as SceneNode } from "../../../Scene/Nodes";
 import { vec3 } from "gl-matrix";

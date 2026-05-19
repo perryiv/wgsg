@@ -17,7 +17,7 @@ import { vec4 } from "gl-matrix";
 import { Visitor as BaseClass } from "./Visitor";
 import type { IRenderGraphInfo, IVector4 } from "../Types";
 import {
-	Color,
+	ColorTool as Color,
 	Device,
 	KEEP_PERFORMANCE_INFO,
 } from "../Tools";
