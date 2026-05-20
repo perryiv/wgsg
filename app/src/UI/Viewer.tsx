@@ -48,21 +48,13 @@ import {
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Constants used below.
-//
-///////////////////////////////////////////////////////////////////////////////
-
-export const VIEWER_NAME = "main_viewer";
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
 //	Types for the viewer props.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 export interface IViewerProps
 {
+	viewerId: string;
 	style?: CSSProperties;
 }
 
@@ -111,7 +103,7 @@ const handleNewDevice = ( viewer: InternalViewer ) =>
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export function Viewer ( { style }: IViewerProps )
+export function Viewer ( { viewerId, style }: IViewerProps )
 {
 	// Get state.
 	const [ boxesScene, setBoxesScene ] = useState < SceneNode | null > ( null );
@@ -119,18 +111,22 @@ export function Viewer ( { style }: IViewerProps )
 	const [ id, ] = useState < number > ( getNextId ( "Viewer Component" ) );
 	const [ progress, setProgress ] = useState < number > ( 0 );
 	const [ supported, setSupported ] = useState < boolean | null > ( null );
-	const { getViewer, setViewer } = useViewerStore ( ( state ) => state );
 	const canvas = useRef < HTMLCanvasElement | null > ( null );
 	const isMounting = useRef ( false );
 	const loader = useRef < Reader > ( null );
+	const {
+		setCurrentViewer,
+		getViewer,
+		setViewer,
+	} = useViewerStore ( ( state ) => state );
 	const {
 		getBoundingBoxesVisible,
 		getTriangleEdgesVisible,
 		getTwoSidedLighting,
 	} = useViewerState ( ( state ) => state );
 
-	// Get the viewer.
-	const viewer = getViewer ( VIEWER_NAME );
+	// Get the viewer, which may be null.
+	const viewer = getViewer ( viewerId );
 
 	// Are these things visible?
 	const boundingBoxesVisible = getBoundingBoxesVisible();
@@ -442,7 +438,7 @@ export function Viewer ( { style }: IViewerProps )
 		// Handle no viewer.
 		if ( !viewer )
 		{
-			console.warn ( `No viewer found with name: ${VIEWER_NAME}` );
+			console.warn ( `No viewer found with id: ${viewerId}` );
 			return;
 		}
 
@@ -465,6 +461,7 @@ export function Viewer ( { style }: IViewerProps )
 	}, [
 		boxesScene,
 		viewer,
+		viewerId,
 	] );
 
 	//
@@ -523,7 +520,7 @@ export function Viewer ( { style }: IViewerProps )
 		}
 
 		// Return the existing viewer if we have it.
-		const existing = getViewer ( VIEWER_NAME );
+		const existing = getViewer ( viewerId );
 		if ( existing )
 		{
 			return existing;
@@ -531,12 +528,15 @@ export function Viewer ( { style }: IViewerProps )
 
 		// Make the viewer.
 		const newViewer = new InternalViewer ( { canvas: canvas.current } );
-		setViewer ( VIEWER_NAME, newViewer );
+		setViewer ( viewerId, newViewer );
 		console.log ( `Internal viewer ${newViewer.id} created` );
 
 		// Build the scene.
 		newViewer.modelScene = buildTestScene();
 		newViewer.viewAll ( { animate: false } );
+
+		// Make this the current viewer.
+		setCurrentViewer ( viewerId );
 
 		// console.log ( "Out getOrCreateViewer()" );
 
@@ -545,7 +545,9 @@ export function Viewer ( { style }: IViewerProps )
 	}, [
 		buildTestScene,
 		getViewer,
+		setCurrentViewer,
 		setViewer,
+		viewerId,
 	] );
 
 	//
@@ -562,10 +564,11 @@ export function Viewer ( { style }: IViewerProps )
 			return;
 		}
 
-		// This should not happen.
+		// This can happen if there are multiple viewers.
 		if ( true === Device.isInitializing )
 		{
-			throw new Error ( "Device is already being initialized" );
+			console.warn ( "Device is already being initialized" );
+			return;
 		}
 
 		// Initialize the singleton device.
