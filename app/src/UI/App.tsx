@@ -16,7 +16,7 @@ import { useTheme } from "@mui/material";
 import { Button } from "./Button";
 import { Panel } from "./Panel";
 import { useViewerState, useViewerStore } from "../State";
-import { Viewer, VIEWER_NAME } from "./Viewer";
+import { Viewer } from "./Viewer";
 import {
 	useCallback,
 	useEffect,
@@ -58,17 +58,21 @@ const defaultRenderGraphInfo: IRenderGraphInfo = {
 export function App()
 {
 	// Get state.
-	const { getViewer } = useViewerStore ( ( state ) => state );
 	const [ count, setCount ] = useState ( 0 );
 	const [ showStats, setShowStats ] = useState ( false );
+	const {
+		getCurrentViewer,
+		getViewer,
+	} = useViewerStore ( ( state ) => state );
 	const {
 		getBoundingBoxesVisible, setBoundingBoxesVisible,
 		getTriangleEdgesVisible, setTriangleEdgesVisible,
 		getTwoSidedLighting, setTwoSidedLighting,
 	} = useViewerState ( ( state ) => state );
 
-	// Get the current viewer.
-	const viewer = getViewer ( VIEWER_NAME );
+	// Get the current viewer, which may be null.
+	const cvid = getCurrentViewer();
+	const viewer = ( ( cvid ) ? getViewer ( cvid ) : null );
 
 	// Get the application state.
 	const { palette } = useTheme();
@@ -293,11 +297,8 @@ export function App()
 	//
 	const renderPanel1 = useCallback ( () =>
 	{
-		// If there's no viewer then do not render the panel.
-		if ( !viewer )
-		{
-			return null;
-		}
+		// If there's no viewer then everybody is disabled.
+		const disabled = !viewer;
 
 		return (
 			<Panel
@@ -313,56 +314,72 @@ export function App()
 					} }
 				>
 					<Button
+						disabled = { disabled }
 						onClick = { handleTrackballMode }
-						value = { "track_ball" === viewer.navBase.rotationMode }
+						value = { "track_ball" === viewer?.navBase.rotationMode }
 						radio = { true }
 					>
 						Trackball rotation
 					</Button>
 					<Button
+						disabled = { disabled }
 						onClick = { handleTurntableMode }
-						value = { "turn_table" === viewer.navBase.rotationMode }
+						value = { "turn_table" === viewer?.navBase.rotationMode }
 						radio = { true }
 					>
 						Turntable rotation
 					</Button>
 					{ verticalSpace() }
 					<Button
+						disabled = { disabled }
 						onClick = { handleAllowAnimations }
-						value = { viewer.options.animations.allow }
+						value = { viewer ? viewer.options.animations.allow : false }
 					>
 						Allow animations
 					</Button>
 					{ verticalSpace() }
-					<Button onClick = { handleViewerRender } >
+					<Button
+						disabled = { disabled }
+						onClick = { handleViewerRender }
+					>
 						Render viewer
 					</Button>
-					<Button onClick = { handleViewerReset } >
+					<Button
+						disabled = { disabled }
+						onClick = { handleViewerReset }
+					>
 						Reset navigation
 					</Button>
-					<Button onClick = { handleSimulateDeviceLost } >
+					<Button
+						disabled = { disabled }
+						onClick = { handleSimulateDeviceLost }
+					>
 						Simulate device lost
 					</Button>
 					{ verticalSpace() }
 					<Button
+						disabled = { disabled }
 						onClick = { handleShowStats }
 						value = { showStats }
 					>
 						Render stats
 					</Button>
 					<Button
+						disabled = { disabled }
 						onClick = { handleShowBoundingBoxes }
 						value = { getBoundingBoxesVisible() }
 					>
 						Bounding boxes
 					</Button>
 					<Button
+						disabled = { disabled }
 						onClick = { handleShowTriangleEdges }
 						value = { getTriangleEdgesVisible() }
 					>
 						Triangle edges
 					</Button>
 					<Button
+						disabled = { disabled }
 						onClick = { handleUseTwoSidedLighting }
 						value = { getTwoSidedLighting() }
 					>
@@ -386,6 +403,7 @@ export function App()
 		buildTimeStamp,
 		getBoundingBoxesVisible,
 		getTriangleEdgesVisible,
+		getTwoSidedLighting,
 		handleAllowAnimations,
 		handleShowBoundingBoxes,
 		handleShowStats,
@@ -393,6 +411,7 @@ export function App()
 		handleSimulateDeviceLost,
 		handleTrackballMode,
 		handleTurntableMode,
+		handleUseTwoSidedLighting,
 		handleViewerRender,
 		handleViewerReset,
 		panelBackground,
@@ -517,6 +536,7 @@ export function App()
 					height: "100vh",
 					background: "transparent",
 				} }
+				viewerId = { "left_viewer" }
 			/>
 		</div>
 	);
