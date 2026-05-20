@@ -553,94 +553,44 @@ export function Viewer ( { viewerId, style }: IViewerProps )
 	//
 	// Initialize the device.
 	//
-	const initDevice = useCallback ( async () =>
-	{
-		// console.log ( "In initDevice()" );
+	// const initDevice = useCallback ( async () =>
+	// {
+	// 	// Handle device lost.
+	// 	void Device.instance.device.lost.then ( async () =>
+	// 	{
+	// 		// It's probably already destroyed but make sure.
+	// 		Device.destroy();
 
-		// This should not happen.
-		if ( true === Device.valid )
-		{
-			console.log ( "Device is already initialized" );
-			return;
-		}
+	// 		// Make it again.
+	// 		await initDevice();
 
-		// This can happen if there are multiple viewers.
-		if ( true === Device.isInitializing )
-		{
-			console.warn ( "Device is already being initialized" );
-			return;
-		}
-
-		// Initialize the singleton device.
-		await Device.init();
-
-		console.log ( `Singleton device ${Device.instance.id} initialized` );
-
-		// Handle device lost.
-		void Device.instance.device.lost.then ( async () =>
-		{
-			// It's probably already destroyed but make sure.
-			Device.destroy();
-
-			// Make it again.
-			await initDevice();
-
-			// This will rebuild the resources.
-			handleNewDevice ( getOrCreateViewer() );
-		} );
-	},
-	[ getOrCreateViewer ] );
+	// 		// This will rebuild the resources.
+	// 		handleNewDevice ( getOrCreateViewer() );
+	// 	} );
+	// },
+	// [ getOrCreateViewer ] );
 
 	//
 	// Local function to handle when this component is mounted.
-	// This has to be async because of how the device initializes.
 	//
-	const handleMount = useCallback ( async () =>
+	const handleMount = useCallback ( () =>
 	{
-		// console.log ( `In handleMount() for viewer component ${id}` );
-
-		// Is WebGPU supported?
-		if ( null === supported )
+		// This should not happen if we get to here.
+		if ( false === Device.valid )
 		{
-			if ( false === await Device.isSupported() )
-			{
-				console.warn ( "WebGPU is not supported in this browser" );
-				setSupported ( false );
-				return;
-			}
-			setSupported ( true );
+			throw new Error ( "Device is not initialized" );
 		}
 
-		// Is WebGPU supported?
-		if ( false === supported )
+		// This should not happen if we get to here.
+		if ( true === Device.isInitializing )
 		{
-			return;
+			throw new Error ( "Device is already being initialized" );
 		}
-
-		// Are we still in the middle of the first mount?
-		if ( true === isMounting.current )
-		{
-			console.log ( "We are still handling the previous mount" );
-			return;
-		}
-
-		// If we get to here then set the flag that says we are mounting.
-		isMounting.current = true;
-
-		// Initialize the device if needed.
-		await initDevice();
 
 		// Get the viewer or make it if we have to.
 		getOrCreateViewer().requestRender();
-
-		// We are done mounting.
-		isMounting.current = false;
-
-		// console.log ( `Out handleMount() for viewer component ${id}` );
 	}, [
 		getOrCreateViewer,
-		initDevice,
-		supported,
 	] );
 
 	//
@@ -650,11 +600,7 @@ export function Viewer ( { viewerId, style }: IViewerProps )
 	{
 		console.log ( `Viewer component ${id} mounted` );
 
-		// This has to be async because of the device initialization.
-		void ( async () =>
-		{
-			await handleMount();
-		} ) ();
+		handleMount();
 
 		return ( () =>
 		{

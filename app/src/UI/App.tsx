@@ -12,9 +12,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { useTheme } from "@mui/material";
 import { Button } from "./Button";
+import { Initialize } from "./Initialize";
 import { Panel } from "./Panel";
+import { useTheme } from "@mui/material";
 import { useViewerState, useViewerStore } from "../State";
 import { Viewer } from "./Viewer";
 import {
@@ -530,14 +531,47 @@ export function App()
 				{ renderPanel1() }
 				{ renderPanel2() }
 			</div>
-			<Viewer
-				style = { {
-					width: "100vw",
-					height: "100vh",
-					background: "transparent",
-				} }
-				viewerId = { "left_viewer" }
-			/>
+			<Initialize>
+				<div
+					style = { {
+						display: "flex",
+						flexDirection: "row",
+						width: "100%",
+						height: "100%",
+					} }
+				>
+					<div
+						style = { {
+							flexGrow: 1,
+							height: "100%",
+							borderRight: "1px solid black",
+						} }
+					>
+						<Viewer
+							style = { {
+								width: "100%",
+								height: "100%",
+							} }
+							viewerId = { "left_viewer" }
+						/>
+					</div>
+					<div
+						style = { {
+							flexGrow: 1,
+							height: "100%",
+							borderLeft: "1px solid black",
+						} }
+					>
+						<Viewer
+							style = { {
+								width: "100%",
+								height: "100%",
+							} }
+							viewerId = { "right_viewer" }
+						/>
+					</div>
+				</div>
+			</Initialize>
 		</div>
 	);
 }
