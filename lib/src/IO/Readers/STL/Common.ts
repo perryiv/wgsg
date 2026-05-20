@@ -12,16 +12,18 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Color, DEVELOPER_BUILD } from "../../../Tools";
-import { Indexed } from "../../../Scene/Primitives";
+import { ColorTool, DEVELOPER_BUILD } from "../../../Tools";
 import { PhongShading } from "../../../Shaders";
 import { Reader as BaseClass } from "../../Reader";
 import { vec3 } from "gl-matrix";
 import type { IVector3, IVector4 } from "../../../Types";
 import {
+	ColorAttribute as Color,
 	Geometry,
 	Group,
+	Indexed,
 	Node as SceneNode,
+	TwoSidedLight,
 } from "../../../Scene";
 
 
@@ -38,7 +40,7 @@ export abstract class Common extends BaseClass
 	// If the file has color as described in the "Materialise Magics software"
 	// then it will be reset. See: https://en.wikipedia.org/wiki/STL_(file_format)
 	#color: IVector4 = ( ( DEVELOPER_BUILD ) ?
-		Color.makeRandomColor ( 0.2, 0.8 ) :
+		ColorTool.makeRandomColor ( 0.2, 0.8 ) :
 		[ 0.5, 0.5, 0.5, 1 ]
 	);
 
@@ -184,7 +186,10 @@ export abstract class Common extends BaseClass
 			const color = this.color;
 
 			// Add the state.
-			tris.state = PhongShading.makeState ( { color, twoSided: true, topology } );
+			const state = PhongShading.makeState ( { topology } );
+			state.addAttribute ( new Color ( color ) );
+			state.addAttribute ( new TwoSidedLight ( true ) );
+			tris.state = state;
 
 			// To speed things up later, calculate the bounds now.
 			void tris.box;

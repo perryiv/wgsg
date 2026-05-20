@@ -12,6 +12,5 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export * from "./Attribute";
-export * from "./Attributes";
-export * from "./State";
+export { Color as ColorAttribute } from "./Color";
+export * from "./TwoSidedLight";

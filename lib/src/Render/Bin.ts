@@ -73,7 +73,7 @@ export class Bin extends BaseClass
 			throw new Error ( `State '${state.name}' has invalid shader when getting pipeline` );
 		}
 
-		const name = `${shader.name}, ${topology}`;
+		const name = `${shader.type}, ${topology}`;
 		let pipeline: ( Pipeline | undefined ) = this.#pipelines.get ( name );
 
 		if ( !pipeline )

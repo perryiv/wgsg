@@ -12,8 +12,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+export { Color as ColorTool } from "./Color";
 export * from "./Bits";
-export * from "./Color";
 export * from "./Constants";
 export * from "./Device";
 export * from "./Environment";

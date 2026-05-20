@@ -20,7 +20,7 @@ import { vec4 } from "gl-matrix";
 import {
 	BUILD_TIME_LOG_LEVEL,
 	clampVec4,
-	Color,
+	ColorTool as Color,
 	Device,
 	IDENTITY_MATRIX,
 	KEEP_PERFORMANCE_INFO,

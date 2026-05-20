@@ -15,7 +15,8 @@
 import {
 	buildBox,
 	buildTriangleEdges,
-	Color,
+	ColorAttribute,
+	ColorTool,
 	Geometry,
 	Group,
 	Indexed,
@@ -25,6 +26,7 @@ import {
 	Sphere,
 	SphereNode,
 	Transform,
+	TwoSidedLight,
 	type IVector2,
 	type IVector3,
 	type IVector4,
@@ -44,11 +46,12 @@ export const buildSceneSphere = ( sphere: Sphere, edges: boolean ) =>
 		radius: sphere.radius,
 		numSubdivisions: 4,
 	} );
-	node.state = PhongShading.makeState ( {
-		color: [ 0.8, 0.2, 0.2, 1.0 ],
-		twoSided: false,
-		topology: "triangle-list"
-	} );
+	{
+		const state = PhongShading.makeState ( { topology: "triangle-list" } );
+		state.addAttribute ( new ColorAttribute ( [ 0.8, 0.2, 0.2, 1.0 ] ) );
+		state.addAttribute ( new TwoSidedLight ( false ) );
+		node.state = state;
+	}
 
 	if ( false === edges )
 	{
@@ -61,10 +64,9 @@ export const buildSceneSphere = ( sphere: Sphere, edges: boolean ) =>
 	const lines = buildTriangleEdges ( node );
 	if ( lines )
 	{
-		lines.state = SolidColor.makeState ( {
-			color: [ ...Color.black ],
-			topology: "line-list"
-		} );
+		const state = SolidColor.makeState ( { topology: "line-list" } );
+		state.addAttribute ( new ColorAttribute ( [ ...ColorTool.black ] ) );
+		lines.state = state;
 	}
 	root.addChild ( lines );
 
@@ -142,7 +144,9 @@ const makeQuad = ( { origin, size, color, topology } :
 	// Were we given a color?
 	if ( color )
 	{
-		geom.state = SolidColor.makeState ( { color, topology } );
+		const state = SolidColor.makeState ( { topology } );
+		state.addAttribute ( new ColorAttribute ( color ) );
+		geom.state = state;
 	}
 
 	// Return the new geometry.
@@ -214,7 +218,7 @@ export const buildSceneQuads = () : Node =>
 			const quads = makeQuad ( {
 				origin: [ x, y, 0.0 ],
 				size: [ w, h ],
-				color: Color.makeRandomColor ( 0.1, 0.9 ),
+				color: ColorTool.makeRandomColor ( 0.1, 0.9 ),
 				topology: "triangle-list"
 			} );
 			group.addChild ( quads );
@@ -280,7 +284,7 @@ export const buildSceneBox = ( sx = 1.0, sy = 1.0, sz = 1.0 ) : Node =>
 	group.addChild ( buildBox ( {
 		center: [ 0.0, 0.0, 0.0 ],
 		size:   [ sx, sy, sz ],
-		color:  [ ...Color.black ],
+		color:  [ ...ColorTool.black ],
 		topology: "line-list",
 	} ) );
 

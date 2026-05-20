@@ -17,8 +17,9 @@ import { Line } from "../Math";
 import { makeTriangleEdges } from "../Algorithms";
 import { Multiply as BaseClass } from "../Visitors/Multiply";
 import { SolidColor } from "../Shaders";
-import { Color } from "../Tools";
+import { ColorTool } from "../Tools";
 import {
+	ColorAttribute,
 	Geometry,
 	Group,
 	Indexed,
@@ -72,7 +73,9 @@ export const buildLine = ( { line, color }: { line: Readonly<Line>, color?: IVec
 	// Were we given a color?
 	if ( color )
 	{
-		geom.state = SolidColor.makeState ( { color, topology } );
+		const state = SolidColor.makeState ( { topology } );
+		state.addAttribute ( new ColorAttribute ( color ) );
+		geom.state = state;
 	}
 
 	// Return the new geometry.
@@ -203,7 +206,7 @@ class BuildEdges extends BaseClass
 {
 	#scene: Group = new Group();
 	#current: Group = this.#scene;
-	#color: IVector4 = [ ...Color.black ];
+	#color: IVector4 = [ ...ColorTool.black ];
 
 	/**
 	 * Construct the class.
@@ -279,7 +282,7 @@ class BuildEdges extends BaseClass
 	{
 		this.#scene.clear();
 		this.#current = this.#scene;
-		vec3.copy ( this.#color, Color.black );
+		vec3.copy ( this.#color, ColorTool.black );
 	}
 
 	/**
@@ -295,10 +298,9 @@ class BuildEdges extends BaseClass
 		const edges = buildTriangleEdges ( geom );
 		if ( edges )
 		{
-			edges.state = SolidColor.makeState ( {
-				color: [ ...Color.black ],
-				topology: "line-list"
-			} );
+			const state = SolidColor.makeState ( { topology: "line-list" } );
+			state.addAttribute ( new ColorAttribute ( [ ...ColorTool.black ] ) );
+			edges.state = state;
 			this.current.addChild ( edges );
 		}
 	}

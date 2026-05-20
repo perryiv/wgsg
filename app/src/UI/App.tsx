@@ -63,7 +63,8 @@ export function App()
 	const [ showStats, setShowStats ] = useState ( false );
 	const {
 		getBoundingBoxesVisible, setBoundingBoxesVisible,
-		getTriangleEdgesVisible, setTriangleEdgesVisible
+		getTriangleEdgesVisible, setTriangleEdgesVisible,
+		getTwoSidedLighting, setTwoSidedLighting,
 	} = useViewerState ( ( state ) => state );
 
 	// Get the current viewer.
@@ -238,6 +239,18 @@ export function App()
 	] );
 
 	//
+	// Handle the use two-sided lighting button.
+	//
+	const handleUseTwoSidedLighting = useCallback ( () =>
+	{
+		const current = getTwoSidedLighting();
+		setTwoSidedLighting ( !current );
+	}, [
+		getTwoSidedLighting,
+		setTwoSidedLighting,
+	] );
+
+	//
 	// Called when the component mounts.
 	//
 	useEffect ( () =>
@@ -349,6 +362,12 @@ export function App()
 					>
 						Triangle edges
 					</Button>
+					<Button
+						onClick = { handleUseTwoSidedLighting }
+						value = { getTwoSidedLighting() }
+					>
+						Two-sided lighting
+					</Button>
 					{ verticalSpace() }
 					<div
 						style = { {
@@ -366,9 +385,11 @@ export function App()
 	}, [
 		buildTimeStamp,
 		getBoundingBoxesVisible,
+		getTriangleEdgesVisible,
 		handleAllowAnimations,
 		handleShowBoundingBoxes,
 		handleShowStats,
+		handleShowTriangleEdges,
 		handleSimulateDeviceLost,
 		handleTrackballMode,
 		handleTurntableMode,

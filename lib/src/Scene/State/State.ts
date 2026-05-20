@@ -12,7 +12,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Base } from "../../Base";
+import { Attribute } from "./Attribute";
+import { Base as BaseClass } from "../../Base";
 import { IMatrix44 } from "../../Types";
 import { ShaderBase } from "../../Shaders";
 
@@ -46,6 +47,8 @@ export interface IStateConstructorInput
 	reset?: IStateResetFunction;
 }
 
+export type IStateAttributes = Map < string, Attribute >;
+
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
@@ -57,8 +60,12 @@ export interface IStateConstructorInput
 
 export const defaultApplyFunction: IStateApplyFunction = ( input: IStateApplyInput ): void =>
 {
-	// console.log ( `Default state apply function called with name: '${input.state.name}', projMatrix: ${JSON.stringify ( input.projMatrix )}, viewMatrix: ${JSON.stringify ( input.viewMatrix )}` );
-	void input; // Do nothing with the function argument.
+	const { state, shader } = input;
+	const { attributes } = state;
+	for ( const [ , attribute ] of attributes )
+	{
+		attribute.apply ( { shader } );
+	}
 };
 
 
@@ -82,7 +89,7 @@ export const defaultResetFunction: IStateResetFunction = (): void =>
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class State extends Base
+export class State extends BaseClass
 {
 	#name: ( string | null ) = null;
 	#layer = 0;
@@ -91,6 +98,7 @@ export class State extends Base
 	#topology: GPUPrimitiveTopology = "triangle-list";
 	#apply: IStateApplyFunction = defaultApplyFunction;
 	#reset: IStateResetFunction = defaultResetFunction;
+	#attributes: IStateAttributes = new Map();
 
 	/**
 	 * Construct the class.
@@ -148,6 +156,35 @@ export class State extends Base
 	public override getClassName() : string
 	{
 		return "Scene.State.State";
+	}
+
+	/**
+	 * Get the state attributes.
+	 * @returns {IStateAttributes} The state attributes.
+	 */
+	public get attributes() : IStateAttributes
+	{
+		return this.#attributes;
+	}
+
+	/**
+	 * Add an attribute to this state.
+	 * @param {Attribute} attribute - The attribute to add.
+	 */
+	public addAttribute ( attribute: Attribute ) : void
+	{
+		this.#attributes.set ( attribute.type, attribute );
+	}
+
+	/**
+	 * Get the attribute of the given type.
+	 * @param {string} type - The type of the attribute to get.
+	 * @returns {Attribute | null} The attribute of the given type, or null if not found.
+	 */
+	public getAttribute ( type: string ) : ( Attribute | null )
+	{
+		const attribute = this.#attributes.get ( type );
+		return ( attribute ?? null );
 	}
 
 	/**
@@ -248,8 +285,14 @@ export class State extends Base
 
 		// If we get to here then make the name.
 		const shader = this.shader;
-		name = ( shader ? shader.name : "invalid_shader" );
+		name = ( shader ? shader.type : "invalid_shader" );
 		name = `${this.type} with shader '${name}'`;
+
+		const { attributes } = this;
+		for ( const [ , attribute ] of attributes )
+		{
+			name += `, ${attribute.toString()}`;
+		}
 
 		// Do not set this! See note above.
 		// this.#name = name;

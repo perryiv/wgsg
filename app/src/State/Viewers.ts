@@ -35,10 +35,13 @@ export interface IViewerState
 {
 	boxesVisible: boolean;
 	edgesVisible: boolean;
-	getTriangleEdgesVisible: () => boolean;
-	setTriangleEdgesVisible: ( visible: boolean ) => void;
+	twoSidedLighting: boolean;
 	getBoundingBoxesVisible: () => boolean;
 	setBoundingBoxesVisible: ( visible: boolean ) => void;
+	getTriangleEdgesVisible: () => boolean;
+	setTriangleEdgesVisible: ( visible: boolean ) => void;
+	getTwoSidedLighting: () => boolean;
+	setTwoSidedLighting: ( enabled: boolean ) => void;
 }
 
 
@@ -107,6 +110,7 @@ export const useViewerState = create < IViewerState > () ( ( set, get ) => (
 {
 	boxesVisible: false,
 	edgesVisible: false,
+	twoSidedLighting: false,
 
 	getBoundingBoxesVisible: () : boolean =>
 	{
@@ -148,5 +152,26 @@ export const useViewerState = create < IViewerState > () ( ( set, get ) => (
 				} )
 		 } );
 		}
-	}
+	},
+
+	getTwoSidedLighting: () : boolean =>
+	{
+		const store = get();
+		return store.twoSidedLighting;
+	},
+
+	setTwoSidedLighting: ( enabled: boolean ) =>
+	{
+		const store = get();
+		if ( enabled !== store.twoSidedLighting )
+		{
+			set ( () =>
+			{
+				return (
+				{
+					twoSidedLighting: enabled
+				} )
+		 } );
+		}
+	},
 } ) );
