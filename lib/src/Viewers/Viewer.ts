@@ -229,7 +229,7 @@ export class Viewer extends BaseClass
 				allow: true
 			},
 			distance: {
-				mouse_move_max: 100,
+				mouse_move_max: 150,
 				mouse_throw: 2
 			},
 			duration: {
