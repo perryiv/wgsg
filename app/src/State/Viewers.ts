@@ -25,6 +25,9 @@ import { Viewer } from "../../../lib/src/Viewers";
 export interface IViewerStore
 {
 	viewers: Map < string, Viewer >;
+	current: ( string | null );
+	getCurrentViewer: () => ( string | null );
+	setCurrentViewer: ( id: string | null ) => void;
 	getViewer: ( id: string ) => ( Viewer | null );
 	setViewer: ( id: string, viewer: Viewer ) => void;
 	removeViewer: ( id: string ) => void;
@@ -54,6 +57,25 @@ export interface IViewerState
 export const useViewerStore = create < IViewerStore > () ( ( set, get ) => (
 {
 	viewers: new Map < string, Viewer > (),
+	current: null as ( string | null ),
+
+	getCurrentViewer: () : ( string | null ) =>
+	{
+		const store = get();
+		return store.current;
+	},
+
+	setCurrentViewer: ( id: string | null ) : void =>
+	{
+		const store = get();
+		if ( id !== store.current )
+		{
+			set ( () =>
+			{
+				return { current: id };
+			} )
+		}
+	},
 
 	getViewer: ( id: string ) : ( Viewer | null ) =>
 	{
@@ -62,7 +84,7 @@ export const useViewerStore = create < IViewerStore > () ( ( set, get ) => (
 		return ( viewer ?? null );
 	},
 
-	setViewer: ( id: string, viewer: Viewer ) =>
+	setViewer: ( id: string, viewer: Viewer ) : void =>
 	{
 		const store = get();
 		const current = store.viewers.get ( id );
@@ -77,7 +99,7 @@ export const useViewerStore = create < IViewerStore > () ( ( set, get ) => (
 		}
 	},
 
-	removeViewer: ( id: string ) =>
+	removeViewer: ( id: string ) : void =>
 	{
 		set ( ( current ) =>
 		{
@@ -87,7 +109,7 @@ export const useViewerStore = create < IViewerStore > () ( ( set, get ) => (
 		} )
 	},
 
-	clearViewers: () =>
+	clearViewers: () : void =>
 	{
 		set ( () =>
 		{
@@ -118,7 +140,7 @@ export const useViewerState = create < IViewerState > () ( ( set, get ) => (
 		return store.boxesVisible;
 	},
 
-	setBoundingBoxesVisible: ( visible: boolean ) =>
+	setBoundingBoxesVisible: ( visible: boolean ) : void =>
 	{
 		const store = get();
 		if ( visible !== store.boxesVisible )
@@ -139,7 +161,7 @@ export const useViewerState = create < IViewerState > () ( ( set, get ) => (
 		return store.edgesVisible;
 	},
 
-	setTriangleEdgesVisible: ( visible: boolean ) =>
+	setTriangleEdgesVisible: ( visible: boolean ) : void =>
 	{
 		const store = get();
 		if ( visible !== store.edgesVisible )
@@ -160,7 +182,7 @@ export const useViewerState = create < IViewerState > () ( ( set, get ) => (
 		return store.twoSidedLighting;
 	},
 
-	setTwoSidedLighting: ( enabled: boolean ) =>
+	setTwoSidedLighting: ( enabled: boolean ) : void =>
 	{
 		const store = get();
 		if ( enabled !== store.twoSidedLighting )
