@@ -39,6 +39,7 @@ export interface IButtonProps
 	onClick?: ( value?: boolean ) => void;
 	value?: boolean;
 	radio?: boolean;
+	disabled?: boolean;
 }
 
 
@@ -51,7 +52,7 @@ export interface IButtonProps
 export function Button ( props: IButtonProps )
 {
 	// Get input.
-	const { style, children, onClick, value, radio } = props;
+	const { style, children, onClick, value, radio, disabled = false } = props;
 
 	// Get the application state.
 	const { palette } = useTheme();
@@ -83,11 +84,13 @@ export function Button ( props: IButtonProps )
 				control = {
 					( radio ) ?
 					<RadioButton
+						disabled = { disabled }
 						checked = { value }
 						onChange = { handleClick }
 						size = "small"
 					/> :
 					<Checkbox
+						disabled = { disabled }
 						checked = { value }
 						onChange = { handleClick }
 						size = "small"
@@ -102,6 +105,7 @@ export function Button ( props: IButtonProps )
 								":hover": { color: palette.secondary.main },
 								...style,
 							} }
+							disabled = { disabled }
 							onClick = { handleClick }
 						>
 							{ children }
@@ -125,6 +129,7 @@ export function Button ( props: IButtonProps )
 					":hover": { color: palette.secondary.main },
 					...style,
 				} }
+				disabled = { disabled }
 				onClick = { handleClick }
 			>
 				{ children }
