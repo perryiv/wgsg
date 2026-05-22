@@ -51,16 +51,16 @@ export function Initialize ( { children }: IInitializeProps )
 	//
 	const initDevice = useCallback ( async () =>
 	{
-		// This should not happen.
+		// This will sometimes happen.
 		if ( true === Device.valid )
 		{
-			throw new Error ( "Device is already initialized" );
+			console.log ( "Device is already initialized" );
 		}
 
-		// This should not happen.
+		// This will sometimes happen.
 		if ( true === Device.isInitializing )
 		{
-			throw new Error ( "Device is already being initialized" );
+			console.log ( "Device is already being initialized" );
 		}
 
 		// Initialize the singleton device.

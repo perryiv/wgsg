@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { buildSceneSpheres } from "../Tools";
-import { useViewerState, useViewerStore } from "../State";
+import { useViewerStore } from "../State";
 import CloseIcon from "@mui/icons-material/Close";
 import {
 	Card,
@@ -22,10 +22,10 @@ import {
 	Paper,
 } from "@mui/material";
 import {
-	CSSProperties,
 	DragEvent,
 	useCallback,
 	useEffect,
+	useMemo,
 	useRef,
 	useState,
 } from "react";
@@ -35,7 +35,7 @@ import {
 	Cancelled,
 	clampNumber,
 	Device,
-	DeviceLost,
+	// DeviceLost,
 	getNextId,
 	getReader,
 	Node as SceneNode,
@@ -52,10 +52,9 @@ import {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export interface IViewerProps
+export interface IViewerProps extends React.HTMLAttributes < HTMLDivElement >
 {
 	viewerId: string;
-	style?: CSSProperties;
 }
 
 
@@ -65,7 +64,7 @@ export interface IViewerProps
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-// let componentRenderCount = 0;
+let componentRenderCount = 0;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -74,27 +73,27 @@ export interface IViewerProps
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-const handleNewDevice = ( viewer: InternalViewer ) =>
-{
-	// Tell the viewer to handle the new device.
-	viewer.handleNewDevice();
+// const handleNewDevice = ( viewer: InternalViewer ) =>
+// {
+// 	// Tell the viewer to handle the new device.
+// 	viewer.handleNewDevice();
 
-	// Get the scene.
-	const { scene } = viewer;
+// 	// Get the scene.
+// 	const { scene } = viewer;
 
-	// Handle no scene.
-	if ( !scene )
-	{
-		return;
-	}
+// 	// Handle no scene.
+// 	if ( !scene )
+// 	{
+// 		return;
+// 	}
 
-	// Visit the scene.
-	const visitor = new DeviceLost();
-	visitor.handle ( scene );
+// 	// Visit the scene.
+// 	const visitor = new DeviceLost();
+// 	visitor.handle ( scene );
 
-	// Render again so that we see the rebuilt scene.
-	viewer.requestRender();
-};
+// 	// Render again so that we see the rebuilt scene.
+// 	viewer.requestRender();
+// };
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -103,35 +102,68 @@ const handleNewDevice = ( viewer: InternalViewer ) =>
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export function Viewer ( { viewerId, style }: IViewerProps )
+export function Viewer ( { viewerId, ...rest }: IViewerProps )
 {
-	// Get state.
+	// Get the state.
 	const [ boxesScene, setBoxesScene ] = useState < SceneNode | null > ( null );
 	const [ edgesScene, setEdgesScene ] = useState < SceneNode | null > ( null );
 	const [ id, ] = useState < number > ( getNextId ( "Viewer Component" ) );
 	const [ progress, setProgress ] = useState < number > ( 0 );
-	const [ supported, setSupported ] = useState < boolean | null > ( null );
+	const [ supported, ] = useState < boolean | null > ( null );
 	const canvas = useRef < HTMLCanvasElement | null > ( null );
-	const isMounting = useRef ( false );
 	const loader = useRef < Reader > ( null );
-	const {
-		setCurrentViewer,
-		getViewer,
-		setViewer,
-	} = useViewerStore ( ( state ) => state );
-	const {
-		getBoundingBoxesVisible,
-		getTriangleEdgesVisible,
-		getTwoSidedLighting,
-	} = useViewerState ( ( state ) => state );
+	const createViewerState = useViewerStore ( ( store ) => store.createViewerState );
+	const setCurrentViewer  = useViewerStore ( ( store ) => store.setCurrentViewer );
+	const setViewerState    = useViewerStore ( ( store ) => store.setViewerState );
+	const viewerStates      = useViewerStore ( ( store ) => store.viewers );
 
+	//
 	// Get the viewer, which may be null.
-	const viewer = getViewer ( viewerId );
+	//
+	const viewer = useMemo ( (): ( InternalViewer | null ) =>
+	{
+		if ( viewerId )
+		{
+			const state = viewerStates.get ( viewerId );
+			if ( state )
+			{
+				return ( state.viewer );
+			}
+		}
+		return null;
+	}, [
+		viewerId,
+		viewerStates,
+	] );
 
-	// Are these things visible?
-	const boundingBoxesVisible = getBoundingBoxesVisible();
-	const triangleEdgesVisible = getTriangleEdgesVisible();
-	const twoSidedLighting = getTwoSidedLighting();
+	//
+	// Get the viewer state.
+	//
+	const { boxesVisible, edgesVisible, twoSidedLighting } = useMemo ( () =>
+	{
+		const state = viewerStates.get ( viewerId );
+		return ( state ?? createViewerState() );
+	}, [
+		createViewerState,
+		viewerId,
+		viewerStates,
+	] );
+
+	//
+	// Are we the current viewer?
+	//
+	// const isCurrentViewer = useMemo ( () =>
+	// {
+	// 	const currentViewerId = getCurrentViewer();
+	// 	if ( currentViewerId )
+	// 	{
+	// 		return ( currentViewerId === viewerId );
+	// 	}
+	// 	return false;
+	// }, [
+	// 	getCurrentViewer,
+	// 	viewerId,
+	// ] );
 
 	//
 	// Build the test scene.
@@ -154,7 +186,7 @@ export function Viewer ( { viewerId, style }: IViewerProps )
 		}
 
 		// If the boxes are not supposed to be visible ...
-		if ( false === boundingBoxesVisible )
+		if ( false === boxesVisible )
 		{
 			// And they are not ...
 			if ( !boxesScene )
@@ -207,7 +239,7 @@ export function Viewer ( { viewerId, style }: IViewerProps )
 		viewer.requestRender();
 	}, [
 		boxesScene,
-		boundingBoxesVisible,
+		boxesVisible,
 		viewer,
 	] );
 
@@ -223,7 +255,7 @@ export function Viewer ( { viewerId, style }: IViewerProps )
 		}
 
 		// If the triangle edges are not supposed to be visible ...
-		if ( false === triangleEdgesVisible )
+		if ( false === edgesVisible )
 		{
 			// And they are not ...
 			if ( !edgesScene )
@@ -282,7 +314,7 @@ export function Viewer ( { viewerId, style }: IViewerProps )
 		viewer.requestRender();
 	}, [
 		edgesScene,
-		triangleEdgesVisible,
+		edgesVisible,
 		viewer,
 	] );
 
@@ -520,20 +552,29 @@ export function Viewer ( { viewerId, style }: IViewerProps )
 		}
 
 		// Return the existing viewer if we have it.
-		const existing = getViewer ( viewerId );
-		if ( existing )
+		const state = viewerStates.get ( viewerId );
+		if ( state )
 		{
-			return existing;
+			const { viewer } = state;
+			if ( viewer )
+			{
+				// console.log ( "Out getOrCreateViewer() with existing viewer" );
+				return viewer;
+			}
 		}
 
-		// Make the viewer.
+		// Make the viewer and its state.
 		const newViewer = new InternalViewer ( { canvas: canvas.current } );
-		setViewer ( viewerId, newViewer );
 		console.log ( `Internal viewer ${newViewer.id} created` );
 
 		// Build the scene.
 		newViewer.modelScene = buildTestScene();
 		newViewer.viewAll ( { animate: false } );
+
+		// Put the new viewer and its state in the store.
+		const newState = createViewerState();
+		newState.viewer = newViewer;
+		setViewerState ( viewerId, newState );
 
 		// Make this the current viewer.
 		setCurrentViewer ( viewerId );
@@ -544,10 +585,11 @@ export function Viewer ( { viewerId, style }: IViewerProps )
 		return newViewer;
 	}, [
 		buildTestScene,
-		getViewer,
+		createViewerState,
 		setCurrentViewer,
-		setViewer,
+		setViewerState,
 		viewerId,
+		viewerStates,
 	] );
 
 	//
@@ -730,15 +772,20 @@ export function Viewer ( { viewerId, style }: IViewerProps )
 	},
 	[ supported ] );
 
-	// console.log ( `Viewer component ${id} render count ${componentRenderCount++}` );
+	console.log ( `Viewer component ${id} render count ${componentRenderCount++}` );
 
 	//
 	// Render the components.
 	//
 	return (
-		<div>
+		<div
+			{ ...rest }
+		>
 			<canvas
-				style = { style }
+				style = { {
+					width: "100%",
+					height: "100%",
+				} }
 				ref = { canvas }
 				onDragOver = { handleDragOver }
 				onDrop = { handleDroppedFiles }
