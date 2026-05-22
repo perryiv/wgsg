@@ -25,6 +25,7 @@ import {
 	useState,
 } from "react";
 import {
+	DEVELOPER_BUILD,
 	Device,
 	Trackball,
 	Viewer as InternalViewer,
@@ -42,12 +43,13 @@ let renderCount = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Types used below.
+//	Constants used below.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 const LEFT_VIEWER = "left_viewer";
 const RIGHT_VIEWER = "right_viewer";
+const NUM_VIEWERS = ( ( DEVELOPER_BUILD ) ? 2 : 1 );
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -444,13 +446,18 @@ export function App()
 	//
 	const renderViewer = useCallback ( ( viewerId: string ) =>
 	{
+		const border = ( ( NUM_VIEWERS > 1 ) ?
+			`1px ${( viewerId === currentViewerId ) ? "solid red" : "solid transparent" }` :
+			"none"
+		);
+
 		return (
 			<div
 				style = { {
 					boxSizing: "border-box",
 					flexGrow: 1,
 					height: "100%",
-					border: `1px ${( viewerId === currentViewerId ) ? "solid red" : "solid transparent" }`,
+					border,
 				} }
 			>
 				<Viewer
@@ -524,7 +531,7 @@ export function App()
 					} }
 				>
 					{ leftViewer }
-					{ rightViewer }
+					{ ( NUM_VIEWERS > 1 ) ? rightViewer : null }
 				</div>
 			</Initialize>
 		</div>
