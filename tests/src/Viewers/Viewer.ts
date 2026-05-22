@@ -107,7 +107,7 @@ export function test ()
 			const pp = ( proj as Perspective );
 			expect ( pp.fov ).to.equal ( 45 );
 			expect ( pp.aspect ).to.equal ( 1 );
-			expect ( pp.near ).to.equal ( 0.01 );
+			expect ( pp.near ).to.equal ( 0.1 );
 			expect ( pp.far ).to.equal ( 10000 );
 		} );
 
@@ -118,7 +118,7 @@ export function test ()
 			viewer.resize ( 100, 100 );
 
 			expect ( viewer.projMatrix ).to.deep.equal ( mat4.perspective (
-				[ ...IDENTITY_MATRIX ], 45, 1, 0.01, 10000
+				[ ...IDENTITY_MATRIX ], 45, 1, 0.1, 10000
 			) );
 
 			expect ( viewer.viewMatrix ).to.deep.equal ( IDENTITY_MATRIX );
@@ -169,7 +169,7 @@ export function test ()
 			// The projection should have the default near and far distances.
 			const proj = ( viewer.projection as Perspective );
 			const { fov, near: n1, far: f1 } = proj;
-			expect ( n1 ).to.be.equal ( 0.01 );
+			expect ( n1 ).to.be.equal ( 0.1 );
 			expect ( f1 ).to.be.equal ( 10000 );
 
 			// This should change the view matrix.
