@@ -445,16 +445,26 @@ export function App()
 	const renderViewer = useCallback ( ( viewerId: string ) =>
 	{
 		return (
-			<Viewer
+			<div
 				style = { {
-					width: "100%",
+					boxSizing: "border-box",
+					flexGrow: 1,
 					height: "100%",
+					border: `1px ${( viewerId === currentViewerId ) ? "solid red" : "solid transparent" }`,
 				} }
-				viewerId = { viewerId }
-				onClick = { () => handleViewerClick ( viewerId ) }
-			/>
+			>
+				<Viewer
+					style = { {
+						width: "100%",
+						height: "100%",
+					} }
+					viewerId = { viewerId }
+					onClick = { () => handleViewerClick ( viewerId ) }
+				/>
+			</div>
 		);
 	}, [
+		currentViewerId,
 		handleViewerClick,
 	] );
 
@@ -513,26 +523,8 @@ export function App()
 						height: "100%",
 					} }
 				>
-					<div
-						style = { {
-							boxSizing: "border-box",
-							flexGrow: 1,
-							height: "100%",
-							border: `1px ${( LEFT_VIEWER === currentViewerId ) ? "solid red" : "solid transparent" }`,
-						} }
-					>
-						{ leftViewer }
-					</div>
-					<div
-						style = { {
-							boxSizing: "border-box",
-							flexGrow: 1,
-							height: "100%",
-							border: `1px ${( RIGHT_VIEWER === currentViewerId ) ? "solid red" : "solid transparent" }`,
-						} }
-					>
-						{ rightViewer }
-					</div>
+					{ leftViewer }
+					{ rightViewer }
 				</div>
 			</Initialize>
 		</div>
