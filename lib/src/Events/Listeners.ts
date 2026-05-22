@@ -109,19 +109,22 @@ export class Listeners extends BaseClass
 	 * Add a listener for the given event type.
 	 * @param {IEventType} type - The event type.
 	 * @param {IEventListener} listener - The event listener.
+	 * @returns {IEventListener} The event listener that was added.
 	 */
-	public add ( type: IEventType, listener: IEventListener ) : void
+	public add ( type: IEventType, listener: IEventListener ) : IEventListener
 	{
 		const listeners = this.get ( type );
 		listeners.push ( listener );
+		return listener;
 	}
 
 	/**
 	 * Add listeners for the given event type that gets called only once.
 	 * @param {IEventType} type - The event type.
 	 * @param {IEventListener} listener - The event listener.
+	 * @returns {IEventListener} The event listener that was added.
 	 */
-	public once ( type: IEventType, listener: IEventListener ) : void
+	public once ( type: IEventType, listener: IEventListener ) : IEventListener
 	{
 		const oneTimeListener = ( event: IEvent ) =>
 		{
@@ -129,6 +132,7 @@ export class Listeners extends BaseClass
 			listener ( event );
 		}
 		this.add ( type, oneTimeListener );
+		return oneTimeListener;
 	}
 
 	/**

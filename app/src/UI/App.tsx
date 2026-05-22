@@ -12,41 +12,44 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { useTheme } from "@mui/material";
 import { Button } from "./Button";
+import { Initialize } from "./Initialize";
+import { RenderStats } from "./RenderStats";
 import { Panel } from "./Panel";
-import { useViewerState, useViewerStore } from "../State";
-import { Viewer, VIEWER_NAME } from "./Viewer";
+import { useTheme } from "@mui/material";
+import { useViewerStore } from "../State";
+import { Viewer } from "./Viewer";
 import {
 	useCallback,
-	useEffect,
 	useMemo,
 	useState,
 } from "react";
 import {
+	DEVELOPER_BUILD,
 	Device,
 	Trackball,
-	type IRenderGraphInfo,
+	Viewer as InternalViewer,
 } from "../../../lib/src";
 
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Default (empty) render graph info.
+//	For debugging.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-const defaultRenderGraphInfo: IRenderGraphInfo = {
-	numLayers: 0,
-	numBins: 0,
-	numPipelines: 0,
-	numProjMatrixGroups: 0,
-	numViewMatrixGroups: 0,
-	numStateGroups: 0,
-	numShapes: 0,
-	numTriangles: 0,
-	numLines: 0,
-};
+let renderCount = 0;
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Constants used below.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+const LEFT_VIEWER = "left_viewer";
+const RIGHT_VIEWER = "right_viewer";
+const NUM_VIEWERS = ( ( DEVELOPER_BUILD ) ? 2 : 1 );
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -57,21 +60,47 @@ const defaultRenderGraphInfo: IRenderGraphInfo = {
 
 export function App()
 {
-	// Get state.
-	const { getViewer } = useViewerStore ( ( state ) => state );
+	// Get the state.
 	const [ count, setCount ] = useState ( 0 );
 	const [ showStats, setShowStats ] = useState ( false );
-	const {
-		getBoundingBoxesVisible, setBoundingBoxesVisible,
-		getTriangleEdgesVisible, setTriangleEdgesVisible,
-		getTwoSidedLighting, setTwoSidedLighting,
-	} = useViewerState ( ( state ) => state );
-
-	// Get the current viewer.
-	const viewer = getViewer ( VIEWER_NAME );
-
-	// Get the application state.
 	const { palette } = useTheme();
+	const createViewerState = useViewerStore ( ( store ) => store.createViewerState );
+	const currentViewerId   = useViewerStore ( ( store ) => store.current );
+	const setCurrentViewer  = useViewerStore ( ( store ) => store.setCurrentViewer );
+	const setViewerState    = useViewerStore ( ( store ) => store.setViewerState );
+	const viewerStates      = useViewerStore ( ( store ) => store.viewers );
+
+	//
+	// Get the viewer, which may be null.
+	//
+	const viewer = useMemo ( (): ( InternalViewer | null ) =>
+	{
+		if ( currentViewerId )
+		{
+			const state = viewerStates.get ( currentViewerId );
+			if ( state )
+			{
+				return ( state.viewer );
+			}
+		}
+		return null;
+	}, [
+		currentViewerId,
+		viewerStates,
+	] );
+
+	//
+	// Get the viewer state.
+	//
+	const { boxesVisible, edgesVisible, twoSidedLighting } = useMemo ( () =>
+	{
+		const state = ( currentViewerId ? ( viewerStates.get ( currentViewerId ) ) : null );
+		return ( state ?? createViewerState() );
+	}, [
+		createViewerState,
+		currentViewerId,
+		viewerStates,
+	] );
 
 	//
 	// Get the background color for the panel.
@@ -100,16 +129,13 @@ export function App()
 	[] );
 
 	//
-	// Return the formatted viewer render graph info.
+	// Handle when the viewer is clicked.
 	//
-	const getRenderGraphInfo = useCallback ( () =>
+	const handleViewerClick = useCallback ( ( viewerId: string ) =>
 	{
-		return ( ( viewer )
-			? viewer.cullVisitor.renderGraphInfo
-			: defaultRenderGraphInfo
-		);
+		setCurrentViewer ( viewerId );
 	},
-	[ viewer ] );
+	[ setCurrentViewer ] );
 
 	//
 	// Handle the "allow animations" button.
@@ -219,11 +245,19 @@ export function App()
 	//
 	const handleShowBoundingBoxes = useCallback ( () =>
 	{
-		const current = getBoundingBoxesVisible();
-		setBoundingBoxesVisible ( !current );
+		if ( currentViewerId )
+		{
+			const vs = viewerStates.get ( currentViewerId );
+			if ( vs )
+			{
+				const visible = vs.boxesVisible;
+				setViewerState ( currentViewerId, { ...vs, boxesVisible: !visible } );
+			}
+		}
 	}, [
-		getBoundingBoxesVisible,
-		setBoundingBoxesVisible,
+		currentViewerId,
+		setViewerState,
+		viewerStates,
 	] );
 
 	//
@@ -231,11 +265,19 @@ export function App()
 	//
 	const handleShowTriangleEdges = useCallback ( () =>
 	{
-		const current = getTriangleEdgesVisible();
-		setTriangleEdgesVisible ( !current );
+		if ( currentViewerId )
+		{
+			const vs = viewerStates.get ( currentViewerId );
+			if ( vs )
+			{
+				const visible = vs.edgesVisible;
+				setViewerState ( currentViewerId, { ...vs, edgesVisible: !visible } );
+			}
+		}
 	}, [
-		getTriangleEdgesVisible,
-		setTriangleEdgesVisible,
+		currentViewerId,
+		setViewerState,
+		viewerStates,
 	] );
 
 	//
@@ -243,37 +285,20 @@ export function App()
 	//
 	const handleUseTwoSidedLighting = useCallback ( () =>
 	{
-		const current = getTwoSidedLighting();
-		setTwoSidedLighting ( !current );
-	}, [
-		getTwoSidedLighting,
-		setTwoSidedLighting,
-	] );
-
-	//
-	// Called when the component mounts.
-	//
-	useEffect ( () =>
-	{
-		// console.log ( "App component mounted" );
-
-		// When the viewer renders we want to re-render this component.
-		if ( viewer )
+		if ( currentViewerId )
 		{
-			viewer.clientListeners.add ( "post_render", () =>
+			const vs = viewerStates.get ( currentViewerId );
+			if ( vs )
 			{
-				setCount ( ( current ) => { return ( current + 1 ); } );
-			} );
+				const tsl = vs.twoSidedLighting;
+				setViewerState ( currentViewerId, { ...vs, twoSidedLighting: !tsl } );
+			}
 		}
-
-		return ( () =>
-		{
-			// console.log ( "App component unmounted" );
-		} );
-	},
-	[ viewer ] );
-
-	// console.log ( "Rendering app" );
+	}, [
+		currentViewerId,
+		setViewerState,
+		viewerStates,
+	] );
 
 	//
 	// Return a vertical space.
@@ -291,13 +316,10 @@ export function App()
 	//
 	// Render the first panel in the top left position.
 	//
-	const renderPanel1 = useCallback ( () =>
+	const panel1 = useMemo ( () =>
 	{
-		// If there's no viewer then do not render the panel.
-		if ( !viewer )
-		{
-			return null;
-		}
+		// If there's no viewer then everybody is disabled.
+		const disabled = !viewer;
 
 		return (
 			<Panel
@@ -313,58 +335,74 @@ export function App()
 					} }
 				>
 					<Button
+						disabled = { disabled }
 						onClick = { handleTrackballMode }
-						value = { "track_ball" === viewer.navBase.rotationMode }
+						value = { "track_ball" === viewer?.navBase.rotationMode }
 						radio = { true }
 					>
 						Trackball rotation
 					</Button>
 					<Button
+						disabled = { disabled }
 						onClick = { handleTurntableMode }
-						value = { "turn_table" === viewer.navBase.rotationMode }
+						value = { "turn_table" === viewer?.navBase.rotationMode }
 						radio = { true }
 					>
 						Turntable rotation
 					</Button>
 					{ verticalSpace() }
 					<Button
+						disabled = { disabled }
 						onClick = { handleAllowAnimations }
-						value = { viewer.options.animations.allow }
+						value = { viewer ? viewer.options.animations.allow : false }
 					>
 						Allow animations
 					</Button>
 					{ verticalSpace() }
-					<Button onClick = { handleViewerRender } >
+					<Button
+						disabled = { disabled }
+						onClick = { handleViewerRender }
+					>
 						Render viewer
 					</Button>
-					<Button onClick = { handleViewerReset } >
+					<Button
+						disabled = { disabled }
+						onClick = { handleViewerReset }
+					>
 						Reset navigation
 					</Button>
-					<Button onClick = { handleSimulateDeviceLost } >
+					<Button
+						disabled = { disabled }
+						onClick = { handleSimulateDeviceLost }
+					>
 						Simulate device lost
 					</Button>
 					{ verticalSpace() }
 					<Button
+						disabled = { disabled }
 						onClick = { handleShowStats }
 						value = { showStats }
 					>
 						Render stats
 					</Button>
 					<Button
+						disabled = { disabled }
 						onClick = { handleShowBoundingBoxes }
-						value = { getBoundingBoxesVisible() }
+						value = { boxesVisible }
 					>
 						Bounding boxes
 					</Button>
 					<Button
+						disabled = { disabled }
 						onClick = { handleShowTriangleEdges }
-						value = { getTriangleEdgesVisible() }
+						value = { edgesVisible }
 					>
 						Triangle edges
 					</Button>
 					<Button
+						disabled = { disabled }
 						onClick = { handleUseTwoSidedLighting }
-						value = { getTwoSidedLighting() }
+						value = { twoSidedLighting }
 					>
 						Two-sided lighting
 					</Button>
@@ -383,9 +421,9 @@ export function App()
 			</Panel>
 		);
 	}, [
+		boxesVisible,
 		buildTimeStamp,
-		getBoundingBoxesVisible,
-		getTriangleEdgesVisible,
+		edgesVisible,
 		handleAllowAnimations,
 		handleShowBoundingBoxes,
 		handleShowStats,
@@ -393,99 +431,71 @@ export function App()
 		handleSimulateDeviceLost,
 		handleTrackballMode,
 		handleTurntableMode,
+		handleUseTwoSidedLighting,
 		handleViewerRender,
 		handleViewerReset,
 		panelBackground,
 		showStats,
+		twoSidedLighting,
 		verticalSpace,
 		viewer,
 	] );
 
 	//
-	// Render the second panel.
+	// Render a viewer component.
 	//
-	const renderPanel2 = useCallback ( () =>
+	const renderViewer = useCallback ( ( viewerId: string ) =>
 	{
-		// If there's no viewer then do not render the panel.
-		if ( !viewer )
-		{
-			return null;
-		}
+		const border = ( ( NUM_VIEWERS > 1 ) ?
+			`1px ${( viewerId === currentViewerId ) ? "solid red" : "solid transparent" }` :
+			"none"
+		);
 
-		// Are we showing the stats?
-		if ( !showStats )
-		{
-			return null;
-		}
-
-		// Get the frame info and make sure there is an end time.
-		const frame = viewer.frame;
-		if ( !frame.end )
-		{
-			return null;
-		}
-
-		// Get the render graph info.
-		const rgi: IRenderGraphInfo = getRenderGraphInfo();
-
-		// Determine how long the frame took in milliseconds.
-		const duration = ( frame.end - frame.start );
-
-		// Make the number formatters.
-		const intF = new Intl.NumberFormat();
-		const decF = new Intl.NumberFormat ( navigator.languages[0], {
-			minimumFractionDigits: 2,
-			maximumFractionDigits: 2,
-		} );
-
-		// Make the final string.
-		const label =
-			`Frame: ${ viewer.frame.count }\n` +
-			`Time: ${ decF.format ( duration ) } ms\n` +
-			`Rate: ${ decF.format ( ( 1000 / duration ) ) } f/s\n` +
-			`Layers: ${ intF.format ( rgi.numLayers ) }\n` +
-			`Bins: ${ intF.format ( rgi.numBins ) }\n` +
-			`Pipelines: ${ intF.format ( rgi.numPipelines ) }\n` +
-			`Projections: ${ intF.format ( rgi.numProjMatrixGroups ) }\n` +
-			`ViewMatrices: ${ intF.format ( rgi.numViewMatrixGroups ) }\n` +
-			`States: ${ intF.format ( rgi.numStateGroups ) }\n` +
-			`Shapes: ${ intF.format ( rgi.numShapes ) }\n` +
-			`Triangles: ${ intF.format ( rgi.numTriangles ) }\n` +
-			`Lines: ${ intF.format ( rgi.numLines ) }`;
-
-		// Render the panel.
 		return (
-			<Panel
+			<div
 				style = { {
-					background: panelBackground,
+					boxSizing: "border-box",
+					flexGrow: 1,
+					height: "100%",
+					border,
 				} }
 			>
-				<div
+				<Viewer
 					style = { {
-						display: "flex",
-						flexDirection: "column",
-						alignItems: "flex-start",
-						paddingLeft: "4px",
-						minWidth: "104px",
+						width: "100%",
+						height: "100%",
 					} }
-				>
-					<div
-						style = { {
-							whiteSpace: "pre",
-							fontSize: "12px",
-						} }
-					>
-						{ label }
-					</div>
-				</div>
-			</Panel>
+					viewerId = { viewerId }
+					onClick = { () => handleViewerClick ( viewerId ) }
+				/>
+			</div>
 		);
 	}, [
-		getRenderGraphInfo,
-		panelBackground,
-		showStats,
-		viewer,
+		currentViewerId,
+		handleViewerClick,
 	] );
+
+	//
+	// Render the left viewer.
+	//
+	const leftViewer = useMemo ( () =>
+	{
+		return renderViewer ( LEFT_VIEWER );
+	}, [
+		renderViewer,
+	] );
+
+	//
+	// Render the right viewer.
+	//
+	const rightViewer = useMemo ( () =>
+	{
+		return renderViewer ( RIGHT_VIEWER );
+	}, [
+		renderViewer,
+	] );
+
+	console.log ( `App render count ${++renderCount}` );
 
 	//
 	// Render the components.
@@ -508,16 +518,22 @@ export function App()
 					gap: "10px",
 				} }
 			>
-				{ renderPanel1() }
-				{ renderPanel2() }
+				{ panel1 }
+				{ showStats ? <RenderStats /> : null }
 			</div>
-			<Viewer
-				style = { {
-					width: "100vw",
-					height: "100vh",
-					background: "transparent",
-				} }
-			/>
+			<Initialize>
+				<div
+					style = { {
+						display: "flex",
+						flexDirection: "row",
+						width: "100%",
+						height: "100%",
+					} }
+				>
+					{ leftViewer }
+					{ ( NUM_VIEWERS > 1 ) ? rightViewer : null }
+				</div>
+			</Initialize>
 		</div>
 	);
 }

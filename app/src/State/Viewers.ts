@@ -18,68 +18,82 @@ import { Viewer } from "../../../lib/src/Viewers";
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Types for the viewer store.
+//	Types used below.
 //
 ///////////////////////////////////////////////////////////////////////////////
-
-export interface IViewerStore
-{
-	viewers: Map < string, Viewer >;
-	getViewer: ( id: string ) => ( Viewer | null );
-	setViewer: ( id: string, viewer: Viewer ) => void;
-	removeViewer: ( id: string ) => void;
-	clearViewers: () => void;
-}
 
 export interface IViewerState
 {
+	viewer: ( Viewer | null );
 	boxesVisible: boolean;
 	edgesVisible: boolean;
 	twoSidedLighting: boolean;
-	getBoundingBoxesVisible: () => boolean;
-	setBoundingBoxesVisible: ( visible: boolean ) => void;
-	getTriangleEdgesVisible: () => boolean;
-	setTriangleEdgesVisible: ( visible: boolean ) => void;
-	getTwoSidedLighting: () => boolean;
-	setTwoSidedLighting: ( enabled: boolean ) => void;
+}
+
+export interface IViewerStore
+{
+	viewers: Map < string, IViewerState >;
+	current: ( string | null );
+
+	setCurrentViewer: ( id: ( string | null ) ) => void;
+	setViewerState: ( id: string, state: IViewerState ) => void;
+	createViewerState: () => IViewerState;
+	removeViewerState: ( id: string ) => void;
+	clearViewerStates: () => void;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Make the map of viewers.
+//	The store of viewers and their states.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 export const useViewerStore = create < IViewerStore > () ( ( set, get ) => (
 {
-	viewers: new Map < string, Viewer > (),
+	viewers: new Map < string, IViewerState > (),
+	current: null as ( string | null ),
 
-	getViewer: ( id: string ) : ( Viewer | null ) =>
+	setCurrentViewer: ( id: ( string | null ) ) : void =>
 	{
 		const store = get();
-		const viewer = store.viewers.get ( id );
-		return ( viewer ?? null );
+		if ( id !== store.current )
+		{
+			set ( () =>
+			{
+				return { current: id };
+			} )
+		}
 	},
 
-	setViewer: ( id: string, viewer: Viewer ) =>
+	setViewerState: ( id: string, state: IViewerState ) : void =>
 	{
 		const store = get();
 		const current = store.viewers.get ( id );
-		if ( viewer !== current )
+		if ( state !== current )
 		{
-			set ( ( current ) =>
+			set ( ( current: IViewerStore ) =>
 			{
 				const next = new Map ( current.viewers );
-				next.set ( id, viewer );
+				next.set ( id, state );
 				return { viewers: next };
 			} )
 		}
 	},
 
-	removeViewer: ( id: string ) =>
+	createViewerState: () : IViewerState =>
 	{
-		set ( ( current ) =>
+		return {
+			viewer: null,
+			boxesVisible: false,
+			edgesVisible: false,
+			twoSidedLighting: false,
+		};
+	},
+
+	removeViewerState: ( id: string ) : void =>
+	{
+		set ( ( current: IViewerStore ) =>
 		{
 			const next = new Map ( current.viewers );
 			next.delete ( id );
@@ -87,91 +101,14 @@ export const useViewerStore = create < IViewerStore > () ( ( set, get ) => (
 		} )
 	},
 
-	clearViewers: () =>
+	clearViewerStates: () : void =>
 	{
 		set ( () =>
 		{
 			return (
 			{
-				viewers: new Map < string, Viewer > ()
+				viewers: new Map < string, IViewerState > ()
 			} );
 		} );
 	}
-} ) );
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
-//	Make the map of viewer state.
-//
-///////////////////////////////////////////////////////////////////////////////
-
-export const useViewerState = create < IViewerState > () ( ( set, get ) => (
-{
-	boxesVisible: false,
-	edgesVisible: false,
-	twoSidedLighting: false,
-
-	getBoundingBoxesVisible: () : boolean =>
-	{
-		const store = get();
-		return store.boxesVisible;
-	},
-
-	setBoundingBoxesVisible: ( visible: boolean ) =>
-	{
-		const store = get();
-		if ( visible !== store.boxesVisible )
-		{
-			set ( () =>
-			{
-				return (
-				{
-					boxesVisible: visible
-				} )
-		 } );
-		}
-	},
-
-	getTriangleEdgesVisible: () : boolean =>
-	{
-		const store = get();
-		return store.edgesVisible;
-	},
-
-	setTriangleEdgesVisible: ( visible: boolean ) =>
-	{
-		const store = get();
-		if ( visible !== store.edgesVisible )
-		{
-			set ( () =>
-			{
-				return (
-				{
-					edgesVisible: visible
-				} )
-		 } );
-		}
-	},
-
-	getTwoSidedLighting: () : boolean =>
-	{
-		const store = get();
-		return store.twoSidedLighting;
-	},
-
-	setTwoSidedLighting: ( enabled: boolean ) =>
-	{
-		const store = get();
-		if ( enabled !== store.twoSidedLighting )
-		{
-			set ( () =>
-			{
-				return (
-				{
-					twoSidedLighting: enabled
-				} )
-		 } );
-		}
-	},
 } ) );

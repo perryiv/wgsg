@@ -12,7 +12,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IProgressCallback } from "../Types";
 import { DEVELOPER_BUILD } from "./Constants";
 
 
@@ -106,25 +105,44 @@ export function getNumElements < T extends { length: Readonly<number> } > ( arra
 
 
 /**
- * Throttle the given progress callback.
- * @param {IProgressCallback} func - The progress callback to throttle.
+ * Throttle the given function.
+ * @param {( ...args: TArgs ) => TResult} func - The function to throttle.
  * @param {number} delay - The delay in milliseconds.
- * @returns {IProgressCallback} The throttled progress callback.
+ * @param {TResult} [fallbackResult] - Optional fallback return value when calls are throttled.
+ * @returns {( ...args: TArgs ) => TResult} The throttled function.
  */
-export function throttle ( func: IProgressCallback, delay: Readonly<number> ) : IProgressCallback
+export function throttle < TArgs extends unknown[], TResult >
+(
+	func: ( ...args: TArgs ) => TResult,
+	delay: Readonly<number>,
+	fallbackResult?: TResult,
+) : ( ...args: TArgs ) => TResult
 {
 	let lastCall = 0;
+	let hasResult = ( undefined !== fallbackResult );
+	let lastResult = ( fallbackResult as TResult );
 
-	return ( ( value: number, total: number ) : boolean =>
+	return ( ( ...args: TArgs ) : TResult =>
 	{
 		const now = Date.now();
 
 		if ( ( now - lastCall ) >= delay )
 		{
 			lastCall = now;
-			return func ( value, total );
+			lastResult = func ( ...args );
+			hasResult = true;
+			return lastResult;
 		}
 
-		return true; // Keep going.
+		// If this call is throttled then return the most recent result.
+		if ( hasResult )
+		{
+			return lastResult;
+		}
+
+		// This only happens in unusual cases where the first call is throttled.
+		lastResult = func ( ...args );
+		hasResult = true;
+		return lastResult;
 	} );
 }

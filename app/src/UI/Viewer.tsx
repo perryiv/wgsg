@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { buildSceneSpheres } from "../Tools";
-import { useViewerState, useViewerStore } from "../State";
+import { useViewerStore } from "../State";
 import CloseIcon from "@mui/icons-material/Close";
 import {
 	Card,
@@ -22,10 +22,10 @@ import {
 	Paper,
 } from "@mui/material";
 import {
-	CSSProperties,
 	DragEvent,
 	useCallback,
 	useEffect,
+	useMemo,
 	useRef,
 	useState,
 } from "react";
@@ -35,7 +35,7 @@ import {
 	Cancelled,
 	clampNumber,
 	Device,
-	DeviceLost,
+	// DeviceLost,
 	getNextId,
 	getReader,
 	Node as SceneNode,
@@ -48,22 +48,13 @@ import {
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Constants used below.
-//
-///////////////////////////////////////////////////////////////////////////////
-
-export const VIEWER_NAME = "main_viewer";
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
 //	Types for the viewer props.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export interface IViewerProps
+export interface IViewerProps extends React.HTMLAttributes < HTMLDivElement >
 {
-	style?: CSSProperties;
+	viewerId: string;
 }
 
 
@@ -73,7 +64,7 @@ export interface IViewerProps
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-// let componentRenderCount = 0;
+let componentRenderCount = 0;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -82,27 +73,27 @@ export interface IViewerProps
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-const handleNewDevice = ( viewer: InternalViewer ) =>
-{
-	// Tell the viewer to handle the new device.
-	viewer.handleNewDevice();
+// const handleNewDevice = ( viewer: InternalViewer ) =>
+// {
+// 	// Tell the viewer to handle the new device.
+// 	viewer.handleNewDevice();
 
-	// Get the scene.
-	const { scene } = viewer;
+// 	// Get the scene.
+// 	const { scene } = viewer;
 
-	// Handle no scene.
-	if ( !scene )
-	{
-		return;
-	}
+// 	// Handle no scene.
+// 	if ( !scene )
+// 	{
+// 		return;
+// 	}
 
-	// Visit the scene.
-	const visitor = new DeviceLost();
-	visitor.handle ( scene );
+// 	// Visit the scene.
+// 	const visitor = new DeviceLost();
+// 	visitor.handle ( scene );
 
-	// Render again so that we see the rebuilt scene.
-	viewer.requestRender();
-};
+// 	// Render again so that we see the rebuilt scene.
+// 	viewer.requestRender();
+// };
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -111,31 +102,68 @@ const handleNewDevice = ( viewer: InternalViewer ) =>
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export function Viewer ( { style }: IViewerProps )
+export function Viewer ( { viewerId, ...rest }: IViewerProps )
 {
-	// Get state.
+	// Get the state.
 	const [ boxesScene, setBoxesScene ] = useState < SceneNode | null > ( null );
 	const [ edgesScene, setEdgesScene ] = useState < SceneNode | null > ( null );
 	const [ id, ] = useState < number > ( getNextId ( "Viewer Component" ) );
 	const [ progress, setProgress ] = useState < number > ( 0 );
-	const [ supported, setSupported ] = useState < boolean | null > ( null );
-	const { getViewer, setViewer } = useViewerStore ( ( state ) => state );
+	const [ supported, ] = useState < boolean | null > ( null );
 	const canvas = useRef < HTMLCanvasElement | null > ( null );
-	const isMounting = useRef ( false );
 	const loader = useRef < Reader > ( null );
-	const {
-		getBoundingBoxesVisible,
-		getTriangleEdgesVisible,
-		getTwoSidedLighting,
-	} = useViewerState ( ( state ) => state );
+	const createViewerState = useViewerStore ( ( store ) => store.createViewerState );
+	const setCurrentViewer  = useViewerStore ( ( store ) => store.setCurrentViewer );
+	const setViewerState    = useViewerStore ( ( store ) => store.setViewerState );
+	const viewerStates      = useViewerStore ( ( store ) => store.viewers );
 
-	// Get the viewer.
-	const viewer = getViewer ( VIEWER_NAME );
+	//
+	// Get the viewer, which may be null.
+	//
+	const viewer = useMemo ( (): ( InternalViewer | null ) =>
+	{
+		if ( viewerId )
+		{
+			const state = viewerStates.get ( viewerId );
+			if ( state )
+			{
+				return ( state.viewer );
+			}
+		}
+		return null;
+	}, [
+		viewerId,
+		viewerStates,
+	] );
 
-	// Are these things visible?
-	const boundingBoxesVisible = getBoundingBoxesVisible();
-	const triangleEdgesVisible = getTriangleEdgesVisible();
-	const twoSidedLighting = getTwoSidedLighting();
+	//
+	// Get the viewer state.
+	//
+	const { boxesVisible, edgesVisible, twoSidedLighting } = useMemo ( () =>
+	{
+		const state = viewerStates.get ( viewerId );
+		return ( state ?? createViewerState() );
+	}, [
+		createViewerState,
+		viewerId,
+		viewerStates,
+	] );
+
+	//
+	// Are we the current viewer?
+	//
+	// const isCurrentViewer = useMemo ( () =>
+	// {
+	// 	const currentViewerId = getCurrentViewer();
+	// 	if ( currentViewerId )
+	// 	{
+	// 		return ( currentViewerId === viewerId );
+	// 	}
+	// 	return false;
+	// }, [
+	// 	getCurrentViewer,
+	// 	viewerId,
+	// ] );
 
 	//
 	// Build the test scene.
@@ -158,7 +186,7 @@ export function Viewer ( { style }: IViewerProps )
 		}
 
 		// If the boxes are not supposed to be visible ...
-		if ( false === boundingBoxesVisible )
+		if ( false === boxesVisible )
 		{
 			// And they are not ...
 			if ( !boxesScene )
@@ -211,7 +239,7 @@ export function Viewer ( { style }: IViewerProps )
 		viewer.requestRender();
 	}, [
 		boxesScene,
-		boundingBoxesVisible,
+		boxesVisible,
 		viewer,
 	] );
 
@@ -227,7 +255,7 @@ export function Viewer ( { style }: IViewerProps )
 		}
 
 		// If the triangle edges are not supposed to be visible ...
-		if ( false === triangleEdgesVisible )
+		if ( false === edgesVisible )
 		{
 			// And they are not ...
 			if ( !edgesScene )
@@ -286,7 +314,7 @@ export function Viewer ( { style }: IViewerProps )
 		viewer.requestRender();
 	}, [
 		edgesScene,
-		triangleEdgesVisible,
+		edgesVisible,
 		viewer,
 	] );
 
@@ -442,7 +470,7 @@ export function Viewer ( { style }: IViewerProps )
 		// Handle no viewer.
 		if ( !viewer )
 		{
-			console.warn ( `No viewer found with name: ${VIEWER_NAME}` );
+			console.warn ( `No viewer found with id: ${viewerId}` );
 			return;
 		}
 
@@ -465,6 +493,7 @@ export function Viewer ( { style }: IViewerProps )
 	}, [
 		boxesScene,
 		viewer,
+		viewerId,
 	] );
 
 	//
@@ -523,20 +552,32 @@ export function Viewer ( { style }: IViewerProps )
 		}
 
 		// Return the existing viewer if we have it.
-		const existing = getViewer ( VIEWER_NAME );
-		if ( existing )
+		const state = viewerStates.get ( viewerId );
+		if ( state )
 		{
-			return existing;
+			const { viewer } = state;
+			if ( viewer )
+			{
+				// console.log ( "Out getOrCreateViewer() with existing viewer" );
+				return viewer;
+			}
 		}
 
-		// Make the viewer.
+		// Make the viewer and its state.
 		const newViewer = new InternalViewer ( { canvas: canvas.current } );
-		setViewer ( VIEWER_NAME, newViewer );
 		console.log ( `Internal viewer ${newViewer.id} created` );
 
 		// Build the scene.
 		newViewer.modelScene = buildTestScene();
 		newViewer.viewAll ( { animate: false } );
+
+		// Put the new viewer and its state in the store.
+		const newState = createViewerState();
+		newState.viewer = newViewer;
+		setViewerState ( viewerId, newState );
+
+		// Make this the current viewer.
+		setCurrentViewer ( viewerId );
 
 		// console.log ( "Out getOrCreateViewer()" );
 
@@ -544,100 +585,54 @@ export function Viewer ( { style }: IViewerProps )
 		return newViewer;
 	}, [
 		buildTestScene,
-		getViewer,
-		setViewer,
+		createViewerState,
+		setCurrentViewer,
+		setViewerState,
+		viewerId,
+		viewerStates,
 	] );
 
 	//
 	// Initialize the device.
 	//
-	const initDevice = useCallback ( async () =>
-	{
-		// console.log ( "In initDevice()" );
+	// const initDevice = useCallback ( async () =>
+	// {
+	// 	// Handle device lost.
+	// 	void Device.instance.device.lost.then ( async () =>
+	// 	{
+	// 		// It's probably already destroyed but make sure.
+	// 		Device.destroy();
 
-		// This should not happen.
-		if ( true === Device.valid )
+	// 		// Make it again.
+	// 		await initDevice();
+
+	// 		// This will rebuild the resources.
+	// 		handleNewDevice ( getOrCreateViewer() );
+	// 	} );
+	// },
+	// [ getOrCreateViewer ] );
+
+	//
+	// Local function to handle when this component is mounted.
+	//
+	const handleMount = useCallback ( () =>
+	{
+		// This should not happen if we get to here.
+		if ( false === Device.valid )
 		{
-			console.log ( "Device is already initialized" );
-			return;
+			throw new Error ( "Device is not initialized" );
 		}
 
-		// This should not happen.
+		// This should not happen if we get to here.
 		if ( true === Device.isInitializing )
 		{
 			throw new Error ( "Device is already being initialized" );
 		}
 
-		// Initialize the singleton device.
-		await Device.init();
-
-		console.log ( `Singleton device ${Device.instance.id} initialized` );
-
-		// Handle device lost.
-		void Device.instance.device.lost.then ( async () =>
-		{
-			// It's probably already destroyed but make sure.
-			Device.destroy();
-
-			// Make it again.
-			await initDevice();
-
-			// This will rebuild the resources.
-			handleNewDevice ( getOrCreateViewer() );
-		} );
-	},
-	[ getOrCreateViewer ] );
-
-	//
-	// Local function to handle when this component is mounted.
-	// This has to be async because of how the device initializes.
-	//
-	const handleMount = useCallback ( async () =>
-	{
-		// console.log ( `In handleMount() for viewer component ${id}` );
-
-		// Is WebGPU supported?
-		if ( null === supported )
-		{
-			if ( false === await Device.isSupported() )
-			{
-				console.warn ( "WebGPU is not supported in this browser" );
-				setSupported ( false );
-				return;
-			}
-			setSupported ( true );
-		}
-
-		// Is WebGPU supported?
-		if ( false === supported )
-		{
-			return;
-		}
-
-		// Are we still in the middle of the first mount?
-		if ( true === isMounting.current )
-		{
-			console.log ( "We are still handling the previous mount" );
-			return;
-		}
-
-		// If we get to here then set the flag that says we are mounting.
-		isMounting.current = true;
-
-		// Initialize the device if needed.
-		await initDevice();
-
 		// Get the viewer or make it if we have to.
 		getOrCreateViewer().requestRender();
-
-		// We are done mounting.
-		isMounting.current = false;
-
-		// console.log ( `Out handleMount() for viewer component ${id}` );
 	}, [
 		getOrCreateViewer,
-		initDevice,
-		supported,
 	] );
 
 	//
@@ -647,11 +642,7 @@ export function Viewer ( { style }: IViewerProps )
 	{
 		console.log ( `Viewer component ${id} mounted` );
 
-		// This has to be async because of the device initialization.
-		void ( async () =>
-		{
-			await handleMount();
-		} ) ();
+		handleMount();
 
 		return ( () =>
 		{
@@ -781,15 +772,20 @@ export function Viewer ( { style }: IViewerProps )
 	},
 	[ supported ] );
 
-	// console.log ( `Viewer component ${id} render count ${componentRenderCount++}` );
+	console.log ( `Viewer component ${id} render count ${componentRenderCount++}` );
 
 	//
 	// Render the components.
 	//
 	return (
-		<div>
+		<div
+			{ ...rest }
+		>
 			<canvas
-				style = { style }
+				style = { {
+					width: "100%",
+					height: "100%",
+				} }
 				ref = { canvas }
 				onDragOver = { handleDragOver }
 				onDrop = { handleDroppedFiles }
