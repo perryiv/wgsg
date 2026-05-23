@@ -352,4 +352,28 @@ export abstract class Node extends Base
 	 * @param {INodeTraverseCallback} cb - Callback function.
 	 */
 	public abstract traverse ( cb: INodeTraverseCallback ) : void;
+
+	/**
+	 * Return an object used when converting to JSON.
+	 * @returns {object} An object used when converting to JSON.
+	 */
+	public override toJSON() : object
+	{
+		// Shortcut.
+		const state = this.state;
+
+		// Get the base class's JSON.
+		const base = super.toJSON();
+
+		// Note: do not write the parents or user data. The parents will be obvious
+		// from the structure, and the user data could be anything.
+
+		// Return the object that represents this class.
+		return {
+			...base,
+			state: ( state ? state.toJSON() : null ),
+			flags: this.flags,
+			bounds: this.bounds.toJSON()
+		};
+	}
 }

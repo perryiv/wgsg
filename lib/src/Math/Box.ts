@@ -536,4 +536,17 @@ export class Box
 		this.min = box.min;
 		this.max = box.max;
 	}
+
+	/**
+	 * Return an object used when converting to JSON.
+	 * @returns {object} An object used when converting to JSON.
+	 */
+	public toJSON() : object
+	{
+		// Return the object that represents this class.
+		return {
+			min: this.min,
+			max: this.max
+		};
+	}
 }

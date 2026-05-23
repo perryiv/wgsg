@@ -273,4 +273,17 @@ export class Line
 	{
 		Line.transform ( this, m, this );
 	}
+
+	/**
+	 * Return an object used when converting to JSON.
+	 * @returns {object} An object used when converting to JSON.
+	 */
+	public toJSON() : object
+	{
+		// Return the object that represents this class.
+		return {
+			start: this.#p0,
+			end: this.#p1
+		};
+	}
 }

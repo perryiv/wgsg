@@ -75,4 +75,19 @@ export abstract class Attribute extends BaseClass
 	 * @param {IAttributeApplyInput} input - The input for applying the state attributes.
 	 */
 	public abstract apply ( input: IAttributeApplyInput ) : void;
+
+	/**
+	 * Return an object used when converting to JSON.
+	 * @returns {object} An object used when converting to JSON.
+	 */
+	public override toJSON() : object
+	{
+		// Get the base class's JSON.
+		const base = super.toJSON();
+
+		// Return the object that represents this class.
+		return {
+			...base,
+		};
+	}
 }

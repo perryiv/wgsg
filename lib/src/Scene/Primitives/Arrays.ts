@@ -149,4 +149,21 @@ export class Arrays extends BaseClass
 			func ( first + i, i );
 		}
 	}
+
+	/**
+	 * Return an object used when converting to JSON.
+	 * @returns {object} An object used when converting to JSON.
+	 */
+	public override toJSON() : object
+	{
+		// Get the base class's JSON.
+		const base = super.toJSON();
+
+			// Return the object that represents this class.
+		return {
+			...base,
+			first: this.#first,
+			count: this.#count
+		};
+	}
 }

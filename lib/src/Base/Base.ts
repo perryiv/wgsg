@@ -69,4 +69,17 @@ export abstract class Base
 	{
 		return this.getClassName();
 	}
+
+	/**
+	 * Return an object used when converting to JSON.
+	 * @returns {object} An object used when converting to JSON.
+	 */
+	public toJSON() : object
+	{
+		// Return the object that represents this class.
+		return {
+			id: this.#id,
+			type: this.type
+		};
+	}
 }

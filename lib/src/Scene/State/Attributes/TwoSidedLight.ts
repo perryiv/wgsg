@@ -98,4 +98,20 @@ export class TwoSidedLight extends BaseClass
 			shader.twoSidedLight = this.value;
 		}
 	}
+
+	/**
+	 * Return an object used when converting to JSON.
+	 * @returns {object} An object used when converting to JSON.
+	 */
+	public override toJSON() : object
+	{
+		// Get the base class's JSON.
+		const base = super.toJSON();
+
+		// Return the object that represents this class.
+		return {
+			...base,
+			value: this.value
+		};
+	}
 }

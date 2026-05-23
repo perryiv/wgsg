@@ -95,4 +95,20 @@ export abstract class Base extends BaseClass
 	 * @param {IForEachIndexCallback} func - The function to call for each index.
 	 */
 	public abstract forEachIndex ( func: IForEachIndexCallback ) : void;
+
+	/**
+	 * Return an object used when converting to JSON.
+	 * @returns {object} An object used when converting to JSON.
+	 */
+	public override toJSON() : object
+	{
+		// Get the base class's JSON.
+		const base = super.toJSON();
+
+		// Return the object that represents this class.
+		return {
+			...base,
+			topology: this.topology
+		};
+	}
 }

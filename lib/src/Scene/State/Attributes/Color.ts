@@ -102,4 +102,20 @@ export class Color extends BaseClass
 			shader.color = this.color;
 		}
 	}
+
+	/**
+	 * Return an object used when converting to JSON.
+	 * @returns {object} An object used when converting to JSON.
+	 */
+	public override toJSON() : object
+	{
+		// Get the base class's JSON.
+		const base = super.toJSON();
+
+		// Return the object that represents this class.
+		return {
+			...base,
+			color: this.color
+		};
+	}
 }

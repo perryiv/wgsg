@@ -427,4 +427,17 @@ export class Sphere
 		// The new sphere's radius.
 		this.radius = ( dist + r1 + r2 ) * 0.5;
 	}
+
+	/**
+	 * Return an object used when converting to JSON.
+	 * @returns {object} An object used when converting to JSON.
+	 */
+	public toJSON() : object
+	{
+		// Return the object that represents this class.
+		return {
+			center: this.center,
+			radius: this.radius
+		};
+	}
 }

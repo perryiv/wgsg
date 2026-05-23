@@ -426,4 +426,41 @@ export class Geometry extends Shape
 	{
 		// There is nothing to do here.
 	}
+
+	/**
+	 * Return an object used when converting to JSON.
+	 * @param {boolean} includeArrays - Whether to include the arrays in the JSON.
+	 * @returns {object} An object used when converting to JSON.
+	 */
+	public override toJSON ( includeArrays = true ) : object
+	{
+		// Get the base class's JSON.
+		const base = super.toJSON();
+
+		// If we are not supposed to include the arrays then we are done.
+		if ( false === includeArrays )
+		{
+			return base;
+		}
+
+		// Shortcuts.
+		const points     = this.#points?.values;
+		const normals    = this.#normals?.values;
+		const colors     = this.#colors?.values;
+		const texCoords  = this.#texCoords?.values;
+		const primitives = this.#primitives;
+
+		// Get the JSON for the primitives.
+		const pj = primitives?.map ( ( pl ) => pl.toJSON() );
+
+		// Return the object that represents this class.
+		return {
+			...base,
+			...( points    && { points:    Array.from ( points    ) } ),
+			...( normals   && { normals:   Array.from ( normals   ) } ),
+			...( colors    && { colors:    Array.from ( colors    ) } ),
+			...( texCoords && { texCoords: Array.from ( texCoords ) } ),
+			...( pj && { primitives: pj } ),
+		};
+	}
 }

@@ -178,4 +178,24 @@ export class Indexed extends BaseClass
 			func ( indices[i], i );
 		}
 	}
+
+	/**
+	 * Return an object used when converting to JSON.
+	 * @returns {object} An object used when converting to JSON.
+	 */
+	public override toJSON() : object
+	{
+		// Get the base class's JSON.
+		const base = super.toJSON();
+
+		// Get the JSON for the indices.
+		const values = this.#indices?.values;
+		const indices = ( values ? Array.from ( values ) : null );
+
+		// Return the object that represents this class.
+		return {
+			...base,
+			indices: indices
+		};
+	}
 }

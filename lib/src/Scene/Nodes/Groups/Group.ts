@@ -336,4 +336,27 @@ export class Group extends BaseClass
 		// TODO: Would it be better to assign the array to []?
 		this.#children.length = 0;
 	}
+
+	/**
+	 * Return an object used when converting to JSON.
+	 * @returns {object} An object used when converting to JSON.
+	 */
+	public override toJSON() : object
+	{
+		// Get the base class's JSON.
+		const base = super.toJSON();
+
+		// Get the JSON for the children.
+		const children: object[] = [];
+		this.forEachChild ( ( child: ChildType ) =>
+		{
+			children.push ( child.toJSON() );
+		} );
+
+		// Return the object that represents this class.
+		return {
+			...base,
+			children
+		};
+	}
 }
