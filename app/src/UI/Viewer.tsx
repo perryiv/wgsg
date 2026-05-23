@@ -576,6 +576,13 @@ export function Viewer ( { viewerId, ...rest }: IViewerProps )
 		newState.viewer = newViewer;
 		setViewerState ( viewerId, newState );
 
+		// We need an immediate change in the state so do this too.
+		// Otherwise, because of all the mounting and unmounting that happens at
+		// startup in a developer build, this function gets entered multiple
+		// times before another render, and we end up with two internal viewers
+		// for each component.
+		viewerStates.set ( viewerId, newState );
+
 		// Make this the current viewer.
 		setCurrentViewer ( viewerId );
 
