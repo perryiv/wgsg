@@ -742,15 +742,15 @@ export class Viewer extends BaseClass
 		this.animations.nav.stop();
 
 		input.preventDefault();
-		const { button, clientX, clientY } = input;
+		const { button, offsetX, offsetY } = input;
 
 		this.mouseButtonsDown.add ( button );
 
 		this.mousePrevious = this.mouseCurrent;
-		this.mouseCurrent = [ clientX, clientY ];
+		this.mouseCurrent = [ offsetX, offsetY ];
 
 		this.mouseReleased = null;
-		this.mousePressed = [ clientX, clientY ];
+		this.mousePressed = [ offsetX, offsetY ];
 
 		const handler = this.eventHandlerOrNavigator;
 		const event = this.makeEvent ( "mouse_down", input );
@@ -766,10 +766,10 @@ export class Viewer extends BaseClass
 	public mouseMove ( input: MouseEvent ) : void
 	{
 		input.preventDefault();
-		const { buttons, clientX, clientY } = input;
+		const { buttons, offsetX, offsetY } = input;
 
 		this.mousePrevious = this.mouseCurrent;
-		this.mouseCurrent = [ clientX, clientY ];
+		this.mouseCurrent = [ offsetX, offsetY ];
 
 		// If the distance is greater than the maximum allowed then do nothing.
 		// This will (hopefully) prevent erroneous "jumps".
@@ -817,16 +817,16 @@ export class Viewer extends BaseClass
 	public mouseUp ( input: MouseEvent ) : void
 	{
 		input.preventDefault();
-		const { button, clientX, clientY } = input;
+		const { button, offsetX, offsetY } = input;
 
 		this.mouseButtonsDown.delete ( button );
 
 		// The previous mouse was already set in the mouse-move handler.
 		// Setting it again here would make it the same as the current.
-		this.mouseCurrent = [ clientX, clientY ];
+		this.mouseCurrent = [ offsetX, offsetY ];
 
 		// Set the released point. The pressed point is unchanged.
-		this.mouseReleased = [ clientX, clientY ];
+		this.mouseReleased = [ offsetX, offsetY ];
 
 		const handler = this.eventHandlerOrNavigator;
 
