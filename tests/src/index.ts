@@ -25,6 +25,7 @@ void ( async () =>
 	await import ( "./Algorithms" );
 	await import ( "./Arrays" );
 	await import ( "./Base" );
+	await import ( "./IO" );
 	await import ( "./Math" );
 	await import ( "./Projections" );
 	await import ( "./Render" );
