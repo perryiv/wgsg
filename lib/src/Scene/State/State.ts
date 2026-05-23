@@ -380,4 +380,31 @@ export class State extends BaseClass
 		// Configure the render pass.
 		shader.configureRenderPass ( pass, this.topology );
 	}
+
+	/**
+	 * Return an object used when converting to JSON.
+	 * @returns {object} An object used when converting to JSON.
+	 */
+	public override toJSON() : object
+	{
+		// Shortcuts.
+		const shader = this.shader;
+
+		// Convert the attributes to JSON.
+		const attributes: Record<string, object> = {};
+		this.attributes.forEach ( ( attribute, key ) =>
+		{
+			attributes[key] = attribute.toJSON();
+		} );
+
+		// Return the object that represents this class.
+		return {
+			name: this.name,
+			layer: this.layer,
+			bin: this.bin,
+			shader: ( shader ? shader.type : null ),
+			topology: this.topology,
+			attributes
+		};
+	}
 }

@@ -227,4 +227,17 @@ export class Plane
 	{
 		Plane.transform ( this, m, this );
 	}
+
+	/**
+	 * Return an object used when converting to JSON.
+	 * @returns {object} An object used when converting to JSON.
+	 */
+	public toJSON() : object
+	{
+		// Return the object that represents this class.
+		return {
+			point: this.#point,
+			normal: this.#normal
+		};
+	}
 }

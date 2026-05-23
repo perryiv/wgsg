@@ -293,4 +293,22 @@ export class Sphere extends BaseClass
 	{
 		return new MathSphere ( this.center, this.radius );
 	}
+
+	/**
+	 * Return an object used when converting to JSON.
+	 * @returns {object} An object used when converting to JSON.
+	 */
+	public override toJSON() : object
+	{
+		// Get the base class's JSON.
+		const base = super.toJSON ( false );
+
+		// Return the object that represents this class.
+		return {
+			...base,
+			center: this.center,
+			radius: this.radius,
+			numSubdivisions: this.numSubdivisions
+		};
+	}
 }

@@ -102,4 +102,20 @@ export class Projection extends Group
 	{
 		return isValidMatrix ( this.#matrix );
 	}
+
+	/**
+	 * Return an object used when converting to JSON.
+	 * @returns {object} An object used when converting to JSON.
+	 */
+	public override toJSON() : object
+	{
+		// Get the base class's JSON.
+		const base = super.toJSON();
+
+		// Return the object that represents this class.
+		return {
+			...base,
+			matrix: this.#matrix
+		};
+	}
 }
