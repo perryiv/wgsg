@@ -8,32 +8,31 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	This file starts a headless browser and has it load the real tests.
+//	Load and run the tests.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-// import puppeteer from "puppeteer-core";
-// import { pathToFileURL } from "url";
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
-//	Test the code.
-//
-///////////////////////////////////////////////////////////////////////////////
-
-/*
-await ( async () =>
+describe ( "Command-Line Test Bootstrap", function ()
 {
-	const browser = await puppeteer.launch ( {
-		executablePath: "/usr/bin/chromium",
-		args: [ "--enable-unsafe-webgpu" ] // Works on Linux.
+	this.timeout ( 0 );
+
+	before ( async function ()
+	{
+		try
+		{
+			await import ( "./Algorithms" );
+			await import ( "./Math" );
+			await import ( "./Types" );
+		}
+		catch ( error )
+		{
+			const text = ( error instanceof Error ) ? ( error.stack ?? error.message ) : String ( error );
+			throw new Error ( `Failed to import command-line test modules: ${text}` );
+		}
 	} );
-	const page = await browser.newPage();
-	await page.goto ( ( pathToFileURL ( "src/tests/index.html" ) ).toString() );
-	// await page.pdf ( { path: "./index.pdf" } );
-	await page.close();
-	await browser.close();
-	console.log ( "Done" );
-} ) ();
-*/
+
+	it ( "Loads test modules", function ()
+	{
+		// If we got here then module loading succeeded.
+	} );
+} );
