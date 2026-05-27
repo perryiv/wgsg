@@ -12,12 +12,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Device } from "../../../lib/src/Tools/Device";
 import { expect } from "chai";
-import {
-	Device,
-	getNextId,
-	Surface,
-} from "../wgsg";
+import { getNextId } from "../../../lib/src/Tools/Functions";
+import { Surface } from "../../../lib/src/Viewers/Surface";
 
 
 ///////////////////////////////////////////////////////////////////////////////

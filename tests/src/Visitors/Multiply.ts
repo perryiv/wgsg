@@ -13,13 +13,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { expect } from "chai";
-import {
-	Group,
-	IMatrix44,
-	Multiply,
-	Transform,
-	Visitor,
-} from "../wgsg";
+import { Group, Transform } from "../../../lib/src/Scene/Nodes/Groups";
+import { Multiply, Visitor } from "../../../lib/src/Visitors";
+import type { IMatrix44 } from "../../../lib/src/Types/Matrix";
 
 
 ///////////////////////////////////////////////////////////////////////////////

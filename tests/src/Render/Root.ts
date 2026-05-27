@@ -12,26 +12,30 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Device } from "../../../lib/src/Tools/Device";
 import { expect } from "chai";
+import { IDENTITY_MATRIX } from "../../../lib/src/Tools/Constants";
+import { SolidColor } from "../../../lib/src/Shaders/SolidColor";
+import {
+	Group,
+	Shape,
+	SphereNode as Sphere,
+	State,
+} from "../../../lib/src/Scene";
 import {
 	Bin,
-	Cull as CullVisitor,
-	Device,
-	Draw as DrawVisitor,
-	Group,
-	IDENTITY_MATRIX,
 	Layer,
 	makeRenderGraphInfo,
 	Pipeline,
 	ProjMatrixGroup,
 	Root,
-	Shape,
-	SolidColor,
-	SphereNode as Sphere,
-	State,
 	StateGroup,
 	ViewMatrixGroup,
-} from "../wgsg";
+} from "../../../lib/src/Render";
+import {
+	Cull as CullVisitor,
+	Draw as DrawVisitor,
+} from "../../../lib/src/Visitors";
 
 
 ///////////////////////////////////////////////////////////////////////////////

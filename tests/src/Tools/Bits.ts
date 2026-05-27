@@ -19,7 +19,7 @@ import {
 	removeBits,
 	toggleBits,
 	setBits,
-} from "../wgsg";
+} from "../../../lib/src/Tools/Bits";
 
 
 ///////////////////////////////////////////////////////////////////////////////

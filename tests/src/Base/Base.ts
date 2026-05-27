@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { expect } from "chai";
-import { Base } from "../wgsg";
+import { Base as BaseClass } from "../../../lib/src/Base";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -22,7 +22,7 @@ import { Base } from "../wgsg";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-class MyConcreteClass extends Base
+class MyConcreteClass extends BaseClass
 {
 	public override getClassName() : string
 	{
@@ -44,7 +44,7 @@ export function test ()
 		it ( "Should be able to inherit from the base class", function ()
 		{
 			const a = new MyConcreteClass();
-			expect ( a instanceof Base ).to.be.true;
+			expect ( a instanceof BaseClass ).to.be.true;
 			expect ( a.type ).to.be.equal ( a.getClassName() );
 			expect ( a.type ).to.be.equal ( "MyConcreteClass" );
 			expect ( a.id ).to.exist;

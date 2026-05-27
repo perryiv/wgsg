@@ -13,12 +13,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { expect } from "chai";
-import {
-	Group,
-	IDENTITY_MATRIX,
-	SphereNode,
-	Transform,
-} from "../../../wgsg";
+import { Group, SphereNode, Transform } from "../../../../../lib/src/Scene";
+import { IDENTITY_MATRIX } from "../../../../../lib/src/Tools";
 
 
 ///////////////////////////////////////////////////////////////////////////////

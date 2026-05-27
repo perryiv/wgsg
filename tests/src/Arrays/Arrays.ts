@@ -13,7 +13,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { expect } from "chai";
-import { Array1, Array2, Array3, Array4, Device } from "../wgsg";
+import {
+	Array1,
+	Array2,
+	Array3,
+	Array4
+} from "../../../lib/src/Arrays";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -26,11 +31,6 @@ export function test ()
 {
 	describe ( "Array", function ()
 	{
-		this.beforeAll ( async function ()
-		{
-			await Device.init();
-		} );
-
 		it ( "Can make a 1D wrapper around Float32Array", function ()
 		{
 			const v = new Float32Array ( [ 1, 2, 3, 4, 5 ] );

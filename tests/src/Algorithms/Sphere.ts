@@ -12,13 +12,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Box } from "../../../lib/src/Math/Box";
 import { expect } from "chai";
+import type { IVector3 } from "../../../lib/src/Types/Vector";
 import {
-	Box,
 	estimateSphereSizes,
 	generateUnitSphere,
-	type IVector3
-} from "../wgsg";
+} from "../../../lib/src/Algorithms/Sphere";
 
 
 ///////////////////////////////////////////////////////////////////////////////

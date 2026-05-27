@@ -12,22 +12,21 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Device } from "../../../lib/src/Tools/Device";
 import { expect } from "chai";
+import { getNextId } from "../../../lib/src/Tools/Functions";
 import { mat4 } from "gl-matrix";
+import { Perspective } from "../../../lib/src/Projections/Perspective";
+import { Sphere } from "../../../lib/src/Math/Sphere";
+import { SphereNode } from "../../../lib/src/Scene/Nodes";
+import { Viewer } from "../../../lib/src/Viewers/Viewer";
+import type { IMatrix44, IVector3 } from "../../../lib/src/Types";
 import {
 	DEG_TO_RAD,
-	Device,
-	getNextId,
 	IDENTITY_MATRIX,
-	IMatrix44,
-	IVector3,
 	MAX_FAR_DISTANCE,
 	MIN_NEAR_DISTANCE,
-	Perspective,
-	Sphere,
-	SphereNode,
-	Viewer,
-} from "../wgsg";
+} from "../../../lib/src/Tools/Constants";
 
 
 ///////////////////////////////////////////////////////////////////////////////

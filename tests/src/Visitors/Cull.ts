@@ -13,12 +13,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { expect } from "chai";
+import { State } from "../../../lib/src/Scene/State/State";
 import {
 	Cull as CullVisitor,
 	Multiply,
-	State,
 	Visitor,
-} from "../wgsg";
+} from "../../../lib/src/Visitors";
 
 
 ///////////////////////////////////////////////////////////////////////////////
