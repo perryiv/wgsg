@@ -12,8 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IMatrix44 } from "../Types/Matrix";
-import { BUILD_ENVIRONMENT } from "./Environment";
+import type { IMatrix44 } from "../Types/Matrix";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -31,15 +30,6 @@ export const IDENTITY_MATRIX: Readonly<IMatrix44> = [
 
 export const DEG_TO_RAD = ( Math.PI / 180 );
 export const RAD_TO_DEG = ( 180 / Math.PI );
-
-export const DEVELOPER_BUILD = !!( BUILD_ENVIRONMENT.DEV );
-export const PRODUCTION_BUILD = !DEVELOPER_BUILD;
-
-export const KEEP_PERFORMANCE_INFO: boolean = (
-	( "string" === typeof ( BUILD_ENVIRONMENT.VITE_KEEP_PERFORMANCE_INFO ) ) ?
-	( "true" === ( BUILD_ENVIRONMENT.VITE_KEEP_PERFORMANCE_INFO as string ).toLowerCase() ) :
-	( false )
-);
 
 // Constants used in projections.
 export const MIN_NEAR_DISTANCE = ( 0.001 );

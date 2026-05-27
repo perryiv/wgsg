@@ -12,11 +12,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IMatrix44 } from "../Types";
-import { makeIdentity } from "../Tools/Math";
+import { IDENTITY_MATRIX } from "../Tools/Constants";
 import { mat4 } from "gl-matrix";
 import { ProjectionNode as Projection, Transform } from "../Scene";
 import { Visitor as BaseClass } from "./Visitor";
+import type { IMatrix44 } from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -28,8 +28,8 @@ import { Visitor as BaseClass } from "./Visitor";
 
 export abstract class Multiply extends BaseClass
 {
-	#viewMatrix: IMatrix44 = makeIdentity(); // Has to be a copy.
-	#projMatrix: IMatrix44 = makeIdentity(); // Has to be a copy.
+	#viewMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ]; // Has to be a copy.
+	#projMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ]; // Has to be a copy.
 
 	/**
 	 * Construct the class.

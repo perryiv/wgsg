@@ -20,19 +20,19 @@ import {
 	ProjectionBase as Projection,
 } from "../Projections";
 import {
+	clampNumber,
 	intersectLinePlane,
 	intersectLineSphere,
 	isFiniteNumber,
+	normalizeQuat,
+	normalizeVec3,
 	Plane,
 	Sphere,
 	type ILineSphereIntersection,
 } from "../Math";
 import {
-	clampNumber,
 	DEG_TO_RAD,
 	IDENTITY_MATRIX,
-	normalizeQuat,
-	normalizeVec3,
 } from "../Tools";
 import {
 	ICoordinateSystem,

@@ -17,7 +17,7 @@
 
 import { intersectLineSphere } from "./Intersect";
 import { isFiniteNumber } from "./Validate";
-import { midPoint } from "../Tools";
+import { midPoint } from "./Functions";
 import { vec3 } from "gl-matrix";
 import type { IMatrix44, IVector3 } from "../Types";
 

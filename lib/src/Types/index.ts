@@ -14,6 +14,7 @@
 
 export * from "./Animations";
 export * from "./Command";
+export * from "./Environment";
 export * from "./Event";
 export * from "./Graphics";
 export * from "./Input";

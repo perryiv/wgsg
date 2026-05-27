@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 export * from "./Box";
+export * from "./Functions";
 export * from "./Intersect";
 export * from "./Line";
 export * from "./Plane";

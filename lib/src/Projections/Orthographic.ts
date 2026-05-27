@@ -12,10 +12,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IMatrix44, IViewport } from "../Types";
-import { makeIdentity } from "../Tools";
+import { IDENTITY_MATRIX } from "../Tools/Constants";
 import { mat4 } from "gl-matrix";
 import { Projection } from "./Projection";
+import type { IMatrix44, IViewport } from "../Types";
 import {
 	isFiniteNumber,
 	isPositiveFiniteNumber,
@@ -196,7 +196,7 @@ export class Orthographic extends Projection
 		}
 
 		// Initialize the answer.
-		const answer: IMatrix44 = makeIdentity();
+		const answer: IMatrix44 = [ ...IDENTITY_MATRIX ];
 
 		// Write the projection matrix to the answer.
 		mat4.ortho ( answer, left, right, bottom, top, near, far );
