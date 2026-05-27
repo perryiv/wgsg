@@ -13,20 +13,23 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-interface BuildEnvironment
-{
-	// These are always set by Vite.
-	BASE_URL: string; // The base URL the app is being served from.
-	DEV: boolean;     // Is this a development build?
-	MODE: string;     // Either "development" or "production".
-	PROD: boolean;    // Is this a production build?
-	SSR: boolean;     // Server side rendering.
-
-	// These are defined in app/.env* files.
-	VITE_KEEP_PERFORMANCE_INFO?: boolean;
-	VITE_LOG_LEVEL?: number;
-};
+import { BuildEnvironment } from "../Types/Environment";
 
 // Vite's import.meta.env doesn't have types so cast it.
 // https://vite.dev/guide/env-and-mode
 export const BUILD_ENVIRONMENT: BuildEnvironment = ( ( ( import.meta as unknown ) as { env: BuildEnvironment } ).env );
+
+export const DEVELOPER_BUILD = !!( BUILD_ENVIRONMENT.DEV );
+export const PRODUCTION_BUILD = !DEVELOPER_BUILD;
+
+export const KEEP_PERFORMANCE_INFO: boolean = (
+	( "string" === typeof ( BUILD_ENVIRONMENT.VITE_KEEP_PERFORMANCE_INFO ) ) ?
+	( "true" === ( BUILD_ENVIRONMENT.VITE_KEEP_PERFORMANCE_INFO as string ).toLowerCase() ) :
+	( false )
+);
+
+export const LOG_LEVEL: number = (
+	( "string" === typeof ( BUILD_ENVIRONMENT.VITE_LOG_LEVEL ) ) ?
+	( parseInt ( BUILD_ENVIRONMENT.VITE_LOG_LEVEL as string ) || 0 ) :
+	( 0 )
+);

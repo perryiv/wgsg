@@ -21,7 +21,7 @@ import type {
 	IVector3,
 	IVector4,
 	IViewport,
-} from "../wgsg";
+} from "../../../lib/src/Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -12,16 +12,16 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Device } from "../../../../lib/src/Tools/Device";
 import { expect } from "chai";
+import { SolidColor } from "../../../../lib/src/Shaders/SolidColor";
 import {
 	defaultApplyFunction,
 	defaultResetFunction,
-	Device,
 	State,
-	SolidColor,
 	type IStateApplyFunction,
 	type IStateResetFunction,
-} from "../../wgsg";
+} from "../../../../lib/src/Scene/State";
 
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -13,13 +13,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base as BaseClass } from "../Base/Base";
+import { clampVec4 } from "../Math/Functions";
 import { makeRenderGraphInfo, resetRenderGraphInfo, Root } from "../Render";
 import { Perspective, ProjectionBase as Projection } from "../Projections";
 import { SolidColor } from "../Shaders";
 import { vec4 } from "gl-matrix";
 import {
 	BUILD_TIME_LOG_LEVEL,
-	clampVec4,
 	ColorTool as Color,
 	Device,
 	IDENTITY_MATRIX,

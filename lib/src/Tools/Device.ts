@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Base } from "../Base";
+import { Base as BaseClass } from "../Base";
 import { IDeviceOptions, ITextureFormat } from "../Types/Graphics";
 
 
@@ -23,7 +23,7 @@ import { IDeviceOptions, ITextureFormat } from "../Types/Graphics";
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Device extends Base
+export class Device extends BaseClass
 {
 	static #instance: Device | null = null;
 	static #isInitializing = false;

@@ -13,8 +13,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base as BaseClass } from "../Base/Base";
-import { clampNumber } from "../Tools";
-import type { IAnimationFunction } from "../Types";
+import { clampNumber } from "../Math/Functions";
+import type { IAnimationFunction } from "../Types/Animations";
 
 
 ///////////////////////////////////////////////////////////////////////////////

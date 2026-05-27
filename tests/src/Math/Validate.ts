@@ -16,7 +16,7 @@ import { expect } from "chai";
 import {
 	isFiniteNumber,
 	isPositiveFiniteNumber,
-} from "../wgsg";
+} from "../../../lib/src/Math/Validate";
 
 
 ///////////////////////////////////////////////////////////////////////////////

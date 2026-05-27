@@ -21,5 +21,5 @@ export * from "./Errors";
 export * from "./Events";
 export * from "./Functions";
 export * from "./Log";
-export * from "./Math";
+export * from "./Singleton";
 export * from "./Three";
