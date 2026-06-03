@@ -62,6 +62,7 @@ export function App()
 {
 	// Get the state.
 	const [ count, setCount ] = useState ( 0 );
+	const [ showPanel, setShowPanel ] = useState ( true );
 	const [ showStats, setShowStats ] = useState ( false );
 	const { palette } = useTheme();
 	const createViewerState = useViewerStore ( ( store ) => store.createViewerState );
@@ -136,6 +137,18 @@ export function App()
 		setCurrentViewer ( viewerId );
 	},
 	[ setCurrentViewer ] );
+
+	//
+	// Handle when the panel toggle button is clicked.
+	//
+	const handleTogglePanel = useCallback ( () =>
+	{
+		setShowPanel ( ( current ) =>
+		{
+			return ( !current );
+		} );
+	},
+	[ setShowPanel ] );
 
 	//
 	// Handle the "allow animations" button.
@@ -318,6 +331,12 @@ export function App()
 	//
 	const panel1 = useMemo ( () =>
 	{
+		// Is the panel hidden?
+		if ( !showPanel )
+		{
+			return null;
+		}
+
 		// If there's no viewer then everybody is disabled.
 		const disabled = !viewer;
 
@@ -325,6 +344,9 @@ export function App()
 			<Panel
 				style = { {
 					background: panelBackground,
+					paddingTop: "10px",
+					paddingLeft: "6px",
+					overflow: "hidden",
 				} }
 			>
 				<div
@@ -429,12 +451,16 @@ export function App()
 		handleShowStats,
 		handleShowTriangleEdges,
 		handleSimulateDeviceLost,
+		handleTogglePanel,
 		handleTrackballMode,
 		handleTurntableMode,
 		handleUseTwoSidedLighting,
 		handleViewerRender,
 		handleViewerReset,
+		palette.background.paper,
+		palette.divider,
 		panelBackground,
+		showPanel,
 		showStats,
 		twoSidedLighting,
 		verticalSpace,
@@ -518,6 +544,20 @@ export function App()
 					gap: "10px",
 				} }
 			>
+				<button
+					style = { {
+						position: "absolute",
+						top: "-25px",
+						left: "-25px",
+						width: "30px",
+						height: "30px",
+						transform: "rotate(45deg)",
+						border: `2px solid ${palette.divider}`,
+						background: `${palette.background.paper}`,
+					} }
+					onClick = { handleTogglePanel }
+				>
+				</button>
 				{ panel1 }
 				{ showStats ? <RenderStats /> : null }
 			</div>
