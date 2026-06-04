@@ -30,7 +30,9 @@ import {
 } from "./Surface";
 import {
 	DEVELOPER_BUILD,
+	hasBits,
 	makeLine as makeLineUnderScreenPoint,
+	setBits,
 } from "../Tools";
 import type {
 	IAnimations,
@@ -97,6 +99,14 @@ export class Viewer extends BaseClass
 	#options: IViewerOptions = Viewer.makeOptions();
 	static #commands: ICommandMap = makeCommands();
 	static #inputToCommand: IInputToCommandNameMap = makeInputToCommandMap();
+
+	/**
+	 * The flags for the viewer.
+	 */
+	static Flags = class
+	{
+		static USE_KEYBOARD_INPUT = ( 1 << 0 );
+	}
 
 	/**
 	 * Construct the class.
@@ -329,7 +339,7 @@ export class Viewer extends BaseClass
 
 		lm.set ( "keydown", ( event: KeyboardEvent ) =>
 		{
-			if ( ( false === this.isDestroyed() ) && ( false === event.repeat ) )
+			if ( ( false === this.isDestroyed() ) && ( true === this.useKeyboardInput ) && ( false === event.repeat ) )
 			{
 				this.keyDown ( event );
 			}
@@ -337,7 +347,7 @@ export class Viewer extends BaseClass
 
 		lm.set ( "keyup", ( event: KeyboardEvent ) =>
 		{
-			if ( false === this.isDestroyed() )
+			if ( ( false === this.isDestroyed() ) && ( true === this.useKeyboardInput ) )
 			{
 				this.keyUp ( event );
 			}
@@ -378,6 +388,24 @@ export class Viewer extends BaseClass
 		} );
 
 		lm.clear();
+	}
+
+	/**
+	 * Are we using keyboard input?
+	 * @returns {boolean} True if we are using keyboard input, false if not.
+	 */
+	public get useKeyboardInput() : boolean
+	{
+		return hasBits ( this.flags, Viewer.Flags.USE_KEYBOARD_INPUT );
+	}
+
+	/**
+	 * Set whether or not to use keyboard input.
+	 * @param {boolean} use - True to use keyboard input, false to disable it.
+	 */
+	public set useKeyboardInput ( use: boolean )
+	{
+		this.flags = setBits ( this.flags, Viewer.Flags.USE_KEYBOARD_INPUT, use );
 	}
 
 	/**
