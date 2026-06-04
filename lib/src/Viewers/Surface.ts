@@ -99,6 +99,7 @@ export class Surface extends BaseClass
 	#defaultState: ( State | null ) = null;
 	#clearColor: IVector4 = [ ...Color.transparent ];
 	#info: IRenderGraphInfo = makeRenderGraphInfo();
+	#flags = 0;
 
 	/**
 	 * Construct the class.
@@ -287,6 +288,24 @@ export class Surface extends BaseClass
 
 		// Set the projection's viewport.
 		this.projection.viewport = { ...this.viewport };
+	}
+
+	/**
+	 * Get the flags.
+	 * @returns {number} The flags.
+	 */
+	public get flags () : number
+	{
+		return this.#flags;
+	}
+
+	/**
+	 * Set the flags.
+	 * @param {number} flags - The flags.
+	 */
+	public set flags ( flags: number )
+	{
+		this.#flags = flags;
 	}
 
 	/**

@@ -56,25 +56,40 @@ export const useViewerStore = create < IViewerStore > () ( ( set, get ) => (
 
 	setCurrentViewer: ( id: ( string | null ) ) : void =>
 	{
-		const store = get();
-		if ( id !== store.current )
+		if ( id === get().current )
 		{
-			set ( () =>
-			{
-				return { current: id };
-			} )
+			return;
 		}
+
+		set ( () =>
+		{
+			return { current: id };
+		} )
+
+		set ( ( store: IViewerStore ) =>
+		{
+			const next = new Map ( store.viewers );
+			for ( const [ key, value ] of next )
+			{
+				const { viewer } = value;
+				if ( viewer )
+				{
+					viewer.useKeyboardInput = ( key === id );
+				}
+			}
+			return { viewers: next };
+		} )
 	},
 
 	setViewerState: ( id: string, state: IViewerState ) : void =>
 	{
-		const store = get();
-		const current = store.viewers.get ( id );
+		const current = get().viewers.get ( id );
+
 		if ( state !== current )
 		{
-			set ( ( current: IViewerStore ) =>
+			set ( ( store: IViewerStore ) =>
 			{
-				const next = new Map ( current.viewers );
+				const next = new Map ( store.viewers );
 				next.set ( id, state );
 				return { viewers: next };
 			} )
@@ -93,9 +108,9 @@ export const useViewerStore = create < IViewerStore > () ( ( set, get ) => (
 
 	removeViewerState: ( id: string ) : void =>
 	{
-		set ( ( current: IViewerStore ) =>
+		set ( ( store: IViewerStore ) =>
 		{
-			const next = new Map ( current.viewers );
+			const next = new Map ( store.viewers );
 			next.delete ( id );
 			return { viewers: next };
 		} )
