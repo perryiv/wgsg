@@ -14,6 +14,7 @@
 
 import { Base as BaseClass } from "../Base";
 import { DEG_TO_RAD } from "../Tools";
+import { Grid } from "../Decorators/Grid";
 import { vec3 } from "gl-matrix";
 import type {
 	ICommand,
@@ -223,6 +224,58 @@ export class RotateZ extends RotateAxisAngle
 	public constructor ( angle: number )
 	{
 		super ( [ 0, 0, 1 ], angle );
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Toggle the grid visibility.
+ * @class
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export class ToggleGridVisibility extends Command
+{
+	/**
+	 * Construct the class.
+	 * @class
+	 */
+	public constructor()
+	{
+		super();
+	}
+
+	/**
+	 * Get the class name.
+	 * @returns {string} The class name.
+	 */
+	public override getClassName() : string
+	{
+		return "Viewers.Commands.ToggleGridVisibility";
+	}
+
+	/**
+	 * Execute the command.
+	 * @param {IEvent} event The event.
+	 */
+	public execute ( event: IEvent ) : void
+	{
+		// Shortcuts.
+		const { viewer } = event;
+
+		// Try to get the decorator.
+		const decorator = viewer.getDecorator ( Grid.getClassName() );
+
+		// Toggle the grid visibility if we found the decorator.
+		if ( decorator )
+		{
+			const newState = !decorator.visible;
+			decorator.visible = newState;
+		}
+
+		// Make sure we see the change.
+		viewer.requestRender();
 	}
 }
 
@@ -537,27 +590,28 @@ export class MouseRotate extends Command
 export function makeCommands() : ICommandMap
 {
 	return new Map < ICommandName, ICommand > ( [
-		[ "mouse_rotate_large",    new MouseRotate ( 1.0 )          ],
-		[ "mouse_rotate_small",    new MouseRotate ( 0.1 )          ],
-		[ "mouse_translate_large", new MouseTranslate ( 1.0 )       ],
-		[ "mouse_translate_small", new MouseTranslate ( 0.1 )       ],
-		[ "mouse_zoom_large",      new Zoom ( 0.90, 1.10 )          ],
-		[ "mouse_zoom_small",      new Zoom ( 0.99, 1.01 )          ],
-		[ "rotate_nx_large",       new RotateX ( DEG_TO_RAD * -45 ) ],
-		[ "rotate_nx_small",       new RotateX ( DEG_TO_RAD *  -5 ) ],
-		[ "rotate_ny_large",       new RotateY ( DEG_TO_RAD * -45 ) ],
-		[ "rotate_ny_small",       new RotateY ( DEG_TO_RAD *  -5 ) ],
-		[ "rotate_nz_large",       new RotateZ ( DEG_TO_RAD * -45 ) ],
-		[ "rotate_nz_small",       new RotateZ ( DEG_TO_RAD *  -5 ) ],
-		[ "rotate_px_large",       new RotateX ( DEG_TO_RAD *  45 ) ],
-		[ "rotate_px_small",       new RotateX ( DEG_TO_RAD *   5 ) ],
-		[ "rotate_py_large",       new RotateY ( DEG_TO_RAD *  45 ) ],
-		[ "rotate_py_small",       new RotateY ( DEG_TO_RAD *   5 ) ],
-		[ "rotate_pz_large",       new RotateZ ( DEG_TO_RAD *  45 ) ],
-		[ "rotate_pz_small",       new RotateZ ( DEG_TO_RAD *   5 ) ],
-		[ "toggle_rotation_mode",  new ToggleRotationMode()         ],
-		[ "view_sphere_fit",       new ViewSphere ( false )         ],
-		[ "view_sphere_reset",     new ViewSphere ( true  )         ],
+		[ "mouse_rotate_large",     new MouseRotate ( 1.0 )          ],
+		[ "mouse_rotate_small",     new MouseRotate ( 0.1 )          ],
+		[ "mouse_translate_large",  new MouseTranslate ( 1.0 )       ],
+		[ "mouse_translate_small",  new MouseTranslate ( 0.1 )       ],
+		[ "mouse_zoom_large",       new Zoom ( 0.90, 1.10 )          ],
+		[ "mouse_zoom_small",       new Zoom ( 0.99, 1.01 )          ],
+		[ "rotate_nx_large",        new RotateX ( DEG_TO_RAD * -45 ) ],
+		[ "rotate_nx_small",        new RotateX ( DEG_TO_RAD *  -5 ) ],
+		[ "rotate_ny_large",        new RotateY ( DEG_TO_RAD * -45 ) ],
+		[ "rotate_ny_small",        new RotateY ( DEG_TO_RAD *  -5 ) ],
+		[ "rotate_nz_large",        new RotateZ ( DEG_TO_RAD * -45 ) ],
+		[ "rotate_nz_small",        new RotateZ ( DEG_TO_RAD *  -5 ) ],
+		[ "rotate_px_large",        new RotateX ( DEG_TO_RAD *  45 ) ],
+		[ "rotate_px_small",        new RotateX ( DEG_TO_RAD *   5 ) ],
+		[ "rotate_py_large",        new RotateY ( DEG_TO_RAD *  45 ) ],
+		[ "rotate_py_small",        new RotateY ( DEG_TO_RAD *   5 ) ],
+		[ "rotate_pz_large",        new RotateZ ( DEG_TO_RAD *  45 ) ],
+		[ "rotate_pz_small",        new RotateZ ( DEG_TO_RAD *   5 ) ],
+		[ "toggle_grid_visibility", new ToggleGridVisibility()       ],
+		[ "toggle_rotation_mode",   new ToggleRotationMode()         ],
+		[ "view_sphere_fit",        new ViewSphere ( false )         ],
+		[ "view_sphere_reset",      new ViewSphere ( true  )         ],
 	] );
 }
 
@@ -618,30 +672,32 @@ export function makeInputToCommandMap() : IInputToCommandNameMap
 	const sp = "Space";
 	const kf = "KeyF";
 	const kt = "KeyT";
+	const kg = "KeyG";
 
 	return new Map < string, ICommandName > ( [
-		makeTuple ( "mouse_rotate_large",    "mouse_drag",  [ 0 ], [        ] ),
-		makeTuple ( "mouse_rotate_small",    "mouse_drag",  [ 0 ], [ sl     ] ),
-		makeTuple ( "mouse_rotate_small",    "mouse_drag",  [ 0 ], [ sr     ] ),
-		makeTuple ( "mouse_translate_large", "mouse_drag",  [ 2 ], [        ] ),
-		makeTuple ( "mouse_translate_small", "mouse_drag",  [ 2 ], [ sl     ] ),
-		makeTuple ( "mouse_translate_small", "mouse_drag",  [ 2 ], [ sr     ] ),
-		makeTuple ( "mouse_zoom_large",      "mouse_wheel", [   ], [        ] ),
-		makeTuple ( "mouse_zoom_small",      "mouse_wheel", [   ], [ sl     ] ),
-		makeTuple ( "rotate_nx_large",       "key_down",    [   ], [ au     ] ),
-		makeTuple ( "rotate_nx_small",       "key_down",    [   ], [ sl, au ] ),
-		makeTuple ( "rotate_nx_small",       "key_down",    [   ], [ sr, au ] ),
-		makeTuple ( "rotate_ny_large",       "key_down",    [   ], [ al     ] ),
-		makeTuple ( "rotate_ny_small",       "key_down",    [   ], [ sl, al ] ),
-		makeTuple ( "rotate_ny_small",       "key_down",    [   ], [ sr, al ] ),
-		makeTuple ( "rotate_px_large",       "key_down",    [   ], [ ad     ] ),
-		makeTuple ( "rotate_px_small",       "key_down",    [   ], [ sl, ad ] ),
-		makeTuple ( "rotate_px_small",       "key_down",    [   ], [ sr, ad ] ),
-		makeTuple ( "rotate_py_large",       "key_down",    [   ], [ ar     ] ),
-		makeTuple ( "rotate_py_small",       "key_down",    [   ], [ sl, ar ] ),
-		makeTuple ( "rotate_py_small",       "key_down",    [   ], [ sr, ar ] ),
-		makeTuple ( "toggle_rotation_mode",  "key_down",    [   ], [ kt     ] ),
-		makeTuple ( "view_sphere_fit",       "key_down",    [   ], [ kf     ] ),
-		makeTuple ( "view_sphere_reset",     "key_down",    [   ], [ sp     ] ),
+		makeTuple ( "mouse_rotate_large",     "mouse_drag",  [ 0 ], [        ] ),
+		makeTuple ( "mouse_rotate_small",     "mouse_drag",  [ 0 ], [ sl     ] ),
+		makeTuple ( "mouse_rotate_small",     "mouse_drag",  [ 0 ], [ sr     ] ),
+		makeTuple ( "mouse_translate_large",  "mouse_drag",  [ 2 ], [        ] ),
+		makeTuple ( "mouse_translate_small",  "mouse_drag",  [ 2 ], [ sl     ] ),
+		makeTuple ( "mouse_translate_small",  "mouse_drag",  [ 2 ], [ sr     ] ),
+		makeTuple ( "mouse_zoom_large",       "mouse_wheel", [   ], [        ] ),
+		makeTuple ( "mouse_zoom_small",       "mouse_wheel", [   ], [ sl     ] ),
+		makeTuple ( "rotate_nx_large",        "key_down",    [   ], [ au     ] ),
+		makeTuple ( "rotate_nx_small",        "key_down",    [   ], [ sl, au ] ),
+		makeTuple ( "rotate_nx_small",        "key_down",    [   ], [ sr, au ] ),
+		makeTuple ( "rotate_ny_large",        "key_down",    [   ], [ al     ] ),
+		makeTuple ( "rotate_ny_small",        "key_down",    [   ], [ sl, al ] ),
+		makeTuple ( "rotate_ny_small",        "key_down",    [   ], [ sr, al ] ),
+		makeTuple ( "rotate_px_large",        "key_down",    [   ], [ ad     ] ),
+		makeTuple ( "rotate_px_small",        "key_down",    [   ], [ sl, ad ] ),
+		makeTuple ( "rotate_px_small",        "key_down",    [   ], [ sr, ad ] ),
+		makeTuple ( "rotate_py_large",        "key_down",    [   ], [ ar     ] ),
+		makeTuple ( "rotate_py_small",        "key_down",    [   ], [ sl, ar ] ),
+		makeTuple ( "rotate_py_small",        "key_down",    [   ], [ sr, ar ] ),
+		makeTuple ( "toggle_grid_visibility", "key_down",    [   ], [ kg     ] ),
+		makeTuple ( "toggle_rotation_mode",   "key_down",    [   ], [ kt     ] ),
+		makeTuple ( "view_sphere_fit",        "key_down",    [   ], [ kf     ] ),
+		makeTuple ( "view_sphere_reset",      "key_down",    [   ], [ sp     ] ),
 	] );
 }
