@@ -223,6 +223,12 @@ export class Cull extends BaseClass
 	 */
 	public override visitGroup ( group: Group ) : void
 	{
+		// Skip invisible nodes.
+		if ( false === group.visible )
+		{
+			return;
+		}
+
 		// Save the current state and set the new one.
 		const original = this.currentState;
 		this.maybeSetCurrentState ( group.state );
@@ -240,6 +246,12 @@ export class Cull extends BaseClass
 	 */
 	public override visitTransform ( tr: Transform ) : void
 	{
+		// Skip invisible nodes.
+		if ( false === tr.visible )
+		{
+			return;
+		}
+
 		// Save the current state and set the new one.
 		const original = this.currentState;
 		this.maybeSetCurrentState ( tr.state );
@@ -257,6 +269,12 @@ export class Cull extends BaseClass
 	 */
 	public override visitProjection ( proj: Projection ) : void
 	{
+		// Skip invisible nodes.
+		if ( false === proj.visible )
+		{
+			return;
+		}
+
 		// Save the current state and set the new one.
 		const original = this.currentState;
 		this.maybeSetCurrentState ( proj.state );
@@ -274,6 +292,12 @@ export class Cull extends BaseClass
 	 */
 	public override visitGeometry ( geom: Geometry ) : void
 	{
+		// Skip invisible nodes.
+		if ( false === geom.visible )
+		{
+			return;
+		}
+
 		// Treat it like a shape.
 		this.visitShape ( geom );
 	}
@@ -284,6 +308,12 @@ export class Cull extends BaseClass
 	 */
 	public override visitShape ( shape: Shape ) : void
 	{
+		// Skip invisible nodes.
+		if ( false === shape.visible )
+		{
+			return;
+		}
+
 		// Save the current state and set the new one.
 		const original = this.currentState;
 		this.maybeSetCurrentState ( shape.state );
@@ -326,6 +356,12 @@ export class Cull extends BaseClass
 	 */
 	public override visitNode ( node: Node ) : void
 	{
+		// Skip invisible nodes.
+		if ( false === node.visible )
+		{
+			return;
+		}
+
 		super.visitNode ( node );
 	}
 
