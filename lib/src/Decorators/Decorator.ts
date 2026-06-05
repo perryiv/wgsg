@@ -50,6 +50,24 @@ export abstract class Decorator extends BaseClass
 	}
 
 	/**
+	 * Get the visibility of the scene.
+	 * @returns {boolean} True if the scene is visible, false if not.
+	 */
+	public get visible () : boolean
+	{
+		return this.scene.visible;
+	}
+
+	/**
+	 * Set the visibility of the scene.
+	 * @param {boolean} value - True to make the scene visible, false to hide it.
+	 */
+	public set visible ( value: boolean )
+	{
+		this.scene.visible = value;
+	}
+
+	/**
 	 * Get the viewer.
 	 * @returns {(IViewer | null)} The viewer or null if not set.
 	 */

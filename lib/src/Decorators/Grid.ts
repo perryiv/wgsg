@@ -45,9 +45,18 @@ export class Grid extends BaseClass
 	 * Get the class name.
 	 * @returns {string} The class name.
 	 */
-	public override getClassName () : string
+	public static getClassName () : string
 	{
 		return "Decorators.Grid";
+	}
+
+	/**
+	 * Get the class name.
+	 * @returns {string} The class name.
+	 */
+	public override getClassName () : string
+	{
+		return Grid.getClassName();
 	}
 
 	/**
