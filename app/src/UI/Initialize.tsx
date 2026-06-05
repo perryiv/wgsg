@@ -19,6 +19,7 @@ import {
 	useState,
 } from "react";
 import { Device } from "../wgsg";
+import Card from "@mui/material/Card/Card";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -147,13 +148,90 @@ export function Initialize ( { children }: IInitializeProps )
 	},
 	[ handleMount ] );
 
+	//
+	// Render a message if WebGPU is not supported.
+	//
+	const renderNotSupported = useCallback ( () =>
+	{
+		return (
+			<Card
+				style = { {
+					position: "absolute",
+					top: "33%",
+					left: "50%",
+					transform: "translate(-50%, -50%)",
+					padding: "20px",
+					textAlign: "center",
+				} }
+			>
+				<h1
+					style = { {
+						transform: "rotate(90deg)",
+					} }
+				>
+					:-(
+				</h1>
+				<span>WebGPU is not supported in this browser</span>
+				<br />
+				<span>You can check browser support&nbsp;</span>
+				<a
+					href="https://github.com/gpuweb/gpuweb/wiki/Implementation-Status"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					here
+				</a>
+				<span>&nbsp;and&nbsp;</span>
+				<a
+					href="https://caniuse.com/webgpu"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					here
+				</a>
+			</Card>
+		);
+	},
+	[] );
 
 	//
-	// Render the children.
+	// Render what we are supposed to.
+	//
+	const renderComponent = useCallback ( () =>
+	{
+		// If we are still figuring it out then render nothing.
+		if ( null === supported )
+		{
+			return ( null );
+		}
+
+		// If we know that it is not supported then render the message.
+		if ( false === supported )
+		{
+			return renderNotSupported();
+		}
+
+		// If it's supported but not yet initialized then render nothing.
+		if ( false === initialized )
+		{
+			return ( null );
+		}
+
+		// If we get to here then render the children.
+		return ( children );
+	}, [
+		children,
+		initialized,
+		renderNotSupported,
+		supported,
+	] );
+
+	//
+	// Render the component.
 	//
 	return (
 		<>
-			{ initialized ? children : null }
+			{ renderComponent() }
 		</>
 	);
 }

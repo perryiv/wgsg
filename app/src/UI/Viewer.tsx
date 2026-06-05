@@ -16,7 +16,6 @@ import { buildSceneSpheres } from "../Tools";
 import { useViewerStore } from "../State";
 import CloseIcon from "@mui/icons-material/Close";
 import {
-	Card,
 	IconButton,
 	LinearProgress,
 	Paper,
@@ -109,7 +108,6 @@ export function Viewer ( { viewerId, ...rest }: IViewerProps )
 	const [ edgesScene, setEdgesScene ] = useState < SceneNode | null > ( null );
 	const [ id, ] = useState < number > ( getNextId ( "Viewer Component" ) );
 	const [ progress, setProgress ] = useState < number > ( 0 );
-	const [ supported, ] = useState < boolean | null > ( null );
 	const canvas = useRef < HTMLCanvasElement | null > ( null );
 	const loader = useRef < Reader > ( null );
 	const createViewerState = useViewerStore ( ( store ) => store.createViewerState );
@@ -725,60 +723,6 @@ export function Viewer ( { viewerId, ...rest }: IViewerProps )
 		);
 	}, [ handleProgressBarClose ] );
 
-	//
-	// Render a message if WebGPU is not supported.
-	//
-	const renderNotSupported = useCallback ( () =>
-	{
-		// There are 3 states, true, false, and unknown (null). Do it this way
-		// because we only want to see the message if it's not supported.
-		// If it's still being figured out (i.e., null) then do nothing.
-		if ( false !== supported )
-		{
-			return null;
-		}
-
-		return (
-			<Card
-				style = { {
-					position: "absolute",
-					top: "33%",
-					left: "50%",
-					transform: "translate(-50%, -50%)",
-					padding: "20px",
-					textAlign: "center",
-				} }
-			>
-				<h1
-					style = { {
-						transform: "rotate(90deg)",
-					} }
-				>
-					:-(
-				</h1>
-				<span>WebGPU is not supported in this browser</span>
-				<br />
-				<span>You can check browser support&nbsp;</span>
-				<a
-					href="https://github.com/gpuweb/gpuweb/wiki/Implementation-Status"
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					here
-				</a>
-				<span>&nbsp;and&nbsp;</span>
-				<a
-					href="https://caniuse.com/webgpu"
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					here
-				</a>
-			</Card>
-		);
-	},
-	[ supported ] );
-
 	console.log ( `Viewer component ${id} render count ${componentRenderCount++}` );
 
 	//
@@ -798,7 +742,6 @@ export function Viewer ( { viewerId, ...rest }: IViewerProps )
 				onDrop = { handleDroppedFiles }
 			>
 			</canvas>
-			{ renderNotSupported() }
 			{ renderProgressBar ( progress ) }
 		</div>
 	);
