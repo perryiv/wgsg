@@ -12,19 +12,5 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export * from "./Algorithms";
-export * from "./Arrays";
-export * from "./Base";
-export * from "./Builders";
-export * from "./Decorators";
-export * from "./IO";
-export * from "./Math";
-export * from "./Navigators";
-export * from "./Projections";
-export * from "./Render"; // Exported for testing purposes.
-export * from "./Scene";
-export * from "./Shaders";
-export * from "./Tools";
-export * from "./Types";
-export * from "./Viewers";
-export * from "./Visitors";
+export * from "./Decorator";
+export * from "./Grid";

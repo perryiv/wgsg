@@ -14,6 +14,7 @@
 
 import { Animation } from "./Animation";
 import { BaseHandler } from "../Events/Handlers/BaseHandler";
+import { Decorator, Grid } from "../Decorators";
 import { Group, Node, Transform } from "../Scene";
 import { Line, Sphere } from "../Math";
 import { Listeners } from "../Events";
@@ -59,6 +60,7 @@ export interface IViewerConstructor extends ISurfaceConstructor
 {
 	noMouseEvents?: boolean;
 	noKeyboardEvents?: boolean;
+	noDecorators?: boolean;
 }
 
 interface IViewerSceneBranches
@@ -76,6 +78,8 @@ type IKeyboardEventListener = ( ( event: KeyboardEvent ) => void );
 type IMouseEventListener = ( ( event: MouseEvent ) => void );
 type IKeyboardEventListenerMap = Map < IEventListenerName, IKeyboardEventListener >;
 type IMouseEventListenerMap = Map < IEventListenerName, IMouseEventListener >;
+type IDecorators = Map < string, Decorator >;
+type IDecoratorCallback = ( decorator: Decorator ) => void;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -90,13 +94,14 @@ export class Viewer extends BaseClass
 	#mouse: IMouseState = Viewer.makeMouseData();
 	#navBase: ( NavBase | null ) = null;
 	#eventHandlers: IEventHandlerStack = [];
-	#keyboardListeners: IKeyboardEventListenerMap = new Map < IEventListenerName, IKeyboardEventListener > ();
-	#mouseListeners: IMouseEventListenerMap = new Map < IEventListenerName, IMouseEventListener > ();
+	#keyboardListeners: IKeyboardEventListenerMap = new Map();
+	#mouseListeners: IMouseEventListenerMap = new Map();
 	#clientListeners: Listeners = new Listeners();
 	#branches: IViewerSceneBranches = Viewer.makeBranches ( true );
 	#keysDown: Set < string > = new Set < string > ();
 	#animations: IAnimations = { nav: new Animation() };
 	#options: IViewerOptions = Viewer.makeOptions();
+	#decorators: IDecorators = new Map();
 	static #commands: ICommandMap = makeCommands();
 	static #inputToCommand: IInputToCommandNameMap = makeInputToCommandMap();
 
@@ -116,7 +121,7 @@ export class Viewer extends BaseClass
 	constructor ( input : IViewerConstructor )
 	{
 		// We need these below.
-		const { noMouseEvents, noKeyboardEvents } = input;
+		const { noMouseEvents, noKeyboardEvents, noDecorators } = input;
 
 		// Have to call the super class constructor first.
 		super ( input );
@@ -153,6 +158,12 @@ export class Viewer extends BaseClass
 				}
 			}
 		} );
+
+		// Add the default decorators.
+		if ( !noDecorators )
+		{
+			this.setDecorator ( new Grid() );
+		}
 	}
 
 	/**
@@ -406,6 +417,88 @@ export class Viewer extends BaseClass
 	public set useKeyboardInput ( use: boolean )
 	{
 		this.flags = setBits ( this.flags, Viewer.Flags.USE_KEYBOARD_INPUT, use );
+	}
+
+	/**
+	 * Add or replace a decorator.
+	 * @param {Decorator} decorator - The decorator to add or replace.
+	 */
+	public setDecorator ( decorator: Decorator ) : void
+	{
+		this.#decorators.set ( decorator.type, decorator );
+		decorator.viewer = this;
+	}
+
+	/**
+	 * Get a decorator by type.
+	 * @param {string} type - The type of the decorator.
+	 * @returns {(Decorator | null)} The decorator or null if not found.
+	 */
+	public getDecorator ( type: string ) : ( Decorator | null )
+	{
+		return ( ( this.#decorators.get ( type ) ) ?? null );
+	}
+
+	/**
+	 * Does the decorator exist?
+	 * @param {string} type - The type of the decorator.
+	 * @returns {boolean} True if the decorator exists, false if not.
+	 */
+	public hasDecorator ( type: string ) : boolean
+	{
+		return this.#decorators.has ( type );
+	}
+
+	/**
+	 * Remove a decorator by type.
+	 * @param {string} type - The type of the decorator to remove.
+	 * @returns {boolean} True if the decorator was removed, false if it was not found.
+	 */
+	public removeDecorator ( type: string ) : boolean
+	{
+		// Look for the decorator.
+		const decorator = this.getDecorator ( type );
+
+		// If we don't have it then we're done.
+		if ( !decorator )
+		{
+			return false;
+		}
+
+		// Tell the decorator that it no longer belongs to this viewer.
+		decorator.viewer = null;
+
+		// We assume this returns true.
+		this.#decorators.delete ( type );
+
+		// It worked.
+		return true;
+	}
+
+	/**
+	 * Clear all the decorators.
+	 */
+	public clearDecorators() : void
+	{
+		const keys = this.#decorators.keys();
+		for ( const key of keys )
+		{
+			this.removeDecorator ( key );
+		}
+		this.#decorators.clear();
+	}
+
+	/**
+	 * Loop through the decorators and call the given function.
+	 * @param {IDecoratorCallback} cb - The callback function to call for each decorator.
+	 */
+	public forEachDecorator ( cb: IDecoratorCallback ) : void
+	{
+		const decorators = this.#decorators.values();
+		for ( const decorator of decorators )
+		{
+			cb ( decorator );
+		}
 	}
 
 	/**
@@ -1028,6 +1121,22 @@ export class Viewer extends BaseClass
 	public get options() : IViewerOptions
 	{
 		return this.#options;
+	}
+
+	/**
+	 * Update the scene if its dirty. This gets called when the scene is
+	 * rendered. It's public so that it can be called at other times, too.
+	 */
+	public override update ()
+	{
+		// Call this first.
+		super.update();
+
+		// Update the decorators.
+		this.forEachDecorator ( ( decorator: Decorator ) =>
+		{
+			decorator.updateScene();
+		} );
 	}
 
 	/**
