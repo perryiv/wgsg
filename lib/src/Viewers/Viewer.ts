@@ -739,7 +739,7 @@ export class Viewer extends BaseClass
 	 * @param {MouseEvent | KeyboardEvent} [event] - The original event.
 	 * @returns {IEvent} The event data.
 	 */
-	private makeEvent ( type: IEventType, event?: ( MouseEvent | KeyboardEvent ) ) : IEvent
+	public makeEvent ( type: IEventType, event?: ( MouseEvent | KeyboardEvent ) ) : IEvent
 	{
 		return {
 			type, event, viewer: this,

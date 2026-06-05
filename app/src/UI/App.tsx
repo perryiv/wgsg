@@ -21,6 +21,7 @@ import { useViewerStore } from "../State";
 import { Viewer } from "./Viewer";
 import {
 	useCallback,
+	useEffect,
 	useMemo,
 	useState,
 } from "react";
@@ -325,6 +326,55 @@ export function App()
 		);
 	},
 	[] );
+
+	//
+	// Called when the component mounts.
+	//
+	useEffect ( () =>
+	{
+		const handler = ( input: KeyboardEvent ) =>
+		{
+			// Do nothing if there is no current viewer.
+			if ( !viewer )
+			{
+				return;
+			}
+
+			// We are in a "key up" event handler but we want to know if the viewer
+			// found a command for the corresponding "key down" event.
+			const event = viewer.makeEvent ( "key_down", input );
+
+			// Make the set of keys that are down include this key.
+			event.keysDown.add ( input.code );
+
+			// Try to find a command.
+			const command = viewer.getCommand ( event );
+
+			// Do nothing if the viewer ignored this event.
+			if ( !command )
+			{
+				return;
+			}
+
+			// If we get to here then re-render the user interface so that it
+			// accurately reflects the state of the current viewer. For example,
+			// pressing 't' will toggle between trackball and turntable modes,
+			// and the panel buttons need to update accordingly.
+			setCount ( ( current ) =>
+			{
+				return ( current + 1 );
+			} );
+		};
+
+		const type = "keyup";
+		globalThis.addEventListener ( type, handler, false );
+
+		return ( () =>
+		{
+			globalThis.removeEventListener ( type, handler, false );
+		} );
+	},
+	[ viewer ] );
 
 	//
 	// Render the first panel in the top left position.
