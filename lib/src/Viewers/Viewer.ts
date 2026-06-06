@@ -912,7 +912,7 @@ export class Viewer extends BaseClass
 			const mx = this.options.distance.mouse_move_max;
 			if ( d > mx )
 			{
-				console.warn ( `Mouse move event ignored because distance ${d} > ${mx}` );
+				console.warn ( `Mouse move event ignored because distance ${ d.toFixed ( 2 ) } > ${mx}` );
 				return;
 			}
 		}
