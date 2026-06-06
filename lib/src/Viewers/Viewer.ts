@@ -162,7 +162,7 @@ export class Viewer extends BaseClass
 		// Add the default decorators.
 		if ( !noDecorators )
 		{
-			this.setDecorator ( new Grid() );
+			this.setDefaultDecorators();
 		}
 	}
 
@@ -171,6 +171,9 @@ export class Viewer extends BaseClass
 	 */
 	public override destroy() : void
 	{
+		// Remove all the decorators.
+		this.clearDecorators();
+
 		// Remove our event listeners.
 		this.removeKeyboardEventListeners();
 		this.removeMouseEventListeners();
@@ -186,6 +189,7 @@ export class Viewer extends BaseClass
 		this.#keysDown.clear();
 		this.#animations.nav.stop();
 		this.#options = Viewer.makeOptions();
+		this.#decorators.clear();
 
 		// Call the base class function.
 		super.destroy();
@@ -499,6 +503,14 @@ export class Viewer extends BaseClass
 		{
 			cb ( decorator );
 		}
+	}
+
+	/**
+	 * Set the default decorators.
+	 */
+	public setDefaultDecorators() : void
+	{
+		this.setDecorator ( new Grid() );
 	}
 
 	/**
