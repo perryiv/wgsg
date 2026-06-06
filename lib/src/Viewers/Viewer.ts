@@ -162,7 +162,7 @@ export class Viewer extends BaseClass
 		// Add the default decorators.
 		if ( !noDecorators )
 		{
-			this.setDecorator ( new Grid() );
+			this.setDefaultDecorators();
 		}
 	}
 
@@ -499,6 +499,14 @@ export class Viewer extends BaseClass
 		{
 			cb ( decorator );
 		}
+	}
+
+	/**
+	 * Set the default decorators.
+	 */
+	public setDefaultDecorators() : void
+	{
+		this.setDecorator ( new Grid() );
 	}
 
 	/**
