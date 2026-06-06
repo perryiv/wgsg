@@ -100,8 +100,9 @@ export function Button ( props: IButtonProps )
 						<RegularButton
 							sx = { {
 								color: palette.text.primary,
-								textTransform: "none",
+								justifyContent: "flex-start",
 								padding: 0,
+								textTransform: "none",
 								":hover": { color: palette.secondary.main },
 								...style,
 							} }

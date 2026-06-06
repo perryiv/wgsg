@@ -30,6 +30,7 @@ import {
 	Device,
 	Trackball,
 	Viewer as InternalViewer,
+	Grid,
 } from "../../../lib/src";
 
 
@@ -255,6 +256,23 @@ export function App()
 	[] );
 
 	//
+	// Handle the show grid button.
+	//
+	const handleShowGrid = useCallback ( () =>
+	{
+		if ( viewer )
+		{
+			const decorator = viewer.getDecorator ( Grid.getClassName() );
+			if ( decorator )
+			{
+				decorator.visible = !decorator.visible;
+				setCount ( count + 1 );
+				viewer.requestRender();
+			}
+		}
+	}, [ count, viewer ] );
+
+	//
 	// Handle the show bounding boxes button.
 	//
 	const handleShowBoundingBoxes = useCallback ( () =>
@@ -360,10 +378,7 @@ export function App()
 			// accurately reflects the state of the current viewer. For example,
 			// pressing 't' will toggle between trackball and turntable modes,
 			// and the panel buttons need to update accordingly.
-			setCount ( ( current ) =>
-			{
-				return ( current + 1 );
-			} );
+			setCount ( count + 1 );
 		};
 
 		const type = "keyup";
@@ -374,7 +389,7 @@ export function App()
 			globalThis.removeEventListener ( type, handler, false );
 		} );
 	},
-	[ viewer ] );
+	[ count, viewer ] );
 
 	//
 	// Render the first panel in the top left position.
@@ -459,6 +474,13 @@ export function App()
 					</Button>
 					<Button
 						disabled = { disabled }
+						onClick = { handleShowGrid }
+						value = { viewer ? viewer.getDecorator ( Grid.getClassName() )?.visible : false }
+					>
+						Grid
+					</Button>
+					<Button
+						disabled = { disabled }
 						onClick = { handleShowBoundingBoxes }
 						value = { boxesVisible }
 					>
@@ -498,6 +520,7 @@ export function App()
 		edgesVisible,
 		handleAllowAnimations,
 		handleShowBoundingBoxes,
+		handleShowGrid,
 		handleShowStats,
 		handleShowTriangleEdges,
 		handleSimulateDeviceLost,
