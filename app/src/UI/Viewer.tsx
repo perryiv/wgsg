@@ -618,17 +618,17 @@ export function Viewer ( { viewerId, ...rest }: IViewerProps )
 	// [ getOrCreateViewer ] );
 
 	//
-	// Local function to handle when this component is mounted.
+	// Make sure there is a viewer and it rendered.
 	//
-	const handleMount = useCallback ( () =>
+	useEffect ( () =>
 	{
-		// This should not happen if we get to here.
+		// Should gracefully handle this somewhere else before we get here.
 		if ( false === Device.valid )
 		{
 			throw new Error ( "Device is not initialized" );
 		}
 
-		// This should not happen if we get to here.
+		// Should gracefully handle this somewhere else before we get here.
 		if ( true === Device.isInitializing )
 		{
 			throw new Error ( "Device is already being initialized" );
@@ -636,25 +636,22 @@ export function Viewer ( { viewerId, ...rest }: IViewerProps )
 
 		// Get the viewer or make it if we have to.
 		getOrCreateViewer().requestRender();
-	}, [
-		getOrCreateViewer,
-	] );
+	},
+	[ id, getOrCreateViewer ] );
 
 	//
-	// Called when the component mounts.
+	// Called when the component mounts and unmounts.
 	//
 	useEffect ( () =>
 	{
 		console.log ( `Viewer component ${id} mounted` );
-
-		handleMount();
 
 		return ( () =>
 		{
 			console.log ( `Viewer component ${id} unmounted` );
 		} );
 	},
-	[ id, handleMount ] );
+	[ id ] );
 
 	//
 	// Render the progress bar if there is a value.
