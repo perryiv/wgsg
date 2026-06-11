@@ -14,6 +14,8 @@
 
 export interface IDecorator
 {
+	get dirty(): boolean;
+	set dirty ( value: boolean );
 	get visible(): boolean;
 	set visible ( value: boolean );
 }

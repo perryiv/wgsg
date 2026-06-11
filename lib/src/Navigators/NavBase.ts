@@ -75,13 +75,7 @@ export abstract class NavBase extends BaseClass
 	 * Get the local up vector.
 	 * @returns {IVector3} The local up vector.
 	 */
-	public abstract get localUp () : Readonly<IVector3>;
-
-	/**
-	 * Set the local up vector.
-	 * @param {IVector3} value - The local up vector.
-	 */
-	public abstract set localUp ( value: Readonly<IVector3> );
+	public abstract getLocalUp () : Readonly<IVector3>;
 
 	/**
 	 * Rotate the navigator.

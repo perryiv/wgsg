@@ -14,8 +14,9 @@
 
 import { Color as ColorTool } from "../Tools/Color";
 import { Decorator as BaseClass } from "./Decorator";
-import { Node as SceneNode } from "../Scene/Nodes";
-import { vec2, vec3 } from "gl-matrix";
+import { mat4, vec2, vec3 } from "gl-matrix";
+import { Node as SceneNode, Transform } from "../Scene/Nodes";
+import { Sphere as MathSphere } from "../Math";
 import {
 	buildGrid,
 	type IGridBuilderInput,
@@ -23,6 +24,7 @@ import {
 import type {
 	IVector2,
 	IVector3,
+	IVector4,
 	IViewer,
 } from "../Types";
 
@@ -33,10 +35,11 @@ import type {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-interface IGridDecoratorData extends IGridBuilderInput
+interface IGridDecoratorData
 {
-	autoPosition: boolean;
-	autoSize: boolean;
+	localUp: IVector3;
+	numLines: IVector2;
+	color: IVector4;
 };
 
 
@@ -50,12 +53,9 @@ interface IGridDecoratorData extends IGridBuilderInput
 export class Grid extends BaseClass
 {
 	#data: IGridDecoratorData = {
-		center: [ 0, 0, 0 ],
-		size: [ 20, 20 ],
+		localUp: [ 0, 1, 0 ],
 		numLines: [ 21, 21 ],
 		color: [ ...ColorTool.black ],
-		autoPosition: true,
-		autoSize: true
 	};
 
 	/**
@@ -156,72 +156,78 @@ export class Grid extends BaseClass
 	}
 
 	/**
-	 * Determine the center and size of the grid based on the scene's bounds.
-	 * @param {SceneNode} scene - The scene to get the bounds from.
-	 * @returns {{center: IVector3, size: IVector2}} The center and size of the grid.
+	 * Update the scene if we should.
 	 */
-	protected static getCenterAndSize ( scene: SceneNode ) : { center: IVector3, size: IVector2 }
+	public override updateScene () : void
 	{
-		// Default values.
-		const center: IVector3 = [ 0, 0, 0 ];
-		const size: IVector2 = [ 20, 20 ];
-
-		// Get the bounding sphere for the model scene.
-		const bounds = scene.bounds;
-
-		// Handle invalid bounds.
-		if ( false === bounds.valid )
+		if ( false === this.dirty )
 		{
-			return { center, size };
+			return;
 		}
 
-		// Update the center.
-		center[0] = bounds.center[0];
-		center[1] = bounds.center[1] - bounds.radius;
-		center[2] = bounds.center[2];
+		const { viewer } = this;
 
-		// Update the size.
-		const length = bounds.radius * 10;
-		size[0] = length;
-		size[1] = length;
+		if ( !viewer )
+		{
+			return;
+		}
 
-		// Return the answer.
-		return { center, size };
+		vec3.copy ( this.#data.localUp, viewer.navBase.getLocalUp() );
+
+		super.updateScene();
 	}
 
 	/**
-	 * Return the input we use to build the grid.
-	 * @returns {IGridBuilderInput} The input we use to build the grid.
+	 * Determine the center and size of the grid based on the scene's bounds.
+	 * @returns {{center: IVector3, size: IVector2}} The center and size of the grid.
 	 */
-	protected get input () : IGridBuilderInput
+	protected get modelBounds () : MathSphere
 	{
-		// Make a copy.
-		const answer = { ...this.#data };
+		// Make a default bounds.
+		let bounds = new MathSphere ( [ 0, 0, 0 ], 1 );
 
-		// Are we supposed to automatically position and size the grid?
-		if ( answer.autoPosition || answer.autoSize )
+		// Get the viewer.
+		const { viewer } = this;
+		if ( viewer )
 		{
-			const viewer = this.viewer;
-			if ( viewer )
+			// Get the model scene.
+			const { modelScene } = viewer;
+			if ( modelScene )
 			{
-				const scene = viewer.modelScene;
-				if ( scene )
+				// Get the bounds from the model scene if it is valid.
+				if ( true === modelScene.bounds.valid )
 				{
-					const { center, size } = Grid.getCenterAndSize ( scene );
-					if ( answer.autoPosition )
-					{
-						vec3.copy ( answer.center, center );
-					}
-					if ( answer.autoSize )
-					{
-						vec2.copy ( answer.size, size );
-					}
+					bounds = modelScene.bounds.clone();
 				}
 			}
 		}
 
 		// Return the answer.
-		return answer;
+		return bounds;
+	}
+
+	/**
+	 * Determine the center and size of the grid based on the scene's bounds.
+	 * @returns {{center: IVector3, size: IVector2}} The center and size of the grid.
+	 */
+	protected getCenterAndSize () : { center: IVector3, size: IVector2 }
+	{
+		// Default values.
+		const center: IVector3 = [ 0, 0, 0 ];
+		const size: IVector2 = [ 1, 1 ];
+
+		// Get the bounds.
+		const bounds = this.modelBounds;
+
+		// Update the center.
+		vec3.copy ( center, bounds.center );
+
+		// Update the size.
+		const length = bounds.radius * 10;
+		vec2.scale ( size, size, length );
+
+		// Return the answer.
+		return { center, size };
 	}
 
 	/**
@@ -230,7 +236,76 @@ export class Grid extends BaseClass
 	 */
 	protected override buildScene () : ( SceneNode | null )
 	{
-		// Build the grid and return it.
-		return buildGrid ( this.input );
+		// Determine what the center a size really should be.
+		const { center, size } = this.getCenterAndSize();
+
+		// We build the grid at the origin but with the correct size.
+		const input: IGridBuilderInput = {
+			...this.#data,
+			center: ( [ 0, 0, 0 ] as IVector3 ),
+			size
+		};
+
+		// Make a transform group to hold the grid.
+		const tr = new Transform();
+
+		// Build the grid and add it to the transform.
+		tr.addChild ( buildGrid ( input ) );
+
+		// Get the up-vector.
+		const up: IVector3 = [ 0, 0, 0 ];
+		vec3.copy ( up, this.#data.localUp );
+
+		// The radius of the bounds is used to lower the grid.
+		const { radius } = this.modelBounds;
+
+		// We transform the grid differently depending on the up-vector.
+		switch ( up.toString() )
+		{
+			case [ 1, 0, 0 ].toString():
+			{
+				mat4.translate ( tr.matrix, tr.matrix, [ -radius, 0, 0 ] );
+				mat4.translate ( tr.matrix, tr.matrix, center );
+				tr.rotate ( Math.PI * 0.5, [ 0, 0, 1 ] );
+				break;
+			}
+			case [ -1, 0, 0 ].toString():
+			{
+				mat4.translate ( tr.matrix, tr.matrix, [ radius, 0, 0 ] );
+				mat4.translate ( tr.matrix, tr.matrix, center );
+				tr.rotate ( Math.PI * -0.5, [ 0, 0, 1 ] );
+				break;
+			}
+			case [ 0, 1, 0 ].toString():
+			{
+				mat4.translate ( tr.matrix, tr.matrix, [ 0, -radius, 0 ] );
+				mat4.translate ( tr.matrix, tr.matrix, center );
+				break; // No rotation needed.
+			}
+			case [ 0, -1, 0 ].toString():
+			{
+				mat4.translate ( tr.matrix, tr.matrix, [ 0, radius, 0 ] );
+				mat4.translate ( tr.matrix, tr.matrix, center );
+				tr.rotate ( Math.PI, [ 1, 0, 0 ] );
+				break;
+			}
+			case [ 0, 0, 1 ].toString():
+			{
+				mat4.translate ( tr.matrix, tr.matrix, [ 0, 0, -radius ] );
+				mat4.translate ( tr.matrix, tr.matrix, center );
+				tr.rotate ( Math.PI * -0.5, [ 1, 0, 0 ] );
+				break;
+			}
+			case [ 0, 0, -1 ].toString():
+			{
+				mat4.translate ( tr.matrix, tr.matrix, [ 0, 0, radius ] );
+				mat4.translate ( tr.matrix, tr.matrix, center );
+				tr.rotate ( Math.PI * 0.5, [ 1, 0, 0 ] );
+				break;
+			}
+		}
+
+		// Return the transform.
+		return tr;
 	}
 }
