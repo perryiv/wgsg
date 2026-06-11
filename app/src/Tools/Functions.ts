@@ -39,7 +39,7 @@ import {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export const buildSceneSphere = ( sphere: Sphere, edges: boolean ) =>
+export const buildSceneSphere = ( sphere: Sphere = new Sphere ( [ 0, 0, 0 ], 1 ), edges = false ) =>
 {
 	const node = new SphereNode ( {
 		center: sphere.center,

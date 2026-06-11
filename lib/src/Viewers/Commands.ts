@@ -267,11 +267,18 @@ export class ToggleGridVisibility extends Command
 		// Try to get the decorator.
 		const decorator = viewer.getDecorator ( Grid.getClassName() );
 
-		// Toggle the grid visibility if we found the decorator.
+		// If we found the decorator ...
 		if ( decorator )
 		{
+			// Toggle the grid visibility.
 			const newState = !decorator.visible;
 			decorator.visible = newState;
+
+			// If we are making it visible then also rebuild it.
+			if ( true === newState )
+			{
+				decorator.dirty = true;
+			}
 		}
 
 		// Make sure we see the change.

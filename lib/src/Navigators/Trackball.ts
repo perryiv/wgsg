@@ -84,7 +84,7 @@ export class Trackball extends BaseClass
 	#matrix: ( IMatrix44 | null ) = null;
 	#inverse: ( IMatrix44 | null ) = null;
 	#mode: IRotationMode = "track_ball";
-	#localUp: IVector3 = [ 0, 1, 0 ];
+	#localUp: ( IVector3 | null ) = null;
 	#state: ITrackballState = makeDefaultTrackballState();
 
 	/**
@@ -230,61 +230,7 @@ export class Trackball extends BaseClass
 	 */
 	public set mode ( mode: IRotationMode )
 	{
-		// Do nothing if they are the same.
-		if ( mode === this.#mode )
-		{
-			return;
-		}
-
-		// If we get to here then set the new mode.
 		this.#mode = mode;
-
-		// If the new mode is not a turn-table then we're done.
-		if ( "turn_table" !== mode )
-		{
-			return;
-		}
-
-		// If we get to here then figure out the best "up" axis.
-
-		// Get the rotation matrix.
-		const rm = this.rotationMatrix;
-
-		// Local function that returns a new rotated vector.
-		const rotateVector = ( v: Readonly<IVector3> ) : IVector3 =>
-		{
-			const answer: IVector3 = [ 0, 0, 0 ];
-			vec3.transformMat4 ( answer, v, rm );
-			return answer;
-		}
-
-		// Get all of the model's primary axes in global space.
-		const px: Readonly<IVector3> = [  1,  0,  0 ];
-		const py: Readonly<IVector3> = [  0,  1,  0 ];
-		const pz: Readonly<IVector3> = [  0,  0,  1 ];
-		const nx: Readonly<IVector3> = [ -1,  0,  0 ];
-		const ny: Readonly<IVector3> = [  0, -1,  0 ];
-		const nz: Readonly<IVector3> = [  0,  0, -1 ];
-
-		// Get the dot product with the global y-axis.
-		const yAxis = [ 0, 1, 0 ];
-		const dotProducts = [
-			{ dot: vec3.dot ( rotateVector ( px ), yAxis ), axis: px },
-			{ dot: vec3.dot ( rotateVector ( py ), yAxis ), axis: py },
-			{ dot: vec3.dot ( rotateVector ( pz ), yAxis ), axis: pz },
-			{ dot: vec3.dot ( rotateVector ( nx ), yAxis ), axis: nx },
-			{ dot: vec3.dot ( rotateVector ( ny ), yAxis ), axis: ny },
-			{ dot: vec3.dot ( rotateVector ( nz ), yAxis ), axis: nz },
-		];
-
-		// Sort the array using the dot products, from greatest to least.
-		dotProducts.sort ( ( a, b ) =>
-		{
-			return ( b.dot - a.dot );
-		} );
-
-		// Set the up axis.
-		this.localUp = dotProducts[0].axis;
 	}
 
 	/**
@@ -306,21 +252,66 @@ export class Trackball extends BaseClass
 	}
 
 	/**
-	 * Get the local up vector.
-	 * @returns {IVector3} The local up vector.
+	 * Return a new rotated vector.
+	 * @param {IMatrix44} rm - The rotation matrix.
+	 * @param {IVector3} v - The vector to rotate.
+	 * @returns {IVector3} The rotated vector.
 	 */
-	public get localUp () : Readonly<IVector3>
+	protected static rotateVector = ( rm: Readonly<IMatrix44>, v: Readonly<IVector3> ) : IVector3 =>
 	{
-		return this.#localUp;
+		const answer: IVector3 = [ 0, 0, 0 ];
+		vec3.transformMat4 ( answer, v, rm );
+		return answer;
 	}
 
 	/**
-	 * Set the local up vector.
-	 * @param {IVector3} value - The local up vector.
+	 * Get the local up vector.
+	 * @returns {IVector3} The local up vector.
 	 */
-	public set localUp ( value: Readonly<IVector3> )
+	public getLocalUp () : Readonly<IVector3>
 	{
-		vec3.copy ( this.#localUp, value );
+		// If we already have a valid vector then return it.
+		if ( this.#localUp )
+		{
+			return this.#localUp;
+		}
+
+		// If we get to here then figure out the best "up" axis.
+
+		// Get the rotation matrix.
+		const rm = this.rotationMatrix;
+
+		// Get all of the model's primary axes in global space.
+		const px: Readonly<IVector3> = [  1,  0,  0 ];
+		const py: Readonly<IVector3> = [  0,  1,  0 ];
+		const pz: Readonly<IVector3> = [  0,  0,  1 ];
+		const nx: Readonly<IVector3> = [ -1,  0,  0 ];
+		const ny: Readonly<IVector3> = [  0, -1,  0 ];
+		const nz: Readonly<IVector3> = [  0,  0, -1 ];
+
+		// Get the dot product with the global y-axis.
+		const yAxis = [ 0, 1, 0 ];
+		const dotProducts = [
+			{ dot: vec3.dot ( Trackball.rotateVector ( rm, px ), yAxis ), axis: px },
+			{ dot: vec3.dot ( Trackball.rotateVector ( rm, py ), yAxis ), axis: py },
+			{ dot: vec3.dot ( Trackball.rotateVector ( rm, pz ), yAxis ), axis: pz },
+			{ dot: vec3.dot ( Trackball.rotateVector ( rm, nx ), yAxis ), axis: nx },
+			{ dot: vec3.dot ( Trackball.rotateVector ( rm, ny ), yAxis ), axis: ny },
+			{ dot: vec3.dot ( Trackball.rotateVector ( rm, nz ), yAxis ), axis: nz },
+		];
+
+		// Sort the array using the dot products, from greatest to least.
+		dotProducts.sort ( ( a, b ) =>
+		{
+			return ( b.dot - a.dot );
+		} );
+
+		// Set the up axis.
+		this.#localUp = [ 0, 1, 0 ];
+		vec3.copy ( this.#localUp, dotProducts[0].axis );
+
+		// Return what we have.
+		return this.#localUp;
 	}
 
 	/**
@@ -378,6 +369,7 @@ export class Trackball extends BaseClass
 	{
 		vec4.copy ( this.#state.rotation, r );
 		this.#matrix = null;
+		this.#localUp = null;
 	}
 
 	/**
@@ -991,7 +983,7 @@ export class Trackball extends BaseClass
 
 				// Get the model's current up-axis in global space.
 				const globalUp: IVector3 = [ 0, 0, 0 ];
-				vec3.transformMat4 ( globalUp, this.localUp, this.rotationMatrix );
+				vec3.transformMat4 ( globalUp, this.getLocalUp(), this.rotationMatrix );
 				vec3.normalize ( globalUp, globalUp );
 
 				// Rotate the global up-axis by this angle.
@@ -1011,7 +1003,7 @@ export class Trackball extends BaseClass
 				const angle = ( cm[0] - pm[0] ) * DEG_TO_RAD * sensitivity[1] * scale * fraction;
 
 				// Rotate about the local up-axis.
-				this.rotateAxisAngle ( this.localUp, angle, "local" );
+				this.rotateAxisAngle ( this.getLocalUp(), angle, "local" );
 			}
 		};
 
