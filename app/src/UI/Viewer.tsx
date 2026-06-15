@@ -486,6 +486,9 @@ export function Viewer ( { viewerId, ...rest }: IViewerProps )
 		// Move the camera so we see the new model.
 		viewer.viewAll ( { animate: false } );
 
+		// Make the decorators update.
+		viewer.dirtyDecorators();
+
 		// Render so we see the new model.
 		viewer.requestRender();
 	}, [

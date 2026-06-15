@@ -115,6 +115,7 @@ export abstract class Decorator extends BaseClass
 
 		this.scene.clear();
 		this.scene.addChild ( this.buildScene() );
+		void this.scene.bounds; // Update the bounds now.
 
 		this.dirty = false;
 	}
