@@ -191,6 +191,32 @@ export const fixAngle = ( angle: number, low: number, high: number ) : number =>
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
+ * Get the signed angle from the first vector to the second.
+ * theta = acos ( a dot b / |a||b| )
+ * @param {IVector3} a - The first vector.
+ * @param {IVector3} b - The second vector.
+ * @returns {number} The angle in radians.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export const getSignedAngle = ( a: Readonly<IVector3>, b: Readonly<IVector3> ) : number =>
+{
+	let angle = vec3.angle ( a, b );
+
+	const c: IVector3 = [ 0, 0, 0 ];
+	vec3.cross ( c, a, b );
+
+	if ( c[2] < 0 )
+	{
+		angle = -angle;
+	}
+
+  return angle;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
  * Return e^(-u)
  * @param {number} u - The input value in the range [0,1].
  * @returns {number} The output value in the range [0,1].
