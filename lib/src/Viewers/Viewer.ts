@@ -514,6 +514,17 @@ export class Viewer extends BaseClass
 	}
 
 	/**
+	 * Dirty all the decorators.
+	 */
+	public dirtyDecorators() : void
+	{
+		this.forEachDecorator ( ( decorator: Decorator ) =>
+		{
+			decorator.dirty = true;
+		} );
+	}
+
+	/**
 	 * Get the view matrix.
 	 * @returns {IMatrix44} The view matrix.
 	 */
