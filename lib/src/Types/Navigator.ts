@@ -62,12 +62,15 @@ export interface INavigator
 	translateScreenXY ( input: { current: IVector2, previous: IVector2, scale: number } ) : void;
 	zoom: ( ( scale: number ) => void );
 
+	reset: () => void;
+	resetRoll: () => void;
+
 	getLocalUp(): Readonly<IVector3>;
 
 	get rotationMode(): ( IRotationMode | null );
 	set rotationMode ( mode: IRotationMode );
 
-	getInternalState: ( () => INavigationState );
+	getInternalState: () => INavigationState;
 	setInternalState: ( ( state: Readonly<INavigationState> ) => void );
 
 	rotationMatrix: Readonly<IMatrix44>;

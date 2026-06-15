@@ -21,6 +21,7 @@ import {
 } from "../Projections";
 import {
 	clampNumber,
+	getSignedAngle,
 	intersectLinePlane,
 	intersectLineSphere,
 	isFiniteNumber,
@@ -500,6 +501,31 @@ export class Trackball extends BaseClass
 	{
 		this.#state = makeDefaultTrackballState();
 		this.#matrix = null;
+	}
+
+	/**
+	 * Reset the navigator's roll.
+	 */
+	public override resetRoll() : void
+	{
+		// Put the local y-axis in global space.
+		const yAxis: IVector3 = [ 0, 1, 0 ];
+		vec3.transformMat4 ( yAxis, yAxis, this.rotationMatrix );
+
+		// Project to the x-y plane.
+		yAxis[2] = 0;
+
+		// Get the signed angle between this transformed yAxis and the global y-axis.
+		const angle = getSignedAngle ( yAxis, [ 0, 1, 0 ] );
+
+		// Handle no angle.
+		if ( 0 === angle )
+		{
+			return;
+		}
+
+		// Rotate about the global z-axis by this angle.
+		this.rotateAxisAngle ( [ 0, 0, 1 ], angle, "global" );
 	}
 
 	/**
