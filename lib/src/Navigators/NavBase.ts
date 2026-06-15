@@ -136,6 +136,16 @@ export abstract class NavBase extends BaseClass
 	public abstract resetRoll() : void;
 
 	/**
+	 * Reset the navigator's pitch.
+	 */
+	public abstract resetPitch() : void;
+
+	/**
+	 * Reset the navigator's rotation.
+	 */
+	public abstract resetRotation() : void;
+
+	/**
 	 * Get the internal state.
 	 * @returns {INavigationState} The internal state.
 	 */

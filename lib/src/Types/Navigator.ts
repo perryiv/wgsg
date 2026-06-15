@@ -64,6 +64,8 @@ export interface INavigator
 
 	reset: () => void;
 	resetRoll: () => void;
+	resetPitch: () => void;
+	resetRotation: () => void;
 
 	getLocalUp(): Readonly<IVector3>;
 

@@ -195,18 +195,19 @@ export const fixAngle = ( angle: number, low: number, high: number ) : number =>
  * theta = acos ( a dot b / |a||b| )
  * @param {IVector3} a - The first vector.
  * @param {IVector3} b - The second vector.
+ * @param {(0 | 1 | 2)} which - The axis to consider for the sign.
  * @returns {number} The angle in radians.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const getSignedAngle = ( a: Readonly<IVector3>, b: Readonly<IVector3> ) : number =>
+export const getSignedAngle = ( a: Readonly<IVector3>, b: Readonly<IVector3>, which: ( 0 | 1 | 2 ) ) : number =>
 {
 	let angle = vec3.angle ( a, b );
 
 	const c: IVector3 = [ 0, 0, 0 ];
 	vec3.cross ( c, a, b );
 
-	if ( c[2] < 0 )
+	if ( c[which] < 0 )
 	{
 		angle = -angle;
 	}

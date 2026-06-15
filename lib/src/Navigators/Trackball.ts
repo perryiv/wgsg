@@ -516,7 +516,7 @@ export class Trackball extends BaseClass
 		yAxis[2] = 0;
 
 		// Get the signed angle between this transformed yAxis and the global y-axis.
-		const angle = getSignedAngle ( yAxis, [ 0, 1, 0 ] );
+		const angle = getSignedAngle ( yAxis, [ 0, 1, 0 ], 2 );
 
 		// Handle no angle.
 		if ( 0 === angle )
@@ -526,6 +526,39 @@ export class Trackball extends BaseClass
 
 		// Rotate about the global z-axis by this angle.
 		this.rotateAxisAngle ( [ 0, 0, 1 ], angle, "global" );
+	}
+
+	/**
+	 * Reset the navigator's pitch.
+	 */
+	public override resetPitch() : void
+	{
+		// Put the local y-axis in global space.
+		const yAxis: IVector3 = [ 0, 1, 0 ];
+		vec3.transformMat4 ( yAxis, yAxis, this.rotationMatrix );
+
+		// Project to the y-z plane.
+		yAxis[0] = 0;
+
+		// Get the signed angle between this transformed yAxis and the global y-axis.
+		const angle = getSignedAngle ( yAxis, [ 0, 1, 0 ], 0 );
+
+		// Handle no angle.
+		if ( 0 === angle )
+		{
+			return;
+		}
+
+		// Rotate about the global x-axis by this angle.
+		this.rotateAxisAngle ( [ 1, 0, 0 ], angle, "global" );
+	}
+
+	/**
+	 * Reset the navigator's rotation.
+	 */
+	public override resetRotation() : void
+	{
+		this.rotation = [ 0, 0, 0, 1 ];
 	}
 
 	/**
