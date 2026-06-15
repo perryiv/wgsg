@@ -682,14 +682,15 @@ export class Viewer extends BaseClass
 	}
 
 	/**
-	 * Reset the navigator's roll.
+	 * Reset the navigation using the given callback.
 	 * @param {object} [input] - The input.
 	 * @param {boolean} [input.animate] - Whether or not to animate the navigation.
+	 * @param {() => void} [input.cb] - The callback function to execute to reset the navigation.
 	 */
-	public resetRoll ( input?: { animate?: boolean } ) : void
+	protected resetNavigation ( input: { animate?: boolean, cb: () => void } ) : void
 	{
 		// Shortcuts.
-		const { animate } = input ?? {};
+		const { animate, cb } = input;
 
 		// If the animate option is not set then use the one from the options.
 		const allowAnimations = ( animate ?? this.options.animations.allow );
@@ -697,7 +698,7 @@ export class Viewer extends BaseClass
 		// If we are not animating then set it and return.
 		if ( !allowAnimations )
 		{
-			this.navBase.resetRoll();
+			cb();
 			return;
 		}
 
@@ -706,8 +707,8 @@ export class Viewer extends BaseClass
 		// Get the current navigation state.
 		const navState1 = this.navBase.getInternalState();
 
-		// Reset the roll.
-		this.navBase.resetRoll();
+		// Reset the navigation.
+		cb();
 
 		// Get the new navigation state.
 		const navState2 = this.navBase.getInternalState();
@@ -716,7 +717,7 @@ export class Viewer extends BaseClass
 		this.navBase.setInternalState ( navState1 );
 
 		// Set an animation function that blends between the two states.
-		this.animations.nav.set ( `${this.type}.resetRoll()`, ( fraction: number ) : void =>
+		this.animations.nav.set ( `${this.type}.resetNavigation()`, ( fraction: number ) : void =>
 		{
 			const newState = this.navBase.blend ( navState1, navState2, fraction );
 			this.navBase.setInternalState ( newState );
@@ -725,6 +726,54 @@ export class Viewer extends BaseClass
 
 		// Start the animation and pass the duration in milliseconds.
 		this.animations.nav.start ( this.options.duration.rotate_axis_angle );
+	}
+
+	/**
+	 * Reset the navigator's roll.
+	 * @param {object} [input] - The input.
+	 * @param {boolean} [input.animate] - Whether or not to animate the navigation.
+	 */
+	public resetRoll ( input?: { animate?: boolean } ) : void
+	{
+		this.resetNavigation ( {
+			...input,
+			cb: () =>
+			{
+				this.navBase.resetRoll();
+			}
+		} );
+	}
+
+	/**
+	 * Reset the navigator's pitch.
+	 * @param {object} [input] - The input.
+	 * @param {boolean} [input.animate] - Whether or not to animate the navigation.
+	 */
+	public resetPitch ( input?: { animate?: boolean } ) : void
+	{
+		this.resetNavigation ( {
+			...input,
+			cb: () =>
+			{
+				this.navBase.resetPitch();
+			}
+		} );
+	}
+
+	/**
+	 * Reset the navigator's rotation.
+	 * @param {object} [input] - The input.
+	 * @param {boolean} [input.animate] - Whether or not to animate the navigation.
+	 */
+	public resetRotation ( input?: { animate?: boolean } ) : void
+	{
+		this.resetNavigation ( {
+			...input,
+			cb: () =>
+			{
+				this.navBase.resetRotation();
+			}
+		} );
 	}
 
 	/**
