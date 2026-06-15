@@ -131,6 +131,11 @@ export abstract class NavBase extends BaseClass
 	public abstract reset() : void;
 
 	/**
+	 * Reset the navigator's roll.
+	 */
+	public abstract resetRoll() : void;
+
+	/**
 	 * Get the internal state.
 	 * @returns {INavigationState} The internal state.
 	 */

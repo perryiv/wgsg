@@ -682,6 +682,52 @@ export class Viewer extends BaseClass
 	}
 
 	/**
+	 * Reset the navigator's roll.
+	 * @param {object} [input] - The input.
+	 * @param {boolean} [input.animate] - Whether or not to animate the navigation.
+	 */
+	public resetRoll ( input?: { animate?: boolean } ) : void
+	{
+		// Shortcuts.
+		const { animate } = input ?? {};
+
+		// If the animate option is not set then use the one from the options.
+		const allowAnimations = ( animate ?? this.options.animations.allow );
+
+		// If we are not animating then set it and return.
+		if ( !allowAnimations )
+		{
+			this.navBase.resetRoll();
+			return;
+		}
+
+		// If we get to here then we're animating.
+
+		// Get the current navigation state.
+		const navState1 = this.navBase.getInternalState();
+
+		// Reset the roll.
+		this.navBase.resetRoll();
+
+		// Get the new navigation state.
+		const navState2 = this.navBase.getInternalState();
+
+		// Return to the original state.
+		this.navBase.setInternalState ( navState1 );
+
+		// Set an animation function that blends between the two states.
+		this.animations.nav.set ( `${this.type}.resetRoll()`, ( fraction: number ) : void =>
+		{
+			const newState = this.navBase.blend ( navState1, navState2, fraction );
+			this.navBase.setInternalState ( newState );
+			this.requestRender();
+		} );
+
+		// Start the animation and pass the duration in milliseconds.
+		this.animations.nav.start ( this.options.duration.rotate_axis_angle );
+	}
+
+	/**
 	 * Set the navigator so that the sphere is completely within the view-volume.
 	 * @param {object} input - The input.
 	 * @param {Sphere} input.sphere - The sphere to view.

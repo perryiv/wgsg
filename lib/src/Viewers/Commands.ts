@@ -262,8 +262,7 @@ export class ResetRoll extends Command
 	public execute ( event: IEvent ) : void
 	{
 		const { viewer } = event;
-		const { navBase } = viewer;
-		navBase.resetRoll();
+		viewer.resetRoll();
 		viewer.requestRender();
 	}
 }
