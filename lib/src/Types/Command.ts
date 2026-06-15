@@ -30,6 +30,7 @@ export type ICommandName = (
 	| "mouse_translate_small"
 	| "mouse_zoom_large"
 	| "mouse_zoom_small"
+	| "reset_roll"
 	| "rotate_nx_large"
 	| "rotate_nx_small"
 	| "rotate_ny_large"

@@ -230,6 +230,47 @@ export class RotateZ extends RotateAxisAngle
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
+ * Reset the roll.
+ * @class
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export class ResetRoll extends Command
+{
+	/**
+	 * Construct the class.
+	 * @class
+	 */
+	public constructor()
+	{
+		super();
+	}
+
+	/**
+	 * Get the class name.
+	 * @returns {string} The class name.
+	 */
+	public override getClassName() : string
+	{
+		return "Viewers.Commands.ResetRoll";
+	}
+
+	/**
+	 * Execute the command.
+	 * @param {IEvent} event The event.
+	 */
+	public execute ( event: IEvent ) : void
+	{
+		const { viewer } = event;
+		const { navBase } = viewer;
+		navBase.resetRoll();
+		viewer.requestRender();
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
  * Toggle the grid visibility.
  * @class
  */
@@ -603,6 +644,7 @@ export function makeCommands() : ICommandMap
 		[ "mouse_translate_small",  new MouseTranslate ( 0.1 )       ],
 		[ "mouse_zoom_large",       new Zoom ( 0.90, 1.10 )          ],
 		[ "mouse_zoom_small",       new Zoom ( 0.99, 1.01 )          ],
+		[ "reset_roll",             new ResetRoll()                  ],
 		[ "rotate_nx_large",        new RotateX ( DEG_TO_RAD * -45 ) ],
 		[ "rotate_nx_small",        new RotateX ( DEG_TO_RAD *  -5 ) ],
 		[ "rotate_ny_large",        new RotateY ( DEG_TO_RAD * -45 ) ],
@@ -680,6 +722,7 @@ export function makeInputToCommandMap() : IInputToCommandNameMap
 	const kf = "KeyF";
 	const kt = "KeyT";
 	const kg = "KeyG";
+	const kr = "KeyR";
 
 	return new Map < string, ICommandName > ( [
 		makeTuple ( "mouse_rotate_large",     "mouse_drag",  [ 0 ], [        ] ),
@@ -690,6 +733,7 @@ export function makeInputToCommandMap() : IInputToCommandNameMap
 		makeTuple ( "mouse_translate_small",  "mouse_drag",  [ 2 ], [ sr     ] ),
 		makeTuple ( "mouse_zoom_large",       "mouse_wheel", [   ], [        ] ),
 		makeTuple ( "mouse_zoom_small",       "mouse_wheel", [   ], [ sl     ] ),
+		makeTuple ( "reset_roll",             "key_down",    [   ], [ kr     ] ),
 		makeTuple ( "rotate_nx_large",        "key_down",    [   ], [ au     ] ),
 		makeTuple ( "rotate_nx_small",        "key_down",    [   ], [ sl, au ] ),
 		makeTuple ( "rotate_nx_small",        "key_down",    [   ], [ sr, au ] ),
