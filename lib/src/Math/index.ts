@@ -18,4 +18,5 @@ export * from "./Intersect";
 export * from "./Line";
 export * from "./Plane";
 export * from "./Sphere";
+export * from "./Quaternion";
 export * from "./Validate";

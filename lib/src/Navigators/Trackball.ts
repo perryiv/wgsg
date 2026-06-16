@@ -21,7 +21,11 @@ import {
 } from "../Projections";
 import {
 	clampNumber,
+	convertQuaternionToEulerAngles,
+	getPitch,
+	getRoll,
 	getSignedAngle,
+	getYaw,
 	intersectLinePlane,
 	intersectLineSphere,
 	isFiniteNumber,
@@ -34,6 +38,7 @@ import {
 import {
 	DEG_TO_RAD,
 	IDENTITY_MATRIX,
+	RAD_TO_DEG,
 } from "../Tools";
 import {
 	ICoordinateSystem,
@@ -501,6 +506,90 @@ export class Trackball extends BaseClass
 	{
 		this.#state = makeDefaultTrackballState();
 		this.#matrix = null;
+	}
+
+	/**
+	 * Get the roll angle.
+	 * @returns {number} The roll angle in radians.
+	 */
+	public override get roll() : number
+	{
+		return getRoll ( this.rotation );
+	}
+
+	/**
+	 * Set the roll angle.
+	 * @param {number} angle - The roll angle in radians.
+	 */
+	public override set roll ( angle: number )
+	{
+		const euler: IVector3 = [ 0, 0, 0 ];
+		convertQuaternionToEulerAngles ( euler, this.rotation );
+
+		euler[0]  = RAD_TO_DEG * angle;
+		euler[1] *= RAD_TO_DEG;
+		euler[2] *= RAD_TO_DEG;
+
+		const newRotation: IVector4 = [ 0, 0, 0, 1 ];
+		quat.fromEuler ( newRotation, euler[0], euler[1], euler[2] );
+
+		this.rotation = newRotation;
+	}
+
+	/**
+	 * Get the pitch angle.
+	 * @returns {number} The pitch angle in radians.
+	 */
+	public override get pitch() : number
+	{
+		return getPitch ( this.rotation );
+	}
+
+	/**
+	 * Set the pitch angle.
+	 * @param {number} angle - The pitch angle in radians.
+	 */
+	public override set pitch ( angle: number )
+	{
+		const euler: IVector3 = [ 0, 0, 0 ];
+		convertQuaternionToEulerAngles ( euler, this.rotation );
+
+		euler[0] *= RAD_TO_DEG;
+		euler[1]  = RAD_TO_DEG * angle;
+		euler[2] *= RAD_TO_DEG;
+
+		const newRotation: IVector4 = [ 0, 0, 0, 1 ];
+		quat.fromEuler ( newRotation, euler[0], euler[1], euler[2] );
+
+		this.rotation = newRotation;
+	}
+
+	/**
+	 * Get the yaw angle.
+	 * @returns {number} The yaw angle in radians.
+	 */
+	public override get yaw() : number
+	{
+		return getYaw ( this.rotation );
+	}
+
+	/**
+	 * Set the yaw angle.
+	 * @param {number} angle - The yaw angle in radians.
+	 */
+	public override set yaw ( angle: number )
+	{
+		const euler: IVector3 = [ 0, 0, 0 ];
+		convertQuaternionToEulerAngles ( euler, this.rotation );
+
+		euler[0] *= RAD_TO_DEG;
+		euler[1] *= RAD_TO_DEG;
+		euler[2]  = RAD_TO_DEG * angle;
+
+		const newRotation: IVector4 = [ 0, 0, 0, 1 ];
+		quat.fromEuler ( newRotation, euler[0], euler[1], euler[2] );
+
+		this.rotation = newRotation;
 	}
 
 	/**

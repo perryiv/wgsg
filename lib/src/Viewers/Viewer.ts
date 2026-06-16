@@ -761,6 +761,22 @@ export class Viewer extends BaseClass
 	}
 
 	/**
+	 * Reset the navigator's yaw.
+	 * @param {object} [input] - The input.
+	 * @param {boolean} [input.animate] - Whether or not to animate the navigation.
+	 */
+	public resetYaw ( input?: { animate?: boolean } ) : void
+	{
+		this.resetNavigation ( {
+			...input,
+			cb: () =>
+			{
+				this.navBase.yaw = 0;
+			}
+		} );
+	}
+
+	/**
 	 * Reset the navigator's rotation.
 	 * @param {object} [input] - The input.
 	 * @param {boolean} [input.animate] - Whether or not to animate the navigation.

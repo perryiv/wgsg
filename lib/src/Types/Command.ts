@@ -33,6 +33,7 @@ export type ICommandName = (
 	| "reset_pitch"
 	| "reset_roll"
 	| "reset_rotation"
+	| "reset_yaw"
 	| "rotate_nx_large"
 	| "rotate_nx_small"
 	| "rotate_ny_large"

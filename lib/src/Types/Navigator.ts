@@ -63,6 +63,14 @@ export interface INavigator
 	zoom: ( ( scale: number ) => void );
 
 	reset: () => void;
+
+	get roll() : number;
+	set roll ( radians: number );
+	get pitch() : number;
+	set pitch ( radians: number );
+	get yaw() : number;
+	set yaw ( radians: number );
+
 	resetRoll: () => void;
 	resetPitch: () => void;
 	resetRotation: () => void;

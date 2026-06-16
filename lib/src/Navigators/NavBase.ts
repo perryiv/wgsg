@@ -131,6 +131,42 @@ export abstract class NavBase extends BaseClass
 	public abstract reset() : void;
 
 	/**
+	 * Get the roll angle.
+	 * @returns {number} The roll angle in radians.
+	 */
+	public abstract get roll() : number;
+
+	/**
+	 * Set the roll angle.
+	 * @param {number} radians - The roll angle in radians.
+	 */
+	public abstract set roll ( radians: number );
+
+	/**
+	 * Get the pitch angle.
+	 * @returns {number} The pitch angle in radians.
+	 */
+	public abstract get pitch() : number;
+
+	/**
+	 * Set the pitch angle.
+	 * @param {number} radians - The pitch angle in radians.
+	 */
+	public abstract set pitch ( radians: number );
+
+	/**
+	 * Get the yaw angle.
+	 * @returns {number} The yaw angle in radians.
+	 */
+	public abstract get yaw() : number;
+
+	/**
+	 * Set the yaw angle.
+	 * @param {number} radians - The yaw angle in radians.
+	 */
+	public abstract set yaw ( radians: number );
+
+	/**
 	 * Reset the navigator's roll.
 	 */
 	public abstract resetRoll() : void;

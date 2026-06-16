@@ -310,6 +310,46 @@ export class ResetPitch extends Command
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
+ * Reset the yaw.
+ * @class
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export class ResetYaw extends Command
+{
+	/**
+	 * Construct the class.
+	 * @class
+	 */
+	public constructor()
+	{
+		super();
+	}
+
+	/**
+	 * Get the class name.
+	 * @returns {string} The class name.
+	 */
+	public override getClassName() : string
+	{
+		return "Viewers.Commands.ResetYaw";
+	}
+
+	/**
+	 * Execute the command.
+	 * @param {IEvent} event The event.
+	 */
+	public execute ( event: IEvent ) : void
+	{
+		const { viewer } = event;
+		viewer.resetYaw();
+		viewer.requestRender();
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
  * Reset the rotation.
  * @class
  */
@@ -726,6 +766,7 @@ export function makeCommands() : ICommandMap
 		[ "reset_pitch",            new ResetPitch()                 ],
 		[ "reset_roll",             new ResetRoll()                  ],
 		[ "reset_rotation",         new ResetRotation()              ],
+		[ "reset_yaw",              new ResetYaw()                   ],
 		[ "rotate_nx_large",        new RotateX ( DEG_TO_RAD * -45 ) ],
 		[ "rotate_nx_small",        new RotateX ( DEG_TO_RAD *  -5 ) ],
 		[ "rotate_ny_large",        new RotateY ( DEG_TO_RAD * -45 ) ],
@@ -805,6 +846,7 @@ export function makeInputToCommandMap() : IInputToCommandNameMap
 	const kg = "KeyG";
 	const kp = "KeyP";
 	const kr = "KeyR";
+	const ky = "KeyY";
 
 	return new Map < string, ICommandName > ( [
 		makeTuple ( "mouse_rotate_large",     "mouse_drag",  [ 0 ], [        ] ),
@@ -815,11 +857,13 @@ export function makeInputToCommandMap() : IInputToCommandNameMap
 		makeTuple ( "mouse_translate_small",  "mouse_drag",  [ 2 ], [ sr     ] ),
 		makeTuple ( "mouse_zoom_large",       "mouse_wheel", [   ], [        ] ),
 		makeTuple ( "mouse_zoom_small",       "mouse_wheel", [   ], [ sl     ] ),
-		makeTuple ( "reset_roll",             "key_down",    [   ], [ sl, kr ] ),
-		makeTuple ( "reset_roll",             "key_down",    [   ], [ sr, kr ] ),
 		makeTuple ( "reset_pitch",            "key_down",    [   ], [ sl, kp ] ),
 		makeTuple ( "reset_pitch",            "key_down",    [   ], [ sr, kp ] ),
+		makeTuple ( "reset_roll",             "key_down",    [   ], [ sl, kr ] ),
+		makeTuple ( "reset_roll",             "key_down",    [   ], [ sr, kr ] ),
 		makeTuple ( "reset_rotation",         "key_down",    [   ], [ kr     ] ),
+		makeTuple ( "reset_yaw",              "key_down",    [   ], [ sl, ky ] ),
+		makeTuple ( "reset_yaw",              "key_down",    [   ], [ sr, ky ] ),
 		makeTuple ( "rotate_nx_large",        "key_down",    [   ], [ au     ] ),
 		makeTuple ( "rotate_nx_small",        "key_down",    [   ], [ sl, au ] ),
 		makeTuple ( "rotate_nx_small",        "key_down",    [   ], [ sr, au ] ),
