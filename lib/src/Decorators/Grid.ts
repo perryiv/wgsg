@@ -236,7 +236,7 @@ export class Grid extends BaseClass
 	 */
 	protected override buildScene () : ( SceneNode | null )
 	{
-		// Determine what the center a size really should be.
+		// Determine what the center and size really should be.
 		const { center, size } = this.getCenterAndSize();
 
 		// We build the grid at the origin but with the correct size.
