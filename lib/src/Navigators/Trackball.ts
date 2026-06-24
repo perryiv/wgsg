@@ -21,11 +21,6 @@ import {
 } from "../Projections";
 import {
 	clampNumber,
-	convertQuaternionToEulerAngles,
-	getPitch,
-	getRoll,
-	getSignedAngle,
-	getYaw,
 	intersectLinePlane,
 	intersectLineSphere,
 	isFiniteNumber,
@@ -38,7 +33,6 @@ import {
 import {
 	DEG_TO_RAD,
 	IDENTITY_MATRIX,
-	RAD_TO_DEG,
 } from "../Tools";
 import {
 	ICoordinateSystem,
@@ -506,140 +500,6 @@ export class Trackball extends BaseClass
 	{
 		this.#state = makeDefaultTrackballState();
 		this.#matrix = null;
-	}
-
-	/**
-	 * Get the roll angle.
-	 * @returns {number} The roll angle in radians.
-	 */
-	public override get roll() : number
-	{
-		return getRoll ( this.rotation );
-	}
-
-	/**
-	 * Set the roll angle.
-	 * @param {number} angle - The roll angle in radians.
-	 */
-	public override set roll ( angle: number )
-	{
-		const euler: IVector3 = [ 0, 0, 0 ];
-		convertQuaternionToEulerAngles ( euler, this.rotation );
-
-		euler[0]  = RAD_TO_DEG * angle;
-		euler[1] *= RAD_TO_DEG;
-		euler[2] *= RAD_TO_DEG;
-
-		const newRotation: IVector4 = [ 0, 0, 0, 1 ];
-		quat.fromEuler ( newRotation, euler[0], euler[1], euler[2] );
-
-		this.rotation = newRotation;
-	}
-
-	/**
-	 * Get the pitch angle.
-	 * @returns {number} The pitch angle in radians.
-	 */
-	public override get pitch() : number
-	{
-		return getPitch ( this.rotation );
-	}
-
-	/**
-	 * Set the pitch angle.
-	 * @param {number} angle - The pitch angle in radians.
-	 */
-	public override set pitch ( angle: number )
-	{
-		const euler: IVector3 = [ 0, 0, 0 ];
-		convertQuaternionToEulerAngles ( euler, this.rotation );
-
-		euler[0] *= RAD_TO_DEG;
-		euler[1]  = RAD_TO_DEG * angle;
-		euler[2] *= RAD_TO_DEG;
-
-		const newRotation: IVector4 = [ 0, 0, 0, 1 ];
-		quat.fromEuler ( newRotation, euler[0], euler[1], euler[2] );
-
-		this.rotation = newRotation;
-	}
-
-	/**
-	 * Get the yaw angle.
-	 * @returns {number} The yaw angle in radians.
-	 */
-	public override get yaw() : number
-	{
-		return getYaw ( this.rotation );
-	}
-
-	/**
-	 * Set the yaw angle.
-	 * @param {number} angle - The yaw angle in radians.
-	 */
-	public override set yaw ( angle: number )
-	{
-		const euler: IVector3 = [ 0, 0, 0 ];
-		convertQuaternionToEulerAngles ( euler, this.rotation );
-
-		euler[0] *= RAD_TO_DEG;
-		euler[1] *= RAD_TO_DEG;
-		euler[2]  = RAD_TO_DEG * angle;
-
-		const newRotation: IVector4 = [ 0, 0, 0, 1 ];
-		quat.fromEuler ( newRotation, euler[0], euler[1], euler[2] );
-
-		this.rotation = newRotation;
-	}
-
-	/**
-	 * Reset the navigator's roll.
-	 */
-	public override resetRoll() : void
-	{
-		// Put the local y-axis in global space.
-		const yAxis: IVector3 = [ 0, 1, 0 ];
-		vec3.transformMat4 ( yAxis, yAxis, this.rotationMatrix );
-
-		// Project to the x-y plane.
-		yAxis[2] = 0;
-
-		// Get the signed angle between this transformed yAxis and the global y-axis.
-		const angle = getSignedAngle ( yAxis, [ 0, 1, 0 ], 2 );
-
-		// Handle no angle.
-		if ( 0 === angle )
-		{
-			return;
-		}
-
-		// Rotate about the global z-axis by this angle.
-		this.rotateAxisAngle ( [ 0, 0, 1 ], angle, "global" );
-	}
-
-	/**
-	 * Reset the navigator's pitch.
-	 */
-	public override resetPitch() : void
-	{
-		// Put the local y-axis in global space.
-		const yAxis: IVector3 = [ 0, 1, 0 ];
-		vec3.transformMat4 ( yAxis, yAxis, this.rotationMatrix );
-
-		// Project to the y-z plane.
-		yAxis[0] = 0;
-
-		// Get the signed angle between this transformed yAxis and the global y-axis.
-		const angle = getSignedAngle ( yAxis, [ 0, 1, 0 ], 0 );
-
-		// Handle no angle.
-		if ( 0 === angle )
-		{
-			return;
-		}
-
-		// Rotate about the global x-axis by this angle.
-		this.rotateAxisAngle ( [ 1, 0, 0 ], angle, "global" );
 	}
 
 	/**

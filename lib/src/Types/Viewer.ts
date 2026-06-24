@@ -47,9 +47,6 @@ export interface IViewer
 	getDecorator: ( name: string ) => ( IDecorator | null );
 	makeLine: ( input: { screenPoint: Readonly<IVector2>, viewMatrix?: Readonly<IMatrix44> } ) => ( Line | null );
 	requestRender: () => void;
-	resetPitch: () => void;
-	resetRoll: () => void;
 	resetRotation: () => void;
-	resetYaw: () => void;
 	viewAll: ( options?: { resetRotation?: boolean, animate?: boolean } ) => void;
 }
