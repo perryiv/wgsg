@@ -729,38 +729,6 @@ export class Viewer extends BaseClass
 	}
 
 	/**
-	 * Reset the navigator's roll.
-	 * @param {object} [input] - The input.
-	 * @param {boolean} [input.animate] - Whether or not to animate the navigation.
-	 */
-	public resetRoll ( input?: { animate?: boolean } ) : void
-	{
-		this.resetNavigation ( {
-			...input,
-			cb: () =>
-			{
-				this.navBase.resetRoll();
-			}
-		} );
-	}
-
-	/**
-	 * Reset the navigator's pitch.
-	 * @param {object} [input] - The input.
-	 * @param {boolean} [input.animate] - Whether or not to animate the navigation.
-	 */
-	public resetPitch ( input?: { animate?: boolean } ) : void
-	{
-		this.resetNavigation ( {
-			...input,
-			cb: () =>
-			{
-				this.navBase.resetPitch();
-			}
-		} );
-	}
-
-	/**
 	 * Reset the navigator's rotation.
 	 * @param {object} [input] - The input.
 	 * @param {boolean} [input.animate] - Whether or not to animate the navigation.
