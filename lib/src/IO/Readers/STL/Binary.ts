@@ -180,7 +180,7 @@ export class BinaryReader extends BaseClass
 				// This is called if there is an error.
 				reader.onerror = () =>
 				{
-					reject ( new Error (`Error reading the file: ${reader.error}` ) );
+					reject ( new Error ( `Error reading the file: ${reader.error}` ) );
 					return;
 				};
 
