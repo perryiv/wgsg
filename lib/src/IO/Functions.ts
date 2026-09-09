@@ -26,14 +26,52 @@ export type Method = ( "Text" | "ArrayBuffer" | "DataURL" );
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
+ * Get a blob from a file with optional start and end positions.
+ * @param {File} file The file to get the blob from.
+ * @param {number} [start] The start position in the file.
+ * @param {number} [end] The end position in the file.
+ * @returns {Blob} The resulting blob.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export function getBlob ( file: File, start?: number, end?: number ) : Blob
+{
+	if ( undefined === start )
+	{
+		return file;
+	}
+
+	if ( start < 0 )
+	{
+		throw new Error ( `Invalid start position: ${start}` );
+	}
+
+	if ( undefined == end )
+	{
+		return file.slice ( start );
+	}
+
+	if ( end <= start )
+	{
+		throw new Error ( `End position ${end} must be greater than start position ${start}` );
+	}
+
+	return file.slice ( start, end );
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
  * Reads a file asynchronously using the specified method.
  * @param {File} file The file to read.
  * @param {Method} method The method to use for reading the file ("Text", "ArrayBuffer", or "DataURL").
+ * @param {number} [start] The start position in the file.
+ * @param {number} [end] The end position in the file.
  * @returns {Promise<string | ArrayBuffer | null>} A promise that resolves to the file content as a string, ArrayBuffer, or DataURL, depending on the specified method.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export function readFileAsync ( file: File, method: Method ) : Promise < string | ArrayBuffer | null >
+export function readFile ( file: File, method: Method, start?: number, end?: number ) : Promise < string | ArrayBuffer | null >
 {
 	return new Promise ( ( resolve, reject ) =>
 	{
@@ -56,21 +94,23 @@ export function readFileAsync ( file: File, method: Method ) : Promise < string 
 			reject ( new Cancelled ( "File reading was cancelled" ) );
 		}
 
+		const blob = getBlob ( file, start, end );
+
 		switch ( method )
 		{
 			case "Text":
 			{
-				reader.readAsText ( file );
+				reader.readAsText ( blob );
 				break;
 			}
 			case "ArrayBuffer":
 			{
-				reader.readAsArrayBuffer ( file );
+				reader.readAsArrayBuffer ( blob );
 				break;
 			}
 			case "DataURL":
 			{
-				reader.readAsDataURL ( file );
+				reader.readAsDataURL ( blob );
 				break;
 			}
 			default:

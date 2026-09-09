@@ -15,9 +15,40 @@
 import { addReader, ReaderFactory as Factory } from "../Reader";
 import { Group, Node as SceneNode } from "../../Scene/Nodes";
 import { Reader as BaseClass } from "../Reader";
+import { readFile } from "../Functions";
 
 const GLB_FILE_HEADER_SIZE = 12;
 const GLB_CHUNK_HEADER_SIZE = 8;
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Types needed below.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+interface FileHeader
+{
+	magic: number;
+	version: number;
+	length: number;
+};
+
+interface FileHeaderResult extends FileHeader
+{
+	offset: number;
+}
+
+interface ChunkHeader
+{
+	length: number;
+	type: number;
+};
+
+interface ChunkHeaderResult extends ChunkHeader
+{
+	offset: number;
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -29,6 +60,9 @@ const GLB_CHUNK_HEADER_SIZE = 8;
 
 class GLB extends BaseClass
 {
+	#file: ( string | null ) = null;
+	#header: ( FileHeader | null ) = null;
+
 	/**
 	 * Construct the class.
 	 * @class
@@ -48,33 +82,22 @@ class GLB extends BaseClass
 	}
 
 	/**
-	 * Read the file and return a promise that resolves to the scene node.
-	 * @param {File} file The file to read.
-	 * @returns {Promise<SceneNode>} A promise that resolves to the scene node.
+	 * Get the file name.
+	 * @returns {(string | null)} The file name.
 	 */
-	public override read ( file: File ) : Promise < SceneNode >
+	public get file() : ( string | null )
 	{
-		return new Promise ( ( resolve, reject ) =>
-		{
-			this.readFileHeader ( file )
-			.then ( ( offset: number ) =>
-			{
-				return this.readChunkHeader ( file, offset );
-			} )
-			.then ( ( data: { length: number, type: number, offset: number } ) =>
-			{
-				const { length, type, offset } = data;
-				return this.readChunkData ( file, length, type, offset );
-			} )
-			.then ( () =>
-			{
-				resolve ( new Group() );
-			} )
-			.catch ( ( error: Error ) =>
-			{
-				reject ( error );
-			} );
-		} );
+		return this.#file;
+	}
+
+	/**
+	 * Get the header.
+	 * @returns {(FileHeader | null)} The file header.
+	 */
+	public get header() : ( FileHeader | null )
+	{
+		const answer = this.#header;
+		return ( answer ? { ...answer } : null );
 	}
 
 	/**
@@ -93,64 +116,87 @@ class GLB extends BaseClass
 	}
 
 	/**
+	 * Read the file and return a promise that resolves to the scene node.
+	 * @param {File} file The file to read.
+	 * @returns {Promise<SceneNode>} A promise that resolves to the scene node.
+	 */
+	public override async read ( file: File ) : Promise < SceneNode >
+	{
+		// Make sure these are initialized.
+		this.#file = file.name;
+		this.#header = null;
+
+		// Read the header information.
+		const result: FileHeaderResult = await GLB.readFileHeader ( file );
+		const { header, offset } = result;
+		this.#header = header;
+
+		// Read the JSON data.
+		offset = await this.readJSON ( file, offset );
+
+		// return new Promise ( ( resolve, reject ) =>
+		// {
+		// 	this.readFileHeader ( file );
+			// .then ( ( offset: number ) =>
+			// {
+			// 	return this.readChunkHeader ( file, offset );
+			// } )
+			// .then ( ( data: { length: number, type: number, offset: number } ) =>
+			// {
+			// 	const { length, type, offset } = data;
+			// 	return this.readChunkData ( file, length, type, offset );
+			// } )
+			// .then ( () =>
+			// {
+			// 	resolve ( new Group() );
+			// } )
+			// .catch ( ( error: Error ) =>
+			// {
+			// 	reject ( error );
+			// } );
+		// } );
+
+		return new Group();
+	}
+
+	/**
 	 * Read the header of the GLB file.
 	 * @param {File} file The file to read.
-	 * @returns {Promise<void>} A promise that resolves when the header has been read.
+	 * @returns {Promise < FileHeaderResult >} A promise that resolves with the file header and the offset to the next chunk.
 	 */
-	protected readFileHeader ( file: File ) : Promise < number >
+	protected static async readFileHeader ( file: File ) : Promise < FileHeaderResult >
 	{
-		return new Promise ( ( resolve, reject ) =>
+		const result = await readFile ( file, "ArrayBuffer", 0, GLB_FILE_HEADER_SIZE );
+
+		// Make the view for the header data.
+		const buffer = ( result as ArrayBuffer );
+		const view = new DataView ( buffer );
+
+		// Get the header.
+		const magic   = view.getUint32 ( 0, true );
+		const version = view.getUint32 ( 4, true );
+		const length  = view.getUint32 ( 8, true );
+
+		// Make sure the magic number is correct.
+		if ( magic !== 0x46546C67 ) // ASCII for "glTF".
 		{
-			// Make the reader.
-			const reader = new FileReader();
+			throw new Error ( `Incorrect GLB magic number: ${magic}, should be 0x46546C67` );
+		}
 
-			// This is called if there is an error.
-			reader.onerror = ( event: ProgressEvent < FileReader > ) =>
-			{
-				reject ( GLB.makeError ( `Error reading header for file: ${file.name}`, event ) );
-				return;
-			}
+		// Make sure the version is supported.
+		if ( version !== 2 )
+		{
+			throw new Error ( `Unsupported GLB version: ${version}` );
+		}
 
-			// This is called when the data is ready.
-			reader.onload = () =>
-			{
-				// Make the view for the header data.
-				const buffer = ( reader.result as ArrayBuffer );
-				const view = new DataView ( buffer );
+		// Make sure the length is consistent with the file size.
+		if ( length !== file.size )
+		{
+			throw new Error ( `Invalid GLB file length: expected ${length}, got ${file.size}` );
+		}
 
-				// Get the header.
-				const magic   = view.getUint32 ( 0, true );
-				const version = view.getUint32 ( 4, true );
-				const length  = view.getUint32 ( 8, true );
-
-				// Make sure the magic number is correct.
-				if ( magic !== 0x46546C67 ) // ASCII for "glTF".
-				{
-					reject ( new Error ( `Incorrect GLB magic number: ${magic}, should be 0x46546C67` ) );
-					return;
-				}
-
-				// Make sure the version is supported.
-				if ( version !== 2 )
-				{
-					reject ( new Error ( `Unsupported GLB version: ${version}` ) );
-					return;
-				}
-
-				// Make sure the length is consistent with the file size.
-				if ( length !== file.size )
-				{
-					reject ( new Error ( `Invalid GLB file length: expected ${length}, got ${file.size}` ) );
-					return;
-				}
-
-				// We succeeded.
-				resolve ( GLB_FILE_HEADER_SIZE );
-			}
-
-			// Read the file header.
-			reader.readAsArrayBuffer ( file.slice ( 0, GLB_FILE_HEADER_SIZE ) );
-		} );
+		// Return the answer.
+		return { magic, version, length, offset: GLB_FILE_HEADER_SIZE };
 	}
 
 	/**
