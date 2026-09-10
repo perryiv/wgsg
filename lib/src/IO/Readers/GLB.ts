@@ -17,8 +17,17 @@ import { Group, Node as SceneNode } from "../../Scene/Nodes";
 import { Reader as BaseClass } from "../Reader";
 import { readFile } from "../Functions";
 
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Constants for this file.
+//
+///////////////////////////////////////////////////////////////////////////////
+
 const GLB_FILE_HEADER_SIZE = 12;
 const GLB_CHUNK_HEADER_SIZE = 8;
+const GLTF_MAGIC_NUMBER = 0x46546C67; // ASCII for "glTF".
+const GLTF_TYPE_JSON = 0x4E4F534A;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -76,13 +85,13 @@ const readFileHeader = async ( file: File ) : Promise < FileHeaderResult > =>
 	const length  = view.getUint32 ( 8, true );
 
 	// Make sure the magic number is correct.
-	if ( magic !== 0x46546C67 ) // ASCII for "glTF".
+	if ( GLTF_MAGIC_NUMBER !== magic ) // ASCII for "glTF".
 	{
-		throw new Error ( `Incorrect GLB magic number: ${magic}, should be 0x46546C67` );
+		throw new Error ( `Incorrect GLB magic number: ${magic}, should be ${GLTF_MAGIC_NUMBER}` );
 	}
 
 	// Make sure the version is supported.
-	if ( version !== 2 )
+	if ( 2 !== version )
 	{
 		throw new Error ( `Unsupported GLB version: ${version}` );
 	}
@@ -201,6 +210,12 @@ class GLB extends BaseClass
 
 		// Read the JSON header.
 		const result2 = await readChunkHeader ( file, result1.offset );
+
+		// Make sure the data type is JSON.
+		if ( GLTF_TYPE_JSON !== result2.header.type )
+		{
+			throw new Error ( `Expected JSON data but found type ${result2.header.type}` );
+		}
 
 		// Read the JSON data.
 		const result3 = await readJSON ( file, result2 );
