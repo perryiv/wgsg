@@ -34,8 +34,9 @@ interface FileHeader
 	length: number;
 };
 
-interface FileHeaderResult extends FileHeader
+interface FileHeaderResult
 {
+	header: FileHeader;
 	offset: number;
 }
 
@@ -45,9 +46,62 @@ interface ChunkHeader
 	type: number;
 };
 
-interface ChunkHeaderResult extends ChunkHeader
+interface ChunkHeaderResult
 {
+	header: ChunkHeader;
 	offset: number;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Read the header of the GLB file.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+const readFileHeader = async ( file: File ) : Promise < FileHeaderResult >
+{
+	const result = await readFile ( file, "ArrayBuffer", 0, GLB_FILE_HEADER_SIZE );
+
+	// Make the view for the header data.
+	const buffer = ( result as ArrayBuffer );
+	const view = new DataView ( buffer );
+
+	// Get the header.
+	const magic   = view.getUint32 ( 0, true );
+	const version = view.getUint32 ( 4, true );
+	const length  = view.getUint32 ( 8, true );
+
+	// Return the answer.
+	return { header: { magic, version, length }, offset: GLB_FILE_HEADER_SIZE };
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Check the header of the GLB file.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+const checkFileHeader = async ( file: File, { magic, version, length }: FileHeader )
+{
+	// Make sure the magic number is correct.
+	if ( magic !== 0x46546C67 ) // ASCII for "glTF".
+	{
+		throw new Error ( `Incorrect GLB magic number: ${magic}, should be 0x46546C67` );
+	}
+
+	// Make sure the version is supported.
+	if ( version !== 2 )
+	{
+		throw new Error ( `Unsupported GLB version: ${version}` );
+	}
+
+	// Make sure the length is consistent with the file size.
+	if ( length !== file.size )
+	{
+		throw new Error ( `Invalid GLB file length: expected ${length}, got ${file.size}` );
+	}
 }
 
 
@@ -61,7 +115,6 @@ interface ChunkHeaderResult extends ChunkHeader
 class GLB extends BaseClass
 {
 	#file: ( string | null ) = null;
-	#header: ( FileHeader | null ) = null;
 
 	/**
 	 * Construct the class.
@@ -91,16 +144,6 @@ class GLB extends BaseClass
 	}
 
 	/**
-	 * Get the header.
-	 * @returns {(FileHeader | null)} The file header.
-	 */
-	public get header() : ( FileHeader | null )
-	{
-		const answer = this.#header;
-		return ( answer ? { ...answer } : null );
-	}
-
-	/**
 	 * Create an error object from a message and a FileReader progress event.
 	 * @param {string} message The error message.
 	 * @param {ProgressEvent<FileReader>} event The progress event from the FileReader.
@@ -122,14 +165,14 @@ class GLB extends BaseClass
 	 */
 	public override async read ( file: File ) : Promise < SceneNode >
 	{
-		// Make sure these are initialized.
+		// Do this first.
 		this.#file = file.name;
-		this.#header = null;
 
 		// Read the header information.
-		const result: FileHeaderResult = await GLB.readFileHeader ( file );
-		const { header, offset } = result;
-		this.#header = header;
+		const { header, offset } = await readFileHeader ( file );
+
+		// Check the header.
+		checkFileHeader ( file, header );
 
 		// Read the JSON data.
 		offset = await this.readJSON ( file, offset );
@@ -157,46 +200,6 @@ class GLB extends BaseClass
 		// } );
 
 		return new Group();
-	}
-
-	/**
-	 * Read the header of the GLB file.
-	 * @param {File} file The file to read.
-	 * @returns {Promise < FileHeaderResult >} A promise that resolves with the file header and the offset to the next chunk.
-	 */
-	protected static async readFileHeader ( file: File ) : Promise < FileHeaderResult >
-	{
-		const result = await readFile ( file, "ArrayBuffer", 0, GLB_FILE_HEADER_SIZE );
-
-		// Make the view for the header data.
-		const buffer = ( result as ArrayBuffer );
-		const view = new DataView ( buffer );
-
-		// Get the header.
-		const magic   = view.getUint32 ( 0, true );
-		const version = view.getUint32 ( 4, true );
-		const length  = view.getUint32 ( 8, true );
-
-		// Make sure the magic number is correct.
-		if ( magic !== 0x46546C67 ) // ASCII for "glTF".
-		{
-			throw new Error ( `Incorrect GLB magic number: ${magic}, should be 0x46546C67` );
-		}
-
-		// Make sure the version is supported.
-		if ( version !== 2 )
-		{
-			throw new Error ( `Unsupported GLB version: ${version}` );
-		}
-
-		// Make sure the length is consistent with the file size.
-		if ( length !== file.size )
-		{
-			throw new Error ( `Invalid GLB file length: expected ${length}, got ${file.size}` );
-		}
-
-		// Return the answer.
-		return { magic, version, length, offset: GLB_FILE_HEADER_SIZE };
 	}
 
 	/**
