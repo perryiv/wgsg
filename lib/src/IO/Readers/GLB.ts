@@ -217,14 +217,11 @@ class GLB extends BaseClass
 			throw new Error ( `Expected JSON data but found type ${result2.header.type}` );
 		}
 
-		// Read the JSON data.
-		const result3 = await readJSON ( file, result2 );
+		// Read the JSON data and convert it to an object.
+		const json = JSON.parse ( await readJSON ( file, result2 ) ) as Record < string, unknown >;
 
-		// Convert it to an object.
-		const result4 = JSON.parse ( result3 ) as Record < string, unknown >;
-
-		// We only handle triangle meshes.
-		console.debug ( result4 );
+		// Print what we have.
+		console.debug ( json );
 
 		return new Group();
 	}
