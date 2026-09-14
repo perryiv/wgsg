@@ -24,16 +24,12 @@ import { readFile } from "../Functions";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-const PLY_FILE_HEADER_LINE_1 = "ply";
-const PLY_FILE_HEADER_LINE_2 = new Set ( [
+const PLY_FILE_HEADER_MAGIC_NUMBER = "ply";
+const PLY_FILE_HEADER_FORMATS = new Set ( [
 	"format ascii 1.0",
 	"format binary_little_endian 1.0",
 	"format binary_big_endian 1.0"
 ] );
-const PLY_FILE_HEADER_LINE_3 = "element vertex";
-const PLY_FILE_HEADER_LINE_4 = "property float x";
-const PLY_FILE_HEADER_LINE_5 = "property float y";
-const PLY_FILE_HEADER_LINE_6 = "property float z";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -44,26 +40,12 @@ const PLY_FILE_HEADER_LINE_6 = "property float z";
 
 interface FileHeader
 {
-	kind: string;
-	format: number;
-	length: number;
+	lines: Set < string >;
 };
 
 interface FileHeaderResult
 {
 	header: FileHeader;
-	offset: number;
-}
-
-interface ChunkHeader
-{
-	length: number;
-	type: number;
-};
-
-interface ChunkHeaderResult
-{
-	header: ChunkHeader;
 	offset: number;
 }
 
@@ -76,137 +58,55 @@ interface ChunkHeaderResult
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-const readFileHeader = async ( file: File ) : Promise < string[] > =>
+const readFileHeader = async ( file: File ) : Promise < FileHeaderResult > =>
 {
-	// Get the header text as an array.
-	const header = await ( async () =>
+	// Read beyond where the header should end.
+	const data1 = ( ( await readFile ( file, "Text", 0, 1024 ) ) as string );
+
+	// Where does the header end?
+	let offset = data1.indexOf ( "end_header" );
+
+	// Make sure.
+	if ( -1 === offset )
 	{
-		// Read the beyond where the header should end.
-		const data1 = ( ( await readFile ( file, "Text", 0, 1024 ) ) as string );
+		throw new Error ( `PLY file is missing 'end_header'` );
+	}
 
-		// We want everything before "end_header".
-		const data2 = data1.split ( "end_header" )[0];
+	// The offset will be after the end of the header.
+	offset += "end_header\n".length;
 
-		// Remove the last newline character.
-		const data3 = data2.trim();
+	// We want everything before "end_header".
+	const data2 = data1.split ( "end_header" )[0];
 
-		// Make it an array.
-		const data4 = data3.split ( "\n" );
+	// Remove the last newline character.
+	const data3 = data2.trim();
 
-		// Remove any comments.
-		return data4.filter ( line => !line.startsWith ( "comment" ) );
-	} ) ();
+	// Make it an array.
+	const data4 = data3.split ( "\n" );
+
+	// Remove any comments.
+	const data5 = data4.filter ( ( line ) =>
+	{
+		return ( false === line.startsWith ( "comment" ) );
+	} );
 
 	// Make sure the first line of the header is correct.
-	if ( PLY_FILE_HEADER_LINE_1 !== header[0] )
+	if ( PLY_FILE_HEADER_MAGIC_NUMBER !== data5[0] )
 	{
-		throw new Error ( `Incorrect first line in PLY file: ${header[0]}, should be ${PLY_FILE_HEADER_LINE_1}` );
+		throw new Error ( `Incorrect first line in PLY file: ${data5[0]}, should be ${PLY_FILE_HEADER_MAGIC_NUMBER}` );
 	}
 
 	// Make sure the format is correct.
-	if ( !PLY_FILE_HEADER_LINE_2.has ( header[1] ) )
+	if ( false === PLY_FILE_HEADER_FORMATS.has ( data5[1] ) )
 	{
-		throw new Error ( `Incorrect second line in PLY file: ${header[1]}, should be one of ${Array.from ( PLY_FILE_HEADER_LINE_2 ).join ( ", " )}` );
+		throw new Error ( `Incorrect second line in PLY file: ${data5[1]}, should be one of ${Array.from ( PLY_FILE_HEADER_FORMATS ).join ( ", " )}` );
 	}
 
-	// Save the format and version.
-	const format = header[1].split ( " " )[1];
-	const version = header[1].split ( " " )[2];
+	// Turn the array into a set.
+	const lines = new Set ( data5 );
 
-	// We do not support big endian files.
-	if ( format === "binary_big_endian" )
-	{
-		throw new Error ( `Big endian PLY files are not supported.` );
-	}
-
-	// We only support this version.
-	if ( "1" !== version )
-	{
-		throw new Error ( `Unsupported PLY version: ${version}` );
-	}
-
-	// The next line should say how many vertices there are.
-	if ( !header[2].startsWith ( PLY_FILE_HEADER_LINE_3 ) )
-	{
-		throw new Error ( `Incorrect third line in PLY file: ${header[2]}, should start with "${PLY_FILE_HEADER_LINE_3}"` );
-	}
-
-	// Get the number of vertices.
-	const numVertices = parseInt ( header[2].split ( " " )[2], 10 );
-
-	// Make sure the number of vertices is valid.
-	if ( ( isNaN ( numVertices ) ) || ( numVertices <= 0 ) )
-	{
-		throw new Error ( `Invalid number of vertices in PLY file: ${header[2]}` );
-	}
-
-	// We should have 3 floats next.
-	{
-		if ( PLY_FILE_HEADER_LINE_4 !== header[3] )
-		{
-			throw new Error ( `Incorrect fourth line in PLY file: ${header[3]}, expected: ${PLY_FILE_HEADER_LINE_4}` );
-		}
-
-		if ( PLY_FILE_HEADER_LINE_5 !== header[4] )
-		{
-			throw new Error ( `Incorrect fifth line in PLY file: ${header[4]}, expected: ${PLY_FILE_HEADER_LINE_5}` );
-		}
-
-		if ( PLY_FILE_HEADER_LINE_6 !== header[5] )
-		{
-			throw new Error ( `Incorrect sixth line in PLY file: ${header[5]}, expected: ${PLY_FILE_HEADER_LINE_6}` );
-		}
-	}
-
-	// Skip any other "property float ..." lines and find the number of faces.
-	const numFaces = ( () =>
-	{
-		let i = 6;
-		while ( ( i < header.length ) && ( header[i].startsWith ( "property float" ) ) )
-		{
-			++i;
-		}
-		if ( ( i < header.length ) && ( header[i].startsWith ( "element face" ) ) )
-		{
-			return parseInt ( header[i].split ( " " )[2], 10 );
-		}
-		return 0;
-	} ) ();
-
-
-	// Make sure the number of faces is valid.
-	if ( ( isNaN ( numFaces ) ) || ( numFaces <= 0 ) )
-	{
-		throw new Error ( `Invalid number of faces in PLY file: ${numFaces}` );
-	}
-
-	return header;
-
-	// Get the header.
-	// const magic   = view.getUint32 ( 0, true );
-	// const version = view.getUint32 ( 4, true );
-	// const length  = view.getUint32 ( 8, true );
-
-	// Make sure the magic number is correct.
-	// if ( PLY_MAGIC_NUMBER !== magic ) // ASCII for "PLY ".
-	// {
-	// 	throw new Error ( `Incorrect PLY magic number: ${magic}, should be ${PLY_MAGIC_NUMBER}` );
-	// }
-
-	// // Make sure the version is supported.
-	// if ( 1 !== version )
-	// {
-	// 	throw new Error ( `Unsupported PLY version: ${version}` );
-	// }
-
-	// // Make sure the length is consistent with the file size.
-	// if ( length !== file.size )
-	// {
-	// 	throw new Error ( `Invalid PLY file length: expected ${length}, got ${file.size}` );
-	// }
-
-	// // Return the answer.
-	// return { header: { magic, version, length }, offset: end };
+	// Return the answer.
+	return { header: { lines }, offset };
 }
 
 
