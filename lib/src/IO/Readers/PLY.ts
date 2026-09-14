@@ -16,6 +16,8 @@ import { addReader, ReaderFactory as Factory } from "../Reader";
 import { Group, Node as SceneNode } from "../../Scene/Nodes";
 import { Reader as BaseClass } from "../Reader";
 import { readFile } from "../Functions";
+import { vec3 } from "gl-matrix";
+import type { IVector3 } from "../../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -38,16 +40,15 @@ const PLY_FILE_HEADER_FORMATS = new Set ( [
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-interface FileHeader
-{
-	lines: Set < string >;
-};
+type FileHeader = Set < string >;
 
 interface FileHeaderResult
 {
 	header: FileHeader;
 	offset: number;
 }
+
+type EndianType = "little" | "big";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -103,23 +104,184 @@ const readFileHeader = async ( file: File ) : Promise < FileHeaderResult > =>
 	}
 
 	// Turn the array into a set.
-	const lines = new Set ( data5 );
+	const header = new Set ( data5 );
 
 	// Return the answer.
-	return { header: { lines }, offset };
+	return { header, offset };
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Read the header of the next chunk of data.
+ * Read the text data and build the scene.
+ * @param {File} file The file to read.
+ * @param {FileHeader} header The header of the PLY file.
+ * @param {number} offset The offset in the file where the text data starts.
+ * @returns {Promise<SceneNode>} A promise that resolves with the scene node built from the text data.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+const readTextData = async ( file: File, header: FileHeader, offset: number ) : Promise < SceneNode > =>
+{
+	// The scene we return.
+	const scene = new Group();
+
+	// See how many vertices there are.
+	const numVertices = ( () =>
+	{
+		const answer = Array.from ( header ).find ( ( line ) =>
+		{
+			return line.startsWith ( "element vertex" );
+		} );
+		return ( answer ? parseInt ( answer.split ( " " )[2] ) : 0 );
+	} ) ();
+
+	// Make sure the number is a positive integer.
+	if ( numVertices <= 0 )
+	{
+		throw new Error ( `Invalid number of vertices: ${numVertices}` );
+	}
+
+	// Allocate the array for the points.
+	const arrayLength = numVertices * 3;
+	const points = new Float32Array ( arrayLength );
+
+	// Loop through the lines of vertices in the text file.
+	{
+		let data, index, lines, numLines, line, components, x, y, z, count = 0;
+
+		while ( count < arrayLength )
+		{
+			// Read the next chunk of data.
+			data = ( ( await readFile ( file, "Text", offset, ( offset + 1024 ) ) ) as string );
+
+			// Reverse find the end of the last complete line.
+			index = data.lastIndexOf ( "\n" );
+
+			// This might happen if the file is truncated.
+			if ( -1 === index )
+			{
+				throw new Error ( `Failed to find the end of the last complete line in the vertex data.` );
+			}
+
+			// Set the new offset.
+			offset += index + 1;
+
+			// Trim the data at the end of the last complete line.
+			data = data.substring ( 0, index );
+
+			// Split the data into lines.
+			lines = data.split ( "\n" );
+
+			// Loop through the lines and process each vertex.
+			numLines = lines.length;
+			for ( let i = 0; i < numLines; ++i )
+			{
+				// Split the line into components.
+				line = lines[i];
+				components = line.split ( " " );
+
+				// There should be at least 3 components for the x, y, and z coordinates.
+				if ( components.length < 3 )
+				{
+					throw new Error ( `Invalid vertex line: ${line}` );
+				}
+
+				// Get the coordinates.
+				// Note: There may be more values on the line but we ignore them.
+				x = parseFloat ( components[0] );
+				y = parseFloat ( components[1] );
+				z = parseFloat ( components[2] );
+
+				// Write the coordinates to the array of points.
+				points[count++] = x;
+				points[count++] = y;
+				points[count++] = z;
+			}
+		}
+	}
+
+	// console.debug ( points );
+
+	// Now make the array of normals.
+	const normals = new Float32Array ( arrayLength );
+
+	// Now loop through the points and make the normal vectors. We could not do
+	// this above because we were not necessarily reading 3 vertices at a time.
+	{
+		const a: IVector3 = [ 0, 0, 0 ];
+		const b: IVector3 = [ 0, 0, 0 ];
+		const c: IVector3 = [ 0, 0, 0 ];
+		const n: IVector3 = [ 0, 0, 0 ];
+		const ab: IVector3 = [ 0, 0, 0 ];
+		const ac: IVector3 = [ 0, 0, 0 ];
+		let count = 0;
+
+		while ( count < arrayLength )
+		{
+			// Get the three points.
+			a[0] = points[count + 0];
+			a[1] = points[count + 1];
+			a[2] = points[count + 2];
+
+			b[0] = points[count + 3];
+			b[1] = points[count + 4];
+			b[2] = points[count + 5];
+
+			c[0] = points[count + 6];
+			c[1] = points[count + 7];
+			c[2] = points[count + 8];
+
+			// Make the vectors for the edges of the triangle.
+			vec3.subtract ( ab, b, a );
+			vec3.subtract ( ac, c, a );
+
+			// Calculate the normal vector.
+			vec3.cross ( n, ab, ac );
+
+			// Make sure it's unit length.
+			vec3.normalize ( n, n );
+
+			// Store the normal vector for each point.
+			normals[count++] = n[0];
+			normals[count++] = n[1];
+			normals[count++] = n[2];
+
+			normals[count++] = n[0];
+			normals[count++] = n[1];
+			normals[count++] = n[2];
+
+			normals[count++] = n[0];
+			normals[count++] = n[1];
+			normals[count++] = n[2];
+		}
+	}
+
+	// The next thing should be the faces. See how many there are.
+	const numFaces = ( () =>
+	{
+		const answer = Array.from ( header ).find ( ( line ) =>
+		{
+			return line.startsWith ( "element face" );
+		} );
+		return ( answer ? parseInt ( answer.split ( " " )[2] ) : 0 );
+	} ) ();
+
+	// Return the scene.
+	return scene;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Read the text data and build the scene.
  * @param {File} file The file to read.
  * @param {number} offset The offset in the file where the chunk header starts.
  * @returns {Promise<ChunkHeaderResult>} A promise that resolves with the chunk header and the offset after the header.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-// const readChunkHeader = async ( file: File, offset: number ) : Promise < ChunkHeaderResult > =>
+// const readTextData = async ( file: File, header: FileHeader, offset: number, endian: EndianType ) : Promise < SceneNode > =>
 // {
 // 	const end = offset + PLY_CHUNK_HEADER_SIZE;
 // 	const result = await readFile ( file, "ArrayBuffer", offset, end );
@@ -209,24 +371,34 @@ class PLY extends BaseClass
 		this.#file = file.name;
 
 		// Read the header information.
-		const result1 = await readFileHeader ( file );
-
-		// // Read the JSON header.
-		// const result2 = await readChunkHeader ( file, result1.offset );
-
-		// // Make sure the data type is JSON.
-		// if ( PLY_TYPE_JSON !== result2.header.type )
-		// {
-		// 	throw new Error ( `Expected JSON data but found type ${result2.header.type}` );
-		// }
-
-		// // Read the JSON data and convert it to an object.
-		// const json = JSON.parse ( await readJSON ( file, result2 ) ) as Record < string, unknown >;
+		const { header, offset } = await readFileHeader ( file );
 
 		// Print what we have.
-		console.debug ( result1 );
+		console.debug ( header, offset );
 
-		return new Group();
+		// Is the file ASCII or binary?
+		if ( header.has ( "format ascii 1.0" ) )
+		{
+			return await readTextData ( file, header, offset );
+		}
+
+		// Is the file little endian binary?
+		else if ( header.has ( "format binary_little_endian 1.0" ) )
+		{
+			return await readBinaryData ( file, header, offset, "little" );
+		}
+
+		// Is the file big endian binary?
+		else if ( header.has ( "format binary_big_endian 1.0" ) )
+		{
+			return await readBinaryData ( file, header, offset, "big" );
+		}
+
+		// Handle unknown format.
+		else
+		{
+			throw new Error ( "Unknown PLY format" );
+		}
 	}
 }
 
