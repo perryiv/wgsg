@@ -12,15 +12,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Cancelled } from "../../Cancelled";
 import { Common as BaseClass } from "./Common";
+import { Group, Node as SceneNode } from "../../../Scene/Nodes";
 import { parse, Parser, ParseStepResult } from "papaparse";
 import { vec3 } from "gl-matrix";
 import type { IVector3 } from "../../../Types";
-import {
-	Group,
-	Node as SceneNode,
-} from "../../../Scene/Nodes";
-import { Cancelled } from "../../Cancelled";
 
 
 ///////////////////////////////////////////////////////////////////////////////
