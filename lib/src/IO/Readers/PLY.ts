@@ -13,11 +13,21 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { addReader, ReaderFactory as Factory } from "../Reader";
-import { Group, Node as SceneNode } from "../../Scene/Nodes";
+import { PhongShading } from "../../Shaders";
 import { Reader as BaseClass } from "../Reader";
 import { readFile } from "../Functions";
 import { vec3 } from "gl-matrix";
 import type { IVector3 } from "../../Types";
+import {
+	Geometry,
+	Group,
+	Node as SceneNode,
+} from "../../Scene/Nodes";
+import {
+	ColorAttribute as Color,
+	Indexed,
+	TwoSidedLight,
+} from "../../Scene";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -123,9 +133,6 @@ const readFileHeader = async ( file: File ) : Promise < FileHeaderResult > =>
 
 const readTextData = async ( file: File, header: FileHeader, offset: number ) : Promise < SceneNode > =>
 {
-	// The scene we return.
-	const scene = new Group();
-
 	// See how many vertices there are.
 	const numVertices = ( () =>
 	{
@@ -143,14 +150,14 @@ const readTextData = async ( file: File, header: FileHeader, offset: number ) : 
 	}
 
 	// Allocate the array for the points.
-	const arrayLength = numVertices * 3;
-	const points = new Float32Array ( arrayLength );
+	const arrayLengthPoints = numVertices * 3;
+	const points = new Float32Array ( arrayLengthPoints );
 
 	// Loop through the lines of vertices in the text file.
 	{
 		let data, index, lines, numLines, line, components, x, y, z, count = 0;
 
-		while ( count < arrayLength )
+		while ( count < arrayLengthPoints )
 		{
 			// Read the next chunk of data.
 			data = ( ( await readFile ( file, "Text", offset, ( offset + 1024 ) ) ) as string );
@@ -161,11 +168,8 @@ const readTextData = async ( file: File, header: FileHeader, offset: number ) : 
 			// This might happen if the file is truncated.
 			if ( -1 === index )
 			{
-				throw new Error ( `Failed to find the end of the last complete line in the vertex data.` );
+				throw new Error ( "Failed to find the end of the last complete line in the vertex data" );
 			}
-
-			// Set the new offset.
-			offset += index + 1;
 
 			// Trim the data at the end of the last complete line.
 			data = data.substring ( 0, index );
@@ -177,8 +181,14 @@ const readTextData = async ( file: File, header: FileHeader, offset: number ) : 
 			numLines = lines.length;
 			for ( let i = 0; i < numLines; ++i )
 			{
-				// Split the line into components.
+				// Get the line.
 				line = lines[i];
+
+				// Update offset.
+				offset += ( line.length + 1 );
+
+				// Split the line into components.
+				line = line.trim();
 				components = line.split ( " " );
 
 				// There should be at least 3 components for the x, y, and z coordinates.
@@ -197,14 +207,18 @@ const readTextData = async ( file: File, header: FileHeader, offset: number ) : 
 				points[count++] = x;
 				points[count++] = y;
 				points[count++] = z;
+
+				// Are we done? Do this to avoid processing beyond the points.
+				if ( count >= arrayLengthPoints )
+				{
+					break;
+				}
 			}
 		}
 	}
 
-	// console.debug ( points );
-
 	// Now make the array of normals.
-	const normals = new Float32Array ( arrayLength );
+	const normals = new Float32Array ( arrayLengthPoints );
 
 	// Now loop through the points and make the normal vectors. We could not do
 	// this above because we were not necessarily reading 3 vertices at a time.
@@ -217,7 +231,7 @@ const readTextData = async ( file: File, header: FileHeader, offset: number ) : 
 		const ac: IVector3 = [ 0, 0, 0 ];
 		let count = 0;
 
-		while ( count < arrayLength )
+		while ( count < arrayLengthPoints )
 		{
 			// Get the three points.
 			a[0] = points[count + 0];
@@ -267,59 +281,105 @@ const readTextData = async ( file: File, header: FileHeader, offset: number ) : 
 		return ( answer ? parseInt ( answer.split ( " " )[2] ) : 0 );
 	} ) ();
 
-	// Return the scene.
-	return scene;
+	// Now make the array of indices.
+	const arrayLengthIndices = numFaces * 3;
+	const indices = new Uint32Array ( arrayLengthIndices );
+
+	// Loop through all the faces.
+	{
+		let data, index, lines, numLines, line, components, a, b, c, count = 0;
+
+		while ( count < arrayLengthIndices )
+		{
+			// Read the next chunk of data.
+			data = ( ( await readFile ( file, "Text", offset, ( offset + 1024 ) ) ) as string );
+
+			// Reverse find the end of the last complete line.
+			index = data.lastIndexOf ( "\n" );
+
+			// This might happen if the file is truncated.
+			if ( -1 === index )
+			{
+				throw new Error ( "Failed to find the end of the last complete line in the face data" );
+			}
+
+			// Trim the data at the end of the last complete line.
+			data = data.substring ( 0, index );
+
+			// Split the data into lines.
+			lines = data.split ( "\n" );
+
+			// Loop through the lines and process each face.
+			numLines = lines.length;
+			for ( let i = 0; i < numLines; ++i )
+			{
+				// Get the line.
+				line = lines[i];
+
+				// Update offset.
+				offset += ( line.length + 1 );
+
+				// Split the line into components.
+				line = line.trim();
+				components = line.split ( " " );
+
+				// We only handle triangles for now.
+				if ( 4 === components.length )
+				{
+					// Get the indices of the vertices for the triangle.
+					a = parseInt ( components[1] ); // Start at one!
+					b = parseInt ( components[2] );
+					c = parseInt ( components[3] );
+
+					// Write the indices to the array of faces.
+					indices[count++] = a;
+					indices[count++] = b;
+					indices[count++] = c;
+				}
+
+				// Are we done? Do this to avoid processing beyond the points.
+				if ( count >= arrayLengthIndices )
+				{
+					break;
+				}
+			}
+		}
+	}
+
+	// The group that we return.
+	const group = new Group();
+
+	// The geometry for the triangles.
+	const tris = new Geometry ( { points, normals } );
+
+	// Add the triangles.
+	{
+		// Make the primitives.
+		const topology = "triangle-list";
+		tris.primitives = new Indexed ( { topology, indices } );
+
+		// The color of the triangles.
+		const color = [ 0.5, 0.5, 0.5, 1.0 ];
+
+		// Add the state.
+		const state = PhongShading.makeState ( { topology } );
+		state.addAttribute ( new Color ( color ) );
+		state.addAttribute ( new TwoSidedLight ( true ) );
+		tris.state = state;
+
+		// To speed things up later, calculate the bounds now.
+		void tris.box;
+
+		// Add the triangles to the scene.
+		group.addChild ( tris );
+	}
+
+	// To speed things up later, calculate the bounds now.
+	void group.bounds;
+
+	// Return the group.
+	return group;
 }
-
-
-///////////////////////////////////////////////////////////////////////////////
-/**
- * Read the text data and build the scene.
- * @param {File} file The file to read.
- * @param {number} offset The offset in the file where the chunk header starts.
- * @returns {Promise<ChunkHeaderResult>} A promise that resolves with the chunk header and the offset after the header.
- */
-///////////////////////////////////////////////////////////////////////////////
-
-// const readTextData = async ( file: File, header: FileHeader, offset: number, endian: EndianType ) : Promise < SceneNode > =>
-// {
-// 	const end = offset + PLY_CHUNK_HEADER_SIZE;
-// 	const result = await readFile ( file, "ArrayBuffer", offset, end );
-
-// 	// Make the view for the chunk header data.
-// 	const buffer = ( result as ArrayBuffer );
-// 	const view = new DataView ( buffer );
-
-// 	// Get the chunk header.
-// 	const length = view.getUint32 ( 0, true );
-// 	const type   = view.getUint32 ( 4, true );
-
-// 	// Return the answer.
-// 	return { header: { length, type }, offset: end };
-// }
-
-
-///////////////////////////////////////////////////////////////////////////////
-/**
- * Read the header of the next chunk of data.
- * @param {File} file The file to read.
- * @param {ChunkHeaderResult} result The result from reading the chunk header.
- * @returns {Promise<string>} A promise that resolves with the JSON string from the chunk.
- */
-///////////////////////////////////////////////////////////////////////////////
-
-// const readJSON = async ( file: File, result: ChunkHeaderResult ) : Promise < string > =>
-// {
-// 	const end = result.offset + result.header.length;
-// 	const text = await readFile ( file, "Text", result.offset, end );
-
-// 	if ( "string" !== ( typeof text ) )
-// 	{
-// 		throw new Error ( `Failed to read JSON chunk as text` );
-// 	}
-
-// 	return ( text as string );
-// }
 
 
 ///////////////////////////////////////////////////////////////////////////////
