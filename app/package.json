@@ -11,7 +11,7 @@
     "clear": "clear",
     "dev": "vite",
     "lint": "eslint --ext .ts --ext .tsx ./src",
-    "watch": "chokidar \"src/**/*.ts\" \"src/**/*.tsx\" --initial --silent --command \"yarn run clear && yarn run compile && yarn run lint && echo watching ...\""
+    "watch": "chokidar \"src/**/*.ts\" \"src/**/*.tsx\" --initial --silent --command \"npm run clear && npm run compile && npm run lint && echo watching ...\""
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

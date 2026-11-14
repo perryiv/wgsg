@@ -11,7 +11,7 @@
     "compile": "tsc --build",
     "clear": "clear",
     "lint": "eslint --ext .ts ./src",
-    "watch": "chokidar \"src/**/*.ts\" --initial --silent --command \"yarn run clear && yarn run compile && yarn run lint && echo watching ...\""
+    "watch": "chokidar \"src/**/*.ts\" --initial --silent --command \"npm run clear && npm run compile && npm run lint && echo watching ...\""
   },
   "dependencies": {
     "gl-matrix": "^3.4.3",
