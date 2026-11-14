@@ -11,9 +11,9 @@
     "dev": "vite",
     "lint": "eslint --ext .ts ./src",
     "test": "mocha ./src/main.ts",
-    "watch": "yarn run watch-lint",
-    "watch-lint": "chokidar \"src/**/*.ts\" --initial --silent --command \"yarn run clear && yarn run compile && yarn run lint && echo watching ...\"",
-    "watch-test": "chokidar \"src/**/*.ts\" --initial --silent --command \"yarn run test && echo watching ...\""
+    "watch": "npm run watch-lint",
+    "watch-lint": "chokidar \"src/**/*.ts\" --initial --silent --command \"npm run clear && npm run compile && npm run lint && echo watching ...\"",
+    "watch-test": "chokidar \"src/**/*.ts\" --initial --silent --command \"npm run test && echo watching ...\""
   },
   "mocha": {
     "node-option": [ "import=tsx" ]
