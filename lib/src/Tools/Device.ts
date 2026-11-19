@@ -85,6 +85,9 @@ export class Device extends BaseClass
 			throw new Error ( "Failed to get WebGPU adapter" );
 		}
 
+		// Log which adapter we got, so the console shows which GPU is in use.
+		console.log ( "WebGPU adapter: ", adapter.info );
+
 		// Get the device from the adapter. Can only do this once with this
 		// particular adapter, which is why we don't return it also.
 		const device = await adapter.requestDevice ( options?.deviceDescriptor );
