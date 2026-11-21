@@ -89,6 +89,7 @@ export class Draw extends BaseClass
 	#geometry: ( Geometry | null ) = null;
 	#info: ( IRenderGraphInfo | null ) = null;
 	#device: ( number | null ) = null;
+	#frame = 0;
 
 	/**
 	 * Construct the class.
@@ -283,9 +284,13 @@ export class Draw extends BaseClass
 	/**
 	 * Draw the render graph.
 	 * @param {IRoot} root - The root of the render graph.
+	 * @param {number} frame - The number of the frame being drawn.
 	 */
-	public draw ( root: Root ) : void
+	public draw ( root: Root, frame: number ) : void
 	{
+		// Remember the frame for the shaders.
+		this.#frame = frame;
+
 		// Make sure we have a device. This can happen if the device is lost after
 		// a render is scheduled but before it happens.
 		if ( false === Device.valid )
@@ -479,7 +484,7 @@ export class Draw extends BaseClass
 
 		// Configure the render pass now that the state has been applied.
 		const shader = requireShader ( state );
-		shader.configureRenderPass ( this.renderPassEncoder, pipeline.topology );
+		shader.configureRenderPass ( this.renderPassEncoder, this.#frame );
 
 		// Draw the shapes.
 		sg.forEachShape ( ( shape: Shape ) =>

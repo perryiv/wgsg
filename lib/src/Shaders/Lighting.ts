@@ -14,10 +14,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { ColorTool as Color, Device } from "../Tools";
+import { ColorTool as Color } from "../Tools";
 import { vec4 } from "gl-matrix";
 import { WithMatrices as BaseClass, type IWithMatricesInput } from "./WithMatrices";
-import type { IMatrix44, IVector4 } from "../Types";
+import type { IVector4 } from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -41,8 +41,10 @@ export abstract class Lighting extends BaseClass
 	#color: IVector4 = [ ...Color.gray ];
 	#twoSidedLight = false;
 	#lightDir: IVector4 = [ 0.0, 0.0, -1.0, 0.0 ];
-	#uniforms: ( GPUBuffer | null ) = null;
-	#bindGroup: ( GPUBindGroup | null ) = null;
+
+	// The uniform values. Two 4x4 matrices, the color, the light direction,
+	// and the two-sided flag, which is the same size as one float.
+	#uniforms = new ArrayBuffer ( ( 16 + 16 + 4 + 3 + 1 ) * 4 );
 
 	/**
 	 * Construct the class.
@@ -52,29 +54,6 @@ export abstract class Lighting extends BaseClass
 	protected constructor ( input: Readonly<ILightingInput> )
 	{
 		super ( input );
-	}
-
-	/**
-	 * Destroy this instance.
-	 */
-	public override destroy() : void
-	{
-		this.reset();
-		super.destroy();
-	}
-
-	/**
-	 * Reset the shader.
-	 */
-	public override reset() : void
-	{
-		if ( this.#uniforms )
-		{
-			this.#uniforms.destroy();
-			this.#uniforms = null;
-		}
-		this.#bindGroup = null;
-		super.reset();
 	}
 
 	/**
@@ -98,46 +77,6 @@ export abstract class Lighting extends BaseClass
 	// }
 
 	/**
-	 * Get the projection matrix.
-	 * @returns {IMatrix44} The projection matrix.
-	 */
-	public override get projMatrix () : Readonly<IMatrix44>
-	{
-		return super.projMatrix;
-	}
-
-	/**
-	 * Set the projection matrix.
-	 * @param {IMatrix44} matrix - The projection matrix.
-	 */
-	public override set projMatrix ( matrix: Readonly<IMatrix44> )
-	{
-		super.projMatrix = matrix;
-		this.#uniforms = null;
-		this.#bindGroup = null;
-	}
-
-	/**
-	 * Get the view matrix.
-	 * @returns {IMatrix44} The view matrix.
-	 */
-	public override get viewMatrix () : Readonly<IMatrix44>
-	{
-		return super.viewMatrix;
-	}
-
-	/**
-	 * Set the view matrix. Overload if needed.
-	 * @param {IMatrix44} matrix - The view matrix.
-	 */
-	public override set viewMatrix ( matrix: Readonly<IMatrix44> )
-	{
-		super.viewMatrix = matrix;
-		this.#uniforms = null;
-		this.#bindGroup = null;
-	}
-
-	/**
 	 * Return the color.
 	 * @returns {IVector4} The color.
 	 */
@@ -153,8 +92,7 @@ export abstract class Lighting extends BaseClass
 	public set color ( color: Readonly<IVector4> )
 	{
 		vec4.copy ( this.#color, color );
-		this.#uniforms = null;
-		this.#bindGroup = null;
+		this.uniformsChanged();
 	}
 
 	/**
@@ -173,8 +111,7 @@ export abstract class Lighting extends BaseClass
 	public set twoSidedLight ( twoSidedLight: boolean )
 	{
 		this.#twoSidedLight = twoSidedLight;
-		this.#uniforms = null;
-		this.#bindGroup = null;
+		this.uniformsChanged();
 	}
 
 	/**
@@ -193,107 +130,23 @@ export abstract class Lighting extends BaseClass
 	public set lightDir ( lightDir: Readonly<IVector4> )
 	{
 		vec4.copy ( this.#lightDir, lightDir );
-		this.#uniforms = null;
-		this.#bindGroup = null;
+		this.uniformsChanged();
 	}
 
 	/**
-	 * Return the uniform buffer.
-	 * @returns {GPUBuffer | null} The uniform buffer.
+	 * Return the uniform values, in the same order as the "Uniforms" struct
+	 * in the shader code.
+	 * @returns {ArrayBuffer} The uniform values.
 	 */
-	protected get uniforms () : GPUBuffer
+	protected makeUniforms () : ArrayBuffer
 	{
-		// Shortcut
-		let buffer = this.#uniforms;
-
-		// Make it if we have to.
-		if ( !buffer )
-		{
-			// Shortcut
-			const device = Device.instance.device;
-
-			// Create the buffer.
-			buffer = device.createBuffer ( {
-				label: `Uniform buffer for shader ${this.type} ${this.id}`,
-				// Two 4x4 matrices + 4D color + 3D light + 1D twoSidedLight, padded to 16-byte alignment.
-				size: 160,
-				usage: ( GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST )
-			} );
-
-			// Write the values to a typed array.
-			const pm = new Float32Array ( this.projMatrix );
-			const vm = new Float32Array ( this.viewMatrix );
-			const color = new Float32Array ( this.#color );
-			const lightDir = new Float32Array ( [ this.#lightDir[0], this.#lightDir[1], this.#lightDir[2] ] );
-			const twoSidedLight = new Uint32Array ( [ this.#twoSidedLight ? 1 : 0 ] );
-
-			// Write the typed array to the buffer.
-			let offset = 0;
-			device.queue.writeBuffer ( buffer, offset, pm       ); offset += pm.byteLength;
-			device.queue.writeBuffer ( buffer, offset, vm       ); offset += vm.byteLength;
-			device.queue.writeBuffer ( buffer, offset, color    ); offset += color.byteLength;
-			device.queue.writeBuffer ( buffer, offset, lightDir ); offset += lightDir.byteLength;
-			device.queue.writeBuffer ( buffer, offset, twoSidedLight ); offset += twoSidedLight.byteLength;
-
-			// Set this for next time.
-			this.#uniforms = buffer;
-		}
-
-		// Return what we have.
-		return buffer;
-	}
-
-	/**
-	 * Get the bind group.
-	 * @param {GPUPrimitiveTopology} topology - The primitive topology.
-	 * @returns {GPUBindGroup} The bind group.
-	 */
-	protected getBindGroup ( topology: Readonly<GPUPrimitiveTopology> ) : GPUBindGroup
-	{
-		// Shortcut
-		let bindGroup = this.#bindGroup;
-
-		// Make it if we have to.
-		if ( !bindGroup )
-		{
-			// Shortcuts.
-			const pipeline = this.getPipeline ( topology );
-			const device = Device.instance.device;
-
-			// Make the layout and give it a name.
-			const index = 0;
-			const layout = pipeline.getBindGroupLayout ( index );
-			layout.label = `Bind group layout ${index} for shader ${this.type}`;
-
-			// Make the bind group.
-			bindGroup = device.createBindGroup ( {
-				label: `Bind group for shader ${this.type}`,
-				layout,
-				entries: [
-				{
-					binding: 0,
-					resource: { buffer: this.uniforms }
-				} ],
-			} );
-
-			// Set for next time.
-			this.#bindGroup = bindGroup;
-		}
-
-		// Return the bind group.
-		return bindGroup;
-	}
-
-	/**
-	 * Configure the render pass.
-	 * @param {GPURenderPassEncoder} pass - The render pass encoder.
-	 * @param {GPUPrimitiveTopology} topology - The primitive topology.
-	 */
-	public configureRenderPass ( pass: Readonly<GPURenderPassEncoder>, topology: Readonly<GPUPrimitiveTopology> ) : void
-	{
-		// Note: The render-pass' pipeline should already be set.
-
-		// Set the color buffer.
-		pass.setBindGroup ( 0, this.getBindGroup ( topology ) );
+		const uniforms = this.#uniforms;
+		const floats = new Float32Array ( uniforms );
+		floats.set ( this.projMatrix, 0 );
+		floats.set ( this.viewMatrix, 16 );
+		floats.set ( this.#color, 32 );
+		floats.set ( [ this.#lightDir[0], this.#lightDir[1], this.#lightDir[2] ], 36 );
+		new Uint32Array ( uniforms )[39] = ( this.#twoSidedLight ? 1 : 0 );
+		return uniforms;
 	}
 }

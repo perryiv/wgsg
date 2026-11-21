@@ -179,7 +179,7 @@ export function test ()
 			const context = Device.instance.getConfiguredContext ( canvas );
 
 			const dv = new DrawVisitor ( { context } );
-			dv.draw ( root );
+			dv.draw ( root, 1 );
 		} );
 	} );
 };
