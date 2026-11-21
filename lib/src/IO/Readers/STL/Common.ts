@@ -79,25 +79,6 @@ export abstract class Common extends BaseClass
 	}
 
 	/**
-	 * Return a progress callback function. Make one if needed.
-	 * @returns {Function} A function that can be used report progress.
-	 */
-	protected getProgressCallback()
-	{
-		const progress = this.progress;
-
-		if ( progress )
-		{
-			return progress;
-		}
-
-		return () : boolean =>
-		{
-			return true;
-		};
-	}
-
-	/**
 	 * Allocate the arrays. We make new ones if they get full, and we trim
 	 * them when we are done if they are not full.
 	 * @param {number} numTriangles The number of triangles.
