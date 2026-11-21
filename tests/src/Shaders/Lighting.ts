@@ -19,6 +19,8 @@ import { FlatShading } from "../../../lib/src/Shaders/FlatShading";
 import { IDENTITY_MATRIX } from "../../../lib/src/Tools/Constants";
 import { Lighting } from "../../../lib/src/Shaders/Lighting";
 import { PhongShading } from "../../../lib/src/Shaders/PhongShading";
+import { SolidColor } from "../../../lib/src/Shaders/SolidColor";
+import type { IMatrix44 } from "../../../lib/src/Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -38,6 +40,10 @@ const FRONT_FACING = [ -1, -1, 0.5,   1, -1, 0.5,   0, 1, 0.5 ];
 
 // The same triangle wound the other way, so it is back facing.
 const BACK_FACING = [ -1, -1, 0.5,   0, 1, 0.5,   1, -1, 0.5 ];
+
+// A projection matrix that moves everything 5 to the right, which puts the
+// triangle off the screen. The matrix is column-major.
+const MOVE_RIGHT: IMatrix44 = [ 1, 0, 0, 0,   0, 1, 0, 0,   0, 0, 1, 0,   5, 0, 0, 1 ];
 
 /**
  * Get the shader's compilation errors.
@@ -67,24 +73,30 @@ const getPipelineError = async ( shader: Lighting ) : Promise < GPUError | null 
 
 /**
  * Render one red triangle and return the color of the center pixel.
- * @param {Lighting} shader The shader.
+ * @param {Lighting | SolidColor} shader The shader.
  * @param {number[]} points The triangle's points.
  * @param {number[] | null} normals The normals, or null for none.
- * @param {boolean} twoSidedLight Whether to use two-sided lighting.
+ * @param {boolean} twoSidedLight Whether to use two-sided lighting. Only used by lighting shaders.
+ * @param {boolean} [setUp] Whether to set up the shader's color and matrices first.
  * @returns {Promise<{ rgba: number[], error: GPUError | null }>} The color, and any validation error.
  */
-const renderCenterPixel = async ( shader: Lighting, points: number[], normals: number[] | null, twoSidedLight: boolean ) :
+const renderCenterPixel = async ( shader: Lighting | SolidColor, points: number[], normals: number[] | null, twoSidedLight: boolean, setUp = true ) :
 	Promise < { rgba: number[], error: GPUError | null } > =>
 {
 	const { device, preferredFormat } = Device.instance;
 	device.pushErrorScope ( "validation" );
 
-	// Set up the shader. Set the view matrix last because that is what makes
-	// the shader update its uniform buffer.
-	shader.projMatrix = IDENTITY_MATRIX;
-	shader.color = [ 1, 0, 0, 1 ];
-	shader.twoSidedLight = twoSidedLight;
-	shader.viewMatrix = IDENTITY_MATRIX;
+	// Set up the shader, unless the test has already done it.
+	if ( setUp )
+	{
+		shader.viewMatrix = IDENTITY_MATRIX;
+		shader.projMatrix = IDENTITY_MATRIX;
+		shader.color = [ 1, 0, 0, 1 ];
+		if ( shader instanceof Lighting )
+		{
+			shader.twoSidedLight = twoSidedLight;
+		}
+	}
 
 	// The images we render into.
 	const texture = device.createTexture ( {
@@ -216,6 +228,38 @@ export function test ()
 				expect ( error ).to.be.null;
 				expect ( rgba ).to.deep.equal ( [ 255, 0, 0, 255 ] );
 			} );
+		} );
+
+		describe ( "Changing only the projection matrix", function ()
+		{
+			// Before the fix, the shader kept using its old uniform buffer, so
+			// the second draw still showed the triangle.
+			const cases: [ string, () => Lighting | SolidColor, number[] | null ][] = [
+				[ "PhongShading", () => PhongShading.instance, [ 0, 0, 1,   0, 0, 1,   0, 0, 1 ] ],
+				[ "FlatShading", () => FlatShading.instance, null ],
+				[ "SolidColor", () => SolidColor.instance, null ],
+			];
+
+			for ( const [ name, getShader, normals ] of cases )
+			{
+				it ( `Should update the uniforms of ${name}`, async function ()
+				{
+					const shader = getShader();
+
+					// First draw with identity matrices, so the triangle covers the center.
+					const first = await renderCenterPixel ( shader, FRONT_FACING, normals, false );
+					expect ( first.error ).to.be.null;
+					expect ( first.rgba ).to.deep.equal ( [ 255, 0, 0, 255 ] );
+
+					// Change only the projection matrix and draw again without setting
+					// anything else. The triangle is now off the screen, so the center
+					// pixel is the clear color.
+					shader.projMatrix = MOVE_RIGHT;
+					const second = await renderCenterPixel ( shader, FRONT_FACING, normals, false, false );
+					expect ( second.error ).to.be.null;
+					expect ( second.rgba ).to.deep.equal ( [ 0, 0, 0, 0 ] );
+				} );
+			}
 		} );
 
 		describe ( "PhongShading drawing", function ()

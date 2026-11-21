@@ -98,6 +98,26 @@ export abstract class Lighting extends BaseClass
 	// }
 
 	/**
+	 * Get the projection matrix.
+	 * @returns {IMatrix44} The projection matrix.
+	 */
+	public override get projMatrix () : Readonly<IMatrix44>
+	{
+		return super.projMatrix;
+	}
+
+	/**
+	 * Set the projection matrix.
+	 * @param {IMatrix44} matrix - The projection matrix.
+	 */
+	public override set projMatrix ( matrix: Readonly<IMatrix44> )
+	{
+		super.projMatrix = matrix;
+		this.#uniforms = null;
+		this.#bindGroup = null;
+	}
+
+	/**
 	 * Get the view matrix.
 	 * @returns {IMatrix44} The view matrix.
 	 */
