@@ -15,7 +15,7 @@
 import { addReader, ReaderFactory as Factory } from "../Reader";
 import { Group, Node as SceneNode } from "../../Scene/Nodes";
 import { Reader as BaseClass } from "../Reader";
-import { readFile } from "../Functions";
+import { readBytes } from "../Functions";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -73,11 +73,9 @@ interface ChunkHeaderResult
 const readFileHeader = async ( file: File ) : Promise < FileHeaderResult > =>
 {
 	const end = GLB_FILE_HEADER_SIZE;
-	const result = await readFile ( file, "ArrayBuffer", 0, end );
 
 	// Make the view for the header data.
-	const buffer = ( result as ArrayBuffer );
-	const view = new DataView ( buffer );
+	const view = new DataView ( await readBytes ( file, 0, end ) );
 
 	// Get the header.
 	const magic   = view.getUint32 ( 0, true );
@@ -119,11 +117,9 @@ const readFileHeader = async ( file: File ) : Promise < FileHeaderResult > =>
 const readChunkHeader = async ( file: File, offset: number ) : Promise < ChunkHeaderResult > =>
 {
 	const end = offset + GLB_CHUNK_HEADER_SIZE;
-	const result = await readFile ( file, "ArrayBuffer", offset, end );
 
 	// Make the view for the chunk header data.
-	const buffer = ( result as ArrayBuffer );
-	const view = new DataView ( buffer );
+	const view = new DataView ( await readBytes ( file, offset, end ) );
 
 	// Get the chunk header.
 	const length = view.getUint32 ( 0, true );
@@ -146,14 +142,9 @@ const readChunkHeader = async ( file: File, offset: number ) : Promise < ChunkHe
 const readJSON = async ( file: File, result: ChunkHeaderResult ) : Promise < string > =>
 {
 	const end = result.offset + result.header.length;
-	const text = await readFile ( file, "Text", result.offset, end );
 
-	if ( "string" !== ( typeof text ) )
-	{
-		throw new Error ( `Failed to read JSON chunk as text` );
-	}
-
-	return ( text as string );
+	// The JSON chunk is UTF-8 text.
+	return new TextDecoder().decode ( await readBytes ( file, result.offset, end ) );
 }
 
 

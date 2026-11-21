@@ -15,7 +15,7 @@
 import { ColorTool, DEVELOPER_BUILD } from "../../../Tools";
 import { PhongShading } from "../../../Shaders";
 import { Reader as BaseClass } from "../../Reader";
-import { vec3 } from "gl-matrix";
+import { vec3, vec4 } from "gl-matrix";
 import type { IVector3, IVector4 } from "../../../Types";
 import {
 	ColorAttribute as Color,
@@ -25,6 +25,16 @@ import {
 	Node as SceneNode,
 	TwoSidedLight,
 } from "../../../Scene";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	The most triangles in one geometry. Bigger files are split into more than
+//	one geometry, each with its own arrays.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export const STL_MAX_TRIANGLES_PER_GEOMETRY = ( 1024 * 1024 );
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -75,36 +85,27 @@ export abstract class Common extends BaseClass
 	 */
 	public set color ( color: Readonly<IVector4> )
 	{
-		vec3.copy ( this.#color, color );
-	}
-
-	/**
-	 * Return a progress callback function. Make one if needed.
-	 * @returns {Function} A function that can be used report progress.
-	 */
-	protected getProgressCallback()
-	{
-		const progress = this.progress;
-
-		if ( progress )
-		{
-			return progress;
-		}
-
-		return () : boolean =>
-		{
-			return true;
-		};
+		vec4.copy ( this.#color, color );
 	}
 
 	/**
 	 * Allocate the arrays. We make new ones if they get full, and we trim
-	 * them when we are done if they are not full.
+	 * them when we are done if they are not full. The number of triangles is
+	 * capped at STL_MAX_TRIANGLES_PER_GEOMETRY.
 	 * @param {number} numTriangles The number of triangles.
 	 * @returns {{ points: Float32Array, normals: Float32Array, indices: Uint32Array }} The allocated arrays.
 	 */
 	protected static allocateArrays ( numTriangles: number ) : { points: Float32Array, normals: Float32Array, indices: Uint32Array }
 	{
+		// Make sure the number makes sense.
+		if ( ( false === Number.isInteger ( numTriangles ) ) || ( numTriangles < 0 ) )
+		{
+			throw new Error ( `Invalid number of triangles to allocate: ${numTriangles}` );
+		}
+
+		// Do not allocate more than one geometry can hold.
+		numTriangles = Math.min ( numTriangles, STL_MAX_TRIANGLES_PER_GEOMETRY );
+
 		const indices = new Uint32Array ( numTriangles * 3 );
 		const points = new Float32Array ( indices.length * 3 );
 		const normals = new Float32Array ( points.length );
