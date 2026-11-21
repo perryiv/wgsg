@@ -1,0 +1,97 @@
+###############################################################################
+#
+#	Copyright (c) 2026, Perry L Miller IV
+#	All rights reserved.
+#	MIT License: https://opensource.org/licenses/mit-license.html
+#
+###############################################################################
+
+###############################################################################
+#
+#	Continuous integration. Type-checks, lints, builds the app, and runs the
+#	command-line tests. The browser tests need WebGPU, so they are not run here.
+#
+###############################################################################
+
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+
+# Cancel a run that is still going when a newer commit is pushed.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v7
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: npm
+          cache-dependency-path: |
+            lib/package-lock.json
+            tests/package-lock.json
+            app/package-lock.json
+
+      # Same as "npm run install-all", but "npm ci" installs exactly what is
+      # in the lock files.
+      - name: Install lib
+        working-directory: lib
+        run: |
+          npm ci
+          npm link
+
+      - name: Install tests
+        working-directory: tests
+        run: |
+          npm ci
+          npm link wgsg-lib
+
+      - name: Install app
+        working-directory: app
+        run: |
+          npm ci
+          npm link wgsg-lib
+
+      - name: Type-check lib
+        working-directory: lib
+        run: npm run compile
+
+      - name: Type-check tests
+        working-directory: tests
+        run: npm run compile
+
+      - name: Type-check app
+        working-directory: app
+        run: npm run compile
+
+      - name: Lint lib
+        working-directory: lib
+        run: npm run lint
+
+      - name: Lint tests
+        working-directory: tests
+        run: npm run lint
+
+      - name: Lint app
+        working-directory: app
+        run: npm run lint
+
+      - name: Build app
+        working-directory: app
+        run: npm run build
+
+      - name: Run command-line tests
+        working-directory: tests
+        run: npm test
