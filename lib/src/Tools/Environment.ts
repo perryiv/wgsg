@@ -23,13 +23,5 @@ export const DEVELOPER_BUILD = !!( BUILD_ENVIRONMENT.DEV );
 export const PRODUCTION_BUILD = !DEVELOPER_BUILD;
 
 export const KEEP_PERFORMANCE_INFO: boolean = (
-	( "string" === typeof ( BUILD_ENVIRONMENT.VITE_KEEP_PERFORMANCE_INFO ) ) ?
-	( "true" === ( BUILD_ENVIRONMENT.VITE_KEEP_PERFORMANCE_INFO as string ).toLowerCase() ) :
-	( false )
-);
-
-export const LOG_LEVEL: number = (
-	( "string" === typeof ( BUILD_ENVIRONMENT.VITE_LOG_LEVEL ) ) ?
-	( parseInt ( BUILD_ENVIRONMENT.VITE_LOG_LEVEL as string ) || 0 ) :
-	( 0 )
+	"true" === BUILD_ENVIRONMENT.VITE_KEEP_PERFORMANCE_INFO?.toLowerCase()
 );
