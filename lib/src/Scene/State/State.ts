@@ -367,8 +367,9 @@ export class State extends BaseClass
 	/**
 	 * Configure the render pass.
 	 * @param {GPURenderPassEncoder} pass - The render pass encoder.
+	 * @param {number} frame - The number of the frame being drawn.
 	 */
-	public configureRenderPass ( pass: GPURenderPassEncoder ) : void
+	public configureRenderPass ( pass: GPURenderPassEncoder, frame: number ) : void
 	{
 		const { shader } = this;
 
@@ -378,7 +379,7 @@ export class State extends BaseClass
 		}
 
 		// Configure the render pass.
-		shader.configureRenderPass ( pass, this.topology );
+		shader.configureRenderPass ( pass, this.topology, frame );
 	}
 
 	/**

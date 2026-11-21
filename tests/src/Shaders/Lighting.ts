@@ -41,6 +41,9 @@ const FRONT_FACING = [ -1, -1, 0.5,   1, -1, 0.5,   0, 1, 0.5 ];
 // The same triangle wound the other way, so it is back facing.
 const BACK_FACING = [ -1, -1, 0.5,   0, 1, 0.5,   1, -1, 0.5 ];
 
+// Each render in these tests is a new frame.
+let frameCount = 0;
+
 // A projection matrix that moves everything 5 to the right, which puts the
 // triangle off the screen. The matrix is column-major.
 const MOVE_RIGHT: IMatrix44 = [ 1, 0, 0, 0,   0, 1, 0, 0,   0, 0, 1, 0,   5, 0, 0, 1 ];
@@ -132,7 +135,7 @@ const renderCenterPixel = async ( shader: Lighting | SolidColor, points: number[
 		},
 	} );
 	pass.setPipeline ( shader.getPipeline ( "triangle-list" ) );
-	shader.configureRenderPass ( pass, "triangle-list" );
+	shader.configureRenderPass ( pass, "triangle-list", ++frameCount );
 	pass.setVertexBuffer ( 0, pointBuffer );
 	if ( normalBuffer )
 	{

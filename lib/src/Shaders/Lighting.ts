@@ -43,6 +43,7 @@ export abstract class Lighting extends BaseClass
 	#lightDir: IVector4 = [ 0.0, 0.0, -1.0, 0.0 ];
 	#uniforms: ( GPUBuffer | null ) = null;
 	#bindGroup: ( GPUBindGroup | null ) = null;
+	#frame = 0;
 
 	/**
 	 * Construct the class.
@@ -288,10 +289,14 @@ export abstract class Lighting extends BaseClass
 	 * Configure the render pass.
 	 * @param {GPURenderPassEncoder} pass - The render pass encoder.
 	 * @param {GPUPrimitiveTopology} topology - The primitive topology.
+	 * @param {number} frame - The number of the frame being drawn.
 	 */
-	public configureRenderPass ( pass: Readonly<GPURenderPassEncoder>, topology: Readonly<GPUPrimitiveTopology> ) : void
+	public configureRenderPass ( pass: Readonly<GPURenderPassEncoder>, topology: Readonly<GPUPrimitiveTopology>, frame: number ) : void
 	{
 		// Note: The render-pass' pipeline should already be set.
+
+		// Remember the frame. The uniform buffers are reused from one frame to the next.
+		this.#frame = frame;
 
 		// Set the color buffer.
 		pass.setBindGroup ( 0, this.getBindGroup ( topology ) );

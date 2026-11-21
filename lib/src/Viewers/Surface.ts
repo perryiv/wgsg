@@ -825,7 +825,7 @@ export class Surface extends BaseClass
 		dv.reset();
 
 		// Draw the render graph.
-		dv.draw ( root );
+		dv.draw ( root, this.#frame.count );
 	}
 
 	/**
