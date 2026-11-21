@@ -19,6 +19,10 @@
 		// compatible library declarations.
 		"target": "ES2016",
 
+		// Declaration files that describe the target environment. This is the
+		// same as the app. Without it, only ES2016 declarations are included.
+		"lib": [ "ES2020", "DOM", "DOM.Iterable" ],
+
 		// Specify what module code is generated.
 		"module": "ESNext",
 
