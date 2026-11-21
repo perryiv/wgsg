@@ -12,9 +12,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { test as testLighting } from "./Lighting";
 import { test as testShaders } from "./Shaders";
 
 describe ( "Shaders", function ()
 {
 	testShaders();
+	testLighting();
 } );
