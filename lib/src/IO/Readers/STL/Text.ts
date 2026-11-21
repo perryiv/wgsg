@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Cancelled } from "../../Cancelled";
-import { Common as BaseClass } from "./Common";
+import { Common as BaseClass, STL_MAX_TRIANGLES_PER_GEOMETRY } from "./Common";
 import { Group, Node as SceneNode } from "../../../Scene/Nodes";
 import { readLines } from "../../Functions";
 import { vec3 } from "gl-matrix";
@@ -250,7 +250,7 @@ export class TextReader extends BaseClass
 							pointCount, normalCount, indexCount
 						) );
 
-						const newArrays = BaseClass.allocateArrays ( 1024 * 1024 );
+						const newArrays = BaseClass.allocateArrays ( STL_MAX_TRIANGLES_PER_GEOMETRY );
 						points = newArrays.points;
 						normals = newArrays.normals;
 						indices = newArrays.indices;
