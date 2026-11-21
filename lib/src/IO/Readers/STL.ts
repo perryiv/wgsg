@@ -14,9 +14,9 @@
 
 import { addReader, ReaderFactory as Factory } from "../Reader";
 import { BinaryReader } from "./STL/Binary";
-import { Cancelled } from "../Cancelled";
 import { Common as BaseClass } from "./STL/Common";
 import { Node as SceneNode } from "../../Scene/Nodes";
+import { readBytes } from "../Functions";
 import { TextReader } from "./STL/Text";
 
 
@@ -53,26 +53,19 @@ class STL extends BaseClass
 	 * @param {File} file The file to check.
 	 * @returns {Promise<boolean>} A promise that resolves to true if the file is binary, false if it is ASCII.
 	 */
-	protected isBinary ( file: File ) : Promise < boolean >
+	protected async isBinary ( file: File ) : Promise < boolean >
 	{
-		return new Promise ( ( resolve, reject ) =>
+		// A binary STL file has an 80 byte header followed by a 4 byte triangle
+		// count, so anything smaller than that can not be binary.
+		if ( file.size < 84 )
 		{
-			const reader = new FileReader();
+			return false;
+		}
 
-			reader.onload = () =>
-			{
-				const view = new DataView ( reader.result as ArrayBuffer );
-				const numTriangles = view.getUint32 ( 0, true );
-				resolve ( file.size === ( 84 + ( numTriangles * 50 ) ) );
-			};
-
-			reader.onerror = () =>
-			{
-				reject ( new Error ( `Error reading the file: ${reader.error}` ) );
-			};
-
-			reader.readAsArrayBuffer ( file.slice ( 80, 84 ) );
-		} );
+		// Read the triangle count and see if the file is the expected size.
+		const view = new DataView ( await readBytes ( file, 80, 84 ) );
+		const numTriangles = view.getUint32 ( 0, true );
+		return ( file.size === ( 84 + ( numTriangles * 50 ) ) );
 	}
 
 	/**
@@ -80,38 +73,15 @@ class STL extends BaseClass
 	 * @param {File} file The file to read.
 	 * @returns {Promise<SceneNode>} A promise that resolves to the scene node.
 	 */
-	public override read ( file: File ) : Promise < SceneNode >
+	public override async read ( file: File ) : Promise < SceneNode >
 	{
-		return new Promise ( ( resolve, reject ) =>
-		{
-			this.isBinary ( file )
-			.then ( ( binary ) =>
-			{
-				if ( true === binary )
-				{
-					const reader = new BinaryReader();
-					reader.progress = this.progress;
-					return reader.read ( file )
-					.then ( resolve )
-					.catch ( reject );
-				}
-				else
-				{
-					const reader = new TextReader();
-					reader.progress = this.progress;
-					return reader.read ( file )
-					.then ( resolve )
-					.catch ( reject );
-				}
-			} )
-			.catch ( ( error ) =>
-			{
-				reject ( ( ( error instanceof Error ) || ( error instanceof Cancelled ) )
-					? error
-					: ( new Error ( String ( error ) ) )
-				);
-			} );
-		} );
+		// Make the reader for the type of file.
+		const binary = await this.isBinary ( file );
+		const reader = ( ( true === binary ) ? new BinaryReader() : new TextReader() );
+
+		// Read the file with the same progress callback.
+		reader.progress = this.progress;
+		return await reader.read ( file );
 	}
 }
 
