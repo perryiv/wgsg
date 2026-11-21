@@ -1,0 +1,11 @@
+{
+	// Extensions that VS Code suggests when this repository is opened.
+	// https://code.visualstudio.com/docs/configure/extensions/extension-marketplace#_workspace-recommended-extensions
+	"recommendations": [
+		"dbaeumer.vscode-eslint",
+		"github.vscode-github-actions",
+		"github.vscode-pull-request-github",
+		"streetsidesoftware.code-spell-checker",
+		"wgsl-analyzer.wgsl-analyzer"
+	]
+}
