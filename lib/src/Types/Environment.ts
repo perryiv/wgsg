@@ -22,7 +22,7 @@ export interface BuildEnvironment
 	PROD: boolean;    // Is this a production build?
 	SSR: boolean;     // Server side rendering.
 
-	// These are defined in app/.env* files.
-	VITE_KEEP_PERFORMANCE_INFO?: boolean;
-	VITE_LOG_LEVEL?: number;
+	// These are defined in app/.env* files. Vite always gives them as strings.
+	VITE_KEEP_PERFORMANCE_INFO?: string;
+	VITE_LOG_LEVEL?: string;
 };

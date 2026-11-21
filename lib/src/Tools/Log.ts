@@ -32,8 +32,9 @@ export enum LogLevel
 	TRACE = 5,
 };
 
-export const BUILD_TIME_LOG_LEVEL: LogLevel = (
-	( "string" === typeof ( BUILD_ENVIRONMENT.VITE_LOG_LEVEL ) ) ?
-	( ( parseInt ( BUILD_ENVIRONMENT.VITE_LOG_LEVEL ) ) as LogLevel ) :
-	( LogLevel.INFO )	
-);
+export const BUILD_TIME_LOG_LEVEL: LogLevel = ( () =>
+{
+	// Vite gives environment variables as strings, or undefined if not set.
+	const level = parseInt ( String ( BUILD_ENVIRONMENT.VITE_LOG_LEVEL ) );
+	return ( Number.isNaN ( level ) ? LogLevel.INFO : level );
+} ) ();
