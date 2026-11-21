@@ -12,6 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+export * from "./Lighting";
 export * from "./PhongShading";
 export * from "./ShaderBase";
 export * from "./SolidColor";
