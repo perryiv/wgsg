@@ -76,6 +76,25 @@ export abstract class Reader extends BaseClass
 	}
 
 	/**
+	 * Return a progress callback function. Make one if needed.
+	 * @returns {IProgressCallback} A function that can be used to report progress.
+	 */
+	protected getProgressCallback() : IProgressCallback
+	{
+		const progress = this.progress;
+
+		if ( progress )
+		{
+			return progress;
+		}
+
+		return () : boolean =>
+		{
+			return true;
+		};
+	}
+
+	/**
 	 * Read the file and return a promise that resolves to the scene node.
 	 * @param {File} file The file to read.
 	 * @returns {Promise<SceneNode>} A promise that resolves to the scene node.
