@@ -18,7 +18,7 @@ import { State } from "../Scene";
 import { vec4 } from "gl-matrix";
 import { WithMatrices as BaseClass } from "./WithMatrices";
 import code from "./SolidColor.wgsl?raw";
-import type { IMatrix44, IVector4 } from "../Types";
+import type { IVector4 } from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -44,9 +44,9 @@ export class SolidColor extends BaseClass
 {
 	static #instance: ( SolidColor | null ) = null;
 	#color: IVector4 = [ ...Color.gray ];
-	#uniforms: ( GPUBuffer | null ) = null;
-	#bindGroup: ( GPUBindGroup | null ) = null;
-	#frame = 0;
+
+	// The uniform values. Two 4x4 matrices and the color.
+	#uniforms = new ArrayBuffer ( ( 16 + 16 + 4 ) * 4 );
 
 	/**
 	 * Construct the class.
@@ -61,29 +61,6 @@ export class SolidColor extends BaseClass
 			code,
 			topology: ( topology ?? "triangle-list" )
 		} );
-	}
-
-	/**
-	 * Destroy this instance.
-	 */
-	public override destroy() : void
-	{
-		this.reset();
-		super.destroy();
-	}
-
-	/**
-	 * Reset the shader.
-	 */
-	public override reset() : void
-	{
-		if ( this.#uniforms )
-		{
-			this.#uniforms.destroy();
-			this.#uniforms = null;
-		}
-		this.#bindGroup = null;
-		super.reset();
 	}
 
 	/**
@@ -131,46 +108,6 @@ export class SolidColor extends BaseClass
 	// }
 
 	/**
-	 * Get the projection matrix.
-	 * @returns {IMatrix44} The projection matrix.
-	 */
-	public override get projMatrix () : Readonly<IMatrix44>
-	{
-		return super.projMatrix;
-	}
-
-	/**
-	 * Set the projection matrix.
-	 * @param {IMatrix44} matrix - The projection matrix.
-	 */
-	public override set projMatrix ( matrix: Readonly<IMatrix44> )
-	{
-		super.projMatrix = matrix;
-		this.#uniforms = null;
-		this.#bindGroup = null;
-	}
-
-	/**
-	 * Get the view matrix.
-	 * @returns {IMatrix44} The view matrix.
-	 */
-	public override get viewMatrix () : Readonly<IMatrix44>
-	{
-		return super.viewMatrix;
-	}
-
-	/**
-	 * Set the view matrix. Overload if needed.
-	 * @param {IMatrix44} matrix - The view matrix.
-	 */
-	public override set viewMatrix ( matrix: Readonly<IMatrix44> )
-	{
-		super.viewMatrix = matrix;
-		this.#uniforms = null;
-		this.#bindGroup = null;
-	}
-
-	/**
 	 * Return the color.
 	 * @returns {IVector4} The color.
 	 */
@@ -186,49 +123,22 @@ export class SolidColor extends BaseClass
 	public set color ( color: Readonly<IVector4> )
 	{
 		vec4.copy ( this.#color, color );
-		this.#uniforms = null;
-		this.#bindGroup = null;
+		this.uniformsChanged();
 	}
 
 	/**
-	 * Return the uniform buffer.
-	 * @returns {GPUBuffer | null} The uniform buffer.
+	 * Return the uniform values, in the same order as the "Uniforms" struct
+	 * in the shader code.
+	 * @returns {ArrayBuffer} The uniform values.
 	 */
-	protected get uniforms () : GPUBuffer
+	protected makeUniforms () : ArrayBuffer
 	{
-		// Shortcut
-		let buffer = this.#uniforms;
-
-		// Make it if we have to.
-		if ( !buffer )
-		{
-			// Shortcut
-			const device = Device.instance.device;
-
-			// Create the buffer.
-			buffer = device.createBuffer ( {
-				label: `Uniform buffer for shader ${this.type} ${this.id}`,
-				size: ( 16 + 16 + 4 ) * 4, // Two 4x4 matrices + 4D color, 4 bytes each.
-				usage: ( GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST )
-			} );
-
-			// Write the values to a typed array.
-			const pm = new Float32Array ( this.projMatrix );
-			const vm = new Float32Array ( this.viewMatrix );
-			const color = new Float32Array ( this.#color );
-
-			// Write the typed array to the buffer.
-			let offset = 0;
-			device.queue.writeBuffer ( buffer, offset, pm ); offset += pm.byteLength;
-			device.queue.writeBuffer ( buffer, offset, vm ); offset += vm.byteLength;
-			device.queue.writeBuffer ( buffer, offset, color );
-
-			// Set this for next time.
-			this.#uniforms = buffer;
-		}
-
-		// Return what we have.
-		return buffer;
+		const uniforms = this.#uniforms;
+		const floats = new Float32Array ( uniforms );
+		floats.set ( this.projMatrix, 0 );
+		floats.set ( this.viewMatrix, 16 );
+		floats.set ( this.#color, 32 );
+		return uniforms;
 	}
 
 	/**
@@ -248,7 +158,7 @@ export class SolidColor extends BaseClass
 		// Make the pipeline.
 		const pipeline = device.createRenderPipeline ( {
 			label: `Render pipeline for shader ${this.type}`,
-			layout: "auto",
+			layout: this.pipelineLayout,
 			vertex: {
 				module: this.module,
 				entryPoint: "vs",
@@ -300,64 +210,6 @@ export class SolidColor extends BaseClass
 
 		// Return the new pipeline.
 		return pipeline;
-	}
-
-	/**
-	 * Get the bind group.
-	 * @param {GPUPrimitiveTopology} topology - The primitive topology.
-	 * @returns {GPUBindGroup} The bind group.
-	 */
-	protected getBindGroup ( topology: Readonly<GPUPrimitiveTopology> ) : GPUBindGroup
-	{
-		// Shortcut
-		let bindGroup = this.#bindGroup;
-
-		// Make it if we have to.
-		if ( !bindGroup )
-		{
-			// Shortcuts.
-			const pipeline = this.getPipeline ( topology );
-			const device = Device.instance.device;
-
-			// Make the layout and give it a name.
-			const index = 0;
-			const layout = pipeline.getBindGroupLayout ( index );
-			layout.label = `Bind group layout ${index} for shader ${this.type}`;
-
-			// Make the bind group.
-			bindGroup = device.createBindGroup ( {
-				label: `Bind group for shader ${this.type}`,
-				layout,
-				entries: [
-				{
-					binding: 0,
-					resource: { buffer: this.uniforms }
-				} ],
-			} );
-
-			// Set for next time.
-			this.#bindGroup = bindGroup;
-		}
-
-		// Return the bind group.
-		return bindGroup;
-	}
-
-	/**
-	 * Configure the render pass.
-	 * @param {GPURenderPassEncoder} pass - The render pass encoder.
-	 * @param {GPUPrimitiveTopology} topology - The primitive topology.
-	 * @param {number} frame - The number of the frame being drawn.
-	 */
-	public configureRenderPass ( pass: Readonly<GPURenderPassEncoder>, topology: Readonly<GPUPrimitiveTopology>, frame: number ) : void
-	{
-		// Note: The render-pass' pipeline should already be set.
-
-		// Remember the frame. The uniform buffers are reused from one frame to the next.
-		this.#frame = frame;
-
-		// Set the color buffer.
-		pass.setBindGroup ( 0, this.getBindGroup ( topology ) );
 	}
 
 	/**

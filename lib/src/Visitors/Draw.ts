@@ -484,7 +484,7 @@ export class Draw extends BaseClass
 
 		// Configure the render pass now that the state has been applied.
 		const shader = requireShader ( state );
-		shader.configureRenderPass ( this.renderPassEncoder, pipeline.topology, this.#frame );
+		shader.configureRenderPass ( this.renderPassEncoder, this.#frame );
 
 		// Draw the shapes.
 		sg.forEachShape ( ( shape: Shape ) =>

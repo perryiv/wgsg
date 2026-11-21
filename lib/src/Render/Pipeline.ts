@@ -179,6 +179,6 @@ export class Pipeline extends BaseClass
 		}
 
 		// Configure the render pass.
-		shader.configureRenderPass ( pass, this.topology, frame );
+		shader.configureRenderPass ( pass, frame );
 	}
 }

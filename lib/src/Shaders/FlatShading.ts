@@ -108,7 +108,7 @@ export class FlatShading extends BaseClass
 		// Make the pipeline.
 		const pipeline = device.createRenderPipeline ( {
 			label: `Render pipeline for shader ${this.type}`,
-			layout: "auto",
+			layout: this.pipelineLayout,
 			vertex: {
 				module: this.module,
 				entryPoint: "vs",

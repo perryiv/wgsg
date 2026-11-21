@@ -135,7 +135,7 @@ const renderCenterPixel = async ( shader: Lighting | SolidColor, points: number[
 		},
 	} );
 	pass.setPipeline ( shader.getPipeline ( "triangle-list" ) );
-	shader.configureRenderPass ( pass, "triangle-list", ++frameCount );
+	shader.configureRenderPass ( pass, ++frameCount );
 	pass.setVertexBuffer ( 0, pointBuffer );
 	if ( normalBuffer )
 	{
@@ -167,6 +167,109 @@ const renderCenterPixel = async ( shader: Lighting | SolidColor, points: number[
 	readBuffer.destroy();
 
 	return { rgba, error: await device.popErrorScope() };
+};
+
+/**
+ * Render two triangles in one render pass and one frame, the left one red
+ * and the right one green, like two state groups that use the same shader.
+ * Return the colors of a pixel in each triangle.
+ * @param {Lighting | SolidColor} shader The shader.
+ * @param {number[] | null} normals The normals for each triangle, or null for none.
+ * @returns {Promise<{ left: number[], right: number[], error: GPUError | null }>} The colors, and any validation error.
+ */
+const renderTwoColors = async ( shader: Lighting | SolidColor, normals: number[] | null ) :
+	Promise < { left: number[], right: number[], error: GPUError | null } > =>
+{
+	const { device, preferredFormat } = Device.instance;
+	device.pushErrorScope ( "validation" );
+
+	shader.viewMatrix = IDENTITY_MATRIX;
+	shader.projMatrix = IDENTITY_MATRIX;
+	if ( shader instanceof Lighting )
+	{
+		shader.twoSidedLight = false;
+	}
+
+	const texture = device.createTexture ( {
+		size: [ SIZE, SIZE ],
+		format: preferredFormat,
+		usage: ( GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC ),
+	} );
+	const depth = device.createTexture ( {
+		size: [ SIZE, SIZE ],
+		format: "depth24plus",
+		usage: GPUTextureUsage.RENDER_ATTACHMENT,
+	} );
+
+	// Two front-facing triangles, one in each half of the image.
+	const left = new Array1 ( new Float32Array ( [ -1, -1, 0.5,   0, -1, 0.5,   -0.5, 1, 0.5 ] ) ).buffer;
+	const right = new Array1 ( new Float32Array ( [ 0, -1, 0.5,   1, -1, 0.5,   0.5, 1, 0.5 ] ) ).buffer;
+	const normalBuffer = ( normals ? new Array1 ( new Float32Array ( normals ) ).buffer : null );
+	const indexBuffer = new Array1 ( new Uint32Array ( [ 0, 1, 2 ] ) ).buffer;
+
+	const encoder = device.createCommandEncoder();
+	const pass = encoder.beginRenderPass ( {
+		colorAttachments: [ {
+			view: texture.createView(),
+			clearValue: [ 0, 0, 0, 0 ],
+			loadOp: "clear",
+			storeOp: "store",
+		} ],
+		depthStencilAttachment: {
+			view: depth.createView(),
+			depthClearValue: 1,
+			depthLoadOp: "clear",
+			depthStoreOp: "store",
+		},
+	} );
+	pass.setPipeline ( shader.getPipeline ( "triangle-list" ) );
+	pass.setIndexBuffer ( indexBuffer!, "uint32" );
+	if ( normalBuffer )
+	{
+		pass.setVertexBuffer ( 1, normalBuffer );
+	}
+
+	// The same frame for both, like the draw stage of one frame.
+	const frame = ++frameCount;
+
+	shader.color = [ 1, 0, 0, 1 ];
+	shader.configureRenderPass ( pass, frame );
+	pass.setVertexBuffer ( 0, left );
+	pass.drawIndexed ( 3 );
+
+	shader.color = [ 0, 1, 0, 1 ];
+	shader.configureRenderPass ( pass, frame );
+	pass.setVertexBuffer ( 0, right );
+	pass.drawIndexed ( 3 );
+
+	pass.end();
+
+	const bytesPerRow = SIZE * 4;
+	const readBuffer = device.createBuffer ( {
+		size: bytesPerRow * SIZE,
+		usage: ( GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ ),
+	} );
+	encoder.copyTextureToBuffer ( { texture }, { buffer: readBuffer, bytesPerRow }, [ SIZE, SIZE ] );
+	device.queue.submit ( [ encoder.finish() ] );
+
+	// Read a pixel in the middle of each triangle. Get the mapped range only
+	// once, because getting it again would overlap the first one.
+	await readBuffer.mapAsync ( GPUMapMode.READ );
+	const image = readBuffer.getMappedRange();
+	const row = ( SIZE / 2 ) * bytesPerRow;
+	const getPixel = ( x: number ) : number[] =>
+	{
+		const bytes = Array.from ( new Uint8Array ( image, row + ( x * 4 ), 4 ) );
+		return ( ( "bgra8unorm" === preferredFormat ) ? [ bytes[2], bytes[1], bytes[0], bytes[3] ] : bytes );
+	};
+	const answer = { left: getPixel ( SIZE / 4 ), right: getPixel ( ( 3 * SIZE ) / 4 ) };
+	readBuffer.unmap();
+
+	texture.destroy();
+	depth.destroy();
+	readBuffer.destroy();
+
+	return { ...answer, error: await device.popErrorScope() };
 };
 
 
@@ -261,6 +364,42 @@ export function test ()
 					const second = await renderCenterPixel ( shader, FRONT_FACING, normals, false, false );
 					expect ( second.error ).to.be.null;
 					expect ( second.rgba ).to.deep.equal ( [ 0, 0, 0, 0 ] );
+				} );
+			}
+		} );
+
+		describe ( "Two colors in one frame", function ()
+		{
+			// Each color needs its own uniform buffer, because all the writes
+			// happen before the frame's draw calls run. If the second color
+			// overwrote the first buffer then both triangles would be green.
+			const cases: [ string, () => Lighting | SolidColor, number[] | null ][] = [
+				[ "PhongShading", () => PhongShading.instance, [ 0, 0, 1,   0, 0, 1,   0, 0, 1 ] ],
+				[ "FlatShading", () => FlatShading.instance, null ],
+				[ "SolidColor", () => SolidColor.instance, null ],
+			];
+
+			for ( const [ name, getShader, normals ] of cases )
+			{
+				it ( `Should draw both colors with ${name}`, async function ()
+				{
+					const shader = getShader();
+					const { left, right, error } = await renderTwoColors ( shader, normals );
+					expect ( error ).to.be.null;
+					expect ( left ).to.deep.equal ( [ 255, 0, 0, 255 ] );
+					expect ( right ).to.deep.equal ( [ 0, 255, 0, 255 ] );
+				} );
+
+				it ( `Should reuse the same uniform buffers in later frames with ${name}`, async function ()
+				{
+					const shader = getShader();
+					await renderTwoColors ( shader, normals );
+					const count = shader.numUniformBuffers;
+					for ( let i = 0; i < 5; ++i )
+					{
+						await renderTwoColors ( shader, normals );
+					}
+					expect ( shader.numUniformBuffers ).to.equal ( count );
 				} );
 			}
 		} );

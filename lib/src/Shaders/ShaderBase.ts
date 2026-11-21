@@ -207,8 +207,7 @@ export abstract class ShaderBase extends Base
 	/**
 	 * Configure the render pass.
 	 * @param {GPURenderPassEncoder} pass - The render pass encoder.
-	 * @param {GPUPrimitiveTopology} topology - The primitive topology.
 	 * @param {number} frame - The number of the frame being drawn.
 	 */
-	public abstract configureRenderPass ( pass: Readonly<GPURenderPassEncoder>, topology: GPUPrimitiveTopology, frame: number ) : void;
+	public abstract configureRenderPass ( pass: Readonly<GPURenderPassEncoder>, frame: number ) : void;
 }
