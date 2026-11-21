@@ -19,6 +19,24 @@ import {
 	Array3,
 	Array4
 } from "../../../lib/src/Arrays";
+import { Device } from "../../../lib/src/Tools/Device";
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Make the array's GPU buffer and return any WebGPU validation error.
+ * @param {Array1} array The array.
+ * @returns {Promise<GPUError | null>} The validation error, or null if there is none.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+const getBufferError = async < T extends Float32Array | Uint16Array > ( array: Array1 < T > ) : Promise < GPUError | null > =>
+{
+	const device = Device.instance.device;
+	device.pushErrorScope ( "validation" );
+	void array.buffer;
+	return await device.popErrorScope();
+};
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -52,6 +70,32 @@ export function test ()
 			expect ( a.values ).to.not.equal ( v );
 			expect ( a.buffer ).to.not.be.null;
 			expect ( a.buffer ).to.not.equal ( b1 );
+		} );
+
+		it ( "Can upload a typed array that is a view into a larger buffer", async function ()
+		{
+			const whole = new Float32Array ( [ 1, 2, 3, 4, 5, 6, 7, 8 ] );
+			const a = new Array1 ( whole.subarray ( 2, 5 ) );
+
+			expect ( await getBufferError ( a ) ).to.be.null;
+			expect ( a.buffer?.size ).to.equal ( 3 * 4 );
+		} );
+
+		it ( "Can upload a Uint16Array with an odd length", async function ()
+		{
+			const a = new Array1 ( new Uint16Array ( [ 0, 1, 2 ] ) );
+
+			expect ( await getBufferError ( a ) ).to.be.null;
+			expect ( a.buffer?.size ).to.equal ( 8 ); // 6 bytes rounded up.
+		} );
+
+		it ( "Can upload a Uint16Array with an odd length that is a view", async function ()
+		{
+			const whole = new Uint16Array ( [ 9, 0, 1, 2, 9 ] );
+			const a = new Array1 ( whole.subarray ( 1, 4 ) );
+
+			expect ( await getBufferError ( a ) ).to.be.null;
+			expect ( a.buffer?.size ).to.equal ( 8 ); // 6 bytes rounded up.
 		} );
 
 		it ( "Can make a 1D wrapper around Float64Array", function ()

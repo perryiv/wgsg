@@ -135,15 +135,31 @@ export class Array1 < InternalArrayType extends PossibleArrayType >
 				throw new Error ( `Unknown array type: ${typeof values}` );
 			}
 
+			// WebGPU only writes whole groups of 4 bytes, so round the size up.
+			// This matters for arrays like a Uint16Array with an odd length.
+			const size = ( Math.ceil ( values.byteLength / 4 ) * 4 );
+
 			// Make the new buffer.
 			const buffer = device.createBuffer ( {
-		    label: "Array1 buffer",
-    		size: values.byteLength,
-    		usage
-  		} );
+				label: "Array1 buffer",
+				size,
+				usage
+			} );
 
-			// Fill the buffer with the values.
-			device.queue.writeBuffer ( buffer, 0, values.buffer );
+			// Fill the buffer with the values. Pass the byte offset and length
+			// because the array may be a view into part of a larger ArrayBuffer.
+			// If the size was rounded up then copy the values into an array of
+			// the rounded size.
+			if ( size === values.byteLength )
+			{
+				device.queue.writeBuffer ( buffer, 0, values.buffer, values.byteOffset, values.byteLength );
+			}
+			else
+			{
+				const padded = new Uint8Array ( size );
+				padded.set ( new Uint8Array ( values.buffer, values.byteOffset, values.byteLength ) );
+				device.queue.writeBuffer ( buffer, 0, padded );
+			}
 
 			// Set our member.
 			this.#buffer = buffer;
