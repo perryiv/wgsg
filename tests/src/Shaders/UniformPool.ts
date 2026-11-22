@@ -121,7 +121,7 @@ export function test ()
 
 			// Then the frames need only one. The extra buffers are kept until
 			// the frame that needed them is no longer one of the recent frames.
-			const last = 1 + UniformPool.PURGE_FRAMES;
+			const last = 1 + UniformPool.purgeFrames;
 			for ( let frame = 2; frame <= last; ++frame )
 			{
 				pool.use ( frame, false, makeValues ( 1 ) );
@@ -131,6 +131,45 @@ export function test ()
 			pool.use ( last + 1, false, makeValues ( 1 ) );
 			expect ( pool.length ).to.equal ( 1 );
 			pool.destroy();
+		} );
+
+		it ( "Should use the number of frames that is set", function ()
+		{
+			const original = UniformPool.purgeFrames;
+			try
+			{
+				UniformPool.purgeFrames = 5;
+				expect ( UniformPool.purgeFrames ).to.equal ( 5 );
+
+				// One frame needs 3 buffers, then 5 frames need only one.
+				const pool = makePool();
+				pool.use ( 1, true, makeValues ( 1 ) );
+				pool.use ( 1, true, makeValues ( 2 ) );
+				pool.use ( 1, true, makeValues ( 3 ) );
+				for ( let frame = 2; frame <= 6; ++frame )
+				{
+					pool.use ( frame, false, makeValues ( 1 ) );
+				}
+				expect ( pool.length ).to.equal ( 3 );
+
+				pool.use ( 7, false, makeValues ( 1 ) );
+				expect ( pool.length ).to.equal ( 1 );
+				pool.destroy();
+			}
+			finally
+			{
+				UniformPool.purgeFrames = original;
+			}
+		} );
+
+		it ( "Should only accept a positive integer for the number of frames", function ()
+		{
+			const original = UniformPool.purgeFrames;
+			for ( const frames of [ 0, -1, 1.5, NaN, Infinity ] )
+			{
+				expect ( () => { UniformPool.purgeFrames = frames; } ).to.throw();
+			}
+			expect ( UniformPool.purgeFrames ).to.equal ( original );
 		} );
 
 		it ( "Should make and write buffers without validation errors", async function ()

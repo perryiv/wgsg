@@ -53,8 +53,8 @@ interface IUniformPoolItem
 
 export class UniformPool
 {
-	// Buffers that have not been used in this many frames are destroyed.
-	public static readonly PURGE_FRAMES = 120;
+	// Buffers that have not been needed in this many frames are destroyed.
+	static #purgeFrames = 120;
 
 	#label: string;
 	#layout: GPUBindGroupLayout;
@@ -77,6 +77,30 @@ export class UniformPool
 		this.#label = label;
 		this.#layout = layout;
 		this.#size = size;
+	}
+
+	/**
+	 * Get the number of frames. Buffers that none of this many recent frames
+	 * needed are destroyed.
+	 * @returns {number} The number of frames.
+	 */
+	public static get purgeFrames () : number
+	{
+		return UniformPool.#purgeFrames;
+	}
+
+	/**
+	 * Set the number of frames. Buffers that none of this many recent frames
+	 * needed are destroyed.
+	 * @param {number} frames - The number of frames. It has to be a positive integer.
+	 */
+	public static set purgeFrames ( frames: number )
+	{
+		if ( ( false === Number.isInteger ( frames ) ) || ( frames <= 0 ) )
+		{
+			throw new Error ( `Number of frames for purging uniform buffers has to be a positive integer, not ${frames}` );
+		}
+		UniformPool.#purgeFrames = frames;
 	}
 
 	/**
@@ -150,7 +174,7 @@ export class UniformPool
 		{
 			const recent = this.#recent;
 			recent.push ( this.#index + 1 );
-			if ( recent.length > UniformPool.PURGE_FRAMES )
+			while ( recent.length > UniformPool.#purgeFrames )
 			{
 				recent.shift();
 			}
