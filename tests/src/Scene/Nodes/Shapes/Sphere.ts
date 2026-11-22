@@ -15,6 +15,7 @@
 import { expect } from "chai";
 import {
 	Geometry,
+	Group,
 	Node,
 	Shape,
 	SphereNode as Sphere,
@@ -100,6 +101,58 @@ export function test ()
 			expect ( bounds.center[1] ).to.be.equal ( 0 );
 			expect ( bounds.center[2] ).to.be.equal ( 0 );
 			expect ( bounds.radius ).to.be.equal ( 1 );
+		} );
+
+		it ( "Should be dirty after its properties change", function ()
+		{
+			const sphere = new Sphere();
+			expect ( sphere.dirty ).to.be.false;
+
+			sphere.numSubdivisions = 3;
+			expect ( sphere.dirty ).to.be.true;
+			sphere.update();
+			expect ( sphere.dirty ).to.be.false;
+
+			sphere.radius = 2;
+			expect ( sphere.dirty ).to.be.true;
+			sphere.update();
+
+			sphere.center = [ 1, 2, 3 ];
+			expect ( sphere.dirty ).to.be.true;
+		} );
+
+		it ( "Should make new points after the number of subdivisions changes", function ()
+		{
+			const sphere = new Sphere ( { numSubdivisions: 1 } );
+			const before = sphere.numPoints;
+			sphere.numSubdivisions = 2;
+			sphere.update();
+			expect ( sphere.numPoints ).to.be.greaterThan ( before );
+		} );
+
+		it ( "Should have new bounds right after the radius or center changes", function ()
+		{
+			const sphere = new Sphere ( { center: [ 0, 0, 0 ], radius: 1 } );
+			expect ( sphere.bounds.radius ).to.equal ( 1 );
+
+			// No update() needed, the bounds come from the center and radius.
+			sphere.radius = 3;
+			expect ( sphere.bounds.radius ).to.equal ( 3 );
+
+			sphere.center = [ 5, 0, 0 ];
+			expect ( sphere.bounds.center ).to.be.deep.equal ( [ 5, 0, 0 ] );
+		} );
+
+		it ( "Should make its parent dirty when its properties change", function ()
+		{
+			const group = new Group();
+			const sphere = new Sphere();
+			group.addChild ( sphere );
+			group.dirty = false;
+			sphere.dirty = false;
+
+			sphere.radius = 2;
+			expect ( group.dirty ).to.be.true;
 		} );
 	} );
 };

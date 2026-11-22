@@ -118,6 +118,10 @@ export class Sphere extends BaseClass
 	public set center ( center: Readonly<IVector3> )
 	{
 		vec3.copy ( this.#center, center );
+
+		// The geometry has to be made again, and the bounds changed.
+		this.dirty = true;
+		this.dirtyBounds();
 	}
 
 	/**
@@ -142,6 +146,10 @@ export class Sphere extends BaseClass
 
 		// Note: We permit negative and zero radii.
 		this.#radius = radius;
+
+		// The geometry has to be made again, and the bounds changed.
+		this.dirty = true;
+		this.dirtyBounds();
 	}
 
 	/**
@@ -170,6 +178,9 @@ export class Sphere extends BaseClass
 		}
 
 		this.#numSubdivisions = num;
+
+		// The geometry has to be made again. The bounds are the same.
+		this.dirty = true;
 	}
 
 	/**

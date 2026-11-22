@@ -317,5 +317,42 @@ export function test ()
 				expect ( r ).to.equal ( 2 );
 			}
 		} );
+
+		it ( "Should update the bounding sphere when a child is removed", function ()
+		{
+			const group = new Group();
+			group.addChild ( new SphereNode ( { center: [ 0, 0, 0 ], radius: 1 } ) );
+			group.addChild ( new SphereNode ( { center: [ 2, 0, 0 ], radius: 1 } ) );
+			expect ( group.bounds.radius ).to.equal ( 2 );
+
+			group.removeChild ( 1 );
+			const { valid, center, radius } = group.bounds;
+			expect ( valid ).to.be.true;
+			expect ( center ).to.be.deep.equal ( [ 0, 0, 0 ] );
+			expect ( radius ).to.equal ( 1 );
+		} );
+
+		it ( "Should have invalid bounds after it is cleared", function ()
+		{
+			const group = new Group();
+			group.addChild ( new SphereNode ( { center: [ 0, 0, 0 ], radius: 1 } ) );
+			expect ( group.bounds.valid ).to.be.true;
+
+			group.clear();
+			expect ( group.bounds.valid ).to.be.false;
+		} );
+
+		it ( "Should update the bounds of the parents when a child is removed", function ()
+		{
+			const parent = new Group();
+			const group = new Group();
+			parent.addChild ( group );
+			group.addChild ( new SphereNode ( { center: [ 0, 0, 0 ], radius: 1 } ) );
+			group.addChild ( new SphereNode ( { center: [ 2, 0, 0 ], radius: 1 } ) );
+			expect ( parent.bounds.radius ).to.equal ( 2 );
+
+			group.removeChild ( 1 );
+			expect ( parent.bounds.radius ).to.equal ( 1 );
+		} );
 	} );
 };
