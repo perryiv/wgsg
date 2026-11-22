@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Array1 } from "../../../Arrays";
+import { replaceReference } from "../../../Base";
 import { Arrays, Indexed } from "../../Primitives";
 import { Box } from "../../../Math";
 import { getNumElements } from "../../../Tools";
@@ -233,6 +234,8 @@ export class Geometry extends Shape
 		}
 
 		// Do not make a copy. These arrays can be shared.
+		// If this geometry is in use then count the new array instead of the old one.
+		replaceReference ( ( this.refCount > 0 ), this.#points, points );
 		this.#points = points;
 	}
 
@@ -265,6 +268,8 @@ export class Geometry extends Shape
 		}
 
 		// Do not make a copy. These arrays can be shared.
+		// If this geometry is in use then count the new array instead of the old one.
+		replaceReference ( ( this.refCount > 0 ), this.#normals, normals );
 		this.#normals = normals;
 	}
 
@@ -297,6 +302,8 @@ export class Geometry extends Shape
 		}
 
 		// Do not make a copy. These arrays can be shared.
+		// If this geometry is in use then count the new array instead of the old one.
+		replaceReference ( ( this.refCount > 0 ), this.#colors, colors );
 		this.#colors = colors;
 	}
 
@@ -329,6 +336,8 @@ export class Geometry extends Shape
 		}
 
 		// Do not make a copy. These arrays can be shared.
+		// If this geometry is in use then count the new array instead of the old one.
+		replaceReference ( ( this.refCount > 0 ), this.#texCoords, texCoords );
 		this.#texCoords = texCoords;
 	}
 
@@ -354,8 +363,41 @@ export class Geometry extends Shape
 			primitives = [ primitives ];
 		}
 
+		// If this geometry is in use then count the new primitives and stop
+		// counting the old ones. Do the new ones first in case some are the same.
+		if ( this.refCount > 0 )
+		{
+			primitives?.forEach ( ( primitive ) => { primitive.ref(); } );
+			this.#primitives?.forEach ( ( primitive ) => { primitive.unref(); } );
+		}
+
 		// Do not make a copy. These arrays can be shared.
 		this.#primitives = primitives;
+	}
+
+	/**
+	 * Called when this geometry starts being used. So do its arrays and primitives.
+	 */
+	protected override onFirstRef() : void
+	{
+		this.#points?.ref();
+		this.#normals?.ref();
+		this.#colors?.ref();
+		this.#texCoords?.ref();
+		this.#primitives?.forEach ( ( primitive ) => { primitive.ref(); } );
+	}
+
+	/**
+	 * Called when this geometry is no longer used. Neither are its arrays and
+	 * primitives, which releases their GPU buffers if nothing else uses them.
+	 */
+	protected override onLastUnref() : void
+	{
+		this.#points?.unref();
+		this.#normals?.unref();
+		this.#colors?.unref();
+		this.#texCoords?.unref();
+		this.#primitives?.forEach ( ( primitive ) => { primitive.unref(); } );
 	}
 
 	/**

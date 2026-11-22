@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Array1 } from "../../Arrays";
+import { replaceReference } from "../../Base";
 import { Draw as DrawVisitor } from "../../Visitors/Draw";
 import {
 	Base as BaseClass,
@@ -121,7 +122,26 @@ export class Indexed extends BaseClass
 		}
 
 		// Do not copy. These arrays can be shared.
+		// If this primitive list is in use then count the new array instead of the old one.
+		replaceReference ( ( this.refCount > 0 ), this.#indices, indices );
 		this.#indices = indices;
+	}
+
+	/**
+	 * Called when this primitive list starts being used. So does its array.
+	 */
+	protected override onFirstRef() : void
+	{
+		this.#indices?.ref();
+	}
+
+	/**
+	 * Called when this primitive list is no longer used. Neither is its array,
+	 * which releases its GPU buffer if nothing else uses it.
+	 */
+	protected override onLastUnref() : void
+	{
+		this.#indices?.unref();
 	}
 
 	/**

@@ -12,6 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Base as BaseClass } from "../Base/Base";
 import { Device } from "../Tools/Device";
 
 
@@ -40,7 +41,7 @@ export type PossibleArrayType = (
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export class Array1 < InternalArrayType extends PossibleArrayType >
+export class Array1 < InternalArrayType extends PossibleArrayType > extends BaseClass
 {
 	#values: ( InternalArrayType | null ) = null;
 	#buffer: ( GPUBuffer | null ) = null;
@@ -52,8 +53,27 @@ export class Array1 < InternalArrayType extends PossibleArrayType >
 	 */
 	constructor ( values: InternalArrayType )
 	{
+		super();
 		this.#values = values;
 		this.#buffer = null;
+	}
+
+	/**
+	 * Return the class name.
+	 * @returns {string} The class name.
+	 */
+	public override getClassName() : string
+	{
+		return "Arrays.Array1";
+	}
+
+	/**
+	 * Destroy this instance and its GPU buffer.
+	 */
+	public override destroy() : void
+	{
+		this.reset();
+		super.destroy();
 	}
 
 	/**
@@ -98,6 +118,15 @@ export class Array1 < InternalArrayType extends PossibleArrayType >
 	{
 		this.#buffer?.destroy();
 		this.#buffer = null;
+	}
+
+	/**
+	 * Called when nothing uses this array anymore. Destroy its GPU buffer.
+	 * The values are kept, so a new buffer is made if it is used again.
+	 */
+	protected override onLastUnref() : void
+	{
+		this.reset();
 	}
 
 	/**

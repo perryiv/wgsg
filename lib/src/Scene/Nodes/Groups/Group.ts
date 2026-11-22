@@ -257,6 +257,12 @@ export class Group extends BaseClass
 		// If we get to here then we know it won't be a repeat.
 		this.#children.push ( node );
 
+		// If this group is in use then so is the new child.
+		if ( this.refCount > 0 )
+		{
+			node.ref();
+		}
+
 		// This group's bounds are now dirty.
 		this.dirtyBounds();
 	}
@@ -315,6 +321,15 @@ export class Group extends BaseClass
 			throw new Error ( `Failed to remove ${child.type} ${child.id} at index ${index} from ${this.type} ${this.id}` );
 		}
 
+		// If this group is in use then the child is no longer used by it.
+		if ( this.refCount > 0 )
+		{
+			child.unref();
+		}
+
+		// This group's bounds are now dirty.
+		this.dirtyBounds();
+
 		// If we get to here then it worked.
 		return true;
 	}
@@ -327,14 +342,47 @@ export class Group extends BaseClass
 		// Note: Could call removeChild() in a loop but this should be faster.
 
 		// Tell all the children that we are no longer a parent.
-		for ( const child of this.#children )
+		const children = this.#children;
+		for ( const child of children )
 		{
 			child.removeParent ( this.id );
 		}
 
-		// Reset the array of children.
-		// TODO: Would it be better to assign the array to []?
-		this.#children.length = 0;
+		// Reset the array of children. This group's bounds are now dirty.
+		this.#children = [];
+		this.dirtyBounds();
+
+		// If this group is in use then the children are no longer used by it.
+		if ( this.refCount > 0 )
+		{
+			for ( const child of children )
+			{
+				child.unref();
+			}
+		}
+	}
+
+	/**
+	 * Called when this group starts being used. Its children are now used too.
+	 */
+	protected override onFirstRef() : void
+	{
+		this.forEachChild ( ( child: ChildType ) =>
+		{
+			child.ref();
+		} );
+	}
+
+	/**
+	 * Called when this group is no longer used. Neither are its children, but
+	 * they stay in the group so that it can be used again later.
+	 */
+	protected override onLastUnref() : void
+	{
+		this.forEachChild ( ( child: ChildType ) =>
+		{
+			child.unref();
+		} );
 	}
 
 	/**
