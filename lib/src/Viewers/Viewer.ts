@@ -550,8 +550,13 @@ export class Viewer extends BaseClass
 	public set modelScene ( scene: ( Node | null ) )
 	{
 		const model = this.#branches.model;
+
+		// Hold a reference while we swap, so that setting the same scene again
+		// does not release its GPU buffers in between.
+		scene?.ref();
 		model.clear();
 		model.addChild ( scene ); // This handles null.
+		scene?.unref();
 	}
 
 	/**

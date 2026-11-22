@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { test as testNodes } from "./Nodes";
+import { test as testReferences } from "./References";
 import { test as testState } from "./State";
 
 
@@ -20,4 +21,5 @@ describe ( "Scene", function ()
 {
 	testState();
 	testNodes();
+	testReferences();
 } );

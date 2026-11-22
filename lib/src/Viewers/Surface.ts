@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base as BaseClass } from "../Base/Base";
+import { replaceReference } from "../Base/References";
 import { clampVec4 } from "../Math/Functions";
 import { makeRenderGraphInfo, resetRenderGraphInfo, Root } from "../Render";
 import { Perspective, ProjectionBase as Projection } from "../Projections";
@@ -178,7 +179,7 @@ export class Surface extends BaseClass
 		this.#context = null;
 		this.#observer = null;
 		this.#viewport = { x: 0, y: 0, width: 0, height: 0 };
-		this.#scene = null;
+		this.scene = null; // Use the setter so the scene is released.
 		this.#projection = null;
 		this.#handles = { render: 0 };
 		this.#visitors = null;
@@ -410,6 +411,9 @@ export class Surface extends BaseClass
 	 */
 	public set scene ( scene: ( Node | null ) )
 	{
+		// The surface uses the scene, so count it. Releasing the old scene
+		// releases its GPU buffers if nothing else uses them.
+		replaceReference ( true, this.#scene, scene );
 		this.#scene = scene;
 	}
 

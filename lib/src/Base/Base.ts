@@ -28,6 +28,9 @@ export abstract class Base
 	// "this.type" in a production environment every time we need a new id.
 	#id: number = ( ( DEVELOPER_BUILD ) ? ( getNextId ( this.type ) ) : ( getNextId() ) );
 
+	// The number of things using this object, see ref() and unref().
+	#refCount = 0;
+
 	/**
 	 * Construct the class.
 	 * @class
@@ -41,6 +44,63 @@ export abstract class Base
 	 * Destroy the class.
 	 */
 	public destroy() : void
+	{
+		// Nothing to do.
+	}
+
+	/**
+	 * Get the reference count. This is the number of things that use this
+	 * object, like groups that have it as a child or the viewer that shows
+	 * it. It is not the number of variables that refer to it.
+	 * @returns {number} The reference count.
+	 */
+	public get refCount() : number
+	{
+		return this.#refCount;
+	}
+
+	/**
+	 * Add a reference. Called by whatever starts using this object.
+	 */
+	public ref() : void
+	{
+		if ( 1 === ++this.#refCount )
+		{
+			this.onFirstRef();
+		}
+	}
+
+	/**
+	 * Remove a reference. Called by whatever stops using this object.
+	 */
+	public unref() : void
+	{
+		if ( this.#refCount <= 0 )
+		{
+			throw new Error ( `Unreferencing ${this.type} ${this.id} too many times` );
+		}
+		if ( 0 === --this.#refCount )
+		{
+			this.onLastUnref();
+		}
+	}
+
+	/**
+	 * Called when the reference count goes from 0 to 1. Objects that hold
+	 * other objects override this to reference them.
+	 */
+	protected onFirstRef() : void
+	{
+		// Nothing to do.
+	}
+
+	/**
+	 * Called when the reference count goes from 1 to 0. Objects override this
+	 * to unreference what they hold and release their GPU resources. Unlike a
+	 * C++ destructor, the object stays usable, because JavaScript variables
+	 * can still refer to it. It can be referenced again later.
+	 */
+	protected onLastUnref() : void
 	{
 		// Nothing to do.
 	}
