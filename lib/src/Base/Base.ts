@@ -12,7 +12,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { DEVELOPER_BUILD, getNextId } from "../Tools";
+// Import these from their own files, not from "../Tools". That would load
+// Tools/Device.ts, which extends this class before it exists.
+import { DEVELOPER_BUILD } from "../Tools/Environment";
+import { getNextId } from "../Tools/Functions";
 
 
 ///////////////////////////////////////////////////////////////////////////////
