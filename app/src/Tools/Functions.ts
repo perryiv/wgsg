@@ -17,6 +17,7 @@ import {
 	buildTriangleEdges,
 	ColorAttribute,
 	ColorTool,
+	FlatShading,
 	Geometry,
 	Group,
 	Indexed,
@@ -103,7 +104,48 @@ export const buildSceneSpheres = () =>
 		root.addChild ( tr );
 	}
 
+	// Flat shading, with and without normal vectors.
+	{
+		const tr = new Transform();
+		tr.translate ( [ 10, 6, 0 ] );
+		tr.addChild ( buildSceneFlatSphere ( new Sphere ( [ 0, 0, 0 ], radius ), true ) );
+		tr.addChild ( buildSceneFlatSphere ( new Sphere ( [ 3, 0, 0 ], radius ), false ) );
+		root.addChild ( tr );
+	}
+
 	return root;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Make a flat-shaded sphere. Without normals, it is a plain geometry with
+//	only the sphere's points and triangles, like a mesh read from a file.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export const buildSceneFlatSphere = ( sphere: Sphere = new Sphere ( [ 0, 0, 0 ], 1 ), withNormals = true ) : Node =>
+{
+	// Fewer subdivisions than the other spheres so the flat triangles show.
+	const sphereNode = new SphereNode ( {
+		center: sphere.center,
+		radius: sphere.radius,
+		numSubdivisions: 2,
+	} );
+
+	// The shader ignores the sphere's normals. Without them, use only the
+	// points and triangles.
+	const node = ( withNormals ? sphereNode : new Geometry ( {
+		points: sphereNode.points,
+		primitives: sphereNode.primitives,
+	} ) );
+
+	const state = FlatShading.makeState ( { topology: "triangle-list" } );
+	state.addAttribute ( new ColorAttribute ( [ 0.2, 0.4, 0.8, 1.0 ] ) );
+	state.addAttribute ( new TwoSidedLight ( false ) );
+	node.state = state;
+
+	return node;
 };
 
 

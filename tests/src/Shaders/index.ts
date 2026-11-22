@@ -12,9 +12,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { test as testLighting } from "./Lighting";
 import { test as testShaders } from "./Shaders";
+import { test as testUniformPool } from "./UniformPool";
 
 describe ( "Shaders", function ()
 {
 	testShaders();
+	testLighting();
+	testUniformPool();
 } );

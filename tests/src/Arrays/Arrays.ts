@@ -19,7 +19,43 @@ import {
 	Array3,
 	Array4
 } from "../../../lib/src/Arrays";
+import { Device } from "../../../lib/src/Tools/Device";
 
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Make the array's GPU buffer and return any WebGPU validation error.
+ * @param {Array1} array The array.
+ * @returns {Promise<GPUError | null>} The validation error, or null if there is none.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+const getBufferError = async < T extends Float32Array | Uint16Array > ( array: Array1 < T > ) : Promise < GPUError | null > =>
+{
+	const device = Device.instance.device;
+	device.pushErrorScope ( "validation" );
+	void array.buffer;
+	return await device.popErrorScope();
+};
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Write to the buffer and return any WebGPU validation error. Writing to a
+ * destroyed buffer is an error, so this tells us if it was destroyed.
+ * @param {GPUBuffer} buffer The buffer.
+ * @returns {Promise<GPUError | null>} The validation error, or null if there is none.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+const getWriteError = async ( buffer: GPUBuffer ) : Promise < GPUError | null > =>
+{
+	const device = Device.instance.device;
+	device.pushErrorScope ( "validation" );
+	device.queue.writeBuffer ( buffer, 0, new Float32Array ( 1 ) );
+	return await device.popErrorScope();
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -51,6 +87,92 @@ export function test ()
 			expect ( a.values ).to.be.instanceOf ( Float32Array );
 			expect ( a.values ).to.not.equal ( v );
 			expect ( a.buffer ).to.not.be.null;
+			expect ( a.buffer ).to.equal ( b1 ); // Same size, so the buffer is reused.
+		} );
+
+		it ( "Can upload a typed array that is a view into a larger buffer", async function ()
+		{
+			const whole = new Float32Array ( [ 1, 2, 3, 4, 5, 6, 7, 8 ] );
+			const a = new Array1 ( whole.subarray ( 2, 5 ) );
+
+			expect ( await getBufferError ( a ) ).to.be.null;
+			expect ( a.buffer?.size ).to.equal ( 3 * 4 );
+		} );
+
+		it ( "Can upload a Uint16Array with an odd length", async function ()
+		{
+			const a = new Array1 ( new Uint16Array ( [ 0, 1, 2 ] ) );
+
+			expect ( await getBufferError ( a ) ).to.be.null;
+			expect ( a.buffer?.size ).to.equal ( 8 ); // 6 bytes rounded up.
+		} );
+
+		it ( "Can upload a Uint16Array with an odd length that is a view", async function ()
+		{
+			const whole = new Uint16Array ( [ 9, 0, 1, 2, 9 ] );
+			const a = new Array1 ( whole.subarray ( 1, 4 ) );
+
+			expect ( await getBufferError ( a ) ).to.be.null;
+			expect ( a.buffer?.size ).to.equal ( 8 ); // 6 bytes rounded up.
+		} );
+
+		it ( "Reuses its buffer when new values are the same size", async function ()
+		{
+			const a = new Array1 ( new Float32Array ( [ 1, 2, 3 ] ) );
+			const b1 = a.buffer;
+
+			const device = Device.instance.device;
+			device.pushErrorScope ( "validation" );
+			a.values = new Float32Array ( [ 4, 5, 6 ] );
+			expect ( await device.popErrorScope() ).to.be.null;
+
+			expect ( a.buffer ).to.equal ( b1 );
+		} );
+
+		it ( "Destroys its buffer when new values are a different size", async function ()
+		{
+			const a = new Array1 ( new Float32Array ( [ 1, 2, 3 ] ) );
+			const b1 = a.buffer!;
+
+			a.values = new Float32Array ( [ 4, 5, 6, 7 ] );
+			expect ( a.buffer ).to.not.equal ( b1 );
+			expect ( a.buffer?.size ).to.equal ( 4 * 4 );
+
+			// Writing to a destroyed buffer is a validation error.
+			expect ( await getWriteError ( b1 ) ).to.not.be.null;
+		} );
+
+		it ( "Destroys its buffer when new values are a different kind with the same size", async function ()
+		{
+			// Same number of bytes, but one is for vertices and one is for indices.
+			const a = new Array1 < Float32Array | Uint32Array > ( new Float32Array ( [ 1, 2, 3 ] ) );
+			const b1 = a.buffer!;
+
+			a.values = new Uint32Array ( [ 0, 1, 2 ] );
+			expect ( a.buffer ).to.not.equal ( b1 );
+			expect ( await getWriteError ( b1 ) ).to.not.be.null;
+		} );
+
+		it ( "Destroys its buffer when the values are set to null", async function ()
+		{
+			const a = new Array1 ( new Float32Array ( [ 1, 2, 3 ] ) );
+			const b1 = a.buffer!;
+
+			a.values = null;
+			expect ( a.buffer ).to.be.null;
+			expect ( await getWriteError ( b1 ) ).to.not.be.null;
+		} );
+
+		it ( "Destroys its buffer when it is reset", async function ()
+		{
+			const a = new Array1 ( new Float32Array ( [ 1, 2, 3 ] ) );
+			const b1 = a.buffer!;
+
+			a.reset();
+			expect ( await getWriteError ( b1 ) ).to.not.be.null;
+
+			// A new buffer is made when needed.
+			expect ( a.buffer ).to.not.be.null;
 			expect ( a.buffer ).to.not.equal ( b1 );
 		} );
 
@@ -75,7 +197,7 @@ export function test ()
 			expect ( a.values ).to.be.instanceOf ( Float64Array );
 			expect ( a.values ).to.not.equal ( v );
 			expect ( a.buffer ).to.not.be.null;
-			expect ( a.buffer ).to.not.equal ( b1 );
+			expect ( a.buffer ).to.equal ( b1 ); // Same size, so the buffer is reused.
 		} );
 
 		it ( "Can make a 2D array wrapper around a Float32Array", function ()

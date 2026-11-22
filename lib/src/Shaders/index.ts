@@ -12,7 +12,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+export * from "./FlatShading";
+export * from "./Lighting";
 export * from "./PhongShading";
 export * from "./ShaderBase";
 export * from "./SolidColor";
+export * from "./UniformPool";
 export * from "./WithMatrices";
