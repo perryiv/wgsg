@@ -18,7 +18,12 @@ void ( async () =>
 	mocha.checkLeaks();
 	mocha.timeout ( 0 ); // Disable timeouts.
 
-	// This one should be first.
+	// This has to be first. It checks that nothing made scene objects when
+	// the library and the test files were imported.
+	const { test: testCreationOrder } = await import ( "./CreationOrder" );
+	testCreationOrder();
+
+	// This one should be next.
 	await import ( "./Tools" );
 
 	// These can be in any order.
