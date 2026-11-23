@@ -28,8 +28,14 @@ export function test ()
 	{
 		it ( "Should be able to write a meaningful JSON file", function ()
 		{
+			// The ids depend on how many objects other tests have made, so use
+			// the ones these got.
+			const scene = new Group();
+			const sphere = new SphereNode();
+			scene.addChild ( sphere );
+
 			const expected = {
-				id: 1,
+				id: scene.id,
 				type: "Scene.Nodes.Groups.Group",
 				state: null,
 				flags: 31,
@@ -38,7 +44,7 @@ export function test ()
 					radius: 1
 				},
 				children: [ {
-					id: 1,
+					id: sphere.id,
 					type: "Scene.Nodes.Shapes.Sphere",
 					state: null,
 					flags: 27,
@@ -55,9 +61,6 @@ export function test ()
 					numSubdivisions: 2
 				} ]
 			};
-
-			const scene = new Group();
-			scene.addChild ( new SphereNode() );
 
 			let json: ( string | object ) = JSON.stringify ( scene, null, 2 );
 			expect ( json ).to.be.a ( "string" );
