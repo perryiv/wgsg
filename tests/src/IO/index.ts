@@ -13,10 +13,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { test as testJSON } from "./JSON";
+import { test as testPLY } from "./PLY";
 import { test as testSTL } from "./STL";
 
 describe ( "IO", function ()
 {
 	testJSON();
+	testPLY();
 	testSTL();
 } );
