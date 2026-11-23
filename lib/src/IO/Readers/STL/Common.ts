@@ -21,7 +21,7 @@ import {
 	ColorAttribute as Color,
 	Geometry,
 	Group,
-	Indexed,
+	Arrays,
 	Node as SceneNode,
 	TwoSidedLight,
 } from "../../../Scene";
@@ -82,14 +82,15 @@ export abstract class Common extends BaseClass
 	}
 
 	/**
-	 * Allocate the arrays. We make new ones if they get full, and we trim
-	 * them when we are done if they are not full. The number of triangles is
+	 * Allocate the array of points. We make a new one if it gets full, and we
+	 * trim it when we are done if it is not full. The number of triangles is
 	 * capped at STL_MAX_TRIANGLES_PER_GEOMETRY. There are no normals, because
 	 * the triangles are drawn with flat shading, which does not need them.
+	 * There are no indices either, because each point is used only once.
 	 * @param {number} numTriangles The number of triangles.
-	 * @returns {{ points: Float32Array, indices: Uint32Array }} The allocated arrays.
+	 * @returns {Float32Array} The array of point coordinates.
 	 */
-	protected static allocateArrays ( numTriangles: number ) : { points: Float32Array, indices: Uint32Array }
+	protected static allocatePoints ( numTriangles: number ) : Float32Array
 	{
 		// Make sure the number makes sense.
 		if ( ( false === Number.isInteger ( numTriangles ) ) || ( numTriangles < 0 ) )
@@ -100,20 +101,17 @@ export abstract class Common extends BaseClass
 		// Do not allocate more than one geometry can hold.
 		numTriangles = Math.min ( numTriangles, STL_MAX_TRIANGLES_PER_GEOMETRY );
 
-		const indices = new Uint32Array ( numTriangles * 3 );
-		const points = new Float32Array ( indices.length * 3 );
-		return { points, indices };
+		// Three points per triangle, and three numbers per point.
+		return new Float32Array ( numTriangles * 9 );
 	}
 
 	/**
-	 * Build the scene from the arrays.
+	 * Build the scene from the array of points.
 	 * @param {Float32Array} points The array of point coordinates.
-	 * @param {Uint32Array} indices The array of indices.
-	 * @param {number} pointCount The number of points in the points array.
-	 * @param {number} indexCount The number of indices in the indices array.
+	 * @param {number} pointCount The number of point coordinates used in the array.
 	 * @returns {SceneNode} The scene node representing the STL file.
 	 */
-	protected buildScene ( points: Float32Array, indices: Uint32Array, pointCount: number, indexCount: number ) : SceneNode
+	protected buildScene ( points: Float32Array, pointCount: number ) : SceneNode
 	{
 		// Make sure we allocated enough space for the points.
 		if ( pointCount > points.length )
@@ -121,39 +119,18 @@ export abstract class Common extends BaseClass
 			throw new Error ( `Too many point coordinates, ${pointCount}, for allocated array of length ${points.length}` );
 		}
 
-		// Make sure we allocated enough space for the indices.
-		if ( indexCount > indices.length )
-		{
-			throw new Error ( `Too many indices, ${indexCount}, for allocated array of length ${indices.length}` );
-		}
-
-		// Trim the arrays to the actual number of points and indices. Full
-		// arrays are used as they are, which saves copying them.
+		// Trim the array to the actual number of point coordinates. This copies
+		// them into a smaller array, and the larger one is freed. A full array
+		// is used as it is, which saves copying it.
 		if ( pointCount < points.length )
 		{
 			points = points.slice ( 0, pointCount );
-		}
-		if ( indexCount < indices.length )
-		{
-			indices = indices.slice ( 0, indexCount );
 		}
 
 		// The number of points should be evenly divisible by 9.
 		if ( 0 !== ( points.length % 9 ) )
 		{
 			throw new Error ( `Number of point coordinates, ${points.length}, is not evenly divisible by 9` );
-		}
-
-		// The number of indices should be evenly divisible by 3.
-		if ( 0 !== ( indices.length % 3 ) )
-		{
-			throw new Error ( `Number of indices, ${indices.length}, is not evenly divisible by 3` );
-		}
-
-		// There should be 3 times as many points as indices.
-		if ( ( indices.length * 3 ) !== points.length )
-		{
-			throw new Error ( `Number of point coordinates, ${points.length}, is not three times the number of indices, ${indices.length}` );
 		}
 
 		// The group that we return.
@@ -164,9 +141,11 @@ export abstract class Common extends BaseClass
 
 		// Add the triangles.
 		{
-			// Make the primitives.
+			// Make the primitives. There are no indices, so each point is used
+			// once, in order. Every three points make a triangle.
 			const topology = "triangle-list";
-			tris.primitives = new Indexed ( { topology, indices } );
+			const count = ( points.length / 3 );
+			tris.primitives = new Arrays ( { topology, count } );
 
 			// The color of the triangles.
 			const color = this.color;

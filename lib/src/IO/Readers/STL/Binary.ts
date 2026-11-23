@@ -183,11 +183,10 @@ export class BinaryReader extends BaseClass
 
 		// Allocate the arrays for the number of triangles, up to the most that
 		// one geometry can hold. We'll make more if these fill up.
-		let { points, indices } = BaseClass.allocateArrays ( numTriangles );
+		let points = BaseClass.allocatePoints ( numTriangles );
 
 		// We have to keep count.
 		let pointCount = 0;
-		let indexCount = 0;
 
 		// Initialize for below.
 		let triangleCount = 0;
@@ -258,16 +257,11 @@ export class BinaryReader extends BaseClass
 				if ( ( pointCount + 9 ) > points.length )
 				{
 					// Build the scene with the data we have so far.
-					scene.addChild ( this.buildScene (
-						points, indices,
-						pointCount, indexCount
-					) );
+					scene.addChild ( this.buildScene ( points, pointCount ) );
 
-					// Make new arrays for the remaining triangles.
-					const newArrays = BaseClass.allocateArrays ( numTriangles - triangleCount );
-					points = newArrays.points;
-					indices = newArrays.indices;
-					pointCount = indexCount = 0;
+					// Make a new array for the remaining triangles.
+					points = BaseClass.allocatePoints ( numTriangles - triangleCount );
+					pointCount = 0;
 
 					// Set a new color if this is a developer build.
 					if ( DEVELOPER_BUILD )
@@ -288,11 +282,6 @@ export class BinaryReader extends BaseClass
 				points[pointCount++] = p3x;
 				points[pointCount++] = p3y;
 				points[pointCount++] = p3z;
-
-				// Add trivial indices.
-				indices[indexCount] = indexCount++;
-				indices[indexCount] = indexCount++;
-				indices[indexCount] = indexCount++;
 
 				// Report progress and check to see if reading was cancelled.
 				if ( false === onProgress ( triangleCount, numTriangles ) )
@@ -322,10 +311,7 @@ export class BinaryReader extends BaseClass
 		}
 
 		// Build the final scene, which may be the only one for smaller files.
-		scene.addChild ( this.buildScene (
-			points, indices,
-			pointCount, indexCount
-		) );
+		scene.addChild ( this.buildScene ( points, pointCount ) );
 
 		// Send the final progress notification.
 		if ( false === onProgress ( numTriangles, numTriangles ) )

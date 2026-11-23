@@ -67,15 +67,14 @@ export class TextReader extends BaseClass
 		// Shortcuts used below.
 		let px = 0; let py = 0; let pz = 0;
 
-		// Allocate the arrays for the most triangles the file can have, up to
-		// the most that one geometry can hold. We make new ones if they get
-		// full, and we trim them when we are done if they are not full.
-		let { points, indices } = BaseClass.allocateArrays (
+		// Allocate the array for the most triangles the file can have, up to
+		// the most that one geometry can hold. We make a new one if it gets
+		// full, and we trim it when we are done if it is not full.
+		let points = BaseClass.allocatePoints (
 			Math.ceil ( size / STL_TEXT_MIN_FACET_BYTES )
 		);
 
 		// Keep count.
-		let indexCount = 0;
 		let pointCount = 0;
 
 		// These are used below.
@@ -182,9 +181,6 @@ export class TextReader extends BaseClass
 					points[pointCount++] = py;
 					points[pointCount++] = pz;
 
-					// Add trivial indices.
-					indices[indexCount] = indexCount++;
-
 					break;
 				}
 				case "endloop":
@@ -208,23 +204,17 @@ export class TextReader extends BaseClass
 					}
 
 					// Did we overflow the array?
-					if ( indexCount > indices.length )
+					if ( pointCount > points.length )
 					{
-						throw new Error ( `Index count ${indexCount} exceeds array length ${indices.length}` );
+						throw new Error ( `Point count ${pointCount} exceeds array length ${points.length}` );
 					}
 
-					// Are the arrays full?
-					if ( indexCount === indices.length )
+					// Is the array full?
+					if ( pointCount === points.length )
 					{
-						scene.addChild ( this.buildScene (
-							points, indices,
-							pointCount, indexCount
-						) );
-
-						const newArrays = BaseClass.allocateArrays ( STL_MAX_TRIANGLES_PER_GEOMETRY );
-						points = newArrays.points;
-						indices = newArrays.indices;
-						pointCount = indexCount = 0;
+						scene.addChild ( this.buildScene ( points, pointCount ) );
+						points = BaseClass.allocatePoints ( STL_MAX_TRIANGLES_PER_GEOMETRY );
+						pointCount = 0;
 					}
 
 					break;
@@ -254,10 +244,7 @@ export class TextReader extends BaseClass
 		}
 
 		// Build the final scene, which may be the only one for smaller files.
-		scene.addChild ( this.buildScene (
-			points, indices,
-			pointCount, indexCount
-		) );
+		scene.addChild ( this.buildScene ( points, pointCount ) );
 
 		// Send the final progress notification.
 		if ( false === onProgress ( size, size ) )
