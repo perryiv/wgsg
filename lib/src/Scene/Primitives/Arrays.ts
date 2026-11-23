@@ -30,7 +30,7 @@ import {
 
 export interface IArrayPrimitivesInput extends IPrimitivesInput
 {
-	first: number;
+	first?: number;
 	count: number;
 }
 
@@ -50,19 +50,19 @@ export class Arrays extends BaseClass
 	/**
 	 * Construct the class.
 	 * @class
-	 * @param {IPrimitivesInput} [input] - Input for the primitives.
-	 * @param {GPUPrimitiveTopology} [input.mode] - The primitive topology mode.
-	 * @param {number} [input.first] - The first index to draw.
+	 * @param {IArrayPrimitivesInput} [input] - Input for the primitives.
+	 * @param {GPUPrimitiveTopology} [input.topology] - The primitive topology.
+	 * @param {number} [input.first] - The first vertex to draw.
 	 * @param {number} [input.count] - The number of vertices to draw.
 	 */
 	constructor ( input?: IArrayPrimitivesInput )
 	{
 		super ( input );
 
+		// Use the setters so that the values are checked.
 		const { first = 0, count = 0 } = ( input ?? {} );
-
-		this.#first = first;
-		this.#count = count;
+		this.first = first;
+		this.count = count;
 	}
 
 	/**
@@ -92,8 +92,8 @@ export class Arrays extends BaseClass
 	}
 
 	/**
-	 * Get the first index to draw.
-	 * @returns {number} The first index.
+	 * Get the first vertex to draw.
+	 * @returns {number} The first vertex.
 	 */
 	get first (): number
 	{
@@ -101,14 +101,14 @@ export class Arrays extends BaseClass
 	}
 
 	/**
-	 * Set the first index to draw.
-	 * @param {number} first The first index.
+	 * Set the first vertex to draw.
+	 * @param {number} first The first vertex.
 	 */
 	set first ( first: number )
 	{
-		if ( first < 0 )
+		if ( ( false === Number.isInteger ( first ) ) || ( first < 0 ) )
 		{
-			throw new RangeError ( "The first index must be >= 0" );
+			throw new RangeError ( `The first vertex must be an integer >= 0, not ${first}` );
 		}
 		this.#first = first;
 	}
@@ -128,9 +128,9 @@ export class Arrays extends BaseClass
 	 */
 	set count ( count: number )
 	{
-		if ( count < 0 )
+		if ( ( false === Number.isInteger ( count ) ) || ( count < 0 ) )
 		{
-			throw new RangeError ( "The count must be >= 0" );
+			throw new RangeError ( `The count must be an integer >= 0, not ${count}` );
 		}
 		this.#count = count;
 	}
@@ -159,7 +159,7 @@ export class Arrays extends BaseClass
 		// Get the base class's JSON.
 		const base = super.toJSON();
 
-			// Return the object that represents this class.
+		// Return the object that represents this class.
 		return {
 			...base,
 			first: this.#first,

@@ -85,8 +85,8 @@ export const buildLine = ( { line, color }: { line: Readonly<Line>, color?: IVec
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Given a geometry with one indexed triangle-list, return a geometry with
- * an indexed line-list for the triangle edges.
+ * Given a geometry with one triangle-list, with or without indices, return
+ * a geometry with an indexed line-list for the triangle edges.
  * @param {Geometry} geom The input geometry.
  * @returns {(Geometry | null)} The new geometry or null on failure.
  */
@@ -143,14 +143,19 @@ export const buildTriangleEdges = ( geom: Geometry ) : ( Geometry | null ) =>
 		return null;
 	}
 
-	// TODO: For now we only handle indexed triangles.
-	if ( false === ( prim instanceof Indexed ) )
+	// The indices that select the points that make the triangles. Triangles
+	// without indices use each point once, in order, so make those indices.
+	let triIndices: ( Uint32Array | Uint16Array | null | undefined ) = null;
+	if ( prim instanceof Indexed )
 	{
-		return null;
+		triIndices = prim.indices?.values;
 	}
-
-	// The indices that select the points that make the triangles.
-	const triIndices = prim.indices?.values;
+	else
+	{
+		const made = new Uint32Array ( prim.count );
+		prim.forEachIndex ( ( index: number, i: number ) => { made[i] = index; } );
+		triIndices = made;
+	}
 
 	// Make sure.
 	if ( !triIndices )

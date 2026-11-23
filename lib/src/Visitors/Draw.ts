@@ -566,33 +566,91 @@ export class Draw extends BaseClass
 			return; // This is not an error.
 		}
 
-		// Handle no geometry.
-		const geom = this.#geometry;
-		if ( !geom )
-		{
-			return; // This is not an error.
-		}
-
-		// We need points to continue.
-		const points = geom.points?.buffer;
-		if ( !points )
-		{
-			return; // This is not an error.
-		}
-
-		// We also need indices to continue.
+		// We need indices to continue.
 		const indices = prims.indices?.buffer;
 		if ( !indices )
 		{
 			return; // This is not an error.
 		}
 
+		// Set the geometry's vertex buffers, which needs points.
+		if ( false === this.setVertexBuffers() )
+		{
+			return; // This is not an error.
+		}
+
+		// Set the index buffer and draw.
+		const pass = this.renderPassEncoder;
+		pass.setIndexBuffer ( indices, prims.indexType );
+		pass.drawIndexed (
+			numIndices, // The number of indices to draw.
+			1, // Number of instances to draw.
+			0, // Offset into the index buffer, in indices, to begin drawing from.
+			0, // Added to each index value before indexing into the vertex buffers.
+			0  // First instance to draw.
+		);
+
+		// Performance info.
+		this.addPerformanceInfo ( prims.topology, numIndices );
+	}
+
+	/**
+	 * Draw the arrays of primitives. These have no indices. Each vertex is
+	 * used once, in the order they are in the arrays.
+	 * @param {Arrays} prims - The arrays of primitives to draw.
+	 */
+	public visitArrays ( prims: Arrays ): void
+	{
+		// Handle no primitives.
+		const count = prims.count;
+		if ( count <= 0 )
+		{
+			return; // This is not an error.
+		}
+
+		// Set the geometry's vertex buffers, which needs points.
+		if ( false === this.setVertexBuffers() )
+		{
+			return; // This is not an error.
+		}
+
+		// Draw the vertices.
+		this.renderPassEncoder.draw (
+			count, // The number of vertices to draw.
+			1, // Number of instances to draw.
+			prims.first, // The first vertex to draw.
+			0  // First instance to draw.
+		);
+
+		// Performance info.
+		this.addPerformanceInfo ( prims.topology, count );
+	}
+
+	/**
+	 * Set the vertex buffers of the geometry being drawn.
+	 * @returns {boolean} False if there is no geometry or it has no points.
+	 */
+	protected setVertexBuffers() : boolean
+	{
+		// Handle no geometry.
+		const geom = this.#geometry;
+		if ( !geom )
+		{
+			return false;
+		}
+
+		// We need points to continue.
+		const points = geom.points?.buffer;
+		if ( !points )
+		{
+			return false;
+		}
+
 		// Get the render pass encoder.
 		const pass = this.renderPassEncoder;
 
-		// Set the points and index buffer.
+		// Set the points.
 		pass.setVertexBuffer ( 0, points );
-		pass.setIndexBuffer ( indices, prims.indexType );
 
 		// Set the buffer of normals if we can.
 		const normals = geom.normals?.buffer;
@@ -615,55 +673,41 @@ export class Draw extends BaseClass
 			pass.setVertexBuffer ( 3, texCoords );
 		}
 
-		// Draw the indexed primitives.
-		pass.drawIndexed (
-			numIndices, // The number of indices to draw.
-			1, // Number of instances to draw.
-			0, // Offset into the index buffer, in indices, to begin drawing from.
-			0, // Added to each index value before indexing into the vertex buffers.
-			0  // First instance to draw.
-		);
-
-		// Performance info.
-		if ( KEEP_PERFORMANCE_INFO )
-		{
-			const info = this.renderGraphInfo;
-			switch ( prims.topology )
-			{
-				case "triangle-list":
-				{
-					if ( 0 === ( numIndices % 3 ) )
-					{
-						info.numTriangles += ( numIndices / 3 );
-					}
-					break;
-				}
-				case "line-list":
-				{
-					if ( 0 === ( numIndices % 2 ) )
-					{
-						info.numLines += ( numIndices / 2 );
-					}
-					break;
-				}
-			}
-		}
+		// It worked.
+		return true;
 	}
 
 	/**
-	 * Draw the arrays of primitives.
-	 * @param {Arrays} arrays - The arrays of primitives to draw.
+	 * Count the triangles or lines that were drawn, if we keep that info.
+	 * @param {GPUPrimitiveTopology} topology - The primitive topology.
+	 * @param {number} numVertices - The number of vertices or indices drawn.
 	 */
-	public visitArrays ( arrays: Arrays ): void
+	protected addPerformanceInfo ( topology: GPUPrimitiveTopology, numVertices: number ) : void
 	{
-		console.warn ( `Skipped drawing ${arrays.type} ${arrays.id}, not implemented yet` );
-
-		// Shortcuts.
-		// const pass = this.pass;
-
-		// Draw the arrays of primitives.
-		// pass.setVertexBuffer ( 0, arrays.vertexBuffer );
-		// pass.drawArrays ( arrays.vertexCount, 1, 0, 0 );
+		if ( !KEEP_PERFORMANCE_INFO )
+		{
+			return;
+		}
+		const info = this.renderGraphInfo;
+		switch ( topology )
+		{
+			case "triangle-list":
+			{
+				if ( 0 === ( numVertices % 3 ) )
+				{
+					info.numTriangles += ( numVertices / 3 );
+				}
+				break;
+			}
+			case "line-list":
+			{
+				if ( 0 === ( numVertices % 2 ) )
+				{
+					info.numLines += ( numVertices / 2 );
+				}
+				break;
+			}
+		}
 	}
 
 	/**

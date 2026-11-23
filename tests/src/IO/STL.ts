@@ -17,7 +17,7 @@ import { FlatShading } from "../../../lib/src/Shaders/FlatShading";
 import { ColorAttribute } from "../../../lib/src/Scene";
 import { expect } from "chai";
 import { Geometry, Group, Node as SceneNode } from "../../../lib/src/Scene/Nodes";
-import { Indexed } from "../../../lib/src/Scene/Primitives/Indexed";
+import { Arrays } from "../../../lib/src/Scene/Primitives/Arrays";
 import { STL_MAX_TRIANGLES_PER_GEOMETRY } from "../../../lib/src/IO/Readers/STL/Common";
 import type { IProgressCallback } from "../../../lib/src/Types";
 
@@ -147,20 +147,22 @@ const getOnlyGeometry = ( scene: SceneNode ) : Geometry =>
 };
 
 /**
- * Get the points, normals, and indices of the geometry as plain arrays.
+ * Get the points of the geometry as a plain array, and its only primitives,
+ * which have no indices.
  * @param {Geometry} geom The geometry.
- * @returns {{ points: number[], normals: number[], indices: number[] }} The arrays.
+ * @returns {{ points: number[], prims: Arrays }} The points and primitives.
  */
-const getArrays = ( geom: Geometry ) : { points: number[], normals: number[], indices: number[] } =>
+const getArrays = ( geom: Geometry ) : { points: number[], prims: Arrays } =>
 {
 	const primitives = geom.primitives;
 	expect ( primitives ).to.not.be.null;
-	const indexed = primitives![0];
-	expect ( indexed ).to.be.instanceOf ( Indexed );
+	expect ( primitives!.length ).to.equal ( 1 );
+	const prims = primitives![0];
+	expect ( prims ).to.be.instanceOf ( Arrays );
+	expect ( prims.topology ).to.equal ( "triangle-list" );
 	return {
 		points: Array.from ( geom.points?.values ?? [] ),
-		normals: Array.from ( geom.normals?.values ?? [] ),
-		indices: Array.from ( ( indexed as Indexed ).indices?.values ?? [] ),
+		prims: ( prims as Arrays ),
 	};
 };
 
@@ -220,14 +222,15 @@ export function test ()
 	{
 		describe ( "Binary", function ()
 		{
-			it ( "Should read the points and indices, and have no normals", async function ()
+			it ( "Should read the points, and have no normals or indices", async function ()
 			{
 				const scene = await read ( makeBinaryFile ( [ TRIANGLE_1, TRIANGLE_2 ] ) );
 				const geom = getOnlyGeometry ( scene );
-				const { points, indices } = getArrays ( geom );
+				const { points, prims } = getArrays ( geom );
 
 				expect ( points ).to.deep.equal ( [ ...TRIANGLE_1.points, ...TRIANGLE_2.points ] );
-				expect ( indices ).to.deep.equal ( [ 0, 1, 2, 3, 4, 5 ] );
+				expect ( prims.first ).to.equal ( 0 );
+				expect ( prims.count ).to.equal ( 6 );
 				expect ( geom.normals ).to.be.null;
 			} );
 
@@ -266,8 +269,9 @@ export function test ()
 			it ( "Should read a file with no triangles", async function ()
 			{
 				const scene = await read ( makeBinaryFile ( [] ) );
-				const { points } = getArrays ( getOnlyGeometry ( scene ) );
+				const { points, prims } = getArrays ( getOnlyGeometry ( scene ) );
 				expect ( points.length ).to.equal ( 0 );
+				expect ( prims.count ).to.equal ( 0 );
 			} );
 
 			it ( "Should reject a triangle with a non-finite value", async function ()
@@ -327,22 +331,25 @@ export function test ()
 				expect ( geometries[1].points?.length ).to.equal ( 9 );
 
 				// The last triangle should be the only one in the second geometry.
-				const { points, indices } = getArrays ( geometries[1] );
+				expect ( getArrays ( geometries[0] ).prims.count ).to.equal ( STL_MAX_TRIANGLES_PER_GEOMETRY * 3 );
+				const { points, prims } = getArrays ( geometries[1] );
 				expect ( points[8] ).to.equal ( STL_MAX_TRIANGLES_PER_GEOMETRY );
-				expect ( indices ).to.deep.equal ( [ 0, 1, 2 ] );
+				expect ( prims.first ).to.equal ( 0 );
+				expect ( prims.count ).to.equal ( 3 );
 			} );
 		} );
 
 		describe ( "Text", function ()
 		{
-			it ( "Should read the points and indices, and have no normals", async function ()
+			it ( "Should read the points, and have no normals or indices", async function ()
 			{
 				const scene = await read ( makeTextFile ( TEXT_TWO_TRIANGLES ) );
 				const geom = getOnlyGeometry ( scene );
-				const { points, indices } = getArrays ( geom );
+				const { points, prims } = getArrays ( geom );
 
 				expect ( points ).to.deep.equal ( [ ...TRIANGLE_1.points, ...TRIANGLE_2.points ] );
-				expect ( indices ).to.deep.equal ( [ 0, 1, 2, 3, 4, 5 ] );
+				expect ( prims.first ).to.equal ( 0 );
+				expect ( prims.count ).to.equal ( 6 );
 				expect ( geom.normals ).to.be.null;
 			} );
 
@@ -375,8 +382,9 @@ export function test ()
 			{
 				// Smaller than a binary header, so this also tests the detection.
 				const scene = await read ( makeTextFile ( "solid empty\nendsolid empty\n" ) );
-				const { points } = getArrays ( getOnlyGeometry ( scene ) );
+				const { points, prims } = getArrays ( getOnlyGeometry ( scene ) );
 				expect ( points.length ).to.equal ( 0 );
+				expect ( prims.count ).to.equal ( 0 );
 			} );
 
 			it ( "Should reject a small file that is not STL", async function ()
