@@ -15,8 +15,9 @@
 //	pass each face to the builder below. The builder splits the faces into
 //	geometries of at most MeshBuilder.maxVerticesPerGeometry vertices, each
 //	with its own copy of the vertices it uses. That keeps each GPU buffer
-//	small, and with up to 65536 vertices the indices can be 16 bits, which
-//	halves their memory. More vertices per geometry means fewer draw calls.
+//	small. With up to PLY_MAX_VERTICES_FOR_16_BIT_INDICES vertices the indices
+//	can be 16 bits, which halves their memory. More vertices per geometry
+//	means fewer geometries to draw.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -40,9 +41,12 @@ import {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-// The default for the most vertices in one geometry. This many can use 16-bit
-// indices, which is the most that can.
-export const PLY_DEFAULT_MAX_VERTICES_PER_GEOMETRY = 65536;
+// The most vertices in one geometry that can use 16-bit indices.
+export const PLY_MAX_VERTICES_FOR_16_BIT_INDICES = 65536;
+
+// The default for the most vertices in one geometry. This many uses 32-bit
+// indices, and makes few geometries.
+export const PLY_DEFAULT_MAX_VERTICES_PER_GEOMETRY = ( 1024 * 1024 );
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -225,7 +229,7 @@ export class MeshBuilder
 		this.#maxTriangles = ( this.#maxVertices * 4 );
 		this.#localPoints = new Float32Array ( this.#maxVertices * 3 );
 		this.#localNormals = ( hasNormals ? new Float32Array ( this.#maxVertices * 3 ) : null );
-		this.#localIndices = ( ( this.#maxVertices <= 65536 ) ?
+		this.#localIndices = ( ( this.#maxVertices <= PLY_MAX_VERTICES_FOR_16_BIT_INDICES ) ?
 			new Uint16Array ( this.#maxTriangles * 3 ) :
 			new Uint32Array ( this.#maxTriangles * 3 ) );
 		this.#localToGlobal = new Uint32Array ( this.#maxVertices );
@@ -266,7 +270,7 @@ export class MeshBuilder
 
 	/**
 	 * Set the most vertices in one geometry, for the builders made after
-	 * this. Up to 65536 uses 16-bit indices, which take half the memory.
+	 * this. Up to PLY_MAX_VERTICES_FOR_16_BIT_INDICES uses 16-bit indices, which take half the memory.
 	 * More than that uses 32-bit indices, but makes fewer geometries, which
 	 * means fewer draw calls.
 	 * @param {number} maxVertices The most vertices, an integer of at least 3.

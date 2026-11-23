@@ -18,7 +18,12 @@ import { DEVELOPER_BUILD } from "../../../../lib/src/Tools/Environment";
 import { FlatShading } from "../../../../lib/src/Shaders/FlatShading";
 import { PhongShading } from "../../../../lib/src/Shaders/PhongShading";
 import { ColorAttribute, Geometry, Group, Indexed } from "../../../../lib/src/Scene";
-import { getLayout, MeshBuilder, PLY_DEFAULT_MAX_VERTICES_PER_GEOMETRY } from "../../../../lib/src/IO/Readers/PLY/Common";
+import {
+	getLayout,
+	MeshBuilder,
+	PLY_DEFAULT_MAX_VERTICES_PER_GEOMETRY,
+	PLY_MAX_VERTICES_FOR_16_BIT_INDICES,
+} from "../../../../lib/src/IO/Readers/PLY/Common";
 import { parseHeader, type IPlyHeader } from "../../../../lib/src/IO/Readers/PLY/Header";
 
 
@@ -244,7 +249,7 @@ export function test ()
 				expect ( normals ).to.be.null;
 			} );
 
-			it ( "Should use 16-bit indices, and the size that is used", function ()
+			it ( "Should use 16-bit indices when the file has few vertices, and the size that is used", function ()
 			{
 				const builder = makeBuilder ( STRIP );
 				builder.addFace ( [ 0, 1, 3 ] );
@@ -257,7 +262,7 @@ export function test ()
 
 			it ( "Should use 32-bit indices when a geometry can have more vertices", function ()
 			{
-				const numVertices = PLY_DEFAULT_MAX_VERTICES_PER_GEOMETRY + 10;
+				const numVertices = PLY_MAX_VERTICES_FOR_16_BIT_INDICES + 10;
 				const builder = new MeshBuilder ( { numVertices, hasNormals: false, maxVertices: numVertices } );
 				builder.addTriangle ( 0, 1, numVertices - 1 );
 				const geom = getGeometries ( builder.finish() )[0];
@@ -509,9 +514,10 @@ export function test ()
 				MeshBuilder.maxVerticesPerGeometry = saved;
 			} );
 
-			it ( "Should default to the most that can use 16-bit indices", function ()
+			it ( "Should default to 32-bit indices, with room for many vertices", function ()
 			{
-				expect ( PLY_DEFAULT_MAX_VERTICES_PER_GEOMETRY ).to.equal ( 65536 );
+				expect ( PLY_MAX_VERTICES_FOR_16_BIT_INDICES ).to.equal ( 65536 );
+				expect ( PLY_DEFAULT_MAX_VERTICES_PER_GEOMETRY ).to.equal ( 1048576 );
 				expect ( MeshBuilder.maxVerticesPerGeometry ).to.equal ( PLY_DEFAULT_MAX_VERTICES_PER_GEOMETRY );
 			} );
 
@@ -540,12 +546,12 @@ export function test ()
 			it ( "Should use 32-bit indices when it is more than 65536", function ()
 			{
 				const numVertices = 70000;
-				MeshBuilder.maxVerticesPerGeometry = 65537;
+				MeshBuilder.maxVerticesPerGeometry = PLY_MAX_VERTICES_FOR_16_BIT_INDICES + 1;
 				const big = new MeshBuilder ( { numVertices, hasNormals: false } );
 				big.addTriangle ( 0, 1, 2 );
 				expect ( ( getGeometries ( big.finish() )[0].primitives![0] as Indexed ).indices!.values ).to.be.instanceOf ( Uint32Array );
 
-				MeshBuilder.maxVerticesPerGeometry = 65536;
+				MeshBuilder.maxVerticesPerGeometry = PLY_MAX_VERTICES_FOR_16_BIT_INDICES;
 				const small = new MeshBuilder ( { numVertices, hasNormals: false } );
 				small.addTriangle ( 0, 1, 2 );
 				expect ( ( getGeometries ( small.finish() )[0].primitives![0] as Indexed ).indices!.values ).to.be.instanceOf ( Uint16Array );

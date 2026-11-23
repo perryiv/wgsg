@@ -18,31 +18,6 @@ import { CssBaseline } from "@mui/material";
 import { StrictMode } from "react"
 import { theme } from "./UI/Theme";
 import { ThemeProvider } from "@mui/material/styles";
-import { PLY } from "./wgsg";
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
-//	Settings from the URL. For example, "?plyMaxVertices=262144" sets the most
-//	vertices in one geometry when reading PLY files.
-//
-///////////////////////////////////////////////////////////////////////////////
-
-{
-	const plyMaxVertices = new URLSearchParams ( globalThis.location.search ).get ( "plyMaxVertices" );
-	if ( null !== plyMaxVertices )
-	{
-		try
-		{
-			PLY.maxVerticesPerGeometry = Number ( plyMaxVertices );
-			console.log ( `Most vertices in one PLY geometry: ${PLY.maxVerticesPerGeometry}` );
-		}
-		catch ( error )
-		{
-			console.error ( "Ignoring the 'plyMaxVertices' URL parameter:", ( error as Error ).message );
-		}
-	}
-}
 
 
 ///////////////////////////////////////////////////////////////////////////////

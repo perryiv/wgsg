@@ -63,7 +63,7 @@ export class PLY extends BaseClass
 
 	/**
 	 * Set the most vertices in one geometry, for the files read after this.
-	 * Up to 65536 uses 16-bit indices, which take half the memory. More than
+	 * Up to PLY_MAX_VERTICES_FOR_16_BIT_INDICES (65536) uses 16-bit indices, which take half the memory. More than
 	 * that uses 32-bit indices, but makes fewer geometries to draw.
 	 * @param {number} maxVertices The most vertices, an integer of at least 3.
 	 */
