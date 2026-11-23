@@ -1,0 +1,110 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Copyright (c) 2026, Perry L Miller IV
+//	All rights reserved.
+//	MIT License: https://opensource.org/licenses/mit-license.html
+//
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Shader class that renders with Phong shading and draws the triangle edges.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+import { WithEdges as BaseClass } from "./WithEdges";
+import { State } from "../Scene";
+import common from "./Edges.wgsl?raw";
+import code from "./PhongEdges.wgsl?raw";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Types used below.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+interface IPhongEdgesShaderInput
+{
+	topology?: GPUPrimitiveTopology;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Class that contains the shader code.
+ * @class
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export class PhongEdges extends BaseClass
+{
+	static #instance: ( PhongEdges | null ) = null;
+
+	/**
+	 * Construct the class.
+	 * @class
+	 * @param {IPhongEdgesShaderInput} [input] - The input.
+	 */
+	protected constructor ( input?: Readonly<IPhongEdgesShaderInput> )
+	{
+		const topology = input?.topology;
+
+		super ( {
+			code: ( common + code ),
+			topology: ( topology ?? "triangle-list" )
+		} );
+	}
+
+	/**
+	 * Get the singleton instance.
+	 * @returns {PhongEdges} The singleton instance.
+	 */
+	public static get instance () : PhongEdges
+	{
+		if ( !PhongEdges.#instance )
+		{
+			PhongEdges.#instance = new PhongEdges();
+		}
+		return PhongEdges.#instance;
+	}
+
+	/**
+	 * Destroy the singleton instance.
+	 */
+	public static destroy() : void
+	{
+		if ( PhongEdges.#instance )
+		{
+			PhongEdges.#instance.destroy();
+			PhongEdges.#instance = null;
+		}
+	}
+
+	/**
+	 * Return the class name.
+	 * @returns {string} The class name.
+	 */
+	public override getClassName() : string
+	{
+		return "Shaders.PhongEdges";
+	}
+
+	// Does the shader read the normal vectors? Phong shading reads the normal vectors.
+	protected readonly usesNormals = true;
+
+	/**
+	 * Make and return a state object that uses this shader.
+	 * @param {object} input - The input object.
+	 * @param {GPUPrimitiveTopology} input.topology - The primitive topology.
+	 * @returns {State} The state object.
+	 */
+	public static makeState = ( { topology } : { topology: GPUPrimitiveTopology } ) : State =>
+	{
+		// Shortcut.
+		const shader = PhongEdges.instance;
+
+		// Return the new state.
+		return new State ( { shader, topology } );
+	}
+}

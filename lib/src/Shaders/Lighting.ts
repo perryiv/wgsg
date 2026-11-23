@@ -42,9 +42,7 @@ export abstract class Lighting extends BaseClass
 	#twoSidedLight = false;
 	#lightDir: IVector4 = [ 0.0, 0.0, -1.0, 0.0 ];
 
-	// The uniform values. Two 4x4 matrices, the color, the light direction,
-	// and the two-sided flag, which is the same size as one float.
-	#uniforms = new ArrayBuffer ( ( 16 + 16 + 4 + 3 + 1 ) * 4 );
+	#uniforms: ( ArrayBuffer | null ) = null;
 
 	/**
 	 * Construct the class.
@@ -134,13 +132,29 @@ export abstract class Lighting extends BaseClass
 	}
 
 	/**
+	 * Get the number of 4-byte values in the uniforms. Two 4x4 matrices, the
+	 * color, the light direction, and the two-sided flag. Derived classes that
+	 * add uniforms after these override this.
+	 * @returns {number} The number of 4-byte values.
+	 */
+	protected get numUniformValues () : number
+	{
+		return ( 16 + 16 + 4 + 3 + 1 );
+	}
+
+	/**
 	 * Return the uniform values, in the same order as the "Uniforms" struct
 	 * in the shader code.
 	 * @returns {ArrayBuffer} The uniform values.
 	 */
 	protected makeUniforms () : ArrayBuffer
 	{
-		const uniforms = this.#uniforms;
+		let uniforms = this.#uniforms;
+		if ( !uniforms )
+		{
+			uniforms = new ArrayBuffer ( this.numUniformValues * 4 );
+			this.#uniforms = uniforms;
+		}
 		const floats = new Float32Array ( uniforms );
 		floats.set ( this.projMatrix, 0 );
 		floats.set ( this.viewMatrix, 16 );
