@@ -16,6 +16,8 @@ import { expect } from "chai";
 import { Cancelled, getReader } from "../../../../lib/src/IO";
 import { PLY } from "../../../../lib/src/IO/Readers/PLY";
 import { MeshBuilder } from "../../../../lib/src/IO/Readers/PLY/Common";
+import { readHeader } from "../../../../lib/src/IO/Readers/PLY/Header";
+import { readText } from "../../../../lib/src/IO/Readers/PLY/Text";
 import { FlatShading } from "../../../../lib/src/Shaders/FlatShading";
 import { PhongShading } from "../../../../lib/src/Shaders/PhongShading";
 import { Geometry, Group, Indexed, Node as SceneNode } from "../../../../lib/src/Scene";
@@ -374,11 +376,22 @@ export function test ()
 					"Error reading PLY file: Not a PLY file, the first line is not 'ply'" );
 			} );
 
-			it ( "Should reject binary files for now", async function ()
+			it ( "Should not read a binary file as text", async function ()
 			{
 				const lines = makeLines ( [], [] );
 				lines[1] = "format binary_little_endian 1.0";
-				expect ( await getMessage ( lines ) ).to.equal ( "Error reading PLY file: Binary PLY files are not supported yet" );
+				const file = makeFile ( lines );
+				const header = await readHeader ( file );
+				let message = "";
+				try
+				{
+					await readText ( file, header, () => true );
+				}
+				catch ( error )
+				{
+					message = ( error as Error ).message;
+				}
+				expect ( message ).to.equal ( "Reading a 'binary_little_endian' PLY file as text" );
 			} );
 
 			it ( "Should reject a header without what is needed", async function ()

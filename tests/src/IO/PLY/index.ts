@@ -12,6 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { test as testBinary } from "./Binary";
 import { test as testCommon } from "./Common";
 import { test as testHeader } from "./Header";
 import { test as testText } from "./Text";
@@ -23,5 +24,6 @@ export function test ()
 		testHeader();
 		testCommon();
 		testText();
+		testBinary();
 	} );
 };

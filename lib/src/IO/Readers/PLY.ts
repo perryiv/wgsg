@@ -16,6 +16,7 @@
 import { addReader, ReaderFactory as Factory } from "../Reader";
 import { Cancelled } from "../Cancelled";
 import { getErrorMessage } from "../Functions";
+import { readBinary } from "./PLY/Binary";
 import { MeshBuilder } from "./PLY/Common";
 import { Node as SceneNode } from "../../Scene/Nodes";
 import { Reader as BaseClass } from "../Reader";
@@ -89,7 +90,7 @@ export class PLY extends BaseClass
 				}
 				default:
 				{
-					throw new Error ( "Binary PLY files are not supported yet" );
+					return await readBinary ( file, header, this.getProgressCallback() );
 				}
 			}
 		}
