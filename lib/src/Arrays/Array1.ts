@@ -43,6 +43,9 @@ export type PossibleArrayType = (
 
 export class Array1 < InternalArrayType extends PossibleArrayType > extends BaseClass
 {
+	// The total size of all the GPU buffers that exist, in bytes.
+	static #totalBufferBytes = 0;
+
 	#values: ( InternalArrayType | null ) = null;
 	#buffer: ( GPUBuffer | null ) = null;
 
@@ -116,8 +119,22 @@ export class Array1 < InternalArrayType extends PossibleArrayType > extends Base
 	 */
 	public reset() : void
 	{
-		this.#buffer?.destroy();
-		this.#buffer = null;
+		const buffer = this.#buffer;
+		if ( buffer )
+		{
+			Array1.#totalBufferBytes -= buffer.size;
+			buffer.destroy();
+			this.#buffer = null;
+		}
+	}
+
+	/**
+	 * Get the total size of all the GPU buffers that exist.
+	 * @returns {number} The size in bytes.
+	 */
+	public static get totalBufferBytes() : number
+	{
+		return Array1.#totalBufferBytes;
 	}
 
 	/**
@@ -161,13 +178,27 @@ export class Array1 < InternalArrayType extends PossibleArrayType > extends Base
 				throw new Error ( "No device when making buffer" );
 			}
 
-			// Make the new buffer and fill it with the values.
+			// Make the new buffer and fill it with the values. Catch running out
+			// of GPU memory, and say how much we had when it happened.
+			const size = Array1.getBufferSize ( values );
+			device.pushErrorScope ( "out-of-memory" );
 			const buffer = device.createBuffer ( {
 				label: "Array1 buffer",
-				size: Array1.getBufferSize ( values ),
+				size,
 				usage: Array1.getBufferUsage ( values ),
 			} );
 			Array1.writeValues ( buffer, values );
+			Array1.#totalBufferBytes += size;
+			const total = Array1.#totalBufferBytes;
+			void device.popErrorScope().then ( ( error ) =>
+			{
+				if ( error )
+				{
+					const mb = ( bytes: number ) => ( bytes / ( 1024 * 1024 ) ).toFixed ( 1 );
+					console.error ( `Out of GPU memory making a ${mb ( size )} MB buffer, ` +
+						`with ${mb ( total - size )} MB in other buffers: ${error.message}` );
+				}
+			} );
 
 			// Set our member.
 			this.#buffer = buffer;
