@@ -12,6 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { test as testCommon } from "./Common";
 import { test as testHeader } from "./Header";
 
 export function test ()
@@ -19,5 +20,6 @@ export function test ()
 	describe ( "PLY", function ()
 	{
 		testHeader();
+		testCommon();
 	} );
 };
