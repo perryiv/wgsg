@@ -17,8 +17,7 @@ import { ColorTool as Color, DEVELOPER_BUILD } from "../../../Tools";
 import { Common as BaseClass } from "./Common";
 import { findBytes, readBytes, yieldToEventLoop } from "../../Functions";
 import { Group, Node as SceneNode } from "../../../Scene/Nodes";
-import { vec3 } from "gl-matrix";
-import type { IVector3, IVector4 } from "../../../Types";
+import type { IVector4 } from "../../../Types";
 
 const STL_HEADER_LENGTH = 80;
 const STL_TRIANGLE_COUNT_LENGTH = 4;
@@ -184,11 +183,10 @@ export class BinaryReader extends BaseClass
 
 		// Allocate the arrays for the number of triangles, up to the most that
 		// one geometry can hold. We'll make more if these fill up.
-		let { points, normals, indices } = BaseClass.allocateArrays ( numTriangles );
+		let { points, indices } = BaseClass.allocateArrays ( numTriangles );
 
 		// We have to keep count.
 		let pointCount = 0;
-		let normalCount = 0;
 		let indexCount = 0;
 
 		// Initialize for below.
@@ -197,7 +195,6 @@ export class BinaryReader extends BaseClass
 		let p1x = 0; let p1y = 0; let p1z = 0;
 		let p2x = 0; let p2y = 0; let p2z = 0;
 		let p3x = 0; let p3y = 0; let p3z = 0;
-		const normal: IVector3 = [ 0, 0, 0 ];
 
 		// The group node we return.
 		const scene = new Group();
@@ -217,19 +214,8 @@ export class BinaryReader extends BaseClass
 			// While there is more data to process ...
 			while ( ( byteOffset + recordSize ) <= view.byteLength )
 			{
-				// Get the normal vector.
-				normal[0] = view.getFloat32 ( byteOffset, true ); byteOffset += 4;
-				normal[1] = view.getFloat32 ( byteOffset, true ); byteOffset += 4;
-				normal[2] = view.getFloat32 ( byteOffset, true ); byteOffset += 4;
-
-				// Make sure all the values are finite.
-				if ( !isFinite ( normal[0] ) || !isFinite ( normal[1] ) || !isFinite ( normal[2] ) )
-				{
-					throw new Error ( `Normal vector for triangle ${triangleCount} has non-finite values` );
-				}
-
-				// Make sure it is a unit vector.
-				vec3.normalize ( normal, normal );
+				// Skip the normal vector. Flat shading calculates it in the shader.
+				byteOffset += 12;
 
 				// Get the first point.
 				p1x = view.getFloat32 ( byteOffset, true ); byteOffset += 4;
@@ -273,16 +259,15 @@ export class BinaryReader extends BaseClass
 				{
 					// Build the scene with the data we have so far.
 					scene.addChild ( this.buildScene (
-						points, normals, indices,
-						pointCount, normalCount, indexCount
+						points, indices,
+						pointCount, indexCount
 					) );
 
 					// Make new arrays for the remaining triangles.
 					const newArrays = BaseClass.allocateArrays ( numTriangles - triangleCount );
 					points = newArrays.points;
-					normals = newArrays.normals;
 					indices = newArrays.indices;
-					pointCount = normalCount = indexCount = 0;
+					pointCount = indexCount = 0;
 
 					// Set a new color if this is a developer build.
 					if ( DEVELOPER_BUILD )
@@ -303,25 +288,6 @@ export class BinaryReader extends BaseClass
 				points[pointCount++] = p3x;
 				points[pointCount++] = p3y;
 				points[pointCount++] = p3z;
-
-				// Is the normal vector zero length?
-				if ( ( 0 === normal[0] ) && ( 0 === normal[1] ) && ( 0 === normal[2] ) )
-				{
-					this.setNormalFromCrossProduct ( normal, points, pointCount );
-				}
-
-				// We need a normal for each point.
-				normals[normalCount++] = normal[0];
-				normals[normalCount++] = normal[1];
-				normals[normalCount++] = normal[2];
-
-				normals[normalCount++] = normal[0];
-				normals[normalCount++] = normal[1];
-				normals[normalCount++] = normal[2];
-
-				normals[normalCount++] = normal[0];
-				normals[normalCount++] = normal[1];
-				normals[normalCount++] = normal[2];
 
 				// Add trivial indices.
 				indices[indexCount] = indexCount++;
@@ -357,8 +323,8 @@ export class BinaryReader extends BaseClass
 
 		// Build the final scene, which may be the only one for smaller files.
 		scene.addChild ( this.buildScene (
-			points, normals, indices,
-			pointCount, normalCount, indexCount
+			points, indices,
+			pointCount, indexCount
 		) );
 
 		// Send the final progress notification.

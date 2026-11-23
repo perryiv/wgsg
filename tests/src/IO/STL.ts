@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Cancelled, getReader } from "../../../lib/src/IO";
+import { FlatShading } from "../../../lib/src/Shaders/FlatShading";
 import { ColorAttribute } from "../../../lib/src/Scene";
 import { expect } from "chai";
 import { Geometry, Group, Node as SceneNode } from "../../../lib/src/Scene/Nodes";
@@ -180,17 +181,6 @@ const getColor = ( geom: Geometry ) : number[] =>
 	throw new Error ( "Geometry has no color attribute" );
 };
 
-/**
- * Make a vector unit length, for comparing directions.
- * @param {number[]} v The vector.
- * @returns {number[]} The unit vector.
- */
-const unit = ( v: number[] ) : number[] =>
-{
-	const length = Math.hypot ( v[0], v[1], v[2] );
-	return [ v[0] / length, v[1] / length, v[2] / length ];
-};
-
 // Two triangles that are easy to check. The values are exact in 32 bits.
 const TRIANGLE_1: ITriangle = { normal: [ 0, 0, 2 ], points: [ 0, 0, 0, 1, 0, 0, 0, 1, 0 ] };
 const TRIANGLE_2: ITriangle = { normal: [ 0, 0, 1 ], points: [ 1, 0, 0, 1, 1, 0, 0, 1, 0.5 ] };
@@ -230,28 +220,30 @@ export function test ()
 	{
 		describe ( "Binary", function ()
 		{
-			it ( "Should read the points, normals, and indices", async function ()
+			it ( "Should read the points and indices, and have no normals", async function ()
 			{
 				const scene = await read ( makeBinaryFile ( [ TRIANGLE_1, TRIANGLE_2 ] ) );
-				const { points, normals, indices } = getArrays ( getOnlyGeometry ( scene ) );
+				const geom = getOnlyGeometry ( scene );
+				const { points, indices } = getArrays ( geom );
 
 				expect ( points ).to.deep.equal ( [ ...TRIANGLE_1.points, ...TRIANGLE_2.points ] );
-				expect ( normals ).to.deep.equal ( [
-					0, 0, 1,  0, 0, 1,  0, 0, 1, // The file has [ 0, 0, 2 ].
-					0, 0, 1,  0, 0, 1,  0, 0, 1,
-				] );
 				expect ( indices ).to.deep.equal ( [ 0, 1, 2, 3, 4, 5 ] );
+				expect ( geom.normals ).to.be.null;
 			} );
 
-			it ( "Should make a normal when the file has a zero normal", async function ()
+			it ( "Should use flat shading", async function ()
 			{
-				const triangle = { normal: [ 0, 0, 0 ], points: [ 0, 0, 0, 2, 0, 0, 0, 2, 0 ] };
-				const scene = await read ( makeBinaryFile ( [ triangle ] ) );
-				const { normals } = getArrays ( getOnlyGeometry ( scene ) );
+				const scene = await read ( makeBinaryFile ( [ TRIANGLE_1 ] ) );
+				expect ( getOnlyGeometry ( scene ).state?.shader ).to.be.instanceOf ( FlatShading );
+			} );
 
-				expect ( unit ( normals.slice ( 0, 3 ) ) ).to.deep.equal ( [ 0, 0, 1 ] );
-				expect ( normals.slice ( 3, 6 ) ).to.deep.equal ( normals.slice ( 0, 3 ) );
-				expect ( normals.slice ( 6, 9 ) ).to.deep.equal ( normals.slice ( 0, 3 ) );
+			it ( "Should ignore the normals in the file, even ones that are not finite", async function ()
+			{
+				const triangle = { normal: [ NaN, Infinity, 0 ], points: [ 0, 0, 0, 2, 0, 0, 0, 2, 0 ] };
+				const scene = await read ( makeBinaryFile ( [ triangle ] ) );
+				const geom = getOnlyGeometry ( scene );
+				expect ( getArrays ( geom ).points ).to.deep.equal ( triangle.points );
+				expect ( geom.normals ).to.be.null;
 			} );
 
 			it ( "Should read the color, including alpha, from the header", async function ()
@@ -343,24 +335,28 @@ export function test ()
 
 		describe ( "Text", function ()
 		{
-			it ( "Should read the points, normals, and indices", async function ()
+			it ( "Should read the points and indices, and have no normals", async function ()
 			{
 				const scene = await read ( makeTextFile ( TEXT_TWO_TRIANGLES ) );
-				const { points, normals, indices } = getArrays ( getOnlyGeometry ( scene ) );
+				const geom = getOnlyGeometry ( scene );
+				const { points, indices } = getArrays ( geom );
 
 				expect ( points ).to.deep.equal ( [ ...TRIANGLE_1.points, ...TRIANGLE_2.points ] );
-				expect ( normals ).to.deep.equal ( [
-					0, 0, 1,  0, 0, 1,  0, 0, 1, // The file has [ 0, 0, 2 ].
-					0, 0, 1,  0, 0, 1,  0, 0, 1,
-				] );
 				expect ( indices ).to.deep.equal ( [ 0, 1, 2, 3, 4, 5 ] );
+				expect ( geom.normals ).to.be.null;
 			} );
 
-			it ( "Should make a normal when the file has a zero normal", async function ()
+			it ( "Should use flat shading", async function ()
+			{
+				const scene = await read ( makeTextFile ( TEXT_TWO_TRIANGLES ) );
+				expect ( getOnlyGeometry ( scene ).state?.shader ).to.be.instanceOf ( FlatShading );
+			} );
+
+			it ( "Should ignore the normals in the file, even ones that are not numbers", async function ()
 			{
 				const text = [
 					"solid test",
-					"facet normal 0 0 0",
+					"facet normal x y z",
 					"outer loop",
 					"vertex 0 0 0",
 					"vertex 2 0 0",
@@ -370,9 +366,9 @@ export function test ()
 					"endsolid test",
 				].join ( "\n" );
 				const scene = await read ( makeTextFile ( text ) );
-				const { normals } = getArrays ( getOnlyGeometry ( scene ) );
-
-				expect ( normals ).to.deep.equal ( [ 0, 0, 1,  0, 0, 1,  0, 0, 1 ] );
+				const geom = getOnlyGeometry ( scene );
+				expect ( getArrays ( geom ).points ).to.deep.equal ( [ 0, 0, 0, 2, 0, 0, 0, 2, 0 ] );
+				expect ( geom.normals ).to.be.null;
 			} );
 
 			it ( "Should read a small file with no triangles", async function ()
