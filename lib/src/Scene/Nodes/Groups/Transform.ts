@@ -23,6 +23,11 @@ import { Visitor } from "../../../Visitors/Visitor";
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * Transform group class.
+ *
+ * Note: Only rotation and translation are supported. If the matrix has
+ * anything else (e.g., scale, shear, or mirror), the scene may still render
+ * correctly (depending on what is in it), but the calculation of the bounds
+ * will be wrong.
  * @class
  */
 ///////////////////////////////////////////////////////////////////////////////

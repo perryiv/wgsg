@@ -12,6 +12,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export * from "./GLB";
+export * from "./GLTF";
 export * from "./PLY";
 export * from "./STL";
