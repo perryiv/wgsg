@@ -191,7 +191,10 @@ export class Geometry extends Shape
 	}
 
 	/**
-	 * Dirty the bounds of this node.
+	 * Dirty the bounds of this node. Setting the points or primitives does
+	 * this. Call it after changing them some other way, like setting the
+	 * values of the points or indices, changing the first or count of the
+	 * primitives, or changing the values in place.
 	 */
 	public override dirtyBounds (): void
 	{
@@ -237,6 +240,9 @@ export class Geometry extends Shape
 		// If this geometry is in use then count the new array instead of the old one.
 		replaceReference ( ( this.refCount > 0 ), this.#points, points );
 		this.#points = points;
+
+		// The bounds come from the points.
+		this.dirtyBounds();
 	}
 
 	/**
@@ -373,6 +379,9 @@ export class Geometry extends Shape
 
 		// Do not make a copy. These arrays can be shared.
 		this.#primitives = primitives;
+
+		// The bounds come from the points that the primitives use.
+		this.dirtyBounds();
 	}
 
 	/**
