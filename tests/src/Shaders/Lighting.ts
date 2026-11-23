@@ -70,7 +70,7 @@ const getPipelineError = async ( shader: Lighting ) : Promise < GPUError | null 
 {
 	const device = Device.instance.device;
 	device.pushErrorScope ( "validation" );
-	shader.getPipeline ( "triangle-list" );
+	shader.getPipeline ( { topology: "triangle-list", cullMode: "none" } );
 	return await device.popErrorScope();
 };
 
@@ -81,9 +81,10 @@ const getPipelineError = async ( shader: Lighting ) : Promise < GPUError | null 
  * @param {number[] | null} normals The normals, or null for none.
  * @param {boolean} twoSidedLight Whether to use two-sided lighting. Only used by lighting shaders.
  * @param {boolean} [setUp] Whether to set up the shader's color and matrices first.
+ * @param {GPUCullMode} [cullMode] Which faces to cull.
  * @returns {Promise<{ rgba: number[], error: GPUError | null }>} The color, and any validation error.
  */
-const renderCenterPixel = async ( shader: Lighting | SolidColor, points: number[], normals: number[] | null, twoSidedLight: boolean, setUp = true ) :
+const renderCenterPixel = async ( shader: Lighting | SolidColor, points: number[], normals: number[] | null, twoSidedLight: boolean, setUp = true, cullMode: GPUCullMode = "none" ) :
 	Promise < { rgba: number[], error: GPUError | null } > =>
 {
 	const { device, preferredFormat } = Device.instance;
@@ -134,7 +135,7 @@ const renderCenterPixel = async ( shader: Lighting | SolidColor, points: number[
 			depthStoreOp: "store",
 		},
 	} );
-	pass.setPipeline ( shader.getPipeline ( "triangle-list" ) );
+	pass.setPipeline ( shader.getPipeline ( { topology: "triangle-list", cullMode } ) );
 	shader.configureRenderPass ( pass, ++frameCount );
 	pass.setVertexBuffer ( 0, pointBuffer );
 	if ( normalBuffer )
@@ -222,7 +223,7 @@ const renderTwoColors = async ( shader: Lighting | SolidColor, normals: number[]
 			depthStoreOp: "store",
 		},
 	} );
-	pass.setPipeline ( shader.getPipeline ( "triangle-list" ) );
+	pass.setPipeline ( shader.getPipeline ( { topology: "triangle-list", cullMode: "none" } ) );
 	pass.setIndexBuffer ( indexBuffer!, "uint32" );
 	if ( normalBuffer )
 	{
@@ -334,6 +335,47 @@ export function test ()
 				expect ( error ).to.be.null;
 				expect ( rgba ).to.deep.equal ( [ 255, 0, 0, 255 ] );
 			} );
+		} );
+
+		describe ( "Face culling", function ()
+		{
+			const cases: [ string, () => Lighting | SolidColor, number[] | null ][] = [
+				[ "PhongShading", () => PhongShading.instance, [ 0, 0, 1,   0, 0, 1,   0, 0, 1 ] ],
+				[ "FlatShading", () => FlatShading.instance, null ],
+				[ "SolidColor", () => SolidColor.instance, null ],
+			];
+
+			for ( const [ name, getShader, normals ] of cases )
+			{
+				it ( `Should make one pipeline for each set of options with ${name}`, function ()
+				{
+					const shader = getShader();
+					const none = shader.getPipeline ( { topology: "triangle-list", cullMode: "none" } );
+					const back = shader.getPipeline ( { topology: "triangle-list", cullMode: "back" } );
+					expect ( back ).not.to.equal ( none );
+					expect ( shader.getPipeline ( { topology: "triangle-list", cullMode: "none" } ) ).to.equal ( none );
+					expect ( shader.getPipeline ( { topology: "triangle-list", cullMode: "back" } ) ).to.equal ( back );
+				} );
+
+				it ( `Should cull the back faces with ${name}`, async function ()
+				{
+					// Two-sided lighting, so that only culling hides the back.
+					const front = await renderCenterPixel ( getShader(), FRONT_FACING, normals, true, true, "back" );
+					expect ( front.error ).to.be.null;
+					expect ( front.rgba ).to.deep.equal ( [ 255, 0, 0, 255 ] );
+
+					const back = await renderCenterPixel ( getShader(), BACK_FACING, normals, true, true, "back" );
+					expect ( back.error ).to.be.null;
+					expect ( back.rgba ).to.deep.equal ( [ 0, 0, 0, 0 ] );
+				} );
+
+				it ( `Should cull the front faces with ${name}`, async function ()
+				{
+					const front = await renderCenterPixel ( getShader(), FRONT_FACING, normals, true, true, "front" );
+					expect ( front.error ).to.be.null;
+					expect ( front.rgba ).to.deep.equal ( [ 0, 0, 0, 0 ] );
+				} );
+			}
 		} );
 
 		describe ( "Changing only the projection matrix", function ()

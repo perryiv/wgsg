@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base as BaseClass } from "../../Base";
-import { ShaderBase } from "../../Shaders";
+import { ShaderBase, type IPipelineOptions } from "../../Shaders";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -75,6 +75,17 @@ export abstract class Attribute extends BaseClass
 	 * @param {IAttributeApplyInput} input - The input for applying the state attributes.
 	 */
 	public abstract apply ( input: IAttributeApplyInput ) : void;
+
+	/**
+	 * Change the options that the GPU pipeline is made with, for attributes
+	 * that are part of the pipeline, like face culling. Most attributes are
+	 * not, so this does nothing. Overload if needed.
+	 * @param {IPipelineOptions} options - The pipeline options to change.
+	 */
+	public configurePipeline ( options: IPipelineOptions ) : void
+	{
+		void options;
+	}
 
 	/**
 	 * Return an object used when converting to JSON.

@@ -15,6 +15,7 @@
 
 import { ColorTool as Color, Device } from "../Tools";
 import { State } from "../Scene";
+import type { IPipelineOptions } from "./ShaderBase";
 import { vec4 } from "gl-matrix";
 import { WithMatrices as BaseClass } from "./WithMatrices";
 import code from "./SolidColor.wgsl?raw";
@@ -143,10 +144,10 @@ export class SolidColor extends BaseClass
 
 	/**
 	 * Make the render pipeline.
-	 * @param {GPUPrimitiveTopology} topology - The primitive topology.
+	 * @param {IPipelineOptions} options - The pipeline options.
 	 * @returns {GPURenderPipeline} The render pipeline.
 	 */
-	protected makePipeline ( topology: Readonly<GPUPrimitiveTopology> ) : GPURenderPipeline
+	protected makePipeline ( { topology, cullMode }: Readonly<IPipelineOptions> ) : GPURenderPipeline
 	{
 		// Shortcuts
 		const { device, preferredFormat } = Device.instance;
@@ -193,7 +194,8 @@ export class SolidColor extends BaseClass
 				} ]
 			},
 			primitive: {
-				topology
+				topology,
+				cullMode,
 			},
 			depthStencil: {
 				depthWriteEnabled: true,

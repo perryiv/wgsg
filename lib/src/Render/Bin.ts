@@ -17,6 +17,7 @@
 import { Base as BaseClass } from "../Base";
 import { Pipeline } from "./Pipeline";
 import { State } from "../Scene";
+import { makePipelineKey } from "../Shaders";
 import { IRenderGraphInfo } from "../Types";
 
 
@@ -66,19 +67,20 @@ export class Bin extends BaseClass
 	 */
 	public getPipeline ( info: IRenderGraphInfo, state: State ) : Pipeline
 	{
-		const { shader, topology } = state;
+		const { shader } = state;
 
 		if ( !shader )
 		{
 			throw new Error ( `State '${state.name}' has invalid shader when getting pipeline` );
 		}
 
-		const name = `${shader.type}, ${topology}`;
+		const options = state.pipelineOptions;
+		const name = `${shader.type}, ${makePipelineKey ( options )}`;
 		let pipeline: ( Pipeline | undefined ) = this.#pipelines.get ( name );
 
 		if ( !pipeline )
 		{
-			pipeline = new Pipeline ( { shader, topology } );
+			pipeline = new Pipeline ( { shader, options } );
 			this.#pipelines.set ( name, pipeline );
 			info.numPipelines++;
 		}

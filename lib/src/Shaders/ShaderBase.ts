@@ -30,11 +30,23 @@ export interface IShaderBaseInput
 	topology: GPUPrimitiveTopology;
 }
 
-interface IPipelineTopologyPair
+// The settings that a render pipeline is made with, besides the shader.
+// More can be added, like depth, stencil, and blending.
+export interface IPipelineOptions
 {
-	pipeline: ( GPURenderPipeline | null );
-	topology: ( GPUPrimitiveTopology | null );
+	topology: GPUPrimitiveTopology;
+	cullMode: GPUCullMode;
 }
+
+/**
+ * Make a key for the pipeline options, to tell pipelines apart.
+ * @param {IPipelineOptions} options - The pipeline options.
+ * @returns {string} The key.
+ */
+export const makePipelineKey = ( options: Readonly<IPipelineOptions> ) : string =>
+{
+	return `${options.topology} ${options.cullMode}`;
+};
 
 export type IShaderFactory = ( ( this: void ) => ShaderBase );
 
@@ -57,7 +69,7 @@ export abstract class ShaderBase extends Base
 {
 	#code: string;
 	#module: ( GPUShaderModule | null ) = null;
-	#data: IPipelineTopologyPair = { pipeline: null, topology: null };
+	#pipelines = new Map < string, GPURenderPipeline > ();
 	#device = 0;
 
 	/**
@@ -95,7 +107,7 @@ export abstract class ShaderBase extends Base
 	public reset() : void
 	{
 		this.#module = null;
-		this.#data = { pipeline: null, topology: null };
+		this.#pipelines.clear();
 		this.#device = 0;
 	}
 
@@ -163,25 +175,24 @@ export abstract class ShaderBase extends Base
 	}
 
 	/**
-	 * Get the pipeline. Make it if we have to.
-	 * @param {GPUPrimitiveTopology} topology - The primitive topology.
+	 * Get the pipeline for the options. Make it if we have to. There is one
+	 * for each set of options used.
+	 * @param {IPipelineOptions} options - The pipeline options.
 	 * @returns {GPURenderPipeline} The render pipeline.
 	 */
-	public getPipeline ( topology: Readonly<GPUPrimitiveTopology> ) : GPURenderPipeline
+	public getPipeline ( options: Readonly<IPipelineOptions> ) : GPURenderPipeline
 	{
 		// Reset if the device changed. Do this before using anything that
 		// was made with the old device.
 		this.checkDevice();
 
-		// Get the existing pipeline, if any, and the current topology.
-		let { pipeline } = this.#data;
-		const { topology: currentTopology } = this.#data;
-
-		// If there is no pipeline, or the topology has changed, make a new one.
-		if ( !pipeline || ( topology !== currentTopology ) )
+		// Make it if we have to.
+		const key = makePipelineKey ( options );
+		let pipeline = this.#pipelines.get ( key );
+		if ( !pipeline )
 		{
-			pipeline = this.makePipeline ( topology );
-			this.#data = { pipeline, topology };
+			pipeline = this.makePipeline ( options );
+			this.#pipelines.set ( key, pipeline );
 		}
 
 		// Return the pipeline.
@@ -242,9 +253,10 @@ export abstract class ShaderBase extends Base
 
 	/**
 	 * Make the render pipeline.
+	 * @param {IPipelineOptions} options - The pipeline options.
 	 * @returns {GPURenderPipeline} The render pipeline.
 	 */
-	protected abstract makePipeline ( topology: Readonly<GPUPrimitiveTopology> ) : GPURenderPipeline;
+	protected abstract makePipeline ( options: Readonly<IPipelineOptions> ) : GPURenderPipeline;
 
 	/**
 	 * Configure the render pass.
