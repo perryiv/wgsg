@@ -69,7 +69,7 @@ export function App()
 	const [ count, setCount ] = useState ( 0 );
 	const [ showPanel, setShowPanel ] = useState ( true );
 	const [ showStats, setShowStats ] = useState ( false );
-	const [ use16BitIndices, setUse16BitIndices ] = useState ( true );
+	const [ use16BitIndices, setUse16BitIndices ] = useState ( () => ( PLY.maxVerticesPerGeometry <= PLY_MAX_VERTICES_FOR_16_BIT_INDICES ) );
 	const { palette } = useTheme();
 	const createViewerState = useViewerStore ( ( store ) => store.createViewerState );
 	const currentViewerId   = useViewerStore ( ( store ) => store.current );
@@ -250,24 +250,18 @@ export function App()
 	//
 	// Handle the 16-bit indices button.
 	//
+	// It changes the PLY reader's setting, which applies to the files read
+	// after this. With 16-bit indices the geometries are smaller, and there
+	// are more of them.
+	//
 	const handleUse16BitIndices = useCallback ( () =>
 	{
-		setUse16BitIndices ( ( current ) =>
-		{
-			return ( !current );
-		} );
-	}, [] );
-
-	//
-	// Tell the PLY reader which indices to use for the files read after this.
-	// With 16-bit indices the geometries are smaller, and there are more.
-	//
-	useEffect ( () =>
-	{
-		PLY.maxVerticesPerGeometry = ( use16BitIndices ?
+		const use16 = ( PLY.maxVerticesPerGeometry > PLY_MAX_VERTICES_FOR_16_BIT_INDICES );
+		PLY.maxVerticesPerGeometry = ( use16 ?
 			PLY_MAX_VERTICES_FOR_16_BIT_INDICES :
 			PLY_DEFAULT_MAX_VERTICES_PER_GEOMETRY );
-	}, [ use16BitIndices ] );
+		setUse16BitIndices ( use16 );
+	}, [] );
 
 	//
 	// Handle the show render stats button.
