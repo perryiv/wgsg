@@ -31,6 +31,9 @@ import {
 	Trackball,
 	Viewer as InternalViewer,
 	Grid,
+	PLY,
+	PLY_DEFAULT_MAX_VERTICES_PER_GEOMETRY,
+	PLY_MAX_VERTICES_FOR_16_BIT_INDICES,
 } from "../../../lib/src";
 
 
@@ -66,6 +69,7 @@ export function App()
 	const [ count, setCount ] = useState ( 0 );
 	const [ showPanel, setShowPanel ] = useState ( true );
 	const [ showStats, setShowStats ] = useState ( false );
+	const [ use16BitIndices, setUse16BitIndices ] = useState ( () => ( PLY.maxVerticesPerGeometry <= PLY_MAX_VERTICES_FOR_16_BIT_INDICES ) );
 	const { palette } = useTheme();
 	const createViewerState = useViewerStore ( ( store ) => store.createViewerState );
 	const currentViewerId   = useViewerStore ( ( store ) => store.current );
@@ -244,7 +248,23 @@ export function App()
 	[] );
 
 	//
-	// Handle the show stats button.
+	// Handle the 16-bit indices button.
+	//
+	// It changes the PLY reader's setting, which applies to the files read
+	// after this. With 16-bit indices the geometries are smaller, and there
+	// are more of them.
+	//
+	const handleUse16BitIndices = useCallback ( () =>
+	{
+		const use16 = ( PLY.maxVerticesPerGeometry > PLY_MAX_VERTICES_FOR_16_BIT_INDICES );
+		PLY.maxVerticesPerGeometry = ( use16 ?
+			PLY_MAX_VERTICES_FOR_16_BIT_INDICES :
+			PLY_DEFAULT_MAX_VERTICES_PER_GEOMETRY );
+		setUse16BitIndices ( use16 );
+	}, [] );
+
+	//
+	// Handle the show render stats button.
 	//
 	const handleShowStats = useCallback ( () =>
 	{
@@ -500,6 +520,13 @@ export function App()
 					>
 						Two-sided lighting
 					</Button>
+					<Button
+						disabled = { disabled }
+						onClick = { handleUse16BitIndices }
+						value = { use16BitIndices }
+					>
+						16-bit indices
+					</Button>
 					{ verticalSpace() }
 					<div
 						style = { {
@@ -526,6 +553,7 @@ export function App()
 		handleSimulateDeviceLost,
 		handleTrackballMode,
 		handleTurntableMode,
+		handleUse16BitIndices,
 		handleUseTwoSidedLighting,
 		handleViewerRender,
 		handleViewerReset,
@@ -533,6 +561,7 @@ export function App()
 		showPanel,
 		showStats,
 		twoSidedLighting,
+		use16BitIndices,
 		verticalSpace,
 		viewer,
 	] );
