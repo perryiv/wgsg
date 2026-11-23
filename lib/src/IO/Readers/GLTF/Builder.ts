@@ -15,10 +15,14 @@
 //	points and normals instead, as explained in Transforms.ts.
 //	Each mesh becomes a geometry for each of its primitives, and a mesh used
 //	by more than one node is shared, unless the nodes scale it differently.
-//	Accessors used by more than one primitive share their arrays. Only triangle lists are read for now;
-//	points, lines, triangle strips, and triangle fans are skipped with a
-//	warning. Each material becomes a state with its base color, and two-sided
-//	lighting if the material is double-sided. Textures are ignored.
+//	Accessors used by more than one primitive share their arrays.
+//
+//	Only triangle lists are read for now. Points, lines, triangle strips, and
+//	triangle fans are skipped with a warning.
+//
+//	Each material becomes a state with its base color. A double-sided
+//	material gets two-sided lighting, and the others get their back faces
+//	culled, as glTF says. Textures are ignored.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -31,6 +35,7 @@ import type { IProgressCallback, IVector4 } from "../../../Types";
 import {
 	Arrays,
 	ColorAttribute,
+	CullFace,
 	Geometry,
 	Group,
 	Indexed,
@@ -534,7 +539,9 @@ export class Builder
 	/**
 	 * Get the state for a material. Primitives with the same material share
 	 * it. With normals the triangles are smooth, otherwise each one is flat.
-	 * Lighting is two-sided only if the material is double-sided.
+	 * A double-sided material has two-sided lighting. Otherwise the back faces
+	 * are culled, as glTF says, which some files need because they have
+	 * triangles on top of each other, facing opposite ways.
 	 * @param {number | undefined} index The index of the material, if any.
 	 * @param {boolean} hasNormals Whether the primitive has normals.
 	 * @returns {State} The state.
@@ -572,6 +579,10 @@ export class Builder
 		state = ( hasNormals ? PhongShading.makeState ( { topology } ) : FlatShading.makeState ( { topology } ) );
 		state.addAttribute ( new ColorAttribute ( color ) );
 		state.addAttribute ( new TwoSidedLight ( doubleSided ) );
+		if ( false === doubleSided )
+		{
+			state.addAttribute ( new CullFace ( "back" ) );
+		}
 		this.#states.set ( key, state );
 		return state;
 	}

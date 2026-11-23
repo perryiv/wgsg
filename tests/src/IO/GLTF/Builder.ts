@@ -619,6 +619,22 @@ export function test ()
 				}
 			} );
 
+			it ( "Should cull the back faces unless the material is double-sided", async function ()
+			{
+				const cases: [ boolean | undefined, GPUCullMode ][] = [ [ undefined, "back" ], [ false, "back" ], [ true, "none" ] ];
+				for ( const [ doubleSided, expected ] of cases )
+				{
+					const maker = makeTriangle ( { material: 0 } );
+					maker.addMaterial ( ( undefined === doubleSided ) ? {} : { doubleSided } );
+					const geom = await readOne ( maker.glb() );
+					expect ( geom.state!.pipelineOptions.cullMode ).to.equal ( expected );
+				}
+
+				// Without a material, it's one-sided.
+				const geom = await readOne ( makeTriangle().glb() );
+				expect ( geom.state!.pipelineOptions.cullMode ).to.equal ( "back" );
+			} );
+
 			it ( "Should use the base color, and its alpha only when blending", async function ()
 			{
 				const cases: [ string | undefined, number ][] = [ [ undefined, 1 ], [ "OPAQUE", 1 ], [ "MASK", 1 ], [ "BLEND", 0.5 ] ];

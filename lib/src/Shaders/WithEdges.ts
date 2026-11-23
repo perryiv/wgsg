@@ -24,7 +24,7 @@
 import { ColorTool as Color, Device } from "../Tools";
 import { vec4 } from "gl-matrix";
 import { Lighting as BaseClass, type ILightingInput } from "./Lighting";
-import type { IPulledVerticesInput } from "./ShaderBase";
+import type { IPipelineOptions, IPulledVerticesInput } from "./ShaderBase";
 import type { IVector4 } from "../Types";
 
 
@@ -313,10 +313,10 @@ export abstract class WithEdges extends BaseClass
 
 	/**
 	 * Make the render pipeline. There are no vertex buffers.
-	 * @param {GPUPrimitiveTopology} topology - The primitive topology.
+	 * @param {IPipelineOptions} options - The pipeline options.
 	 * @returns {GPURenderPipeline} The render pipeline.
 	 */
-	protected makePipeline ( topology: Readonly<GPUPrimitiveTopology> ) : GPURenderPipeline
+	protected makePipeline ( { topology, cullMode }: Readonly<IPipelineOptions> ) : GPURenderPipeline
 	{
 		// Shortcuts
 		const { device, preferredFormat } = Device.instance;
@@ -348,7 +348,8 @@ export abstract class WithEdges extends BaseClass
 				} ]
 			},
 			primitive: {
-				topology
+				topology,
+				cullMode,
 			},
 			depthStencil: {
 				depthWriteEnabled: true,

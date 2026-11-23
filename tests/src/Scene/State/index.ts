@@ -12,6 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { test as testCullFace } from "./CullFace";
 import { test as testStateClass } from "./State";
 
 export function test ()
@@ -19,5 +20,6 @@ export function test ()
 	describe ( "State", function ()
 	{
 		testStateClass();
+		testCullFace();
 	} );
 };

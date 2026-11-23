@@ -15,7 +15,7 @@
 import { Attribute } from "./Attribute";
 import { Base as BaseClass } from "../../Base";
 import { IMatrix44 } from "../../Types";
-import { ShaderBase } from "../../Shaders";
+import { ShaderBase, type IPipelineOptions } from "../../Shaders";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -362,6 +362,25 @@ export class State extends BaseClass
 	public set topology ( topology: GPUPrimitiveTopology )
 	{
 		this.#topology = topology;
+	}
+
+	/**
+	 * Get the options that the GPU pipeline is made with. They start with
+	 * the topology and no face culling, and then each attribute can change
+	 * them. States with the same shader and options share a pipeline.
+	 * @returns {IPipelineOptions} The pipeline options.
+	 */
+	public get pipelineOptions () : IPipelineOptions
+	{
+		const options: IPipelineOptions = {
+			topology: this.topology,
+			cullMode: "none",
+		};
+		for ( const [ , attribute ] of this.#attributes )
+		{
+			attribute.configurePipeline ( options );
+		}
+		return options;
 	}
 
 	/**

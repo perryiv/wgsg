@@ -16,6 +16,7 @@
 import { Device } from "../Tools";
 import { Lighting as BaseClass } from "./Lighting";
 import { State } from "../Scene";
+import type { IPipelineOptions } from "./ShaderBase";
 import code from "./FlatShading.wgsl?raw";
 
 
@@ -93,10 +94,10 @@ export class FlatShading extends BaseClass
 
 	/**
 	 * Make the render pipeline.
-	 * @param {GPUPrimitiveTopology} topology - The primitive topology.
+	 * @param {IPipelineOptions} options - The pipeline options.
 	 * @returns {GPURenderPipeline} The render pipeline.
 	 */
-	protected makePipeline ( topology: Readonly<GPUPrimitiveTopology> ) : GPURenderPipeline
+	protected makePipeline ( { topology, cullMode }: Readonly<IPipelineOptions> ) : GPURenderPipeline
 	{
 		// Shortcuts
 		const { device, preferredFormat } = Device.instance;
@@ -143,7 +144,8 @@ export class FlatShading extends BaseClass
 				} ]
 			},
 			primitive: {
-				topology
+				topology,
+				cullMode,
 			},
 			depthStencil: {
 				depthWriteEnabled: true,

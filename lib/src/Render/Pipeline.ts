@@ -14,7 +14,7 @@
 
 import { Base as BaseClass } from "../Base";
 import { ProjMatrixGroup } from "./ProjMatrixGroup";
-import { ShaderBase } from "../Shaders";
+import { ShaderBase, type IPipelineOptions } from "../Shaders";
 import type { IMatrix44, IRenderGraphInfo } from "../Types";
 
 
@@ -27,7 +27,7 @@ import type { IMatrix44, IRenderGraphInfo } from "../Types";
 interface IPipelineInput
 {
 	shader: ShaderBase;
-	topology: GPUPrimitiveTopology;
+	options: IPipelineOptions;
 }
 
 export type IProjMatrixMap = Map < string, ProjMatrixGroup >;
@@ -43,19 +43,20 @@ export type IProjMatrixMap = Map < string, ProjMatrixGroup >;
 export class Pipeline extends BaseClass
 {
 	#shader: ShaderBase;
-	#topology: GPUPrimitiveTopology;
+	#options: IPipelineOptions;
 	#projMatrixMap: IProjMatrixMap = new Map < string, ProjMatrixGroup > ();
 
 	/**
 	 * Construct the class.
 	 * @class
-	 * @param {ShaderBase} shader - The pipeline shader.
+	 * @param {IPipelineInput} input - The shader, and the options the GPU
+	 * pipeline is made with.
 	 */
-	constructor ( { shader, topology }: IPipelineInput )
+	constructor ( { shader, options }: IPipelineInput )
 	{
 		super();
 		this.#shader = shader;
-		this.#topology = topology;
+		this.#options = { ...options };
 	}
 
 	/**
@@ -161,7 +162,16 @@ export class Pipeline extends BaseClass
 	 */
 	public get topology() : GPUPrimitiveTopology
 	{
-		return this.#topology;
+		return this.#options.topology;
+	}
+
+	/**
+	 * Get the options the GPU pipeline is made with.
+	 * @returns {IPipelineOptions} The pipeline options.
+	 */
+	public get options() : Readonly<IPipelineOptions>
+	{
+		return this.#options;
 	}
 
 	/**

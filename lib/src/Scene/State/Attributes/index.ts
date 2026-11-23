@@ -13,4 +13,5 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 export { Color as ColorAttribute } from "./Color";
+export * from "./CullFace";
 export * from "./TwoSidedLight";

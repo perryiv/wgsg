@@ -96,13 +96,14 @@ const getCompilationErrors = async ( shader: WithEdges ) : Promise < string[] > 
 /**
  * Make the shader's pipeline and return any WebGPU validation error.
  * @param {WithEdges} shader The shader.
+ * @param {GPUCullMode} [cullMode] Which faces to cull.
  * @returns {Promise<GPUError | null>} The validation error, or null if there is none.
  */
-const getPipelineError = async ( shader: WithEdges ) : Promise < GPUError | null > =>
+const getPipelineError = async ( shader: WithEdges, cullMode: GPUCullMode = "none" ) : Promise < GPUError | null > =>
 {
 	const device = Device.instance.device;
 	device.pushErrorScope ( "validation" );
-	shader.getPipeline ( "triangle-list" );
+	shader.getPipeline ( { topology: "triangle-list", cullMode } );
 	return await device.popErrorScope();
 };
 
@@ -161,7 +162,7 @@ const render = async ( { shader, points, normals, indices, edgeWidth = 4 }: IRen
 			depthStoreOp: "store",
 		},
 	} );
-	pass.setPipeline ( shader.getPipeline ( "triangle-list" ) );
+	pass.setPipeline ( shader.getPipeline ( { topology: "triangle-list", cullMode: "none" } ) );
 	shader.configureRenderPass ( pass, ++frameCount );
 	const mode = shader.setPulledVertices ( pass, { geometry, indices: indexArray, key: {} } );
 	if ( null !== mode )
@@ -230,6 +231,7 @@ export function test ()
 				it ( "Should make a pipeline without validation errors", async function ()
 				{
 					expect ( await getPipelineError ( getShader() ) ).to.be.null;
+					expect ( await getPipelineError ( getShader(), "back" ) ).to.be.null;
 				} );
 
 				it ( "Should pull vertices", function ()
