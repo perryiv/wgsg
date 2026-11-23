@@ -105,6 +105,8 @@ export class Indexed extends BaseClass
 
 	/**
 	 * Set the indices.
+	 * These primitives do not know which geometries use them, so call their
+	 * dirtyBounds() afterwards.
 	 * @param {IIndexArray | Uint32Array | Uint16Array | number[] | null} indices The indices.
 	 */
 	set indices ( indices: ( IIndexArray | Uint32Array | Uint16Array | number[] | null ) )

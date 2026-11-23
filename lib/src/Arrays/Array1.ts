@@ -93,7 +93,9 @@ export class Array1 < InternalArrayType extends PossibleArrayType > extends Base
 	 * and kind then the new values are written into it. Otherwise the old
 	 * buffer is destroyed, and a new one is made when needed. Set the values
 	 * between frames, not during the draw stage, because the draw calls that
-	 * were already recorded still use the old buffer.
+	 * were already recorded still use the old buffer. This array does not know
+	 * which geometries use it, so if it holds their points or indices then
+	 * call their dirtyBounds() afterwards.
 	 * @param {InternalArrayType | null} values - Values for this array.
 	 */
 	public set values ( values: ( InternalArrayType | null ) )

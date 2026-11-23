@@ -102,6 +102,8 @@ export class Arrays extends BaseClass
 
 	/**
 	 * Set the first vertex to draw.
+	 * These primitives do not know which geometries use them, so call their
+	 * dirtyBounds() afterwards.
 	 * @param {number} first The first vertex.
 	 */
 	set first ( first: number )
@@ -124,6 +126,8 @@ export class Arrays extends BaseClass
 
 	/**
 	 * Set the number of vertices to draw.
+	 * These primitives do not know which geometries use them, so call their
+	 * dirtyBounds() afterwards.
 	 * @param {number} count The number of vertices.
 	 */
 	set count ( count: number )
