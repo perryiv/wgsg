@@ -17,15 +17,6 @@ import type { IProgressCallback } from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
-//
-//	The method type for reading files.
-//
-///////////////////////////////////////////////////////////////////////////////
-
-export type Method = ( "Text" | "ArrayBuffer" | "DataURL" );
-
-
-///////////////////////////////////////////////////////////////////////////////
 /**
  * Get a blob from a file with optional start and end positions.
  * @param {File} file The file to get the blob from.
@@ -63,72 +54,9 @@ export function getBlob ( file: File, start?: number, end?: number ) : Blob
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Reads a file asynchronously using the specified method.
- * @param {File} file The file to read.
- * @param {Method} method The method to use for reading the file ("Text", "ArrayBuffer", or "DataURL").
- * @param {number} [start] The start position in the file.
- * @param {number} [end] The end position in the file.
- * @returns {Promise<string | ArrayBuffer | null>} A promise that resolves to the file content as a string, ArrayBuffer, or DataURL, depending on the specified method.
- */
-///////////////////////////////////////////////////////////////////////////////
-
-export function readFile ( file: File, method: Method, start?: number, end?: number ) : Promise < string | ArrayBuffer | null >
-{
-	return new Promise ( ( resolve, reject ) =>
-	{
-		const reader = new FileReader();
-
-		reader.onload = () =>
-		{
-			resolve ( reader.result );
-		};
-
-		reader.onerror = () =>
-		{
-			const error = reader.error;
-			const message = ( error?.message ) ?? `Unknown error when reading file '${file.name}'`;
-			reject ( new Error ( message ) );
-		}
-
-		reader.onabort = () =>
-		{
-			reject ( new Cancelled ( "File reading was cancelled" ) );
-		}
-
-		const blob = getBlob ( file, start, end );
-
-		switch ( method )
-		{
-			case "Text":
-			{
-				reader.readAsText ( blob );
-				break;
-			}
-			case "ArrayBuffer":
-			{
-				reader.readAsArrayBuffer ( blob );
-				break;
-			}
-			case "DataURL":
-			{
-				reader.readAsDataURL ( blob );
-				break;
-			}
-			default:
-			{
-				reject ( new Error ( `Unsupported read method: ${method as string}` ) );
-				break;
-			}
-		}
-	} );
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-/**
  * Read bytes from a file with optional start and end positions.
- * Unlike readFile(), this does not use FileReader, so errors thrown while
- * processing the result reject the caller's promise instead of escaping.
+ * This does not use FileReader, so errors thrown while processing the
+ * result reject the caller's promise instead of escaping.
  * @param {File} file The file to read.
  * @param {number} [start] The start position in the file.
  * @param {number} [end] The end position in the file.
@@ -313,4 +241,18 @@ export async function readLines ( file: File, onLine: LineCallback, onProgress?:
 		await reader.cancel();
 		throw error;
 	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Get the message from an unknown error.
+ * @param {unknown} error The error.
+ * @returns {string} The error message.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export function getErrorMessage ( error: unknown ) : string
+{
+	return ( ( error instanceof Error ) ? error.message : String ( error ) );
 }

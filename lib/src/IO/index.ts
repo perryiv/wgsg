@@ -17,3 +17,6 @@ export * from "./Reader";
 
 // Import the concrete readers to load them into memory. Do not export them.
 import "./Readers";
+
+// The PLY reader has settings that the application can change.
+export { PLY } from "./Readers/PLY";

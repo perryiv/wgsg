@@ -1,0 +1,29 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Copyright (c) 2026, Perry L Miller IV
+//	All rights reserved.
+//	MIT License: https://opensource.org/licenses/mit-license.html
+//
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Load and run the other tests.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+import { test as testBinary } from "./Binary";
+import { test as testCommon } from "./Common";
+import { test as testHeader } from "./Header";
+import { test as testText } from "./Text";
+
+export function test ()
+{
+	describe ( "PLY", function ()
+	{
+		testHeader();
+		testCommon();
+		testText();
+		testBinary();
+	} );
+};

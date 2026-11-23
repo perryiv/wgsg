@@ -15,7 +15,7 @@
 import { Cancelled } from "../../Cancelled";
 import { ColorTool as Color, DEVELOPER_BUILD } from "../../../Tools";
 import { Common as BaseClass } from "./Common";
-import { findBytes, readBytes, yieldToEventLoop } from "../../Functions";
+import { findBytes, getErrorMessage, readBytes, yieldToEventLoop } from "../../Functions";
 import { Group, Node as SceneNode } from "../../../Scene/Nodes";
 import type { IVector4 } from "../../../Types";
 
@@ -25,20 +25,6 @@ const STL_START_OF_DATA = STL_HEADER_LENGTH + STL_TRIANGLE_COUNT_LENGTH;
 const STL_RECORD_LENGTH = 50;
 const STL_COLOR_KEYWORD = "COLOR=";
 const STL_COLOR_LENGTH = 4;
-
-
-///////////////////////////////////////////////////////////////////////////////
-/**
- * Get the message from an unknown error.
- * @param {unknown} error The error.
- * @returns {string} The error message.
- */
-///////////////////////////////////////////////////////////////////////////////
-
-const getErrorMessage = ( error: unknown ) : string =>
-{
-	return ( ( error instanceof Error ) ? error.message : String ( error ) );
-};
 
 
 ///////////////////////////////////////////////////////////////////////////////
