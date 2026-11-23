@@ -26,6 +26,7 @@ import {
 	Geometry,
 	Indexed,
 	Shape,
+	type IIndexArray,
 	State,
 	type IStateApplyInput,
 } from "../Scene";
@@ -87,6 +88,7 @@ export class Draw extends BaseClass
 	#renderPassEncoder: ( GPURenderPassEncoder | null ) = null;
 	#commandEncoder: ( GPUCommandEncoder | null ) = null;
 	#geometry: ( Geometry | null ) = null;
+	#shader: ( ShaderBase | null ) = null;
 	#info: ( IRenderGraphInfo | null ) = null;
 	#device: ( number | null ) = null;
 	#frame = 0;
@@ -364,6 +366,7 @@ export class Draw extends BaseClass
 		this.#renderPassEncoder = null;
 		this.#commandEncoder = null;
 		this.#geometry = null;
+		this.#shader = null;
 	}
 
 	/**
@@ -485,6 +488,7 @@ export class Draw extends BaseClass
 		// Configure the render pass now that the state has been applied.
 		const shader = requireShader ( state );
 		shader.configureRenderPass ( this.renderPassEncoder, this.#frame );
+		this.#shader = shader;
 
 		// Draw the shapes.
 		sg.forEachShape ( ( shape: Shape ) =>
@@ -495,6 +499,7 @@ export class Draw extends BaseClass
 
 		// Reset the state.
 		state.doReset ( input );
+		this.#shader = null;
 	}
 
 	/**
@@ -573,6 +578,13 @@ export class Draw extends BaseClass
 			return; // This is not an error.
 		}
 
+		// Does the shader read the indices and points itself?
+		if ( true === this.#shader?.pullsVertices )
+		{
+			this.drawPulledVertices ( prims, prims.indices, numIndices, 0 );
+			return;
+		}
+
 		// Set the geometry's vertex buffers, which needs points.
 		if ( false === this.setVertexBuffers() )
 		{
@@ -608,6 +620,13 @@ export class Draw extends BaseClass
 			return; // This is not an error.
 		}
 
+		// Does the shader read the points itself?
+		if ( true === this.#shader?.pullsVertices )
+		{
+			this.drawPulledVertices ( prims, null, count, prims.first );
+			return;
+		}
+
 		// Set the geometry's vertex buffers, which needs points.
 		if ( false === this.setVertexBuffers() )
 		{
@@ -621,6 +640,42 @@ export class Draw extends BaseClass
 			prims.first, // The first vertex to draw.
 			0  // First instance to draw.
 		);
+
+		// Performance info.
+		this.addPerformanceInfo ( prims.topology, count );
+	}
+
+	/**
+	 * Draw with a shader that reads the indices and points from storage
+	 * buffers. There are no index or vertex buffers, and each triangle
+	 * corner is a separate vertex.
+	 * @param {Indexed | Arrays} prims - The primitives to draw.
+	 * @param {IIndexArray | null} indices - The indices, if any.
+	 * @param {number} count - The number of indices, or vertices if there
+	 * are no indices.
+	 * @param {number} first - The first vertex to draw.
+	 */
+	protected drawPulledVertices ( prims: ( Indexed | Arrays ), indices: ( IIndexArray | null ), count: number, first: number ) : void
+	{
+		// We need a shader and a geometry.
+		const shader = this.#shader;
+		const geometry = this.#geometry;
+		if ( ( !shader ) || ( !geometry ) )
+		{
+			return;
+		}
+
+		// Set the buffers. This also returns how the shader reads the indices.
+		const pass = this.renderPassEncoder;
+		const mode = shader.setPulledVertices ( pass, { geometry, indices, key: prims } );
+		if ( null === mode )
+		{
+			return; // The shader already said why, if it matters.
+		}
+
+		// Draw the vertices. There is one instance, and the first instance
+		// tells the shader how to read the indices.
+		pass.draw ( count, 1, first, mode );
 
 		// Performance info.
 		this.addPerformanceInfo ( prims.topology, count );

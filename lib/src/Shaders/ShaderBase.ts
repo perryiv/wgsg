@@ -14,6 +14,7 @@
 
 import { Base } from "../Base";
 import { Device } from "../Tools";
+import type { Geometry, IIndexArray } from "../Scene";
 import type { IMatrix44 } from "../Types";
 
 
@@ -36,6 +37,13 @@ interface IPipelineTopologyPair
 }
 
 export type IShaderFactory = ( ( this: void ) => ShaderBase );
+
+export interface IPulledVerticesInput
+{
+	geometry: Geometry;
+	indices: ( IIndexArray | null );
+	key: object;
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -119,19 +127,27 @@ export abstract class ShaderBase extends Base
 	}
 
 	/**
+	 * Reset the shader if the device changed since it was last used. This
+	 * also resets shaders that were not in the scene when the device was lost.
+	 */
+	protected checkDevice() : void
+	{
+		const device = Device.instance.id;
+		if ( this.#device !== device )
+		{
+			this.reset();
+			this.#device = device;
+		}
+	}
+
+	/**
 	 * Get the shader module.
 	 * @returns {GPUShaderModule} The shader module.
 	 */
 	public get module() : GPUShaderModule
 	{
-		// Did the device change?
-		const device = Device.instance.id;
-		if ( this.#device !== device )
-		{
-			this.#device = device;
-			this.#module = null;
-			this.#data = { pipeline: null, topology: null };
-		}
+		// Reset if the device changed.
+		this.checkDevice();
 
 		// Make it if we have to.
 		if ( !this.#module )
@@ -153,6 +169,10 @@ export abstract class ShaderBase extends Base
 	 */
 	public getPipeline ( topology: Readonly<GPUPrimitiveTopology> ) : GPURenderPipeline
 	{
+		// Reset if the device changed. Do this before using anything that
+		// was made with the old device.
+		this.checkDevice();
+
 		// Get the existing pipeline, if any, and the current topology.
 		let { pipeline } = this.#data;
 		const { topology: currentTopology } = this.#data;
@@ -166,6 +186,28 @@ export abstract class ShaderBase extends Base
 
 		// Return the pipeline.
 		return pipeline;
+	}
+
+	// Does this shader read the vertices from storage buffers in the vertex
+	// shader (vertex pulling) instead of from vertex and index buffers?
+	// Derived classes that do set this to true.
+	public readonly pullsVertices: boolean = false;
+
+	/**
+	 * Set the bind group with the buffers that the vertex shader pulls the
+	 * vertices from. Only called when pullsVertices is true. Overload if needed.
+	 * @param {GPURenderPassEncoder} pass - The render pass encoder.
+	 * @param {IPulledVerticesInput} input - The geometry, its indices if any,
+	 * and an object that identifies the primitives, for caching.
+	 * @returns {number | null} The value to pass as the first instance when
+	 * drawing, which tells the vertex shader how to read the indices, or null
+	 * if the vertices cannot be drawn, which is always the case here.
+	 */
+	public setPulledVertices ( pass: Readonly<GPURenderPassEncoder>, input: Readonly<IPulledVerticesInput> ) : ( number | null )
+	{
+		void pass;
+		void input;
+		return null;
 	}
 
 	/**
