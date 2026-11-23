@@ -14,6 +14,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { expect } from "chai";
+import { DEVELOPER_BUILD } from "../../../../lib/src/Tools/Environment";
 import { FlatShading } from "../../../../lib/src/Shaders/FlatShading";
 import { PhongShading } from "../../../../lib/src/Shaders/PhongShading";
 import { ColorAttribute, Geometry, Group, Indexed } from "../../../../lib/src/Scene";
@@ -413,7 +414,7 @@ export function test ()
 				expect ( getArrays ( geometries[0] ).indices ).to.deep.equal ( [ 0, 1, 1,  2, 2, 2,  0, 2, 0 ] );
 			} );
 
-			it ( "Should share one state with the color", function ()
+			it ( "Should share one state when given the color", function ()
 			{
 				const builder = makeBuilder ( STRIP, { maxVertices: 4 } );
 				STRIP_FACES.forEach ( ( face ) => builder.addFace ( face ) );
@@ -423,6 +424,36 @@ export function test ()
 					( attr ) : attr is ColorAttribute => ( attr instanceof ColorAttribute ) );
 				const actual = Array.from ( color!.color );
 				[ 0.1, 0.2, 0.3, 1 ].forEach ( ( value, i ) => expect ( actual[i] ).to.be.closeTo ( value, 1e-6 ) );
+			} );
+
+			it ( "Should give each geometry a random color in a developer build, and gray otherwise", function ()
+			{
+				const builder = new MeshBuilder ( { numVertices: 6, hasNormals: false, maxVertices: 4 } );
+				builder.points.set ( STRIP );
+				STRIP_FACES.forEach ( ( face ) => builder.addFace ( face ) );
+				const geometries = getGeometries ( builder.finish() );
+				expect ( geometries.length ).to.equal ( 2 );
+
+				// Get the colors, and make sure the shading is the same.
+				const colors = geometries.map ( ( geom ) =>
+				{
+					expect ( geom.state?.shader ).to.be.instanceOf ( FlatShading );
+					const color = Array.from ( geom.state!.attributes.values() ).find (
+						( attr ) : attr is ColorAttribute => ( attr instanceof ColorAttribute ) );
+					return Array.from ( color!.color );
+				} );
+
+				if ( DEVELOPER_BUILD )
+				{
+					expect ( geometries[0].state ).to.not.equal ( geometries[1].state );
+					expect ( colors[0] ).to.not.deep.equal ( colors[1] );
+					colors.flat().forEach ( ( c ) => expect ( c ).to.be.within ( 0, 1 ) );
+				}
+				else
+				{
+					expect ( geometries[0].state ).to.equal ( geometries[1].state );
+					expect ( colors[0] ).to.deep.equal ( [ 0.5, 0.5, 0.5, 1 ] );
+				}
 			} );
 
 			it ( "Should have the bounds of all the points used", function ()

@@ -191,7 +191,8 @@ export class MeshBuilder
 
 	// What we make.
 	readonly #scene = new Group();
-	readonly #state: State;
+	readonly #hasNormals: boolean;
+	readonly #state: ( State | null ); // Null when each geometry gets its own.
 
 	/**
 	 * Construct the class.
@@ -199,8 +200,8 @@ export class MeshBuilder
 	 * @param {object} input The input.
 	 * @param {number} input.numVertices The number of vertices in the file.
 	 * @param {boolean} input.hasNormals Whether the file has normals.
-	 * @param {IVector4} [input.color] The color. The default is gray, or
-	 * random in a developer build.
+	 * @param {IVector4} [input.color] The color. The default is gray, or a
+	 * random color for each geometry in a developer build.
 	 * @param {number} [input.maxVertices] The most vertices in one geometry.
 	 * The default is the maxVerticesPerGeometry setting.
 	 */
@@ -230,17 +231,28 @@ export class MeshBuilder
 		this.#localToGlobal = new Uint32Array ( this.#maxVertices );
 		this.#globalToLocal = new Int32Array ( numVertices ).fill ( -1 );
 
-		// One state for all the geometries. With normals in the file the
-		// triangles are smooth, otherwise each one is flat.
+		// The geometries share one state, unless each gets its own random color
+		// so that a developer can see them.
+		this.#hasNormals = hasNormals;
+		this.#state = ( ( ( !color ) && DEVELOPER_BUILD ) ? null :
+			this.makeState ( color ?? [ 0.5, 0.5, 0.5, 1 ] ) );
+	}
+
+	/**
+	 * Make the state for the geometries. With normals in the file the
+	 * triangles are smooth, otherwise each one is flat.
+	 * @param {IVector4} color The color.
+	 * @returns {State} The state.
+	 */
+	protected makeState ( color: Readonly<IVector4> ) : State
+	{
 		const topology = "triangle-list";
-		const state = ( hasNormals ?
+		const state = ( this.#hasNormals ?
 			PhongShading.makeState ( { topology } ) :
 			FlatShading.makeState ( { topology } ) );
-		state.addAttribute ( new ColorAttribute ( color ?? ( DEVELOPER_BUILD ?
-			ColorTool.makeRandomColor ( 0.2, 0.8 ) :
-			[ 0.5, 0.5, 0.5, 1 ] ) ) );
+		state.addAttribute ( new ColorAttribute ( color ) );
 		state.addAttribute ( new TwoSidedLight ( true ) );
-		this.#state = state;
+		return state;
 	}
 
 	/**
@@ -408,7 +420,7 @@ export class MeshBuilder
 
 		const primitives = new Indexed ( { topology: "triangle-list", indices } );
 		const geom = new Geometry ( { points, normals, primitives } );
-		geom.state = this.#state;
+		geom.state = ( this.#state ?? this.makeState ( ColorTool.makeRandomColor ( 0.2, 0.8 ) ) );
 		void geom.box; // Calculate the bounds now, to speed things up later.
 		this.#scene.addChild ( geom );
 
