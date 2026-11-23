@@ -17,7 +17,7 @@ import { PhongShading } from "../../Shaders";
 import { Reader as BaseClass } from "../Reader";
 import { readFile } from "../Functions";
 import { vec3 } from "gl-matrix";
-import type { IVector3 } from "../../Types";
+import type { IVector3, IVector4 } from "../../Types";
 import {
 	Geometry,
 	Group,
@@ -57,8 +57,6 @@ interface FileHeaderResult
 	header: FileHeader;
 	offset: number;
 }
-
-type EndianType = "little" | "big";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -359,7 +357,7 @@ const readTextData = async ( file: File, header: FileHeader, offset: number ) : 
 		tris.primitives = new Indexed ( { topology, indices } );
 
 		// The color of the triangles.
-		const color = [ 0.5, 0.5, 0.5, 1.0 ];
+		const color: IVector4 = [ 0.5, 0.5, 0.5, 1.0 ];
 
 		// Add the state.
 		const state = PhongShading.makeState ( { topology } );
@@ -442,16 +440,12 @@ class PLY extends BaseClass
 			return await readTextData ( file, header, offset );
 		}
 
-		// Is the file little endian binary?
-		else if ( header.has ( "format binary_little_endian 1.0" ) )
+		// Binary files are not read yet.
+		else if (
+			( header.has ( "format binary_little_endian 1.0" ) ) ||
+			( header.has ( "format binary_big_endian 1.0" ) ) )
 		{
-			return await readBinaryData ( file, header, offset, "little" );
-		}
-
-		// Is the file big endian binary?
-		else if ( header.has ( "format binary_big_endian 1.0" ) )
-		{
-			return await readBinaryData ( file, header, offset, "big" );
+			throw new Error ( "Binary PLY files are not supported yet" );
 		}
 
 		// Handle unknown format.
