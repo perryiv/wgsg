@@ -14,6 +14,7 @@
 
 import { test as testCommon } from "./Common";
 import { test as testHeader } from "./Header";
+import { test as testText } from "./Text";
 
 export function test ()
 {
@@ -21,5 +22,6 @@ export function test ()
 	{
 		testHeader();
 		testCommon();
+		testText();
 	} );
 };

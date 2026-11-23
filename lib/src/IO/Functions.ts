@@ -314,3 +314,17 @@ export async function readLines ( file: File, onLine: LineCallback, onProgress?:
 		throw error;
 	}
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Get the message from an unknown error.
+ * @param {unknown} error The error.
+ * @returns {string} The error message.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export function getErrorMessage ( error: unknown ) : string
+{
+	return ( ( error instanceof Error ) ? error.message : String ( error ) );
+}
