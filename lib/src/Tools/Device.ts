@@ -85,8 +85,12 @@ export class Device extends BaseClass
 			throw new Error ( "Failed to get WebGPU adapter" );
 		}
 
-		// Log which adapter we got, so the console shows which GPU is in use.
-		console.log ( "WebGPU adapter: ", adapter.info );
+		// Say which GPU we got, and how big a buffer it allows.
+		const { vendor, architecture, device: name, description } = adapter.info;
+		const mb = ( bytes: number ) => `${( bytes / ( 1024 * 1024 ) ).toFixed ( 0 )} MB`;
+		console.log ( `WebGPU adapter: ${vendor}, ${architecture}, ${name}, ${description}, ` +
+			`max buffer size ${mb ( adapter.limits.maxBufferSize )}, ` +
+			`max storage binding ${mb ( adapter.limits.maxStorageBufferBindingSize )}` );
 
 		// Get the device from the adapter. Can only do this once with this
 		// particular adapter, which is why we don't return it also.

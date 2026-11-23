@@ -13,15 +13,15 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { ColorTool, DEVELOPER_BUILD } from "../../../Tools";
-import { PhongShading } from "../../../Shaders";
+import { FlatShading } from "../../../Shaders";
 import { Reader as BaseClass } from "../../Reader";
-import { vec3, vec4 } from "gl-matrix";
-import type { IVector3, IVector4 } from "../../../Types";
+import { vec4 } from "gl-matrix";
+import type { IVector4 } from "../../../Types";
 import {
 	ColorAttribute as Color,
 	Geometry,
 	Group,
-	Indexed,
+	Arrays,
 	Node as SceneNode,
 	TwoSidedLight,
 } from "../../../Scene";
@@ -54,13 +54,6 @@ export abstract class Common extends BaseClass
 		[ 0.5, 0.5, 0.5, 1 ]
 	);
 
-	// These are allocated once here for speed in case they are needed below.
-	#point1: IVector3 = [ 0, 0, 0 ];
-	#point2: IVector3 = [ 0, 0, 0 ];
-	#point3: IVector3 = [ 0, 0, 0 ];
-	#edge1: IVector3 = [ 0, 0, 0 ];
-	#edge2: IVector3 = [ 0, 0, 0 ];
-
 	/**
 	 * Construct the class.
 	 * @abstract
@@ -89,13 +82,15 @@ export abstract class Common extends BaseClass
 	}
 
 	/**
-	 * Allocate the arrays. We make new ones if they get full, and we trim
-	 * them when we are done if they are not full. The number of triangles is
-	 * capped at STL_MAX_TRIANGLES_PER_GEOMETRY.
+	 * Allocate the array of points. We make a new one if it gets full, and we
+	 * trim it when we are done if it is not full. The number of triangles is
+	 * capped at STL_MAX_TRIANGLES_PER_GEOMETRY. There are no normals, because
+	 * the triangles are drawn with flat shading, which does not need them.
+	 * There are no indices either, because each point is used only once.
 	 * @param {number} numTriangles The number of triangles.
-	 * @returns {{ points: Float32Array, normals: Float32Array, indices: Uint32Array }} The allocated arrays.
+	 * @returns {Float32Array} The array of point coordinates.
 	 */
-	protected static allocateArrays ( numTriangles: number ) : { points: Float32Array, normals: Float32Array, indices: Uint32Array }
+	protected static allocatePoints ( numTriangles: number ) : Float32Array
 	{
 		// Make sure the number makes sense.
 		if ( ( false === Number.isInteger ( numTriangles ) ) || ( numTriangles < 0 ) )
@@ -106,46 +101,31 @@ export abstract class Common extends BaseClass
 		// Do not allocate more than one geometry can hold.
 		numTriangles = Math.min ( numTriangles, STL_MAX_TRIANGLES_PER_GEOMETRY );
 
-		const indices = new Uint32Array ( numTriangles * 3 );
-		const points = new Float32Array ( indices.length * 3 );
-		const normals = new Float32Array ( points.length );
-		return { points, normals, indices };
+		// Three points per triangle, and three numbers per point.
+		return new Float32Array ( numTriangles * 9 );
 	}
 
 	/**
-	 * Build the scene from the arrays.
+	 * Build the scene from the array of points.
 	 * @param {Float32Array} points The array of point coordinates.
-	 * @param {Float32Array} normals The array of normal coordinates.
-	 * @param {Uint32Array} indices The array of indices.
-	 * @param {number} pointCount The number of points in the points array.
-	 * @param {number} normalCount The number of normals in the normals array.
-	 * @param {number} indexCount The number of indices in the indices array.
+	 * @param {number} pointCount The number of point coordinates used in the array.
 	 * @returns {SceneNode} The scene node representing the STL file.
 	 */
-	protected buildScene ( points: Float32Array, normals: Float32Array, indices: Uint32Array, pointCount: number, normalCount: number, indexCount: number ) : SceneNode
+	protected buildScene ( points: Float32Array, pointCount: number ) : SceneNode
 	{
-		// Make sure we alloacted enough space for the points.
+		// Make sure we allocated enough space for the points.
 		if ( pointCount > points.length )
 		{
 			throw new Error ( `Too many point coordinates, ${pointCount}, for allocated array of length ${points.length}` );
 		}
 
-		// Make sure we alloacted enough space for the normals.
-		if ( normalCount > normals.length )
+		// Trim the array to the actual number of point coordinates. This copies
+		// them into a smaller array, and the larger one is freed. A full array
+		// is used as it is, which saves copying it.
+		if ( pointCount < points.length )
 		{
-			throw new Error ( `Too many normal coordinates, ${normalCount}, for allocated array of length ${normals.length}` );
+			points = points.slice ( 0, pointCount );
 		}
-
-		// Make sure we alloacted enough space for the indices.
-		if ( indexCount > indices.length )
-		{
-			throw new Error ( `Too many indices, ${indexCount}, for allocated array of length ${indices.length}` );
-		}
-
-		// Trim the arrays to the actual number of points, normals, and indices.
-		points  = points.slice  ( 0, pointCount  );
-		normals = normals.slice ( 0, normalCount );
-		indices = indices.slice ( 0, indexCount  );
 
 		// The number of points should be evenly divisible by 9.
 		if ( 0 !== ( points.length % 9 ) )
@@ -153,41 +133,25 @@ export abstract class Common extends BaseClass
 			throw new Error ( `Number of point coordinates, ${points.length}, is not evenly divisible by 9` );
 		}
 
-		// The number of normals should equal the number of points.
-		if ( points.length !== normals.length )
-		{
-			throw new Error ( `Number of normals, ${normals.length}, is not equal to the number of points, ${points.length}` );
-		}
-
-		// The number of indices should be evenly divisible by 3.
-		if ( 0 !== ( indices.length % 3 ) )
-		{
-			throw new Error ( `Number of indices, ${indices.length}, is not evenly divisible by 3` );
-		}
-
-		// There should be 3 times as many points as indices.
-		if ( ( indices.length * 3 ) !== points.length )
-		{
-			throw new Error ( `Number of point coordinates, ${points.length}, is not three times the number of indices, ${indices.length}` );
-		}
-
 		// The group that we return.
 		const group = new Group();
 
-		// The geometry for the triangles.
-		const tris = new Geometry ( { points, normals } );
+		// The geometry for the triangles. It has no normals.
+		const tris = new Geometry ( { points } );
 
 		// Add the triangles.
 		{
-			// Make the primitives.
+			// Make the primitives. There are no indices, so each point is used
+			// once, in order. Every three points make a triangle.
 			const topology = "triangle-list";
-			tris.primitives = new Indexed ( { topology, indices } );
+			const count = ( points.length / 3 );
+			tris.primitives = new Arrays ( { topology, count } );
 
 			// The color of the triangles.
 			const color = this.color;
 
-			// Add the state.
-			const state = PhongShading.makeState ( { topology } );
+			// Add the state. Flat shading calculates the normals in the shader.
+			const state = FlatShading.makeState ( { topology } );
 			state.addAttribute ( new Color ( color ) );
 			state.addAttribute ( new TwoSidedLight ( true ) );
 			tris.state = state;
@@ -204,52 +168,5 @@ export abstract class Common extends BaseClass
 
 		// Return the group.
 		return group;
-	}
-
-	/**
-	 * Set the normal vector from the cross product of the triangle edges.
-	 * @param {IVector3} normal The normal vector to set.
-	 * @param {Float32Array} points The array of point coordinates.
-	 * @param {number} pointCount The number of points in the points array.
-	 */
-	protected setNormalFromCrossProduct ( normal: IVector3, points: Readonly<Float32Array>, pointCount: Readonly<number> ) : void
-	{
-		// Get the end of data in the points array, not points.length!
-		const end = pointCount;
-
-		// Make sure.
-		if ( ( end < 9 ) || ( 0 !== ( end % 9 ) ) )
-		{
-			throw new Error ( "Not enough points to calculate normal vector" );
-		}
-
-		// Shortcuts.
-		const point1 = this.#point1;
-		const point2 = this.#point2;
-		const point3 = this.#point3;
-		const edge1 = this.#edge1;
-		const edge2 = this.#edge2;
-
-		// Set the three points of the triangle.
-		point1[0] = points[end - 9];
-		point1[1] = points[end - 8];
-		point1[2] = points[end - 7];
-		point2[0] = points[end - 6];
-		point2[1] = points[end - 5];
-		point2[2] = points[end - 4];
-		point3[0] = points[end - 3];
-		point3[1] = points[end - 2];
-		point3[2] = points[end - 1];
-
-		// Set the edges of the triangle.
-		edge1[0] = point2[0] - point1[0];
-		edge1[1] = point2[1] - point1[1];
-		edge1[2] = point2[2] - point1[2];
-		edge2[0] = point3[0] - point1[0];
-		edge2[1] = point3[1] - point1[1];
-		edge2[2] = point3[2] - point1[2];
-
-		// The normal is cross product of the edges.
-		vec3.cross ( normal, edge1, edge2 );
 	}
 }

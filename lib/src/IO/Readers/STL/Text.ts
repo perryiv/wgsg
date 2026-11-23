@@ -16,8 +16,6 @@ import { Cancelled } from "../../Cancelled";
 import { Common as BaseClass, STL_MAX_TRIANGLES_PER_GEOMETRY } from "./Common";
 import { Group, Node as SceneNode } from "../../../Scene/Nodes";
 import { readLines } from "../../Functions";
-import { vec3 } from "gl-matrix";
-import type { IVector3 } from "../../../Types";
 
 // The fewest bytes one facet can take, when written like this:
 // "facet normal 0 0 0\n" + "outer loop\n" + 3 * "vertex 0 0 0\n" +
@@ -68,19 +66,16 @@ export class TextReader extends BaseClass
 
 		// Shortcuts used below.
 		let px = 0; let py = 0; let pz = 0;
-		const normal: IVector3 = [ 0, 0, 0 ];
 
-		// Allocate the arrays for the most triangles the file can have, up to
-		// the most that one geometry can hold. We make new ones if they get
-		// full, and we trim them when we are done if they are not full.
-		let { points, normals, indices } = BaseClass.allocateArrays (
+		// Allocate the array for the most triangles the file can have, up to
+		// the most that one geometry can hold. We make a new one if it gets
+		// full, and we trim it when we are done if it is not full.
+		let points = BaseClass.allocatePoints (
 			Math.ceil ( size / STL_TEXT_MIN_FACET_BYTES )
 		);
 
 		// Keep count.
-		let indexCount = 0;
 		let pointCount = 0;
-		let normalCount = 0;
 
 		// These are used below.
 		let solidCount = 0;
@@ -134,10 +129,7 @@ export class TextReader extends BaseClass
 						throw new Error ( `Keyword 'facet' on line ${lineNumber} not balanced with 'endfacet'` );
 					}
 
-					// Read the normal for the whole triangle.
-					normal[0] = parseFloat ( parts[2] );
-					normal[1] = parseFloat ( parts[3] );
-					normal[2] = parseFloat ( parts[4] );
+					// The normal is not used. Flat shading calculates it in the shader.
 
 					break;
 				}
@@ -189,9 +181,6 @@ export class TextReader extends BaseClass
 					points[pointCount++] = py;
 					points[pointCount++] = pz;
 
-					// Add trivial indices.
-					indices[indexCount] = indexCount++;
-
 					break;
 				}
 				case "endloop":
@@ -202,28 +191,6 @@ export class TextReader extends BaseClass
 					{
 						throw new Error ( `Keyword 'endloop' on line ${lineNumber} not balanced with 'outer'` );
 					}
-
-					// Is the normal vector zero length?
-					if ( ( 0 === normal[0] ) && ( 0 === normal[1] ) && ( 0 === normal[2] ) )
-					{
-						this.setNormalFromCrossProduct ( normal, points, pointCount );
-					}
-
-					// Make sure it is a unit vector.
-					vec3.normalize ( normal, normal );
-
-					// We need a normal for each point.
-					normals[normalCount++] = normal[0];
-					normals[normalCount++] = normal[1];
-					normals[normalCount++] = normal[2];
-
-					normals[normalCount++] = normal[0];
-					normals[normalCount++] = normal[1];
-					normals[normalCount++] = normal[2];
-
-					normals[normalCount++] = normal[0];
-					normals[normalCount++] = normal[1];
-					normals[normalCount++] = normal[2];
 
 					break;
 				}
@@ -237,24 +204,17 @@ export class TextReader extends BaseClass
 					}
 
 					// Did we overflow the array?
-					if ( indexCount > indices.length )
+					if ( pointCount > points.length )
 					{
-						throw new Error ( `Index count ${indexCount} exceeds array length ${indices.length}` );
+						throw new Error ( `Point count ${pointCount} exceeds array length ${points.length}` );
 					}
 
-					// Are the arrays full?
-					if ( indexCount === indices.length )
+					// Is the array full?
+					if ( pointCount === points.length )
 					{
-						scene.addChild ( this.buildScene (
-							points, normals, indices,
-							pointCount, normalCount, indexCount
-						) );
-
-						const newArrays = BaseClass.allocateArrays ( STL_MAX_TRIANGLES_PER_GEOMETRY );
-						points = newArrays.points;
-						normals = newArrays.normals;
-						indices = newArrays.indices;
-						pointCount = normalCount = indexCount = 0;
+						scene.addChild ( this.buildScene ( points, pointCount ) );
+						points = BaseClass.allocatePoints ( STL_MAX_TRIANGLES_PER_GEOMETRY );
+						pointCount = 0;
 					}
 
 					break;
@@ -284,10 +244,7 @@ export class TextReader extends BaseClass
 		}
 
 		// Build the final scene, which may be the only one for smaller files.
-		scene.addChild ( this.buildScene (
-			points, normals, indices,
-			pointCount, normalCount, indexCount
-		) );
+		scene.addChild ( this.buildScene ( points, pointCount ) );
 
 		// Send the final progress notification.
 		if ( false === onProgress ( size, size ) )
