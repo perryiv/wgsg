@@ -12,12 +12,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { test as testGLTF } from "./GLTF";
 import { test as testJSON } from "./JSON";
 import { test as testPLY } from "./PLY";
 import { test as testSTL } from "./STL";
 
 describe ( "IO", function ()
 {
+	testGLTF();
 	testJSON();
 	testPLY();
 	testSTL();
