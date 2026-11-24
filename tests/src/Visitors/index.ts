@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { test as testCull } from "./Cull";
+import { test as testDraw } from "./Draw";
 import { test as testMultiply } from "./Multiply";
 import { test as testVisitor } from "./Visitor";
 
@@ -21,4 +22,5 @@ describe ( "Visitors", function ()
 	testVisitor();
 	testMultiply();
 	testCull();
+	testDraw();
 } );
