@@ -30,6 +30,7 @@ void ( async () =>
 	await import ( "./Algorithms" );
 	await import ( "./Arrays" );
 	await import ( "./Base" );
+	await import ( "./Builders" );
 	await import ( "./IO" );
 	await import ( "./Math" );
 	await import ( "./Projections" );
