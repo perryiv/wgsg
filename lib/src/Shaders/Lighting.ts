@@ -113,6 +113,16 @@ export abstract class Lighting extends BaseClass
 	}
 
 	/**
+	 * Put back the default values of what state attributes set. The light
+	 * direction is not one of them.
+	 */
+	public override reset () : void
+	{
+		this.color = Color.gray;
+		this.twoSidedLight = false;
+	}
+
+	/**
 	 * Return the light direction.
 	 * @returns {IVector4} The light direction.
 	 */

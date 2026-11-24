@@ -128,6 +128,14 @@ export class SolidColor extends BaseClass
 	}
 
 	/**
+	 * Put back the default values of what state attributes set.
+	 */
+	public override reset () : void
+	{
+		this.color = Color.gray;
+	}
+
+	/**
 	 * Return the uniform values, in the same order as the "Uniforms" struct
 	 * in the shader code.
 	 * @returns {ArrayBuffer} The uniform values.

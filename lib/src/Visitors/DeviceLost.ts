@@ -148,9 +148,9 @@ export class DeviceLost extends BaseClass
 						// Set this for next time.
 						shaders.add ( key2 );
 
-						// Reset the shader. It will rebuild later when needed.
-						shader.reset();
-						console.log ( `Reset shader '${key2}' module after device was lost` );
+						// Release the shader's GPU objects. They are made again when needed.
+						shader.releaseGpuObjects();
+						console.log ( `Released shader '${key2}' GPU objects after device was lost` );
 					}
 				}
 			}

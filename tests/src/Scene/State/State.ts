@@ -14,7 +14,11 @@
 
 import { Device } from "../../../../lib/src/Tools/Device";
 import { expect } from "chai";
+import { FlatShading } from "../../../../lib/src/Shaders/FlatShading";
+import { IDENTITY_MATRIX } from "../../../../lib/src/Tools/Constants";
 import { SolidColor } from "../../../../lib/src/Shaders/SolidColor";
+import { ColorAttribute, TwoSidedLight } from "../../../../lib/src/Scene/State/Attributes";
+import type { IMatrix44, IVector4 } from "../../../../lib/src/Types";
 import {
 	defaultApplyFunction,
 	defaultResetFunction,
@@ -106,6 +110,51 @@ export function test ()
 			expect ( state.shader ).to.equal ( shader );
 			expect ( state.layer ).to.equal ( 1 );
 			expect ( state.bin ).to.equal ( 2 );
+		} );
+
+		it ( "Should put the shader back to its defaults when it resets", function ()
+		{
+			const shader = FlatShading.instance;
+			const matrix = [ ...IDENTITY_MATRIX ] as IMatrix44;
+			const red: IVector4 = [ 1, 0, 0, 1 ];
+
+			// A state that sets the color and two-sided lighting.
+			const state1 = FlatShading.makeState ( { topology: "triangle-list" } );
+			state1.addAttribute ( new ColorAttribute ( red ) );
+			state1.addAttribute ( new TwoSidedLight ( true ) );
+			const input1 = { state: state1, shader, projMatrix: matrix, viewMatrix: matrix };
+			state1.doApply ( input1 );
+			expect ( shader.color ).to.deep.equal ( red );
+			expect ( shader.twoSidedLight ).to.be.true;
+			state1.doReset ( input1 );
+
+			// The next state sets neither, so it gets the defaults.
+			const state2 = FlatShading.makeState ( { topology: "triangle-list" } );
+			state2.doApply ( { state: state2, shader, projMatrix: matrix, viewMatrix: matrix } );
+			expect ( shader.color ).to.deep.equal ( [ 0.5, 0.5, 0.5, 1 ] );
+			expect ( shader.twoSidedLight ).to.be.false;
+		} );
+
+		it ( "Should let a custom reset function keep the values", function ()
+		{
+			const shader = SolidColor.instance;
+			const matrix = [ ...IDENTITY_MATRIX ] as IMatrix44;
+			const red: IVector4 = [ 1, 0, 0, 1 ];
+
+			const state = SolidColor.makeState ( { topology: "triangle-list" } );
+			state.addAttribute ( new ColorAttribute ( red ) );
+			state.reset = () =>
+			{
+				// Keep the color on purpose.
+			};
+			const input = { state, shader, projMatrix: matrix, viewMatrix: matrix };
+			state.doApply ( input );
+			state.doReset ( input );
+			expect ( shader.color ).to.deep.equal ( red );
+
+			// The default reset function puts it back.
+			defaultResetFunction ( input );
+			expect ( shader.color ).to.deep.equal ( [ 0.5, 0.5, 0.5, 1 ] );
 		} );
 	} );
 };

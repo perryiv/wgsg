@@ -71,14 +71,18 @@ export const defaultApplyFunction: IStateApplyFunction = ( input: IStateApplyInp
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * The default reset function.
+ * The default reset function. It puts the shader's values back to their
+ * defaults, so that the next state drawn does not get this state's values.
+ * A custom reset function can do something else on purpose, or call this
+ * one to do the same.
+ * @param {IStateResetInput} input - The input for resetting the state.
  * @returns {void}
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const defaultResetFunction: IStateResetFunction = (): void =>
+export const defaultResetFunction: IStateResetFunction = ( input: IStateResetInput ): void =>
 {
-	// console.log ( "Default state reset function called" );
+	input.shader.reset();
 };
 
 

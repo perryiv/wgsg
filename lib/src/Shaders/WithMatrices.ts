@@ -64,17 +64,17 @@ export abstract class WithMatrices extends BaseClass
 	}
 
 	/**
-	 * Reset the shader. Destroy the uniform buffers. They, and the layouts,
-	 * are made again when needed.
+	 * Release the GPU objects. Destroy the uniform buffers. They, and the
+	 * layouts, are made again when needed.
 	 */
-	public override reset() : void
+	public override releaseGpuObjects() : void
 	{
 		this.#pool?.destroy();
 		this.#pool = null;
 		this.#bindGroupLayout = null;
 		this.#pipelineLayout = null;
 		this.#uniformsChanged = true;
-		super.reset();
+		super.releaseGpuObjects();
 	}
 
 	/**

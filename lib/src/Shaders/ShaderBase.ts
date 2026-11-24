@@ -97,14 +97,14 @@ export abstract class ShaderBase extends Base
 	 */
 	public override destroy() : void
 	{
-		this.reset();
+		this.releaseGpuObjects();
 		super.destroy();
 	}
 
 	/**
-	 * Reset the shader.
+	 * Release the GPU objects. They are made again when needed.
 	 */
-	public reset() : void
+	public releaseGpuObjects() : void
 	{
 		this.#module = null;
 		this.#pipelines.clear();
@@ -139,15 +139,16 @@ export abstract class ShaderBase extends Base
 	}
 
 	/**
-	 * Reset the shader if the device changed since it was last used. This
-	 * also resets shaders that were not in the scene when the device was lost.
+	 * Release the GPU objects if the device changed since the shader was last
+	 * used. This also handles shaders that were not in the scene when the
+	 * device was lost.
 	 */
 	protected checkDevice() : void
 	{
 		const device = Device.instance.id;
 		if ( this.#device !== device )
 		{
-			this.reset();
+			this.releaseGpuObjects();
 			this.#device = device;
 		}
 	}
@@ -264,4 +265,14 @@ export abstract class ShaderBase extends Base
 	 * @param {number} frame - The number of the frame being drawn.
 	 */
 	public abstract configureRenderPass ( pass: Readonly<GPURenderPassEncoder>, frame: number ) : void;
+
+	/**
+	 * Put back the default values of what state attributes set (e.g., the
+	 * color). States call this when they reset, so that a state does not get
+	 * the values of the one drawn before it. This one does nothing.
+	 */
+	public reset () : void
+	{
+		// Nothing to do here.
+	}
 }

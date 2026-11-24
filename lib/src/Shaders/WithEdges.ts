@@ -85,14 +85,15 @@ export abstract class WithEdges extends BaseClass
 	}
 
 	/**
-	 * Reset the shader. The layouts and bind groups are made again when needed.
+	 * Release the GPU objects. The layouts and bind groups are made again
+	 * when needed.
 	 */
-	public override reset() : void
+	public override releaseGpuObjects() : void
 	{
 		this.#verticesLayout = null;
 		this.#pipelineLayout = null;
 		this.#pulled = new WeakMap();
-		super.reset();
+		super.releaseGpuObjects();
 	}
 
 	/**
