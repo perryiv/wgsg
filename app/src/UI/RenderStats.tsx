@@ -23,6 +23,7 @@ import {
 } from "react";
 import {
 	type IRenderGraphInfo,
+	type ITimeSummary,
 	Viewer as InternalViewer,
 	throttle,
 } from "../../../lib/src";
@@ -177,14 +178,35 @@ export function RenderStats()
 		// Get the render graph info.
 		const rgi: IRenderGraphInfo = getRenderGraphInfo();
 
-		// Determine how long the frame took in milliseconds.
-		const duration = ( frame.end - frame.start );
+		// Get the times of the recent frames.
+		const times = viewer.frameTimes;
 
-		// Make the final string.
+		// Format an average time, or a dash if there is none.
+		const average = ( summary: ( ITimeSummary | null ) ) =>
+		{
+			return ( summary ? `${ decF.format ( summary.average ) } ms` : "-" );
+		};
+
+		// Format the range of the times.
+		const range = ( summary: ( ITimeSummary | null ) ) =>
+		{
+			return ( summary ? `${ decF.format ( summary.min ) } to ${ decF.format ( summary.max ) }` : "-" );
+		};
+
+		// The GPU time is only approximate without timestamps.
+		const gpuName = ( ( "submitted" === times.gpuMethod ) ? "GPU (approx)" : "GPU" );
+
+		// Make the final string. The times are averages over the last second.
 		const label =
 			`Frame: ${ getFrameCount() }\n` +
-			`Time: ${ decF.format ( duration ) } ms\n` +
-			`Rate: ${ decF.format ( ( 1000 / duration ) ) } f/s\n` +
+			`Rate: ${ ( null === times.rate ) ? "-" : decF.format ( times.rate ) } f/s\n` +
+			`CPU: ${ average ( times.cpu ) }\n` +
+			`  range: ${ range ( times.cpu ) }\n` +
+			`  update: ${ average ( times.update ) }\n` +
+			`  cull: ${ average ( times.cull ) }\n` +
+			`  draw: ${ average ( times.draw ) }\n` +
+			`${ gpuName }: ${ average ( times.gpu ) }\n` +
+			`  range: ${ range ( times.gpu ) }\n` +
 			`Layers: ${ intF.format ( rgi.numLayers ) }\n` +
 			`Bins: ${ intF.format ( rgi.numBins ) }\n` +
 			`Pipelines: ${ intF.format ( rgi.numPipelines ) }\n` +
