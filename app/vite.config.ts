@@ -16,10 +16,21 @@
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
 
+// Browsers give finer times from performance.now() when the page is
+// cross-origin isolated, which these headers do. That makes the frame times
+// more accurate. The page can then only load files from other sites that
+// allow it, but it doesn't load any.
+const headers = {
+	"Cross-Origin-Opener-Policy": "same-origin",
+	"Cross-Origin-Embedder-Policy": "require-corp",
+};
+
 export default defineConfig ( {
 	plugins: [
 		react()
 	],
+	server: { headers },
+	preview: { headers },
 	base: "/wgsg_demo/", // The output files get copied to the demo repository.
 	define: {
 		BUILD_TIME_STAMP: JSON.stringify ( Date.now() ),

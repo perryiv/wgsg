@@ -19,6 +19,8 @@ import type { IRenderGraphInfo, IVector4 } from "../Types";
 import {
 	ColorTool as Color,
 	Device,
+	GpuTimer,
+	type IGpuTimeCallback,
 	KEEP_PERFORMANCE_INFO,
 } from "../Tools";
 import {
@@ -92,6 +94,8 @@ export class Draw extends BaseClass
 	#info: ( IRenderGraphInfo | null ) = null;
 	#device: ( number | null ) = null;
 	#frame = 0;
+	#gpuTimer: ( GpuTimer | null ) = null;
+	#onGpuTime: ( IGpuTimeCallback | null ) = null;
 
 	/**
 	 * Construct the class.
@@ -148,6 +152,31 @@ export class Draw extends BaseClass
 	public set renderGraphInfo ( info: IRenderGraphInfo )
 	{
 		this.#info = info;
+	}
+
+	/**
+	 * Get the function called with the GPU time of each frame.
+	 * @returns {IGpuTimeCallback | null} The function, or null.
+	 */
+	public get onGpuTime () : ( IGpuTimeCallback | null )
+	{
+		return this.#onGpuTime;
+	}
+
+	/**
+	 * Set the function called with the GPU time of each frame. The time arrives
+	 * after the frame is drawn, sometimes after the next one starts. Set it to
+	 * null to stop timing the GPU.
+	 * @param {IGpuTimeCallback | null} callback - The function, or null.
+	 */
+	public set onGpuTime ( callback: ( IGpuTimeCallback | null ) )
+	{
+		this.#onGpuTime = callback;
+		if ( !callback )
+		{
+			this.#gpuTimer?.destroy();
+			this.#gpuTimer = null;
+		}
 	}
 
 	/**
@@ -329,9 +358,18 @@ export class Draw extends BaseClass
 		// For debugging.
 		canvasTexture.label = `Texture for ${this.type} ${this.id}`;
 
+		// Get the GPU timer if we are timing the GPU.
+		const onGpuTime = this.#onGpuTime;
+		if ( onGpuTime && !this.#gpuTimer )
+		{
+			this.#gpuTimer = new GpuTimer ( device );
+		}
+		const gpuTimer = ( onGpuTime ? this.#gpuTimer : null );
+
 		// Make the render pass encoder.
 		const pass = this.commandEncoder.beginRenderPass ( {
 			label: `Render pass for ${this.type} ${this.id}`,
+			timestampWrites: gpuTimer?.timestampWrites(),
 			colorAttachments: [ {
 				view: canvasTexture.createView(),
 				clearValue: this.preMultipliedClearColor,
@@ -359,8 +397,17 @@ export class Draw extends BaseClass
 		// End this render pass.
 		pass.end();
 
+		// Copy the GPU times to where we can read them.
+		gpuTimer?.afterPass ( encoder );
+
 		// Submit the commands to the GPU.
 		device.queue.submit ( [ encoder.finish() ] );
+
+		// Get the GPU time when it's ready.
+		if ( gpuTimer && onGpuTime )
+		{
+			gpuTimer.afterSubmit ( onGpuTime );
+		}
 
 		// Reset these.
 		this.#renderPassEncoder = null;

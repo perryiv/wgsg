@@ -94,7 +94,16 @@ export class Device extends BaseClass
 
 		// Get the device from the adapter. Can only do this once with this
 		// particular adapter, which is why we don't return it also.
-		const device = await adapter.requestDevice ( options?.deviceDescriptor );
+		// Ask for timestamp queries if the adapter has them, so that we can
+		// measure how long the GPU takes to draw.
+		const descriptor: GPUDeviceDescriptor = { ...options?.deviceDescriptor };
+		if ( adapter.features.has ( "timestamp-query" ) )
+		{
+			const features = new Set<GPUFeatureName> ( descriptor.requiredFeatures ?? [] );
+			features.add ( "timestamp-query" );
+			descriptor.requiredFeatures = [ ...features ];
+		}
+		const device = await adapter.requestDevice ( descriptor );
 
 		// Handle no device.
 		if ( !device )

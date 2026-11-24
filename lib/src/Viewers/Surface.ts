@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base as BaseClass } from "../Base/Base";
+import { FrameTimes, type IFrameTimes } from "./FrameTimes";
 import { replaceReference } from "../Base/References";
 import { clampVec4 } from "../Math/Functions";
 import { makeRenderGraphInfo, resetRenderGraphInfo, Root } from "../Render";
@@ -101,6 +102,8 @@ export class Surface extends BaseClass
 	#clearColor: IVector4 = [ ...Color.transparent ];
 	#info: IRenderGraphInfo = makeRenderGraphInfo();
 	#flags = 0;
+	#frameTimes = new FrameTimes();
+	#renderContinuously = false;
 
 	/**
 	 * Construct the class.
@@ -828,6 +831,13 @@ export class Surface extends BaseClass
 		// Tell the visitor that it should return to its initial state.
 		dv.reset();
 
+		// Time the GPU. The time arrives later, so remember which frame it's for.
+		const { start } = this.#frame;
+		dv.onGpuTime = ( time, method ) =>
+		{
+			this.#frameTimes.addGpu ( start, time, method );
+		};
+
 		// Draw the render graph.
 		dv.draw ( root, this.#frame.count );
 	}
@@ -839,6 +849,38 @@ export class Surface extends BaseClass
 	public get frame () : IFrameInfo
 	{
 		return { ...this.#frame };
+	}
+
+	/**
+	 * Get the summary of the times of the recent frames.
+	 * @returns {IFrameTimes} The summary.
+	 */
+	public get frameTimes () : IFrameTimes
+	{
+		return this.#frameTimes.summary;
+	}
+
+	/**
+	 * See if we render again as soon as each frame is done.
+	 * @returns {boolean} True if we render continuously.
+	 */
+	public getRenderContinuously () : boolean
+	{
+		return this.#renderContinuously;
+	}
+
+	/**
+	 * Set whether we render again as soon as each frame is done. This is for
+	 * measuring the frame rate, and for animations.
+	 * @param {boolean} state - True to render continuously.
+	 */
+	public setRenderContinuously ( state: boolean ) : void
+	{
+		this.#renderContinuously = state;
+		if ( state )
+		{
+			this.requestRender();
+		}
 	}
 
 	/**
@@ -903,16 +945,32 @@ export class Surface extends BaseClass
 		}
 
 		// Update the scene.
+		const start = this.#frame.start;
 		this.update();
+		const updated = performance.now();
 
 		// Cull the scene and make the render-graph.
 		this.cull();
+		const culled = performance.now();
 
 		// Draw the render-graph.
 		this.draw();
 
 		// Finish the frame.
-		this.#frame.end = performance.now();
+		const end = performance.now();
+		this.#frame.end = end;
+		this.#frameTimes.addFrame ( {
+			start,
+			update: ( updated - start ),
+			cull: ( culled - updated ),
+			draw: ( end - culled ),
+		} );
+
+		// Ask for the next frame if we're rendering continuously.
+		if ( this.#renderContinuously )
+		{
+			this.requestRender();
+		}
 
 		// Performance info.
 		if ( BUILD_TIME_LOG_LEVEL >= LogLevel.DEBUG )

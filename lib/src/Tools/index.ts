@@ -20,6 +20,7 @@ export * from "./Environment";
 export * from "./Errors";
 export * from "./Events";
 export * from "./Functions";
+export * from "./GpuTimer";
 export * from "./Log";
 export * from "./Singleton";
 export * from "./Three";

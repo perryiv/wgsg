@@ -12,11 +12,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { test as testFrameTimes } from "./FrameTimes";
 import { test as testSurface } from "./Surface";
 import { test as testViewer } from "./Viewer";
 
 describe ( "Viewers", function ()
 {
+	testFrameTimes();
 	testSurface();
 	testViewer();
 } );
