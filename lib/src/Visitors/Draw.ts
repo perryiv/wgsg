@@ -50,10 +50,18 @@ import {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export interface IDrawVisitorInput
-{
-	context: GPUCanvasContext;
-};
+/**
+ * What the draw visitor renders into. Give it one or the other:
+ * - context: A canvas's context. Each frame goes to the canvas.
+ * - texture: A texture, to render without a canvas. It must have the
+ *   device's preferred format (Device.instance.preferredFormat), because the
+ *   shaders make their pipelines for that format, and RENDER_ATTACHMENT
+ *   usage. Add COPY_SRC usage to read the pixels back.
+ */
+export type IDrawVisitorInput = (
+	{ context: GPUCanvasContext, texture?: undefined } |
+	{ texture: GPUTexture, context?: undefined }
+);
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -84,7 +92,8 @@ const requireShader = ( state: State ) : ShaderBase =>
 
 export class Draw extends BaseClass
 {
-	#context: GPUCanvasContext;
+	#context: ( GPUCanvasContext | null ) = null;
+	#texture: ( GPUTexture | null ) = null;
 	#depthTexture: ( GPUTexture | null ) = null;
 	#clearColor: IVector4 = [ ...Color.gray ];
 	#renderPassEncoder: ( GPURenderPassEncoder | null ) = null;
@@ -101,14 +110,30 @@ export class Draw extends BaseClass
 	 * Construct the class.
 	 * @class
 	 * @param {IDrawVisitorInput} input - The input for the constructor.
-	 * @param {GPUCanvasContext} input.context - The GPU canvas context to use for rendering.
+	 * @param {GPUCanvasContext} [input.context] - The GPU canvas context to render into.
+	 * @param {GPUTexture} [input.texture] - The texture to render into.
 	 */
-	constructor ( { context }: IDrawVisitorInput )
+	constructor ( { context, texture }: IDrawVisitorInput )
 	{
 		// Call this first.
 		super();
 
-		// Check the input.
+		// Render into a texture?
+		if ( texture )
+		{
+			if ( context )
+			{
+				throw new Error ( "Draw visitor was given both a context and a texture" );
+			}
+			if ( 0 === ( texture.usage & GPUTextureUsage.RENDER_ATTACHMENT ) )
+			{
+				throw new Error ( "Draw visitor texture input does not have RENDER_ATTACHMENT usage" );
+			}
+			this.#texture = texture;
+			return;
+		}
+
+		// Otherwise, render into a canvas.
 		if ( !context )
 		{
 			throw new Error ( "Draw visitor context input is invalid" );
@@ -117,8 +142,6 @@ export class Draw extends BaseClass
 		{
 			throw new Error ( "Draw visitor context input is not a GPUCanvasContext" );
 		}
-
-		// Set the members.
 		this.#context = context;
 	}
 
@@ -183,19 +206,48 @@ export class Draw extends BaseClass
 	 * Get the GPU canvas context.
 	 * @returns {GPUCanvasContext} The GPU canvas context.
 	 */
-	protected get context () : GPUCanvasContext
+	protected get context () : ( GPUCanvasContext | null )
 	{
-		// Shortcut.
-		const context = this.#context;
+		return this.#context;
+	}
 
-		// We should always have a valid context.
-		if ( !context )
+	/**
+	 * Get the texture we render into, if we were given one instead of a context.
+	 * @returns {GPUTexture | null} The texture, or null.
+	 */
+	public get texture () : ( GPUTexture | null )
+	{
+		return this.#texture;
+	}
+
+	/**
+	 * Get the texture to render this frame into.
+	 * @returns {GPUTexture} The texture.
+	 */
+	protected getColorTexture () : GPUTexture
+	{
+		// Were we given a texture?
+		const texture = this.#texture;
+		if ( texture )
 		{
-			throw new Error ( "Attempting to get invalid context in draw visitor" );
+			// It has to match the format the shaders make their pipelines for.
+			const { preferredFormat } = Device.instance;
+			if ( texture.format !== preferredFormat )
+			{
+				throw new Error ( `Draw visitor texture has format ${texture.format} but the shaders use ${preferredFormat}` );
+			}
+			return texture;
 		}
 
-		// Return the context.
-		return context;
+		// Otherwise, the canvas gives us a new texture each frame.
+		const context = this.#context;
+		if ( !context )
+		{
+			throw new Error ( "Draw visitor has neither a context nor a texture" );
+		}
+		const canvasTexture = context.getCurrentTexture();
+		canvasTexture.label = `Texture for ${this.type} ${this.id}`;
+		return canvasTexture;
 	}
 
 	/**
@@ -352,11 +404,8 @@ export class Draw extends BaseClass
 		this.#commandEncoder = encoder;
 
 		// Shortcuts.
-		const canvasTexture = this.context.getCurrentTexture();
-		const depthTexture = this.getDepthTexture ( canvasTexture );
-
-		// For debugging.
-		canvasTexture.label = `Texture for ${this.type} ${this.id}`;
+		const colorTexture = this.getColorTexture();
+		const depthTexture = this.getDepthTexture ( colorTexture );
 
 		// Get the GPU timer if we are timing the GPU.
 		const onGpuTime = this.#onGpuTime;
@@ -371,7 +420,7 @@ export class Draw extends BaseClass
 			label: `Render pass for ${this.type} ${this.id}`,
 			timestampWrites: gpuTimer?.timestampWrites(),
 			colorAttachments: [ {
-				view: canvasTexture.createView(),
+				view: colorTexture.createView(),
 				clearValue: this.preMultipliedClearColor,
 				loadOp: "clear",
 				storeOp: "store"

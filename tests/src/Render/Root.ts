@@ -44,6 +44,61 @@ import {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+const SIZE = 16;
+
+/**
+ * Read the pixels of a texture, in RGBA order, one row after another.
+ * @param {GPUTexture} texture - The texture, with COPY_SRC usage.
+ * @returns {Promise<Uint8Array>} The pixels.
+ */
+async function readPixels ( texture: GPUTexture ) : Promise < Uint8Array >
+{
+	const { device } = Device.instance;
+	const { width, height, format } = texture;
+	const bytesPerRow = Math.ceil ( ( width * 4 ) / 256 ) * 256; // Must be a multiple of 256.
+	const buffer = device.createBuffer ( {
+		size: ( bytesPerRow * height ),
+		usage: ( GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ ),
+	} );
+	const encoder = device.createCommandEncoder();
+	encoder.copyTextureToBuffer ( { texture }, { buffer, bytesPerRow }, [ width, height ] );
+	device.queue.submit ( [ encoder.finish() ] );
+	await buffer.mapAsync ( GPUMapMode.READ );
+	const mapped = new Uint8Array ( buffer.getMappedRange() );
+
+	// Copy the rows without the padding, and put blue last if it's first.
+	const pixels = new Uint8Array ( width * height * 4 );
+	const bgra = ( "bgra8unorm" === format );
+	for ( let y = 0; y < height; ++y )
+	{
+		for ( let x = 0; x < width; ++x )
+		{
+			const from = ( y * bytesPerRow ) + ( x * 4 );
+			const to = ( ( y * width ) + x ) * 4;
+			pixels[ to     ] = mapped[ from + ( bgra ? 2 : 0 ) ];
+			pixels[ to + 1 ] = mapped[ from + 1 ];
+			pixels[ to + 2 ] = mapped[ from + ( bgra ? 0 : 2 ) ];
+			pixels[ to + 3 ] = mapped[ from + 3 ];
+		}
+	}
+	buffer.unmap();
+	buffer.destroy();
+	return pixels;
+}
+
+/**
+ * Get one pixel.
+ * @param {Uint8Array} pixels - The pixels from readPixels().
+ * @param {number} x - The column.
+ * @param {number} y - The row.
+ * @returns {number[]} The pixel, in RGBA order.
+ */
+function getPixel ( pixels: Uint8Array, x: number, y: number ) : number[]
+{
+	const i = ( ( y * SIZE ) + x ) * 4;
+	return Array.from ( pixels.subarray ( i, i + 4 ) );
+}
+
 function buildScene ()
 {
 	const root = new Group();
@@ -180,6 +235,51 @@ export function test ()
 
 			const dv = new DrawVisitor ( { context } );
 			dv.draw ( root, 1 );
+		} );
+
+		it ( "Can draw the scene into a texture and read the pixels", async function ()
+		{
+			const { device, preferredFormat } = Device.instance;
+			const texture = device.createTexture ( {
+				size: [ SIZE, SIZE ],
+				format: preferredFormat,
+				usage: ( GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC ),
+			} );
+
+			const dv = new DrawVisitor ( { texture } );
+			expect ( dv.texture ).to.equal ( texture );
+			dv.clearColor = [ 0, 0, 1, 1 ];
+			dv.draw ( root, 1 );
+
+			// The sphere at the origin covers the middle. Its color is gray, and
+			// the corners are the blue clear color.
+			const pixels = await readPixels ( texture );
+			const middle = getPixel ( pixels, ( SIZE / 2 ), ( SIZE / 2 ) );
+			expect ( middle ).to.not.deep.equal ( [ 0, 0, 255, 255 ] );
+			expect ( getPixel ( pixels, 0, 0 ) ).to.deep.equal ( [ 0, 0, 255, 255 ] );
+			texture.destroy();
+		} );
+
+		it ( "Should reject a texture it can't render into", function ()
+		{
+			const { device, preferredFormat } = Device.instance;
+			const noUsage = device.createTexture ( {
+				size: [ SIZE, SIZE ],
+				format: preferredFormat,
+				usage: GPUTextureUsage.COPY_SRC,
+			} );
+			expect ( () => new DrawVisitor ( { texture: noUsage } ) ).to.throw ( "does not have RENDER_ATTACHMENT usage" );
+			noUsage.destroy();
+
+			const otherFormat = ( ( "rgba8unorm" === preferredFormat ) ? "bgra8unorm" : "rgba8unorm" );
+			const wrongFormat = device.createTexture ( {
+				size: [ SIZE, SIZE ],
+				format: otherFormat,
+				usage: GPUTextureUsage.RENDER_ATTACHMENT,
+			} );
+			const dv = new DrawVisitor ( { texture: wrongFormat } );
+			expect ( () => dv.draw ( root, 1 ) ).to.throw ( `has format ${otherFormat} but the shaders use ${preferredFormat}` );
+			wrongFormat.destroy();
 		} );
 	} );
 };
