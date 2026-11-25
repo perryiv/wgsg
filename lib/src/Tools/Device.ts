@@ -29,19 +29,22 @@ export class Device extends BaseClass
 	static #isInitializing = false;
 	#device: ( GPUDevice | null ) = null;
 	#preferredFormat: ( ITextureFormat | null ) = null;
+	#adapterInfo: GPUAdapterInfo;
 
 	/**
 	 * Construct the class.
 	 * @class
 	 * @param {GPUDevice} device The GPU device.
+	 * @param {GPUAdapterInfo} adapterInfo The information about the adapter.
 	 */
-	protected constructor ( device: GPUDevice )
+	protected constructor ( device: GPUDevice, adapterInfo: GPUAdapterInfo )
 	{
 		// Do this first.
 		super();
 
 		// Set our members.
 		this.#device = device;
+		this.#adapterInfo = adapterInfo;
 	}
 
 	/**
@@ -113,7 +116,7 @@ export class Device extends BaseClass
 		}
 
 		// Make the new instance.
-		const instance = new Device ( device );
+		const instance = new Device ( device, adapter.info );
 
 		// Set the label for debugging.
 		device.label = `Device ${instance.id}`;
@@ -236,6 +239,16 @@ export class Device extends BaseClass
 			throw new Error ( "Device is not initialized" );
 		}
 		return Device.#instance;
+	}
+
+	/**
+	 * Get the information about the adapter: its vendor, architecture, and
+	 * so on.
+	 * @returns {GPUAdapterInfo} The adapter information.
+	 */
+	public get adapterInfo() : GPUAdapterInfo
+	{
+		return this.#adapterInfo;
 	}
 
 	/**

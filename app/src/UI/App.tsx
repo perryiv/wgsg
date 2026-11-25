@@ -276,19 +276,6 @@ export function App()
 	[] );
 
 	//
-	// Handle the render continuously button. This is for measuring the frame rate.
-	//
-	const handleRenderContinuously = useCallback ( () =>
-	{
-		if ( viewer )
-		{
-			viewer.setRenderContinuously ( !viewer.getRenderContinuously() );
-			setCount ( count + 1 );
-		}
-	},
-	[ count, viewer ] );
-
-	//
 	// Handle the show grid button.
 	//
 	const handleShowGrid = useCallback ( () =>
@@ -507,13 +494,6 @@ export function App()
 					</Button>
 					<Button
 						disabled = { disabled }
-						onClick = { handleRenderContinuously }
-						value = { viewer ? viewer.getRenderContinuously() : false }
-					>
-						Render continuously
-					</Button>
-					<Button
-						disabled = { disabled }
 						onClick = { handleShowGrid }
 						value = { viewer ? viewer.getDecorator ( Grid.getClassName() )?.visible : false }
 					>
@@ -566,7 +546,6 @@ export function App()
 		buildTimeStamp,
 		edgesVisible,
 		handleAllowAnimations,
-		handleRenderContinuously,
 		handleShowBoundingBoxes,
 		handleShowGrid,
 		handleShowStats,

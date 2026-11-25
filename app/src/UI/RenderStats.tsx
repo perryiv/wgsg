@@ -12,9 +12,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Button } from "./Button";
 import { Panel } from "./Panel";
 import { useTheme } from "@mui/material";
-import { useViewerStore } from "../State";
+import { modelNames, useViewerStore } from "../State";
 import {
 	useCallback,
 	useEffect,
@@ -22,7 +23,10 @@ import {
 	useState,
 } from "react";
 import {
+	Device,
+	type IFrameMeasurement,
 	type IRenderGraphInfo,
+	type ITimeStatistics,
 	type ITimeSummary,
 	Viewer as InternalViewer,
 	throttle,
@@ -50,6 +54,48 @@ const defaultRenderGraphInfo: IRenderGraphInfo = {
 
 ///////////////////////////////////////////////////////////////////////////////
 //
+//	A measurement, with what was measured.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+interface IMeasured
+{
+	measurement: IFrameMeasurement;
+	renderGraph: IRenderGraphInfo;
+	model: string;
+	when: Date;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	Make the JSON of a measurement to copy to the clipboard. The times are in
+//	milliseconds, rounded to microseconds.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+const makeReport = ( { measurement, renderGraph, model, when }: IMeasured ) : string =>
+{
+	const { vendor, architecture, device, description } = Device.instance.adapterInfo;
+	const report = {
+		when: when.toISOString(),
+		model,
+		...measurement,
+		renderGraph,
+		adapter: { vendor, architecture, device, description },
+		browser: navigator.userAgent,
+	};
+	const round = ( _key: string, value: unknown ) =>
+	{
+		return ( ( ( "number" === typeof value ) && !Number.isInteger ( value ) ) ?
+			Number ( value.toFixed ( 3 ) ) : value );
+	};
+	return ( JSON.stringify ( report, round, "  " ) + "\n" );
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
 //	Component for rendering the statistics about the current frame.
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -58,6 +104,9 @@ export function RenderStats()
 {
 	// Get the state.
 	const [ , setCount ] = useState ( 0 );
+	const [ measured, setMeasured ] = useState < IMeasured | null > ( null );
+	const [ measuring, setMeasuring ] = useState ( false );
+	const [ copied, setCopied ] = useState ( false );
 	const { palette } = useTheme();
 	const currentViewerId = useViewerStore ( ( store ) => store.current );
 	const viewerStates = useViewerStore ( ( store ) => store.viewers );
@@ -124,6 +173,55 @@ export function RenderStats()
 		);
 	},
 	[ viewer ] );
+
+	//
+	// Measure the frames.
+	//
+	const handleMeasure = useCallback ( () =>
+	{
+		if ( !viewer || viewer.measuring )
+		{
+			return;
+		}
+		setMeasuring ( true );
+		viewer.measure().then ( ( measurement ) =>
+		{
+			const scene = viewer.modelScene;
+			setMeasured ( {
+				measurement,
+				renderGraph: { ...viewer.cullVisitor.renderGraphInfo },
+				model: ( ( scene ? modelNames.get ( scene ) : null ) ?? "none" ),
+				when: new Date(),
+			} );
+		} ).catch ( ( error: unknown ) =>
+		{
+			console.error ( "Failed to measure the frames:", error );
+		} ).finally ( () =>
+		{
+			setMeasuring ( false );
+		} );
+	},
+	[ viewer ] );
+
+	//
+	// Copy the measurement to the clipboard.
+	//
+	const handleCopy = useCallback ( () =>
+	{
+		if ( !measured )
+		{
+			return;
+		}
+		navigator.clipboard.writeText ( makeReport ( measured ) ).then ( () =>
+		{
+			setCopied ( true );
+			setTimeout ( () => { setCopied ( false ); }, 2000 );
+		} ).catch ( ( error: unknown ) =>
+		{
+			console.error ( "Failed to copy the measurement:", error );
+		} );
+	},
+	[ measured ] );
 
 	//
 	// Called when the component mounts.
@@ -217,12 +315,33 @@ export function RenderStats()
 			`Triangles: ${ intF.format ( rgi.numTriangles ) }\n` +
 			`Lines: ${ intF.format ( rgi.numLines ) }`;
 
+		// Add the measurement, if there is one.
+		if ( measuring )
+		{
+			return ( label + "\n\nMeasuring..." );
+		}
+		if ( measured )
+		{
+			const m = measured.measurement;
+			const middle = ( stats: ( ITimeStatistics | null ) ) =>
+			{
+				return ( stats ? `${ decF.format ( stats.median ) } ms` : "-" );
+			};
+			return ( label +
+				`\n\nMeasured ${ intF.format ( m.frames ) } frames\n` +
+				`Rate: ${ ( null === m.rate ) ? "-" : decF.format ( m.rate ) } f/s\n` +
+				`CPU median: ${ middle ( m.cpu ) }\n` +
+				`${ ( "submitted" === m.gpuMethod ) ? "GPU (approx)" : "GPU" } median: ${ middle ( m.gpu ) }` );
+		}
+
 		return label;
 	}, [
 		decF,
 		getFrameCount,
 		getRenderGraphInfo,
 		intF,
+		measured,
+		measuring,
 		viewer,
 	] );
 
@@ -259,6 +378,18 @@ export function RenderStats()
 				>
 					{ label }
 				</div>
+				<Button
+					disabled = { measuring }
+					onClick = { handleMeasure }
+				>
+					Measure
+				</Button>
+				<Button
+					disabled = { !measured || measuring }
+					onClick = { handleCopy }
+				>
+					{ copied ? "Copied" : "Copy" }
+				</Button>
 			</div>
 		</Panel>
 	);
