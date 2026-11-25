@@ -41,8 +41,8 @@ export function test ()
 			expect ( proj.near ).to.be.equal ( 0.1 );
 			expect ( proj.far ).to.be.equal ( 10000 );
 			expect ( proj.matrix ).to.be.deep.equal ( [
-				1.792590986919304, 0, 0, 0,
-				0, 1.792590986919304, 0, 0,
+				2.414213562373095, 0, 0, 0,
+				0, 2.414213562373095, 0, 0,
 				0, 0, -1.000010000100001, -1,
 				0, 0, -0.1000010000100001, 0
 			] );
@@ -83,6 +83,8 @@ export function test ()
 
 			expect ( () => { proj.setFrom ( { fov:  0 } ) } ).to.throw ( "Invalid field-of-view: 0"  );
 			expect ( () => { proj.setFrom ( { fov: -1 } ) } ).to.throw ( "Invalid field-of-view: -1" );
+			expect ( () => { proj.setFrom ( { fov: 180 } ) } ).to.throw ( "Invalid field-of-view: 180" );
+			expect ( () => { proj.fov = 180; } ).to.throw();
 
 			expect ( () => { proj.setFrom ( { aspect:  0 } ) } ).to.throw ( "Invalid aspect ratio: 0"  );
 			expect ( () => { proj.setFrom ( { aspect: -1 } ) } ).to.throw ( "Invalid aspect ratio: -1" );
@@ -92,6 +94,20 @@ export function test ()
 
 			expect ( () => { proj.setFrom ( { far:  0 } ) } ).to.throw ( "Invalid far distance: 0"  );
 			expect ( () => { proj.setFrom ( { far: -1 } ) } ).to.throw ( "Invalid far distance: -1" );
+		} );
+
+		it ( "Should take the field-of-view in degrees", function ()
+		{
+			// At 90 degrees, the top of the view is 45 degrees up, so a point at
+			// distance d in front of the eye is at the top when it's d up.
+			const proj = new Perspective ( { fov: 90, aspect: 1, near: 1, far: 100 } );
+			const m = proj.matrix;
+			expect ( m[0] ).to.be.closeTo ( 1, 1e-12 );
+			expect ( m[5] ).to.be.closeTo ( 1, 1e-12 );
+
+			// At 60 degrees, the slope of the top is tan ( 30 degrees ).
+			proj.fov = 60;
+			expect ( proj.matrix[5] ).to.be.closeTo ( 1 / Math.tan ( Math.PI / 6 ), 1e-12 );
 		} );
 
 		it ( "Can use setter members", function ()

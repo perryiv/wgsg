@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IDENTITY_MATRIX } from "../Tools";
+import { DEG_TO_RAD, IDENTITY_MATRIX } from "../Tools";
 import { isPositiveFiniteNumber, Sphere } from "../Math";
 import { mat4 } from "gl-matrix";
 import { Projection } from "./Projection";
@@ -32,7 +32,7 @@ import {
 
 export interface IPerspectiveData
 {
-	fov?: number;
+	fov?: number; // The vertical field-of-view, in degrees.
 	aspect?: number;
 	near?: number;
 	far?: number;
@@ -119,7 +119,7 @@ export class Perspective extends Projection
 		}
 
 		// When we get to here make sure the numbers are all positive.
-		if ( fov <= 0 )
+		if ( ( fov <= 0 ) || ( fov >= 180 ) )
 		{
 			throw new Error ( `Invalid field-of-view: ${fov}` );
 		}
@@ -190,7 +190,8 @@ export class Perspective extends Projection
 		// Write the projection matrix to the answer. WebGPU's depth goes from 0
 		// to 1, so this is the "ZO" version. The other, mat4.perspective(), is
 		// OpenGL's, with depth from -1 to 1.
-		mat4.perspectiveZO ( answer, fov, aspect, near, far );
+		// The field-of-view is in degrees, and gl-matrix wants radians.
+		mat4.perspectiveZO ( answer, ( fov * DEG_TO_RAD ), aspect, near, far );
 
 		// Return the new matrix.
 		return answer;
@@ -256,8 +257,8 @@ export class Perspective extends Projection
 	}
 
 	/**
-	 * Get the field-of-view.
-	 * @returns {number} The field-of-view.
+	 * Get the vertical field-of-view.
+	 * @returns {number} The field-of-view, in degrees.
 	 */
 	public get fov() : number
 	{
@@ -265,14 +266,19 @@ export class Perspective extends Projection
 	}
 
 	/**
-	 * Set the field-of-view.
-	 * @param {number} fov - The field-of-view.
+	 * Set the vertical field-of-view.
+	 * @param {number} fov - The field-of-view, in degrees, more than 0 and
+	 * less than 180.
 	 */
 	public set fov ( fov: Readonly<number> )
 	{
 		if ( false === isPositiveFiniteNumber ( fov ) )
 		{
 			throw new Error ( `Given field-of-view '${fov}' is not a positive finite number` );
+		}
+		if ( fov >= 180 )
+		{
+			throw new Error ( `Given field-of-view '${fov}' is not less than 180 degrees` );
 		}
 
 		this.#fov = fov;
