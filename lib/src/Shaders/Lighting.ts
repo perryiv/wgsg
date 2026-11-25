@@ -41,8 +41,8 @@ export abstract class Lighting extends BaseClass
 	#color: IVector4 = [ ...Color.gray ];
 	#twoSidedLight = false;
 	#lightDir: IVector4 = [ 0.0, 0.0, -1.0, 0.0 ];
-
-	#uniforms: ( ArrayBuffer | null ) = null;
+	#camera: ( ArrayBuffer | null ) = null;
+	#material: ( ArrayBuffer | null ) = null;
 
 	/**
 	 * Construct the class.
@@ -90,7 +90,7 @@ export abstract class Lighting extends BaseClass
 	public set color ( color: Readonly<IVector4> )
 	{
 		vec4.copy ( this.#color, color );
-		this.uniformsChanged();
+		this.materialChanged();
 	}
 
 	/**
@@ -109,7 +109,7 @@ export abstract class Lighting extends BaseClass
 	public set twoSidedLight ( twoSidedLight: boolean )
 	{
 		this.#twoSidedLight = twoSidedLight;
-		this.uniformsChanged();
+		this.materialChanged();
 	}
 
 	/**
@@ -138,39 +138,48 @@ export abstract class Lighting extends BaseClass
 	public set lightDir ( lightDir: Readonly<IVector4> )
 	{
 		vec4.copy ( this.#lightDir, lightDir );
-		this.uniformsChanged();
+		this.cameraChanged();
 	}
 
 	/**
-	 * Get the number of 4-byte values in the uniforms. Two 4x4 matrices, the
-	 * color, the light direction, and the two-sided flag. Derived classes that
-	 * add uniforms after these override this.
-	 * @returns {number} The number of 4-byte values.
-	 */
-	protected get numUniformValues () : number
-	{
-		return ( 16 + 16 + 4 + 3 + 1 );
-	}
-
-	/**
-	 * Return the uniform values, in the same order as the "Uniforms" struct
-	 * in the shader code.
+	 * Return the camera's uniform values, in the same order as the "Camera"
+	 * struct in the shader code: the projection matrix and the light
+	 * direction, and one unused value so that the size is a multiple of 16
+	 * bytes.
 	 * @returns {ArrayBuffer} The uniform values.
 	 */
-	protected makeUniforms () : ArrayBuffer
+	protected makeCameraUniforms () : ArrayBuffer
 	{
-		let uniforms = this.#uniforms;
-		if ( !uniforms )
-		{
-			uniforms = new ArrayBuffer ( this.numUniformValues * 4 );
-			this.#uniforms = uniforms;
-		}
-		const floats = new Float32Array ( uniforms );
+		this.#camera ??= new ArrayBuffer ( ( 16 + 4 ) * 4 );
+		const floats = new Float32Array ( this.#camera );
 		floats.set ( this.projMatrix, 0 );
-		floats.set ( this.viewMatrix, 16 );
-		floats.set ( this.#color, 32 );
-		floats.set ( [ this.#lightDir[0], this.#lightDir[1], this.#lightDir[2] ], 36 );
-		new Uint32Array ( uniforms )[39] = ( this.#twoSidedLight ? 1 : 0 );
-		return uniforms;
+		floats.set ( [ this.#lightDir[0], this.#lightDir[1], this.#lightDir[2] ], 16 );
+		return this.#camera;
+	}
+
+	/**
+	 * Get the number of 4-byte values in the material's uniforms: the color,
+	 * the two-sided flag, and three unused values so that the size is a
+	 * multiple of 16 bytes. Derived classes that add uniforms after these
+	 * override this.
+	 * @returns {number} The number of 4-byte values.
+	 */
+	protected get numMaterialValues () : number
+	{
+		return ( 4 + 1 + 3 );
+	}
+
+	/**
+	 * Return the material's uniform values, in the same order as the
+	 * "Material" struct in the shader code.
+	 * @returns {ArrayBuffer} The uniform values.
+	 */
+	protected makeMaterialUniforms () : ArrayBuffer
+	{
+		this.#material ??= new ArrayBuffer ( this.numMaterialValues * 4 );
+		const floats = new Float32Array ( this.#material );
+		floats.set ( this.#color, 0 );
+		new Uint32Array ( this.#material )[4] = ( this.#twoSidedLight ? 1 : 0 );
+		return this.#material;
 	}
 }

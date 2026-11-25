@@ -30,11 +30,11 @@ struct VertexOut
 
 	// Transform the position to view space, and pass it to the fragment
 	// shader so that it can calculate the normal vector.
-	let viewPosition = uniforms.viewMatrix * position;
+	let viewPosition = object.viewMatrix * position;
 	answer.viewPosition = viewPosition.xyz;
 
 	// Transform the position to clip space.
-	answer.position = uniforms.projMatrix * viewPosition;
+	answer.position = camera.projMatrix * viewPosition;
 
 	// The fragment shader uses this to find the edges.
 	answer.barycentric = getBarycentric ( corner );
@@ -58,12 +58,12 @@ struct VertexOut
 	}
 
 	// Calculate the diffuse lighting factor.
-	let dotProduct = dot ( normal, -uniforms.lightDir );
-	let diffuse = select ( max ( dotProduct, 0.0 ), abs ( dotProduct ), ( uniforms.twoSided != 0u ) );
+	let dotProduct = dot ( normal, -camera.lightDir );
+	let diffuse = select ( max ( dotProduct, 0.0 ), abs ( dotProduct ), ( material.twoSided != 0u ) );
 
 	// Calculate the color, assuming that the canvas is configured
 	// for pre-multiplied alpha.
-	let color = vec4 ( uniforms.color.rgb * diffuse * uniforms.color.a, uniforms.color.a );
+	let color = vec4 ( material.color.rgb * diffuse * material.color.a, material.color.a );
 
 	// Add the edges.
 	return addEdges ( color, fragData.barycentric, change );

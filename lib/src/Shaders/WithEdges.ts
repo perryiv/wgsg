@@ -57,6 +57,9 @@ export const PULLED_INDICES_NONE = 0;
 export const PULLED_INDICES_UINT16 = 1;
 export const PULLED_INDICES_UINT32 = 2;
 
+// The bind group with the buffers that the vertices are pulled from.
+export const PULLED_VERTICES_BIND_GROUP = 3;
+
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
@@ -70,7 +73,6 @@ export abstract class WithEdges extends BaseClass
 	#edgeColor: IVector4 = [ ...Color.black ];
 	#edgeWidth = 1.0;
 	#verticesLayout: ( GPUBindGroupLayout | null ) = null;
-	#pipelineLayout: ( GPUPipelineLayout | null ) = null;
 	#pulled = new WeakMap < object, IPulledVerticesData >();
 	#warned = false;
 
@@ -91,7 +93,6 @@ export abstract class WithEdges extends BaseClass
 	public override releaseGpuObjects() : void
 	{
 		this.#verticesLayout = null;
-		this.#pipelineLayout = null;
 		this.#pulled = new WeakMap();
 		super.releaseGpuObjects();
 	}
@@ -121,7 +122,7 @@ export abstract class WithEdges extends BaseClass
 	public set edgeColor ( color: Readonly<IVector4> )
 	{
 		vec4.copy ( this.#edgeColor, color );
-		this.uniformsChanged();
+		this.materialChanged();
 	}
 
 	/**
@@ -144,7 +145,7 @@ export abstract class WithEdges extends BaseClass
 			throw new Error ( `Invalid edge width: ${width}` );
 		}
 		this.#edgeWidth = width;
-		this.uniformsChanged();
+		this.materialChanged();
 	}
 
 	// This shader pulls the vertices from storage buffers.
@@ -154,26 +155,26 @@ export abstract class WithEdges extends BaseClass
 	protected abstract readonly usesNormals: boolean;
 
 	/**
-	 * Get the number of 4-byte values in the uniforms. The edge color, the
-	 * edge width, and three unused values so that the size is a multiple of
-	 * 16 bytes, like the struct in the shader code.
+	 * Get the number of 4-byte values in the material's uniforms. The edge
+	 * color, the edge width, and three unused values so that the size is a
+	 * multiple of 16 bytes, like the struct in the shader code.
 	 * @returns {number} The number of 4-byte values.
 	 */
-	protected override get numUniformValues () : number
+	protected override get numMaterialValues () : number
 	{
-		return ( super.numUniformValues + 4 + 1 + 3 );
+		return ( super.numMaterialValues + 4 + 1 + 3 );
 	}
 
 	/**
-	 * Return the uniform values, in the same order as the "Uniforms" struct
-	 * in the shader code.
+	 * Return the material's uniform values, in the same order as the
+	 * "Material" struct in the shader code.
 	 * @returns {ArrayBuffer} The uniform values.
 	 */
-	protected override makeUniforms () : ArrayBuffer
+	protected override makeMaterialUniforms () : ArrayBuffer
 	{
-		const uniforms = super.makeUniforms();
+		const uniforms = super.makeMaterialUniforms();
 		const floats = new Float32Array ( uniforms );
-		const start = super.numUniformValues;
+		const start = super.numMaterialValues;
 		floats.set ( this.#edgeColor, start );
 		floats[start + 4] = this.#edgeWidth;
 		return uniforms;
@@ -207,20 +208,13 @@ export abstract class WithEdges extends BaseClass
 	}
 
 	/**
-	 * Get the pipeline layout. Group 0 has the uniforms and group 1 has the
-	 * buffers that the vertices are pulled from.
-	 * @returns {GPUPipelineLayout} The pipeline layout.
+	 * Get the bind group layouts. After the camera, material, and object
+	 * comes group 3, with the buffers that the vertices are pulled from.
+	 * @returns {GPUBindGroupLayout[]} The bind group layouts.
 	 */
-	protected override get pipelineLayout () : GPUPipelineLayout
+	protected override get bindGroupLayouts () : GPUBindGroupLayout[]
 	{
-		if ( !this.#pipelineLayout )
-		{
-			this.#pipelineLayout = Device.instance.device.createPipelineLayout ( {
-				label: `Pipeline layout for shader ${this.type}`,
-				bindGroupLayouts: [ this.bindGroupLayout, this.verticesLayout ],
-			} );
-		}
-		return this.#pipelineLayout;
+		return [ ...super.bindGroupLayouts, this.verticesLayout ];
 	}
 
 	/**
@@ -306,7 +300,7 @@ export abstract class WithEdges extends BaseClass
 		}
 
 		// Use the bind group.
-		pass.setBindGroup ( 1, data.bindGroup );
+		pass.setBindGroup ( PULLED_VERTICES_BIND_GROUP, data.bindGroup );
 
 		// Return how the vertex shader should read the indices.
 		return mode;

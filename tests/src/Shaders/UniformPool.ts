@@ -184,6 +184,47 @@ export function test ()
 			expect ( await device.popErrorScope() ).to.be.null;
 		} );
 
+		it ( "Should keep the buffer when the values change back to what it has", function ()
+		{
+			const pool = makePool();
+			const a = pool.use ( 1, true, makeValues ( 1 ) );
+			const b = pool.use ( 1, true, makeValues ( 1 ) );
+			expect ( b ).to.equal ( a );
+			expect ( pool.length ).to.equal ( 1 );
+			pool.destroy();
+		} );
+
+		it ( "Should not write values that the buffer already has", function ()
+		{
+			const { queue } = Device.instance.device;
+			const writeBuffer = queue.writeBuffer.bind ( queue );
+			let count = 0;
+			queue.writeBuffer = ( ...args: Parameters < typeof queue.writeBuffer > ) =>
+			{
+				++count;
+				writeBuffer ( ...args );
+			};
+			try
+			{
+				const pool = makePool();
+				pool.use ( 1, true, makeValues ( 1 ) );
+				expect ( count ).to.equal ( 1 );
+
+				// A new frame with the same values, even if they were set again.
+				pool.use ( 2, true, makeValues ( 1 ) );
+				expect ( count ).to.equal ( 1 );
+
+				// Different values are written.
+				pool.use ( 3, true, makeValues ( 2 ) );
+				expect ( count ).to.equal ( 2 );
+				pool.destroy();
+			}
+			finally
+			{
+				queue.writeBuffer = writeBuffer;
+			}
+		} );
+
 		it ( "Should have no buffers after it is destroyed", function ()
 		{
 			const pool = makePool();

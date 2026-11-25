@@ -24,6 +24,7 @@ import {
 	Group,
 	Indexed,
 	State,
+	Transform,
 	TwoSidedLight,
 } from "../../../lib/src/Scene";
 import {
@@ -169,6 +170,28 @@ export function test ()
 
 			// The background is the clear color.
 			expect ( pixelAt ( pixels, -0.95, 0.95 ) ).to.deep.equal ( [ 0, 0, 255, 255 ] );
+		} );
+
+		it ( "Should draw each object with its own matrix", async function ()
+		{
+			// One square, under two transforms that move it left and right.
+			const state = FlatShading.makeState ( { topology: "triangle-list" } );
+			state.addAttribute ( new ColorAttribute ( RED ) );
+			const square = makeSquare ( [ 0, 0, 0.5 ], true, state );
+			const scene = new Group();
+			for ( const x of [ -0.5, 0.5 ] )
+			{
+				const transform = new Transform ( [ 1, 0, 0, 0,   0, 1, 0, 0,   0, 0, 1, 0,   x, 0, 0, 1 ] );
+				transform.addChild ( square );
+				scene.addChild ( transform );
+			}
+
+			const pixels = await drawScene ( scene );
+			expect ( pixelAt ( pixels, -0.5, 0 ) ).to.deep.equal ( [ 255, 0, 0, 255 ] );
+			expect ( pixelAt ( pixels, 0.5, 0 ) ).to.deep.equal ( [ 255, 0, 0, 255 ] );
+
+			// Between them, and where the square was before it moved, is the background.
+			expect ( pixelAt ( pixels, 0, 0 ) ).to.deep.equal ( [ 0, 0, 255, 255 ] );
 		} );
 
 		it ( "Should keep the light direction when the shader resets", function ()

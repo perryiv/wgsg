@@ -14,17 +14,29 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-// This has to be the same as in the other shaders that use the Lighting class.
-struct Uniforms
+// The camera, in bind group 0. This has to match makeCameraUniforms().
+struct Camera
 {
 	projMatrix: mat4x4f,
-	viewMatrix: mat4x4f,
-	color: vec4f,
 	lightDir: vec3f,
+};
+
+// The material, in bind group 1. This has to match makeMaterialUniforms().
+struct Material
+{
+	color: vec4f,
 	twoSided: u32,
 };
 
-@group ( 0 ) @binding ( 0 ) var<uniform> uniforms : Uniforms;
+// The object, in bind group 2, from ObjectMatrices.
+struct Object
+{
+	viewMatrix: mat4x4f,
+};
+
+@group ( 0 ) @binding ( 0 ) var<uniform> camera : Camera;
+@group ( 1 ) @binding ( 0 ) var<uniform> material : Material;
+@group ( 2 ) @binding ( 0 ) var<uniform> object : Object;
 
 struct VertexOut
 {
@@ -39,11 +51,11 @@ struct VertexOut
 
 	// Transform the position to view space, and pass it to the fragment
 	// shader so that it can calculate the normal vector.
-	let viewPosition = uniforms.viewMatrix * position;
+	let viewPosition = object.viewMatrix * position;
 	answer.viewPosition = viewPosition.xyz;
 
 	// Transform the position to clip space.
-	answer.position = uniforms.projMatrix * viewPosition;
+	answer.position = camera.projMatrix * viewPosition;
 
 	// Return the answer.
 	return answer;
@@ -69,10 +81,10 @@ struct VertexOut
 	}
 
 	// Calculate the diffuse lighting factor.
-	let dotProduct = dot ( normal, -uniforms.lightDir );
-	let diffuse = select ( max ( dotProduct, 0.0 ), abs ( dotProduct ), ( uniforms.twoSided != 0u ) );
+	let dotProduct = dot ( normal, -camera.lightDir );
+	let diffuse = select ( max ( dotProduct, 0.0 ), abs ( dotProduct ), ( material.twoSided != 0u ) );
 
 	// Calculate the color, assuming that the canvas is configured
 	// for pre-multiplied alpha.
-	return vec4 ( uniforms.color.rgb * diffuse * uniforms.color.a, uniforms.color.a );
+	return vec4 ( material.color.rgb * diffuse * material.color.a, material.color.a );
 }

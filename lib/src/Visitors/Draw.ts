@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { ShaderBase } from "../Shaders";
+import { ObjectMatrices, ShaderBase } from "../Shaders";
 import { vec4 } from "gl-matrix";
 import { Visitor as BaseClass } from "./Visitor";
 import type { IRenderGraphInfo, IVector4 } from "../Types";
@@ -85,6 +85,34 @@ const requireShader = ( state: State ) : ShaderBase =>
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
+ * Count the view matrix groups in the render graph.
+ * @param {Root} root - The root of the render graph.
+ * @returns {number} The number of view matrix groups.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+const countViewMatrixGroups = ( root: Root ) : number =>
+{
+	let count = 0;
+	root.forEachLayer ( ( layer: Layer ) =>
+	{
+		layer.forEachBin ( ( bin: Bin ) =>
+		{
+			bin.forEachPipeline ( ( pipeline: Pipeline ) =>
+			{
+				pipeline.forEachProjMatrixGroup ( ( pmg: ProjMatrixGroup ) =>
+				{
+					count += pmg.numViewMatrices;
+				} );
+			} );
+		} );
+	} );
+	return count;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
  * Draw visitor class.
  * @abstract
  */
@@ -105,6 +133,7 @@ export class Draw extends BaseClass
 	#frame = 0;
 	#gpuTimer: ( GpuTimer | null ) = null;
 	#onGpuTime: ( IGpuTimeCallback | null ) = null;
+	#objects = new ObjectMatrices();
 
 	/**
 	 * Construct the class.
@@ -437,6 +466,9 @@ export class Draw extends BaseClass
 		// console.log ( `Render tree root ${root.id} has ${root.numLayers} layers` );
 
 		// Iterate over the layers in order.
+		// Make room for the matrix of each object.
+		this.#objects.begin ( countViewMatrixGroups ( root ) );
+
 		root.forEachLayer ( ( layer: Layer ) =>
 		{
 			// Draw the layer.
@@ -445,6 +477,9 @@ export class Draw extends BaseClass
 
 		// End this render pass.
 		pass.end();
+
+		// Write all the objects' matrices at once, before the commands run.
+		this.#objects.upload();
 
 		// Copy the GPU times to where we can read them.
 		gpuTimer?.afterPass ( encoder );
@@ -544,8 +579,8 @@ export class Draw extends BaseClass
 	 */
 	protected drawViewMatrix ( pipeline: Pipeline, pmg: ProjMatrixGroup, vmg: ViewMatrixGroup ) : void
 	{
-		// Set the pipeline's view matrix.
-		pipeline.viewMatrix = vmg.matrix;
+		// Use the matrix of the objects in this group.
+		this.#objects.bind ( this.renderPassEncoder, this.#objects.add ( vmg.matrix ) );
 
 		// console.log ( `ViewMatrix ${vmg.id} has ${vmg.numStateGroups} state groups` );
 
