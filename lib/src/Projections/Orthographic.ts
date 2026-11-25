@@ -198,8 +198,10 @@ export class Orthographic extends Projection
 		// Initialize the answer.
 		const answer: IMatrix44 = [ ...IDENTITY_MATRIX ];
 
-		// Write the projection matrix to the answer.
-		mat4.ortho ( answer, left, right, bottom, top, near, far );
+		// Write the projection matrix to the answer. WebGPU's depth goes from 0
+		// to 1, so this is the "ZO" version. The other, mat4.ortho(), is
+		// OpenGL's, with depth from -1 to 1.
+		mat4.orthoZO ( answer, left, right, bottom, top, near, far );
 
 		// Return the new matrix.
 		return answer;
