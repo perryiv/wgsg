@@ -27,3 +27,10 @@ export interface IPlanePointAndNormal
 }
 
 export type IPlane = ( IPlaneCoefficients | IPlanePointAndNormal );
+
+/**
+ * Where something is compared to a plane or a frustum. For a plane, inside
+ * is the side its normal points to. For a frustum, inside is the inside of
+ * every plane.
+ */
+export type IContainment = ( "inside" | "intersects" | "outside" );
