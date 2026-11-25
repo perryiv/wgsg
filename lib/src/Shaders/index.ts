@@ -20,6 +20,7 @@ export * from "./PhongShading";
 export * from "./ShaderBase";
 export * from "./SolidColor";
 export * from "./TriangleEdges";
+export * from "./ObjectMatrices";
 export * from "./UniformPool";
 export * from "./WithEdges";
 export * from "./WithMatrices";

@@ -13,14 +13,27 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-struct Uniforms
+// The camera, in bind group 0. This has to match makeCameraUniforms().
+struct Camera
 {
 	projMatrix: mat4x4f,
-	viewMatrix: mat4x4f,
+};
+
+// The material, in bind group 1. This has to match makeMaterialUniforms().
+struct Material
+{
 	color: vec4f,
 };
 
-@group ( 0 ) @binding ( 0 ) var<uniform> uniforms : Uniforms;
+// The object, in bind group 2, from ObjectMatrices.
+struct Object
+{
+	viewMatrix: mat4x4f,
+};
+
+@group ( 0 ) @binding ( 0 ) var<uniform> camera : Camera;
+@group ( 1 ) @binding ( 0 ) var<uniform> material : Material;
+@group ( 2 ) @binding ( 0 ) var<uniform> object : Object;
 
 struct VertexOut
 {
@@ -30,12 +43,12 @@ struct VertexOut
 @vertex fn vs ( @location ( 0 ) position: vec4f ) -> VertexOut
 {
 	var output : VertexOut;
-	output.position = uniforms.projMatrix * uniforms.viewMatrix * position;
+	output.position = camera.projMatrix * object.viewMatrix * position;
 	return output;
 }
 
 @fragment fn fs ( fragData: VertexOut ) -> @location ( 0 ) vec4f
 {
 	// We assume that the canvas is configured for pre-multiplied alpha.
-	return vec4 ( uniforms.color.rgb * uniforms.color.a, uniforms.color.a );
+	return vec4 ( material.color.rgb * material.color.a, material.color.a );
 }

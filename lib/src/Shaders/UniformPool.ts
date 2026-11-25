@@ -41,6 +41,7 @@ interface IUniformPoolItem
 {
 	buffer: GPUBuffer;
 	bindGroup: GPUBindGroup;
+	values: ( Uint8Array | null ); // What was last written to the buffer.
 }
 
 
@@ -114,7 +115,7 @@ export class UniformPool
 
 	/**
 	 * Return the bind group to use for the next draw calls. The values are
-	 * written to a buffer if they changed, or if this is a new frame.
+	 * written to a buffer if they changed, unless that buffer already has them.
 	 * @param {number} frame - The number of the frame being drawn.
 	 * @param {boolean} changed - Whether the values changed since the last call.
 	 * @param {ArrayBuffer} values - The uniform values.
@@ -134,6 +135,12 @@ export class UniformPool
 			return this.#items[this.#index].bindGroup;
 		}
 
+		// The values changed, but maybe back to what the current buffer has.
+		else if ( true === this.hasValues ( this.#items[this.#index], values ) )
+		{
+			return this.#items[this.#index].bindGroup;
+		}
+
 		// The values changed and the current buffer is used by draw calls in
 		// this frame, so use the next buffer.
 		else
@@ -141,10 +148,39 @@ export class UniformPool
 			++this.#index;
 		}
 
-		// Get the buffer, making it if we have to, and write the values to it.
+		// Get the buffer, making it if we have to. Write the values to it,
+		// unless it already has them from an earlier frame.
 		const item = this.getItem ( this.#index );
-		Device.instance.device.queue.writeBuffer ( item.buffer, 0, values );
+		if ( false === this.hasValues ( item, values ) )
+		{
+			Device.instance.device.queue.writeBuffer ( item.buffer, 0, values );
+			item.values = new Uint8Array ( values.slice ( 0 ) );
+		}
 		return item.bindGroup;
+	}
+
+	/**
+	 * See if the buffer already has the values.
+	 * @param {IUniformPoolItem | undefined} item - The item, if there is one.
+	 * @param {ArrayBuffer} values - The values.
+	 * @returns {boolean} True if the buffer has the values.
+	 */
+	protected hasValues ( item: ( IUniformPoolItem | undefined ), values: ArrayBuffer ) : boolean
+	{
+		const old = item?.values;
+		if ( old?.length !== values.byteLength )
+		{
+			return false;
+		}
+		const bytes = new Uint8Array ( values );
+		for ( let i = 0; i < bytes.length; ++i )
+		{
+			if ( old[i] !== bytes[i] )
+			{
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**
@@ -221,7 +257,7 @@ export class UniformPool
 				} ],
 			} );
 
-			this.#items.push ( { buffer, bindGroup } );
+			this.#items.push ( { buffer, bindGroup, values: null } );
 		}
 
 		return this.#items[index];

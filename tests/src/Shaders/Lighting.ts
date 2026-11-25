@@ -18,6 +18,7 @@ import { expect } from "chai";
 import { FlatShading } from "../../../lib/src/Shaders/FlatShading";
 import { IDENTITY_MATRIX } from "../../../lib/src/Tools/Constants";
 import { Lighting } from "../../../lib/src/Shaders/Lighting";
+import { ObjectMatrices } from "../../../lib/src/Shaders/ObjectMatrices";
 import { PhongShading } from "../../../lib/src/Shaders/PhongShading";
 import { SolidColor } from "../../../lib/src/Shaders/SolidColor";
 import type { IMatrix44 } from "../../../lib/src/Types";
@@ -90,10 +91,14 @@ const renderCenterPixel = async ( shader: Lighting | SolidColor, points: number[
 	const { device, preferredFormat } = Device.instance;
 	device.pushErrorScope ( "validation" );
 
+	// The object's matrix is the identity.
+	const objects = new ObjectMatrices();
+	objects.begin ( 1 );
+	const objectOffset = objects.add ( IDENTITY_MATRIX );
+
 	// Set up the shader, unless the test has already done it.
 	if ( setUp )
 	{
-		shader.viewMatrix = IDENTITY_MATRIX;
 		shader.projMatrix = IDENTITY_MATRIX;
 		shader.color = [ 1, 0, 0, 1 ];
 		if ( shader instanceof Lighting )
@@ -137,6 +142,7 @@ const renderCenterPixel = async ( shader: Lighting | SolidColor, points: number[
 	} );
 	pass.setPipeline ( shader.getPipeline ( { topology: "triangle-list", cullMode } ) );
 	shader.configureRenderPass ( pass, ++frameCount );
+	objects.bind ( pass, objectOffset );
 	pass.setVertexBuffer ( 0, pointBuffer );
 	if ( normalBuffer )
 	{
@@ -153,6 +159,7 @@ const renderCenterPixel = async ( shader: Lighting | SolidColor, points: number[
 		usage: ( GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ ),
 	} );
 	encoder.copyTextureToBuffer ( { texture }, { buffer: readBuffer, bytesPerRow }, [ SIZE, SIZE ] );
+	objects.upload();
 	device.queue.submit ( [ encoder.finish() ] );
 
 	// Read the center pixel. The byte order depends on the format.
@@ -164,6 +171,7 @@ const renderCenterPixel = async ( shader: Lighting | SolidColor, points: number[
 
 	// Clean up.
 	texture.destroy();
+	objects.destroy();
 	depth.destroy();
 	readBuffer.destroy();
 
@@ -184,7 +192,11 @@ const renderTwoColors = async ( shader: Lighting | SolidColor, normals: number[]
 	const { device, preferredFormat } = Device.instance;
 	device.pushErrorScope ( "validation" );
 
-	shader.viewMatrix = IDENTITY_MATRIX;
+	// The object's matrix is the identity.
+	const objects = new ObjectMatrices();
+	objects.begin ( 1 );
+	const objectOffset = objects.add ( IDENTITY_MATRIX );
+
 	shader.projMatrix = IDENTITY_MATRIX;
 	if ( shader instanceof Lighting )
 	{
@@ -235,6 +247,7 @@ const renderTwoColors = async ( shader: Lighting | SolidColor, normals: number[]
 
 	shader.color = [ 1, 0, 0, 1 ];
 	shader.configureRenderPass ( pass, frame );
+	objects.bind ( pass, objectOffset );
 	pass.setVertexBuffer ( 0, left );
 	pass.drawIndexed ( 3 );
 
@@ -251,6 +264,7 @@ const renderTwoColors = async ( shader: Lighting | SolidColor, normals: number[]
 		usage: ( GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ ),
 	} );
 	encoder.copyTextureToBuffer ( { texture }, { buffer: readBuffer, bytesPerRow }, [ SIZE, SIZE ] );
+	objects.upload();
 	device.queue.submit ( [ encoder.finish() ] );
 
 	// Read a pixel in the middle of each triangle. Get the mapped range only
@@ -267,6 +281,7 @@ const renderTwoColors = async ( shader: Lighting | SolidColor, normals: number[]
 	readBuffer.unmap();
 
 	texture.destroy();
+	objects.destroy();
 	depth.destroy();
 	readBuffer.destroy();
 

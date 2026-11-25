@@ -19,6 +19,7 @@ import { FlatEdges } from "../../../lib/src/Shaders/FlatEdges";
 import { FlatShading } from "../../../lib/src/Shaders/FlatShading";
 import { Geometry, Group } from "../../../lib/src/Scene/Nodes";
 import { IDENTITY_MATRIX } from "../../../lib/src/Tools/Constants";
+import { ObjectMatrices } from "../../../lib/src/Shaders/ObjectMatrices";
 import { PhongEdges } from "../../../lib/src/Shaders/PhongEdges";
 import { PhongShading } from "../../../lib/src/Shaders/PhongShading";
 import { SolidColor } from "../../../lib/src/Shaders/SolidColor";
@@ -118,8 +119,12 @@ const render = async ( { shader, points, normals, indices, edgeWidth = 4 }: IRen
 	const { device, preferredFormat } = Device.instance;
 	device.pushErrorScope ( "validation" );
 
+	// The object's matrix is the identity.
+	const objects = new ObjectMatrices();
+	objects.begin ( 1 );
+	const objectOffset = objects.add ( IDENTITY_MATRIX );
+
 	// Set up the shader.
-	shader.viewMatrix = IDENTITY_MATRIX;
 	shader.projMatrix = IDENTITY_MATRIX;
 	shader.color = [ 1, 0, 0, 1 ];
 	shader.twoSidedLight = false;
@@ -164,6 +169,7 @@ const render = async ( { shader, points, normals, indices, edgeWidth = 4 }: IRen
 	} );
 	pass.setPipeline ( shader.getPipeline ( { topology: "triangle-list", cullMode: "none" } ) );
 	shader.configureRenderPass ( pass, ++frameCount );
+	objects.bind ( pass, objectOffset );
 	const mode = shader.setPulledVertices ( pass, { geometry, indices: indexArray, key: {} } );
 	if ( null !== mode )
 	{
@@ -178,6 +184,7 @@ const render = async ( { shader, points, normals, indices, edgeWidth = 4 }: IRen
 		usage: ( GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ ),
 	} );
 	encoder.copyTextureToBuffer ( { texture }, { buffer: readBuffer, bytesPerRow }, [ SIZE, SIZE ] );
+	objects.upload();
 	device.queue.submit ( [ encoder.finish() ] );
 
 	// Read the pixels. Get the mapped range only once, because getting it
@@ -194,6 +201,7 @@ const render = async ( { shader, points, normals, indices, edgeWidth = 4 }: IRen
 
 	// Clean up.
 	texture.destroy();
+	objects.destroy();
 	depth.destroy();
 	readBuffer.destroy();
 	geometry.points?.reset();

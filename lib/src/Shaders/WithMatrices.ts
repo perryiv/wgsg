@@ -8,13 +8,14 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Shader class that handles the projection and view matrices.
+//	Shader class that handles the uniforms: the camera's and the material's.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Device, IDENTITY_MATRIX } from "../Tools";
 import { mat4 } from "gl-matrix";
 import { ShaderBase as BaseClass, type IShaderBaseInput } from "./ShaderBase";
+import { ObjectMatrices } from "./ObjectMatrices";
 import { UniformPool } from "./UniformPool";
 import type { IMatrix44 } from "../Types";
 
@@ -27,11 +28,36 @@ import type { IMatrix44 } from "../Types";
 
 export type IWithMatricesInput = IShaderBaseInput;
 
+///////////////////////////////////////////////////////////////////////////////
+//
+//	The uniforms of one bind group.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+interface IUniformGroup
+{
+	pool: ( UniformPool | null );
+	layout: ( GPUBindGroupLayout | null );
+	changed: boolean;
+}
+
+const makeUniformGroup = () : IUniformGroup =>
+{
+	return { pool: null, layout: null, changed: true };
+};
+
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Base class for shaders whose uniforms start with the projection and view
- * matrices. It keeps the uniform buffers in a pool that is reused every frame.
+ * Base class for shaders with uniforms in three bind groups, by how often
+ * they change:
+ * - Group 0, the camera: the projection matrix, and whatever derived classes
+ *   add (e.g., the light direction).
+ * - Group 1, the material: what state attributes set (e.g., the color).
+ * - Group 2, the object: its matrix, from ObjectMatrices, which the caller
+ *   binds.
+ * The camera and material uniforms are each kept in a pool of buffers that
+ * is reused every frame, and written only when they change.
  * @class
  */
 ///////////////////////////////////////////////////////////////////////////////
@@ -39,11 +65,9 @@ export type IWithMatricesInput = IShaderBaseInput;
 export abstract class WithMatrices extends BaseClass
 {
 	#projMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
-	#viewMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
-	#pool: ( UniformPool | null ) = null;
-	#bindGroupLayout: ( GPUBindGroupLayout | null ) = null;
+	#camera: IUniformGroup = makeUniformGroup();
+	#material: IUniformGroup = makeUniformGroup();
 	#pipelineLayout: ( GPUPipelineLayout | null ) = null;
-	#uniformsChanged = true;
 
 	/**
 	 * Construct the class.
@@ -69,11 +93,11 @@ export abstract class WithMatrices extends BaseClass
 	 */
 	public override releaseGpuObjects() : void
 	{
-		this.#pool?.destroy();
-		this.#pool = null;
-		this.#bindGroupLayout = null;
+		this.#camera.pool?.destroy();
+		this.#material.pool?.destroy();
+		this.#camera = makeUniformGroup();
+		this.#material = makeUniformGroup();
 		this.#pipelineLayout = null;
-		this.#uniformsChanged = true;
 		super.releaseGpuObjects();
 	}
 
@@ -102,66 +126,70 @@ export abstract class WithMatrices extends BaseClass
 	public override set projMatrix ( matrix: Readonly<IMatrix44> )
 	{
 		mat4.copy ( this.#projMatrix, matrix );
-		this.uniformsChanged();
+		this.cameraChanged();
 	}
 
 	/**
-	 * Get the view matrix.
-	 * @returns {IMatrix44} The view matrix.
+	 * Call this when any of the camera's uniform values change.
 	 */
-	public override get viewMatrix () : Readonly<IMatrix44>
+	protected cameraChanged () : void
 	{
-		return this.#viewMatrix;
+		this.#camera.changed = true;
 	}
 
 	/**
-	 * Set the view matrix.
-	 * @param {IMatrix44} matrix - The view matrix.
+	 * Call this when any of the material's uniform values change.
 	 */
-	public override set viewMatrix ( matrix: Readonly<IMatrix44> )
+	protected materialChanged () : void
 	{
-		mat4.copy ( this.#viewMatrix, matrix );
-		this.uniformsChanged();
+		this.#material.changed = true;
 	}
 
 	/**
-	 * Call this when any of the uniform values change.
-	 */
-	protected uniformsChanged () : void
-	{
-		this.#uniformsChanged = true;
-	}
-
-	/**
-	 * Return the uniform values, in the same order as the "Uniforms" struct
-	 * in the shader code.
+	 * Return the camera's uniform values, in the same order as the "Camera"
+	 * struct in the shader code.
 	 * @returns {ArrayBuffer} The uniform values.
 	 */
-	protected abstract makeUniforms () : ArrayBuffer;
+	protected abstract makeCameraUniforms () : ArrayBuffer;
 
 	/**
-	 * Get the layout of the bind group that holds the uniform buffer.
+	 * Return the material's uniform values, in the same order as the
+	 * "Material" struct in the shader code.
+	 * @returns {ArrayBuffer} The uniform values.
+	 */
+	protected abstract makeMaterialUniforms () : ArrayBuffer;
+
+	/**
+	 * Get the layout of the camera's bind group.
 	 * @returns {GPUBindGroupLayout} The bind group layout.
 	 */
-	protected get bindGroupLayout () : GPUBindGroupLayout
+	protected get cameraLayout () : GPUBindGroupLayout
 	{
-		if ( !this.#bindGroupLayout )
-		{
-			this.#bindGroupLayout = Device.instance.device.createBindGroupLayout ( {
-				label: `Bind group layout for shader ${this.type}`,
-				entries: [ {
-					binding: 0,
-					visibility: ( GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT ),
-					buffer: { type: "uniform" },
-				} ],
-			} );
-		}
-		return this.#bindGroupLayout;
+		return this.getLayout ( this.#camera, "camera" );
+	}
+
+	/**
+	 * Get the layout of the material's bind group.
+	 * @returns {GPUBindGroupLayout} The bind group layout.
+	 */
+	protected get materialLayout () : GPUBindGroupLayout
+	{
+		return this.getLayout ( this.#material, "material" );
+	}
+
+	/**
+	 * Get the bind group layouts, in order. Derived classes that add bind
+	 * groups after these override this.
+	 * @returns {GPUBindGroupLayout[]} The bind group layouts.
+	 */
+	protected get bindGroupLayouts () : GPUBindGroupLayout[]
+	{
+		return [ this.cameraLayout, this.materialLayout, ObjectMatrices.layout ];
 	}
 
 	/**
 	 * Get the pipeline layout. Use this when making the pipeline so that the
-	 * bind groups in the pool work with all of this shader's pipelines.
+	 * bind groups in the pools work with all of this shader's pipelines.
 	 * @returns {GPUPipelineLayout} The pipeline layout.
 	 */
 	protected get pipelineLayout () : GPUPipelineLayout
@@ -170,46 +198,73 @@ export abstract class WithMatrices extends BaseClass
 		{
 			this.#pipelineLayout = Device.instance.device.createPipelineLayout ( {
 				label: `Pipeline layout for shader ${this.type}`,
-				bindGroupLayouts: [ this.bindGroupLayout ],
+				bindGroupLayouts: this.bindGroupLayouts,
 			} );
 		}
 		return this.#pipelineLayout;
 	}
 
 	/**
-	 * Get the number of uniform buffers in the pool.
+	 * Get the layout of a bind group with one uniform buffer, making it if
+	 * we have to.
+	 * @param {IUniformGroup} group - The uniforms.
+	 * @param {string} name - The name, for the label.
+	 * @returns {GPUBindGroupLayout} The bind group layout.
+	 */
+	protected getLayout ( group: IUniformGroup, name: string ) : GPUBindGroupLayout
+	{
+		group.layout ??= Device.instance.device.createBindGroupLayout ( {
+			label: `Bind group layout for the ${name} in shader ${this.type}`,
+			entries: [ {
+				binding: 0,
+				visibility: ( GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT ),
+				buffer: { type: "uniform" },
+			} ],
+		} );
+		return group.layout;
+	}
+
+	/**
+	 * Get the number of uniform buffers in the pools.
 	 * @returns {number} The number of uniform buffers.
 	 */
 	public get numUniformBuffers () : number
 	{
-		return ( this.#pool?.length ?? 0 );
+		return ( ( this.#camera.pool?.length ?? 0 ) + ( this.#material.pool?.length ?? 0 ) );
 	}
 
 	/**
-	 * Configure the render pass.
+	 * Configure the render pass. This sets the camera's and material's bind
+	 * groups. The caller sets the object's.
 	 * @param {GPURenderPassEncoder} pass - The render pass encoder.
 	 * @param {number} frame - The number of the frame being drawn.
 	 */
 	public configureRenderPass ( pass: Readonly<GPURenderPassEncoder>, frame: number ) : void
 	{
 		// Note: The render-pass' pipeline should already be set.
+		this.useUniforms ( pass, frame, 0, this.#camera, "camera", this.makeCameraUniforms() );
+		this.useUniforms ( pass, frame, 1, this.#material, "material", this.makeMaterialUniforms() );
+	}
 
-		// Get the uniform values.
-		const values = this.makeUniforms();
-
-		// Make the pool if we have to.
-		if ( !this.#pool )
-		{
-			this.#pool = new UniformPool ( {
-				label: `shader ${this.type}`,
-				layout: this.bindGroupLayout,
-				size: values.byteLength,
-			} );
-		}
-
-		// Get the bind group with the values, and use it.
-		const bindGroup = this.#pool.use ( frame, this.#uniformsChanged, values );
-		this.#uniformsChanged = false;
-		pass.setBindGroup ( 0, bindGroup );
+	/**
+	 * Get the bind group with the values, writing them if we have to, and set it.
+	 * @param {GPURenderPassEncoder} pass - The render pass encoder.
+	 * @param {number} frame - The number of the frame being drawn.
+	 * @param {number} index - The bind group index.
+	 * @param {IUniformGroup} group - The uniforms.
+	 * @param {string} name - The name, for the labels.
+	 * @param {ArrayBuffer} values - The values.
+	 */
+	protected useUniforms ( pass: Readonly<GPURenderPassEncoder>, frame: number, index: number,
+		group: IUniformGroup, name: string, values: ArrayBuffer ) : void
+	{
+		group.pool ??= new UniformPool ( {
+			label: `${name} in shader ${this.type}`,
+			layout: this.getLayout ( group, name ),
+			size: values.byteLength,
+		} );
+		const bindGroup = group.pool.use ( frame, group.changed, values );
+		group.changed = false;
+		pass.setBindGroup ( index, bindGroup );
 	}
 }

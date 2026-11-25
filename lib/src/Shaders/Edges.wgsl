@@ -13,25 +13,38 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-// The same as in the other shaders that use the Lighting class, with the
-// edge values added.
-struct Uniforms
+// The camera, in bind group 0. This has to match makeCameraUniforms().
+struct Camera
 {
 	projMatrix: mat4x4f,
-	viewMatrix: mat4x4f,
-	color: vec4f,
 	lightDir: vec3f,
+};
+
+// The material, in bind group 1, with the edge values after the ones in the
+// other shaders that use the Lighting class. This has to match
+// makeMaterialUniforms().
+struct Material
+{
+	color: vec4f,
 	twoSided: u32,
 	edgeColor: vec4f,
 	edgeWidth: f32,
 };
 
-@group ( 0 ) @binding ( 0 ) var<uniform> uniforms : Uniforms;
+// The object, in bind group 2, from ObjectMatrices.
+struct Object
+{
+	viewMatrix: mat4x4f,
+};
 
-// The buffers that the vertices are pulled from. Without indices, the
-// indices binding holds a buffer that isn't read.
-@group ( 1 ) @binding ( 0 ) var<storage, read> indices : array<u32>;
-@group ( 1 ) @binding ( 1 ) var<storage, read> points : array<f32>;
+@group ( 0 ) @binding ( 0 ) var<uniform> camera : Camera;
+@group ( 1 ) @binding ( 0 ) var<uniform> material : Material;
+@group ( 2 ) @binding ( 0 ) var<uniform> object : Object;
+
+// The buffers that the vertices are pulled from, in bind group 3. Without
+// indices, the indices binding holds a buffer that isn't read.
+@group ( 3 ) @binding ( 0 ) var<storage, read> indices : array<u32>;
+@group ( 3 ) @binding ( 1 ) var<storage, read> points : array<f32>;
 
 // How to read the indices. These are the same as in WithEdges.ts.
 const PULLED_INDICES_NONE = 0u;
@@ -89,8 +102,8 @@ fn addEdges ( color: vec4f, barycentric: vec3f, change: vec3f ) -> vec4f
 
 	// The triangles on both sides of an edge each draw half of its width.
 	// The half pixel more gives smooth sides.
-	let coverage = clamp ( ( 0.5 * uniforms.edgeWidth ) + 0.5 - distance, 0.0, 1.0 ) * uniforms.edgeColor.a;
+	let coverage = clamp ( ( 0.5 * material.edgeWidth ) + 0.5 - distance, 0.0, 1.0 ) * material.edgeColor.a;
 
 	// Blend in the edge color, keeping the alpha of the triangle.
-	return mix ( color, vec4f ( uniforms.edgeColor.rgb * color.a, color.a ), coverage );
+	return mix ( color, vec4f ( material.edgeColor.rgb * color.a, color.a ), coverage );
 }

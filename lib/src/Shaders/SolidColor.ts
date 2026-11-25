@@ -46,8 +46,10 @@ export class SolidColor extends BaseClass
 	static #instance: ( SolidColor | null ) = null;
 	#color: IVector4 = [ ...Color.gray ];
 
-	// The uniform values. Two 4x4 matrices and the color.
-	#uniforms = new ArrayBuffer ( ( 16 + 16 + 4 ) * 4 );
+	// The uniform values. The camera's is the projection matrix, and the
+	// material's is the color.
+	#camera = new ArrayBuffer ( 16 * 4 );
+	#material = new ArrayBuffer ( 4 * 4 );
 
 	/**
 	 * Construct the class.
@@ -124,7 +126,7 @@ export class SolidColor extends BaseClass
 	public set color ( color: Readonly<IVector4> )
 	{
 		vec4.copy ( this.#color, color );
-		this.uniformsChanged();
+		this.materialChanged();
 	}
 
 	/**
@@ -136,18 +138,25 @@ export class SolidColor extends BaseClass
 	}
 
 	/**
-	 * Return the uniform values, in the same order as the "Uniforms" struct
-	 * in the shader code.
+	 * Return the camera's uniform values, in the same order as the "Camera"
+	 * struct in the shader code: the projection matrix.
 	 * @returns {ArrayBuffer} The uniform values.
 	 */
-	protected makeUniforms () : ArrayBuffer
+	protected makeCameraUniforms () : ArrayBuffer
 	{
-		const uniforms = this.#uniforms;
-		const floats = new Float32Array ( uniforms );
-		floats.set ( this.projMatrix, 0 );
-		floats.set ( this.viewMatrix, 16 );
-		floats.set ( this.#color, 32 );
-		return uniforms;
+		new Float32Array ( this.#camera ).set ( this.projMatrix, 0 );
+		return this.#camera;
+	}
+
+	/**
+	 * Return the material's uniform values, in the same order as the
+	 * "Material" struct in the shader code: the color.
+	 * @returns {ArrayBuffer} The uniform values.
+	 */
+	protected makeMaterialUniforms () : ArrayBuffer
+	{
+		new Float32Array ( this.#material ).set ( this.#color, 0 );
+		return this.#material;
 	}
 
 	/**
