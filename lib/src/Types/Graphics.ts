@@ -29,6 +29,7 @@ export interface IRenderGraphInfo
 	numMatrices: number;
 	numStateGroups: number;
 	numShapes: number;
+	numCulled: number;
 	numTriangles: number;
 	numLines: number;
 }

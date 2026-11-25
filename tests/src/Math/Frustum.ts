@@ -190,6 +190,31 @@ export function test ()
 			expect ( copy.containsPoint ( [ 10, 0, 0 ] ) ).to.be.true;
 		} );
 
+		it ( "Should copy another frustum's planes, reusing its own", function ()
+		{
+			const cube = makeCube();
+			const target = makeCube();
+			target.transform ( translate ( [ 10, 0, 0 ] ) );
+			const plane = target.getPlane ( 0 );
+
+			target.copy ( cube );
+			expect ( target.getPlane ( 0 ) ).to.equal ( plane );
+			for ( let i = 0; i < cube.numPlanes; ++i )
+			{
+				expect ( target.getPlane ( i ).coefficients ).to.deep.equal ( cube.getPlane ( i ).coefficients );
+			}
+
+			// Changing the copy doesn't change the original.
+			target.transform ( translate ( [ 5, 0, 0 ] ) );
+			expect ( cube.containsPoint ( [ 0, 0, 0 ] ) ).to.be.true;
+
+			// A different number of planes makes new ones.
+			const prism = makePrism ( 8 );
+			target.copy ( prism );
+			expect ( target.numPlanes ).to.equal ( 8 );
+			expect ( target.containsPoint ( [ 0, 0, 1000 ] ) ).to.be.true;
+		} );
+
 		it ( "Should move, and go into the coordinates under a transform", function ()
 		{
 			const m = translate ( [ 10, 0, 0 ] );

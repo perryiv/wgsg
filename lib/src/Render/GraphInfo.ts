@@ -32,6 +32,7 @@ export const makeRenderGraphInfo = () : IRenderGraphInfo =>
 		numMatrices: 0,
 		numStateGroups: 0,
 		numShapes: 0,
+		numCulled: 0,
 		numTriangles: 0,
 		numLines: 0
 	};
@@ -54,6 +55,7 @@ export const resetRenderGraphInfo = ( info: IRenderGraphInfo ) : void =>
 	info.numMatrices = 0;
 	info.numStateGroups = 0;
 	info.numShapes = 0;
+	info.numCulled = 0;
 	info.numTriangles = 0;
 	info.numLines = 0;
 };

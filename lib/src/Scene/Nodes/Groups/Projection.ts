@@ -67,6 +67,18 @@ export class Projection extends Group
 	}
 
 	/**
+	 * The nodes under a projection are seen through it, not the projection
+	 * above it, so the bounds don't say whether they are in view. That makes
+	 * this, and every group above it, count as having nodes outside the
+	 * bounds, so that culling never skips them because of their bounds.
+	 * @returns {boolean} Always true.
+	 */
+	public override get hasNodesOutsideBounds() : boolean
+	{
+		return true;
+	}
+
+	/**
 	 * Get the matrix.
 	 * @returns {IMatrix44} The projection matrix.
 	 */

@@ -17,6 +17,7 @@ import { FrameTimes, type IFrameTimes } from "./FrameTimes";
 import { FrameRecorder, type IFrameMeasurement, type IMeasureOptions } from "./FrameMeasurement";
 import { replaceReference } from "../Base/References";
 import { clampVec4 } from "../Math/Functions";
+import { ViewFrustum } from "../Math/ViewFrustum";
 import { makeRenderGraphInfo, resetRenderGraphInfo, Root } from "../Render";
 import { Perspective, ProjectionBase as Projection } from "../Projections";
 import { SolidColor } from "../Shaders";
@@ -115,6 +116,7 @@ export class Surface extends BaseClass
 	#flags = 0;
 	#frameTimes = new FrameTimes();
 	#renderContinuously = false;
+	#frustumCulling = true;
 	#measurement: ( IMeasurementInProgress | null ) = null;
 	#recorder: ( FrameRecorder | null ) = null;
 
@@ -815,6 +817,9 @@ export class Surface extends BaseClass
 		cv.defaultState = this.defaultState;
 		cv.projMatrix = [ ...this.projection.matrix ];
 
+		// Skip what's out of view, unless that's turned off.
+		cv.frustum = ( this.#frustumCulling ? new ViewFrustum ( cv.projMatrix ) : null );
+
 		// Tell the visitor that it should return to its initial state.
 		// This will clear the layers.
 		cv.reset();
@@ -879,6 +884,26 @@ export class Surface extends BaseClass
 	public get frameTimes () : IFrameTimes
 	{
 		return this.#frameTimes.summary;
+	}
+
+	/**
+	 * See if the nodes out of view are skipped when making the render graph.
+	 * @returns {boolean} True if they are skipped.
+	 */
+	public get frustumCulling () : boolean
+	{
+		return this.#frustumCulling;
+	}
+
+	/**
+	 * Set whether the nodes out of view are skipped when making the render
+	 * graph. It's on by default. Turning it off is for comparing and
+	 * debugging. Request a render to see the change.
+	 * @param {boolean} state - True to skip them.
+	 */
+	public set frustumCulling ( state: boolean )
+	{
+		this.#frustumCulling = state;
 	}
 
 	/**
@@ -1105,6 +1130,7 @@ export class Surface extends BaseClass
 				{ matrices: rgi.numMatrices },
 				{ states: rgi.numStateGroups },
 				{ shapes: rgi.numShapes },
+				{ culled: rgi.numCulled },
 				{ triangles: rgi.numTriangles },
 				{ lines: rgi.numLines }
 			];

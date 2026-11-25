@@ -276,6 +276,20 @@ export function App()
 	[] );
 
 	//
+	// Handle the frustum culling button.
+	//
+	const handleFrustumCulling = useCallback ( () =>
+	{
+		if ( viewer )
+		{
+			viewer.frustumCulling = !viewer.frustumCulling;
+			viewer.requestRender();
+			setCount ( count + 1 );
+		}
+	},
+	[ count, viewer ] );
+
+	//
 	// Handle the show grid button.
 	//
 	const handleShowGrid = useCallback ( () =>
@@ -494,6 +508,13 @@ export function App()
 					</Button>
 					<Button
 						disabled = { disabled }
+						onClick = { handleFrustumCulling }
+						value = { viewer ? viewer.frustumCulling : true }
+					>
+						Frustum culling
+					</Button>
+					<Button
+						disabled = { disabled }
 						onClick = { handleShowGrid }
 						value = { viewer ? viewer.getDecorator ( Grid.getClassName() )?.visible : false }
 					>
@@ -546,6 +567,7 @@ export function App()
 		buildTimeStamp,
 		edgesVisible,
 		handleAllowAnimations,
+		handleFrustumCulling,
 		handleShowBoundingBoxes,
 		handleShowGrid,
 		handleShowStats,

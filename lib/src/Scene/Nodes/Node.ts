@@ -260,7 +260,10 @@ export abstract class Node extends Base
 	}
 
 	/**
-	 * Set the adds-to-bounds state.
+	 * Set the adds-to-bounds state. This does not change any bounds. After
+	 * changing it on a node that's already in a group, call this node's
+	 * dirtyBounds(), so that its parents' bounds are made again. That also
+	 * updates what culling knows about it (see hasNodesOutsideBounds).
 	 * @param {boolean} addsToBounds - The new adds-to-bounds state.
 	 */
 	public set addsToBounds ( addsToBounds: Readonly<boolean> )
@@ -331,6 +334,20 @@ export abstract class Node extends Base
 	 * @returns {Sphere} The bounding sphere of this node.
 	 */
 	protected abstract getBoundingSphere() : Readonly<Sphere>;
+
+	/**
+	 * See if any node under this one does not add to the bounds, like a grid.
+	 * Then the bounds may not hold everything under this node, so culling
+	 * can't skip it just because its bounds are out of view. Nodes without
+	 * children have nothing under them.
+	 * @returns {boolean} True if a node under this one does not add to the bounds.
+	 */
+	// It's a getter, not a field, because groups override it.
+	// eslint-disable-next-line @typescript-eslint/class-literal-property-style
+	public get hasNodesOutsideBounds() : boolean
+	{
+		return false;
+	}
 
 	/**
 	 * Get the bounding sphere of this node.
