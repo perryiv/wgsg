@@ -14,6 +14,7 @@
 
 import { Base as BaseClass } from "../Base/Base";
 import { FrameTimes, type IFrameTimes } from "./FrameTimes";
+import { FrameRecorder, type IFrameMeasurement, type IMeasureOptions } from "./FrameMeasurement";
 import { replaceReference } from "../Base/References";
 import { clampVec4 } from "../Math/Functions";
 import { makeRenderGraphInfo, resetRenderGraphInfo, Root } from "../Render";
@@ -78,6 +79,16 @@ interface IVisitors
 	draw: ( DrawVisitor | null );
 }
 
+interface IMeasurementInProgress
+{
+	frames: number;
+	warmUp: number;
+	maxTime: number;
+	rendered: number;
+	recorder: FrameRecorder;
+	resolve: ( measurement: IFrameMeasurement ) => void;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
@@ -104,6 +115,8 @@ export class Surface extends BaseClass
 	#flags = 0;
 	#frameTimes = new FrameTimes();
 	#renderContinuously = false;
+	#measurement: ( IMeasurementInProgress | null ) = null;
+	#recorder: ( FrameRecorder | null ) = null;
 
 	/**
 	 * Construct the class.
@@ -169,6 +182,11 @@ export class Surface extends BaseClass
 	{
 		// Stop any scheduled rendering.
 		this.cancelRender();
+
+		// Finish a measurement with the frames it has.
+		const measurement = this.#measurement;
+		this.#measurement = null;
+		measurement?.resolve ( measurement.recorder.getMeasurement ( measurement.warmUp ) );
 
 		// Disconnect the resize observer.
 		const observer = this.#observer;
@@ -831,11 +849,14 @@ export class Surface extends BaseClass
 		// Tell the visitor that it should return to its initial state.
 		dv.reset();
 
-		// Time the GPU. The time arrives later, so remember which frame it's for.
+		// Time the GPU. The time arrives later, so remember which frame it's
+		// for, and the measurement it's in, if any.
 		const { start } = this.#frame;
+		const recorder = this.#recorder;
 		dv.onGpuTime = ( time, method ) =>
 		{
 			this.#frameTimes.addGpu ( start, time, method );
+			recorder?.addGpu ( time, method );
 		};
 
 		// Draw the render graph.
@@ -881,6 +902,78 @@ export class Surface extends BaseClass
 		{
 			this.requestRender();
 		}
+	}
+
+	/**
+	 * Measure the times of some frames. It renders the frames one after
+	 * another, the same as rendering continuously, and then stops. The first
+	 * frames are rendered without being measured, because they make pipelines
+	 * and buffers.
+	 * @param {IMeasureOptions} [options] - What to measure.
+	 * @returns {Promise<IFrameMeasurement>} The measurement, after the last
+	 * frame's GPU time arrives.
+	 */
+	public measure ( options?: Readonly<IMeasureOptions> ) : Promise < IFrameMeasurement >
+	{
+		const frames = ( options?.frames ?? 300 );
+		const warmUp = ( options?.warmUp ?? 10 );
+		const maxTime = ( options?.maxTime ?? 10000 );
+
+		if ( !Number.isInteger ( frames ) || ( frames < 1 ) )
+		{
+			throw new Error ( `The number of frames to measure must be an integer >= 1, not ${frames}` );
+		}
+		if ( !Number.isInteger ( warmUp ) || ( warmUp < 0 ) )
+		{
+			throw new Error ( `The number of warm-up frames must be an integer >= 0, not ${warmUp}` );
+		}
+		if ( !( maxTime > 0 ) )
+		{
+			throw new Error ( `The longest time to measure must be > 0, not ${maxTime}` );
+		}
+		if ( this.isDestroyed() )
+		{
+			throw new Error ( "Cannot measure a surface that is destroyed" );
+		}
+		if ( this.#measurement )
+		{
+			throw new Error ( "Already measuring" );
+		}
+
+		return new Promise < IFrameMeasurement > ( ( resolve ) =>
+		{
+			this.#measurement = {
+				frames, warmUp, maxTime, resolve,
+				rendered: 0,
+				recorder: new FrameRecorder(),
+			};
+			this.requestRender();
+		} );
+	}
+
+	/**
+	 * See if we are measuring frames.
+	 * @returns {boolean} True if we are measuring.
+	 */
+	public get measuring () : boolean
+	{
+		return ( null !== this.#measurement );
+	}
+
+	/**
+	 * Finish a measurement when the GPU times of its frames arrive, or after
+	 * a second if some never do.
+	 * @param {IMeasurementInProgress} measurement - The measurement.
+	 */
+	protected async finishMeasurement ( measurement: IMeasurementInProgress ) : Promise < void >
+	{
+		const { recorder, warmUp, resolve } = measurement;
+		const giveUp = ( performance.now() + 1000 );
+		while ( ( recorder.gpuTimes < recorder.frames ) && ( performance.now() < giveUp ) )
+		{
+			await new Promise ( ( done ) => { setTimeout ( done, 10 ); } );
+		}
+		resolve ( recorder.getMeasurement ( warmUp ) );
 	}
 
 	/**
@@ -944,6 +1037,15 @@ export class Surface extends BaseClass
 			resetRenderGraphInfo ( this.#info );
 		}
 
+		// Record this frame if we're measuring and done warming up.
+		const measurement = this.#measurement;
+		if ( measurement )
+		{
+			++measurement.rendered;
+		}
+		this.#recorder = ( ( measurement && ( measurement.rendered > measurement.warmUp ) ) ?
+			measurement.recorder : null );
+
 		// Update the scene.
 		const start = this.#frame.start;
 		this.update();
@@ -966,8 +1068,26 @@ export class Surface extends BaseClass
 			draw: ( end - culled ),
 		} );
 
-		// Ask for the next frame if we're rendering continuously.
-		if ( this.#renderContinuously )
+		// Finish the measurement when it has enough frames, or took too long.
+		const recorder = this.#recorder;
+		this.#recorder = null;
+		if ( measurement && recorder )
+		{
+			recorder.addFrame ( {
+				start,
+				update: ( updated - start ),
+				cull: ( culled - updated ),
+				draw: ( end - culled ),
+			} );
+			if ( ( recorder.frames >= measurement.frames ) || ( recorder.duration >= measurement.maxTime ) )
+			{
+				this.#measurement = null;
+				void this.finishMeasurement ( measurement );
+			}
+		}
+
+		// Ask for the next frame if we're rendering continuously or measuring.
+		if ( this.#renderContinuously || this.#measurement )
 		{
 			this.requestRender();
 		}

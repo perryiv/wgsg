@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { buildSceneSpheres } from "../Tools";
-import { useViewerStore } from "../State";
+import { modelNames, useViewerStore } from "../State";
 import CloseIcon from "@mui/icons-material/Close";
 import {
 	IconButton,
@@ -432,6 +432,9 @@ export function Viewer ( { viewerId, ...rest }: IViewerProps )
 		{
 			showTriangleEdges ( model, true );
 		}
+
+		// Remember the file's name, to say which model was measured.
+		modelNames.set ( model, file.name );
 
 		// Add the model to the scene.
 		viewer.modelScene = model;
