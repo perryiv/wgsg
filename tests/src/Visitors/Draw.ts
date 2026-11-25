@@ -43,6 +43,8 @@ import {
 const SIZE = 32;
 const BLUE: IVector4 = [ 0, 0, 1, 1 ];
 const RED: IVector4 = [ 1, 0, 0, 1 ];
+const GREEN: IVector4 = [ 0, 1, 0, 1 ];
+const YELLOW: IVector4 = [ 1, 1, 0, 1 ];
 
 /**
  * Make a square in front of the camera.
@@ -169,6 +171,47 @@ export function test ()
 			expect ( pixelAt ( pixels, 0.5, -0.5 ) ).to.deep.equal ( [ 0, 0, 0, 255 ] );
 
 			// The background is the clear color.
+			expect ( pixelAt ( pixels, -0.95, 0.95 ) ).to.deep.equal ( [ 0, 0, 255, 255 ] );
+		} );
+
+		it ( "Should draw a later layer in front of an earlier one, even when it's farther away", async function ()
+		{
+			// Makes a square in front of the camera, with its own color and layer.
+			const square = ( center: IVector3, color: IVector4, layer: number ) : Geometry =>
+			{
+				const state = FlatShading.makeState ( { topology: "triangle-list" } );
+				state.addAttribute ( new ColorAttribute ( color ) );
+				state.layer = layer;
+				return makeSquare ( center, true, state );
+			};
+
+			// Red is the nearest, but it's in the first layer. Green and yellow are
+			// in the second layer, where yellow is nearer than green.
+			const scene = new Group();
+			scene.addChild ( square ( [ 0, 0, 0.2 ], RED, 0 ) );
+			scene.addChild ( square ( [ 0.2, 0, 0.8 ], GREEN, 1 ) );
+			scene.addChild ( square ( [ 0.4, 0, 0.5 ], YELLOW, 1 ) );
+
+			const pixels = await drawScene ( scene );
+
+			// Only red.
+			expect ( pixelAt ( pixels, -0.3, 0 ) ).to.deep.equal ( [ 255, 0, 0, 255 ] );
+
+			// Red and green: green is in the later layer.
+			expect ( pixelAt ( pixels, -0.1, 0 ) ).to.deep.equal ( [ 0, 255, 0, 255 ] );
+
+			// Red, green, and yellow: yellow is in the later layer, and nearer than
+			// green in it.
+			expect ( pixelAt ( pixels, 0.3, 0 ) ).to.deep.equal ( [ 255, 255, 0, 255 ] );
+
+			// The background is still the clear color.
+			expect ( pixelAt ( pixels, -0.95, 0.95 ) ).to.deep.equal ( [ 0, 0, 255, 255 ] );
+		} );
+
+		it ( "Should clear the background when there is nothing to draw", async function ()
+		{
+			const pixels = await drawScene ( new Group() );
+			expect ( pixelAt ( pixels, 0, 0 ) ).to.deep.equal ( [ 0, 0, 255, 255 ] );
 			expect ( pixelAt ( pixels, -0.95, 0.95 ) ).to.deep.equal ( [ 0, 0, 255, 255 ] );
 		} );
 

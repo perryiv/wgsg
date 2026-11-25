@@ -52,9 +52,12 @@ const MAX_READ_BUFFERS = 4;
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * Measures how long the GPU takes to draw a frame. For each frame, call
- * timestampWrites() and give the result to beginRenderPass(), then call
- * afterPass() before finishing the command encoder, and afterSubmit() after
- * submitting it. The time arrives later, in the callback.
+ * timestampWrites() and give the result to beginRenderPass(). When a frame
+ * has more than one render pass, give the first pass only the beginning
+ * write and the last pass only the end write, so the time covers them all.
+ * Then call afterPass() after the last pass, before finishing the command
+ * encoder, and afterSubmit() after submitting it. The time arrives later, in
+ * the callback.
  * @class
  */
 ///////////////////////////////////////////////////////////////////////////////
