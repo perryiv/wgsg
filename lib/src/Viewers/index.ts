@@ -14,6 +14,7 @@
 
 export * from "./Animation";
 export * from "./Commands";
+export * from "./FrameMeasurement";
 export * from "./FrameTimes";
 export * from "./Surface";
 export * from "./Viewer";
