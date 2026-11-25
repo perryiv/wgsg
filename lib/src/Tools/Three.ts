@@ -83,12 +83,13 @@ export function unProject ( input: Readonly<IUnProjectInput> ) : ( IVector3 | nu
 		screenPoint = [ screenPoint[0], screenPoint[1], 0 ];
 	}
 
-	// Make the homogeneous, normalized point.
-	// All three, x, y, and z, will be in the range [-1,1].
+	// Make the homogeneous, normalized point. The x and y will be in the
+	// range [-1,1]. The depth stays in the range [0,1], because that's
+	// WebGPU's depth range (OpenGL's is [-1,1]).
 	const a: IVector4 = [
 		( ( ( screenPoint[0] - viewport.x ) * 2 / viewport.width ) - 1 ),
 		( ( ( screenPoint[1] - viewport.y ) * 2 / viewport.height ) - 1 ),
-		( ( 2 * screenPoint[2] ) - 1 ),
+		screenPoint[2],
 		1
 	];
 

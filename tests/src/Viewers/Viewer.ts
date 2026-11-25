@@ -116,7 +116,7 @@ export function test ()
 			const viewer = new Viewer ( { canvas } );
 			viewer.resize ( 100, 100 );
 
-			expect ( viewer.projMatrix ).to.deep.equal ( mat4.perspective (
+			expect ( viewer.projMatrix ).to.deep.equal ( mat4.perspectiveZO (
 				[ ...IDENTITY_MATRIX ], 45, 1, 0.1, 10000
 			) );
 

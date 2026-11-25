@@ -187,8 +187,10 @@ export class Perspective extends Projection
 		// Initialize the answer.
 		const answer: IMatrix44 = [ ...IDENTITY_MATRIX ];
 
-		// Write the projection matrix to the answer.
-		mat4.perspective ( answer, fov, aspect, near, far );
+		// Write the projection matrix to the answer. WebGPU's depth goes from 0
+		// to 1, so this is the "ZO" version. The other, mat4.perspective(), is
+		// OpenGL's, with depth from -1 to 1.
+		mat4.perspectiveZO ( answer, fov, aspect, near, far );
 
 		// Return the new matrix.
 		return answer;
