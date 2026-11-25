@@ -15,7 +15,8 @@
 import { Base as BaseClass } from "../Base";
 import { IDENTITY_MATRIX } from "../Tools/Constants";
 import { mat4 } from "gl-matrix";
-import { ViewMatrixGroup } from "./ViewMatrixGroup";
+import { State } from "../Scene";
+import { StateGroup } from "./StateGroup";
 import type { IMatrix44, IRenderGraphInfo } from "../Types";
 
 
@@ -25,7 +26,7 @@ import type { IMatrix44, IRenderGraphInfo } from "../Types";
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export type IviewMatrixMap = Map < string, ViewMatrixGroup >;
+export type IStateGroupMap = Map < string, StateGroup >;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -38,7 +39,7 @@ export type IviewMatrixMap = Map < string, ViewMatrixGroup >;
 export class ProjMatrixGroup extends BaseClass
 {
 	#matrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
-	#viewMatrixMap: IviewMatrixMap = new Map < string, ViewMatrixGroup > ();
+	#stateGroupMap: IStateGroupMap = new Map < string, StateGroup > ();
 
 	/**
 	 * Construct the class.
@@ -70,40 +71,40 @@ export class ProjMatrixGroup extends BaseClass
 	}
 
 	/**
-	 * Get the view matrix group. Make it if we have to.
+	 * Get the state group. Make it if we have to.
 	 * @param {IRenderGraphInfo} info - The render graph info.
-	 * @param {IMatrix44} matrix - The view matrix.
-	 * @returns {ViewMatrixGroup} The view matrix group.
+	 * @param {State} state - The state.
+	 * @returns {StateGroup} The state group.
 	 */
-	public getViewMatrixGroup ( info: IRenderGraphInfo, matrix: Readonly<IMatrix44> ) : ViewMatrixGroup
+	public getStateGroup ( info: IRenderGraphInfo, state: State ) : StateGroup
 	{
-		const name = JSON.stringify ( matrix );
-		let mmg = this.#viewMatrixMap.get ( name );
-		if ( !mmg )
+		// Two states with the same name become one state group in the map.
+		const { name } = state;
+		let sg = this.#stateGroupMap.get ( name );
+		if ( !sg )
 		{
-			mmg = new ViewMatrixGroup ( matrix );
-			this.#viewMatrixMap.set ( name, mmg );
-			info.numViewMatrixGroups++;
+			sg = new StateGroup ( state );
+			this.#stateGroupMap.set ( name, sg );
+			info.numStateGroups++;
 		}
-		return mmg;
+		return sg;
 	}
 
 	/**
-	 * Call the given function for each view matrix group.
+	 * Call the given function for each state group.
 	 * @param {Function} func - The function to call.
 	 */
-	public forEachViewMatrixGroup ( func: ( mmg: ViewMatrixGroup ) => void ) : void
+	public forEachStateGroup ( func: ( sg: StateGroup ) => void ) : void
 	{
-		// The order doesn't matter so we don't sort like the layers and bins.
-		this.#viewMatrixMap.forEach ( func );
+		this.#stateGroupMap.forEach ( func );
 	}
 
 	/**
-	 * Get the number of view matrices.
-	 * @returns {number} The number of view matrices.
+	 * Get the number of state groups.
+	 * @returns {number} The number of state groups.
 	 */
-	public get numViewMatrices () : number
+	public get numStateGroups () : number
 	{
-		return this.#viewMatrixMap.size;
+		return this.#stateGroupMap.size;
 	}
 }
