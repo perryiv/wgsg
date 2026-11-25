@@ -44,6 +44,7 @@ export class Group extends BaseClass
 {
 	#children: ChildType[] = [];
 	#sphere: Sphere = new Sphere();
+	#outsideBounds: ( boolean | null ) = null; // Unknown when null.
 
 	/**
 	 * Construct the class.
@@ -180,12 +181,37 @@ export class Group extends BaseClass
 	}
 
 	/**
+	 * See if any node under this one does not add to the bounds. It's worked
+	 * out when needed, and kept until the bounds are dirtied.
+	 * @returns {boolean} True if a node under this one does not add to the bounds.
+	 */
+	public override get hasNodesOutsideBounds() : boolean
+	{
+		let answer = this.#outsideBounds;
+		if ( null === answer )
+		{
+			let found = false;
+			this.forEachChild ( ( child: ChildType ) =>
+			{
+				if ( !found && ( ( false === child.addsToBounds ) || child.hasNodesOutsideBounds ) )
+				{
+					found = true;
+				}
+			} );
+			answer = found;
+			this.#outsideBounds = answer;
+		}
+		return answer;
+	}
+
+	/**
 	 * Dirty the bounds of this node.
 	 */
 	public override dirtyBounds (): void
 	{
-		// Make a new invalid sphere.
+		// Make a new invalid sphere, and forget what's under it.
 		this.#sphere = new Sphere();
+		this.#outsideBounds = null;
 
 		// Let the parents know that their bounds are now invalid.
 		this.forEachParent ( ( parent: ChildType ) =>

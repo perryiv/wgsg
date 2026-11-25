@@ -110,6 +110,26 @@ export class Frustum
 	}
 
 	/**
+	 * Copy the planes of the other frustum. When both have the same number of
+	 * planes, this reuses the planes it has instead of making new ones.
+	 * @param {Frustum} other - The frustum to copy.
+	 */
+	public copy ( other: Readonly<Frustum> ): void
+	{
+		const mine = this.#planes;
+		const theirs = other.planes;
+		if ( mine.length !== theirs.length )
+		{
+			this.setPlanes ( theirs );
+			return;
+		}
+		for ( let i = 0; i < mine.length; ++i )
+		{
+			mine[i].setFromPlane ( theirs[i] as Plane );
+		}
+	}
+
+	/**
 	 * See if the point is inside, or on the edge.
 	 * @param {IVector3} point - The point.
 	 * @returns {boolean} True if the point is inside or on the edge.

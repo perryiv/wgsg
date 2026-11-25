@@ -12,6 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Frustum, ViewFrustum } from "../Math";
 import { makeRenderGraphInfo, Root } from "../Render";
 import { Multiply as BaseClass } from "./Multiply";
 import { SolidColor } from "../Shaders";
@@ -70,6 +71,11 @@ export class Cull extends BaseClass
 	#currentState: ( State | null ) = null;
 	#info: ( IRenderGraphInfo | null ) = null;
 	#matrix = -1; // The index of the current matrix in the render graph, or -1.
+	#frustum: ( Frustum | null ) = null; // In the current node's coordinates.
+	#topFrustum: ( Frustum | null ) = null; // The one that was set.
+	#frustums: Frustum[] = []; // Reused for each depth of transforms.
+	#depth = 0; // How many transforms deep we are.
+	#allInside = false; // True when the current node is all inside the frustum.
 
 	/**
 	 * Construct the class.
@@ -147,6 +153,84 @@ export class Cull extends BaseClass
 	public set renderGraphInfo ( info: IRenderGraphInfo )
 	{
 		this.#info = info;
+	}
+
+	/**
+	 * Get the frustum that nodes are culled with.
+	 * @returns {Frustum | null} The frustum, or null if nothing is culled.
+	 */
+	public get frustum () : ( Readonly<Frustum> | null )
+	{
+		return this.#frustum;
+	}
+
+	/**
+	 * Set the frustum that nodes are culled with, in the coordinates of the
+	 * top of the scene. When the camera is a transform in the scene, like the
+	 * viewer's, that's eye coordinates: make it with ViewFrustum from the
+	 * projection matrix. Nodes outside it are not put in the render graph.
+	 * It's copied. Set it before each traversal; null turns culling off.
+	 * @param {Frustum | null} frustum - The frustum, or null.
+	 */
+	public set frustum ( frustum: ( Readonly<Frustum> | null ) )
+	{
+		this.#topFrustum = ( frustum ? frustum.clone() : null );
+		this.#frustum = this.#topFrustum;
+	}
+
+	/**
+	 * See if the node is outside the frustum, so that it and everything under
+	 * it can be skipped. It also notes when the node is all inside, so that
+	 * the nodes under it don't need to be tested. Spheres are tested first,
+	 * and for a shape whose sphere crosses the frustum, its box is too, since
+	 * a shape's sphere is the one around its box. Nodes that don't add to the
+	 * bounds are never culled, and neither are nodes that have them under
+	 * them, since their bounds may not hold everything under them. Nodes
+	 * with invalid bounds are not culled either.
+	 * @param {Node} node - The node.
+	 * @returns {boolean} True if the node is outside and should be skipped.
+	 */
+	protected isOutside ( node: Node ) : boolean
+	{
+		// Is there anything to test?
+		const frustum = this.#frustum;
+		if ( !frustum || this.#allInside || ( false === node.addsToBounds ) )
+		{
+			return false;
+		}
+
+		// Nodes without bounds have nothing to draw, or don't say where it is.
+		const sphere = node.bounds;
+		if ( false === sphere.valid )
+		{
+			return false;
+		}
+
+		// Test the sphere, and then the box of a shape if we need to.
+		let where = frustum.classifySphere ( sphere );
+		if ( ( "intersects" === where ) && ( node instanceof Shape ) )
+		{
+			where = frustum.classifyBox ( node.box );
+		}
+
+		// Skip it if it's outside, unless something under it may not be.
+		if ( "outside" === where )
+		{
+			if ( node.hasNodesOutsideBounds )
+			{
+				return false;
+			}
+			this.renderGraphInfo.numCulled++;
+			return true;
+		}
+
+		// The nodes under one that is all inside are too.
+		if ( "inside" === where )
+		{
+			this.#allInside = true;
+		}
+
+		return false;
 	}
 
 	/**
@@ -230,6 +314,13 @@ export class Cull extends BaseClass
 			return;
 		}
 
+		// Skip it if it's out of view.
+		const allInside = this.#allInside;
+		if ( this.isOutside ( group ) )
+		{
+			return;
+		}
+
 		// Save the current state and set the new one.
 		const original = this.currentState;
 		this.maybeSetCurrentState ( group.state );
@@ -239,6 +330,7 @@ export class Cull extends BaseClass
 
 		// Restore the original state.
 		this.alwaysSetCurrentState ( original );
+		this.#allInside = allInside;
 	}
 
 	/**
@@ -253,6 +345,14 @@ export class Cull extends BaseClass
 			return;
 		}
 
+		// Skip it if it's out of view. Its bounds are in our coordinates, the
+		// ones its matrix takes its children's to.
+		const allInside = this.#allInside;
+		if ( this.isOutside ( tr ) )
+		{
+			return;
+		}
+
 		// Save the current state and set the new one.
 		const original = this.currentState;
 		this.maybeSetCurrentState ( tr.state );
@@ -262,12 +362,36 @@ export class Cull extends BaseClass
 		const matrix = this.#matrix;
 		this.#matrix = -1;
 
-		// Call the base class's function.
-		super.visitTransform ( tr );
+		// Put the frustum in the coordinates of the children, unless they don't
+		// need testing. The copy is reused for this depth in later transforms.
+		const frustum = this.#frustum;
+		if ( frustum && !this.#allInside )
+		{
+			const depth = this.#depth;
+			let local = this.#frustums[depth];
+			if ( !local )
+			{
+				local = frustum.clone();
+				this.#frustums[depth] = local;
+			}
+			else
+			{
+				local.copy ( frustum );
+			}
+			local.toLocal ( tr.matrix );
+			this.#frustum = local;
+		}
 
-		// Restore the original matrix and state.
+		// Call the base class's function.
+		++this.#depth;
+		super.visitTransform ( tr );
+		--this.#depth;
+
+		// Restore the original frustum, matrix, and state.
+		this.#frustum = frustum;
 		this.#matrix = matrix;
 		this.alwaysSetCurrentState ( original );
+		this.#allInside = allInside;
 	}
 
 	/**
@@ -282,6 +406,19 @@ export class Cull extends BaseClass
 			return;
 		}
 
+		// The nodes under it are seen with its projection, so they are culled
+		// with its frustum, not ours. That frustum is in eye coordinates, and
+		// the model-view matrix takes our coordinates there.
+		const frustum = this.#frustum;
+		const allInside = this.#allInside;
+		if ( frustum )
+		{
+			const local = new ViewFrustum ( proj.matrix );
+			local.toLocal ( this.viewMatrix );
+			this.#frustum = local;
+			this.#allInside = false;
+		}
+
 		// Save the current state and set the new one.
 		const original = this.currentState;
 		this.maybeSetCurrentState ( proj.state );
@@ -289,7 +426,9 @@ export class Cull extends BaseClass
 		// Call the base class's function.
 		super.visitProjection ( proj );
 
-		// Restore the original state.
+		// Restore the original frustum and state.
+		this.#frustum = frustum;
+		this.#allInside = allInside;
 		this.alwaysSetCurrentState ( original );
 	}
 
@@ -320,6 +459,14 @@ export class Cull extends BaseClass
 		{
 			return;
 		}
+
+		// Skip it if it's out of view.
+		const allInside = this.#allInside;
+		if ( this.isOutside ( shape ) )
+		{
+			return;
+		}
+		this.#allInside = allInside;
 
 		// Save the current state and set the new one.
 		const original = this.currentState;
@@ -383,5 +530,8 @@ export class Cull extends BaseClass
 		this.root.clear();
 		this.#currentState = null;
 		this.#matrix = -1;
+		this.#depth = 0;
+		this.#allInside = false;
+		this.#frustum = this.#topFrustum;
 	}
 }

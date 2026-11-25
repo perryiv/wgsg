@@ -47,6 +47,7 @@ const defaultRenderGraphInfo: IRenderGraphInfo = {
 	numMatrices: 0,
 	numStateGroups: 0,
 	numShapes: 0,
+	numCulled: 0,
 	numTriangles: 0,
 	numLines: 0,
 };
@@ -312,6 +313,7 @@ export function RenderStats()
 			`Matrices: ${ intF.format ( rgi.numMatrices ) }\n` +
 			`States: ${ intF.format ( rgi.numStateGroups ) }\n` +
 			`Shapes: ${ intF.format ( rgi.numShapes ) }\n` +
+			`Culled: ${ intF.format ( rgi.numCulled ) }\n` +
 			`Triangles: ${ intF.format ( rgi.numTriangles ) }\n` +
 			`Lines: ${ intF.format ( rgi.numLines ) }`;
 

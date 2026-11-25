@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { expect } from "chai";
-import { Group, Node, SphereNode } from "../../../../../lib/src/Scene";
+import { Group, Node, ProjectionNode, SphereNode } from "../../../../../lib/src/Scene";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -353,6 +353,73 @@ export function test ()
 
 			group.removeChild ( 1 );
 			expect ( parent.bounds.radius ).to.equal ( 1 );
+		} );
+
+		it ( "Should know when a node under it does not add to the bounds", function ()
+		{
+			const top = new Group();
+			const middle = new Group();
+			const sphere = new SphereNode ( { center: [ 0, 0, 0 ], radius: 1 } );
+			const grid = new SphereNode ( { center: [ 50, 0, 0 ], radius: 1 } );
+			grid.addsToBounds = false;
+			middle.addChild ( sphere );
+			top.addChild ( middle );
+			expect ( top.hasNodesOutsideBounds ).to.be.false;
+			expect ( middle.hasNodesOutsideBounds ).to.be.false;
+			expect ( sphere.hasNodesOutsideBounds ).to.be.false;
+
+			// Two levels down.
+			middle.addChild ( grid );
+			expect ( middle.hasNodesOutsideBounds ).to.be.true;
+			expect ( top.hasNodesOutsideBounds ).to.be.true;
+
+			// The bounds leave it out.
+			expect ( top.bounds.radius ).to.equal ( 1 );
+
+			// Gone again when it's removed.
+			middle.removeChild ( middle.indexOf ( grid ) );
+			expect ( middle.hasNodesOutsideBounds ).to.be.false;
+			expect ( top.hasNodesOutsideBounds ).to.be.false;
+		} );
+
+		it ( "Should count a projection node as having nodes outside the bounds", function ()
+		{
+			// What's under it is seen through its projection, so the bounds don't
+			// say whether it's in view.
+			const top = new Group();
+			const projection = new ProjectionNode();
+			expect ( projection.hasNodesOutsideBounds ).to.be.true;
+			top.addChild ( new SphereNode ( { center: [ 0, 0, 0 ], radius: 1 } ) );
+			expect ( top.hasNodesOutsideBounds ).to.be.false;
+			top.addChild ( projection );
+			expect ( top.hasNodesOutsideBounds ).to.be.true;
+		} );
+
+		it ( "Should update the bounds after changing whether a child adds to them, once dirtyBounds() is called", function ()
+		{
+			const parent = new Group();
+			const a = new SphereNode ( { center: [ 0, 0, 0 ], radius: 1 } );
+			const b = new SphereNode ( { center: [ 2, 0, 0 ], radius: 1 } );
+			parent.addChild ( a );
+			parent.addChild ( b );
+			expect ( parent.bounds.radius ).to.equal ( 2 );
+			expect ( parent.hasNodesOutsideBounds ).to.be.false;
+
+			// The setter doesn't change any bounds by itself.
+			b.addsToBounds = false;
+			expect ( parent.bounds.radius ).to.equal ( 2 );
+			expect ( parent.hasNodesOutsideBounds ).to.be.false;
+
+			// After dirtyBounds(), the parent has the new bounds.
+			b.dirtyBounds();
+			expect ( parent.bounds.radius ).to.equal ( 1 );
+			expect ( parent.hasNodesOutsideBounds ).to.be.true;
+
+			// And back again.
+			b.addsToBounds = true;
+			b.dirtyBounds();
+			expect ( parent.bounds.radius ).to.equal ( 2 );
+			expect ( parent.hasNodesOutsideBounds ).to.be.false;
 		} );
 	} );
 };

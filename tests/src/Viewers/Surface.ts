@@ -82,6 +82,16 @@ export function test ()
 			expect ( surface.context ).to.equal ( context );
 		} );
 
+		it ( "Should cull by the view frustum unless that's turned off", function ()
+		{
+			const canvas = document.createElement ( "canvas" );
+			const surface = new Surface ( { canvas } );
+			expect ( surface.frustumCulling ).to.be.true;
+			surface.frustumCulling = false;
+			expect ( surface.frustumCulling ).to.be.false;
+			surface.destroy();
+		} );
+
 		describe ( "Measuring", function ()
 		{
 			let surface: ( Surface | null ) = null;
