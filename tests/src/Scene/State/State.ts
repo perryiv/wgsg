@@ -122,7 +122,7 @@ export function test ()
 			const state1 = FlatShading.makeState ( { topology: "triangle-list" } );
 			state1.addAttribute ( new ColorAttribute ( red ) );
 			state1.addAttribute ( new TwoSidedLight ( true ) );
-			const input1 = { state: state1, shader, projMatrix: matrix, viewMatrix: matrix };
+			const input1 = { state: state1, shader, projMatrix: matrix };
 			state1.doApply ( input1 );
 			expect ( shader.color ).to.deep.equal ( red );
 			expect ( shader.twoSidedLight ).to.be.true;
@@ -130,7 +130,7 @@ export function test ()
 
 			// The next state sets neither, so it gets the defaults.
 			const state2 = FlatShading.makeState ( { topology: "triangle-list" } );
-			state2.doApply ( { state: state2, shader, projMatrix: matrix, viewMatrix: matrix } );
+			state2.doApply ( { state: state2, shader, projMatrix: matrix } );
 			expect ( shader.color ).to.deep.equal ( [ 0.5, 0.5, 0.5, 1 ] );
 			expect ( shader.twoSidedLight ).to.be.false;
 		} );
@@ -147,7 +147,7 @@ export function test ()
 			{
 				// Keep the color on purpose.
 			};
-			const input = { state, shader, projMatrix: matrix, viewMatrix: matrix };
+			const input = { state, shader, projMatrix: matrix };
 			state.doApply ( input );
 			state.doReset ( input );
 			expect ( shader.color ).to.deep.equal ( red );

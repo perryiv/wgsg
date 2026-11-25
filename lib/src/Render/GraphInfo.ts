@@ -29,7 +29,7 @@ export const makeRenderGraphInfo = () : IRenderGraphInfo =>
 		numBins: 0,
 		numPipelines: 0,
 		numProjMatrixGroups: 0,
-		numViewMatrixGroups: 0,
+		numMatrices: 0,
 		numStateGroups: 0,
 		numShapes: 0,
 		numTriangles: 0,
@@ -51,7 +51,7 @@ export const resetRenderGraphInfo = ( info: IRenderGraphInfo ) : void =>
 	info.numBins = 0;
 	info.numPipelines = 0;
 	info.numProjMatrixGroups = 0;
-	info.numViewMatrixGroups = 0;
+	info.numMatrices = 0;
 	info.numStateGroups = 0;
 	info.numShapes = 0;
 	info.numTriangles = 0;

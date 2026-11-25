@@ -29,7 +29,6 @@ export interface IStateApplyInput
 	state: State;
 	shader: ShaderBase;
 	projMatrix: IMatrix44;
-	viewMatrix: IMatrix44;
 }
 
 export type IStateResetInput = IStateApplyInput;

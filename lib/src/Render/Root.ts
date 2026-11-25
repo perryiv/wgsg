@@ -14,7 +14,7 @@
 
 import { Base as BaseClass } from "../Base";
 import { Layer } from "./Layer";
-import type { IRenderGraphInfo } from "../Types";
+import type { IMatrix44, IRenderGraphInfo } from "../Types";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -24,13 +24,12 @@ import type { IRenderGraphInfo } from "../Types";
 ///////////////////////////////////////////////////////////////////////////////
 
 /*
-- Root contains map of number to Layer
+- Root contains map of number to Layer, and the model-view matrices of the shapes
 	- Layer contains map of number to RenderBin
-		- RenderBin contains map of string (state name) to Pipeline
+		- RenderBin contains map of string (shader and pipeline options) to Pipeline
 			- Pipeline contains Shader (and our shaders are singletons), GPUPipeline, and map of projection matrix (as string) to ProjMatrixGroup
-				- ProjMatrixGroup contains projection matrix and map of view matrix (as string) to ViewMatrixGroup
-					- ViewMatrixGroup contains map of state name to StateGroup
-						- StateGroup contains state and array of shapes.
+				- ProjMatrixGroup contains projection matrix and map of state name to StateGroup
+					- StateGroup contains state, and array of shapes with the index of each one's matrix in the root.
 */
 
 
@@ -44,6 +43,8 @@ import type { IRenderGraphInfo } from "../Types";
 export class Root extends BaseClass
 {
 	#layers = new Map < number, Layer > ();
+	#matrices = new Float32Array ( 16 * 16 );
+	#numMatrices = 0;
 
 	/**
 	 * Construct the class.
@@ -99,6 +100,52 @@ export class Root extends BaseClass
 	}
 
 	/**
+	 * Add a model-view matrix. Shapes under the same transform share one.
+	 * @param {IRenderGraphInfo} info - The render graph info.
+	 * @param {IMatrix44} matrix - The matrix.
+	 * @returns {number} The index of the matrix.
+	 */
+	public addMatrix ( info: IRenderGraphInfo, matrix: Readonly<IMatrix44> ) : number
+	{
+		const index = this.#numMatrices;
+		const needed = ( ( index + 1 ) * 16 );
+		if ( needed > this.#matrices.length )
+		{
+			const bigger = new Float32Array ( needed * 2 );
+			bigger.set ( this.#matrices );
+			this.#matrices = bigger;
+		}
+		this.#matrices.set ( matrix, ( index * 16 ) );
+		this.#numMatrices = ( index + 1 );
+		info.numMatrices++;
+		return index;
+	}
+
+	/**
+	 * Get a model-view matrix.
+	 * @param {number} index - The index that addMatrix() returned.
+	 * @returns {Float32Array} The matrix, a view into the root's array.
+	 */
+	public getMatrix ( index: number ) : Float32Array
+	{
+		if ( !Number.isInteger ( index ) || ( index < 0 ) || ( index >= this.#numMatrices ) )
+		{
+			throw new Error ( `Invalid matrix index ${index}, there are ${this.#numMatrices} matrices` );
+		}
+		const start = ( index * 16 );
+		return this.#matrices.subarray ( start, ( start + 16 ) );
+	}
+
+	/**
+	 * Get the number of model-view matrices.
+	 * @returns {number} The number of matrices.
+	 */
+	public get numMatrices () : number
+	{
+		return this.#numMatrices;
+	}
+
+	/**
 	 * Get the number of layers.
 	 * @returns {number} The number of layers.
 	 */
@@ -114,5 +161,6 @@ export class Root extends BaseClass
 	public clear () : void
 	{
 		this.#layers.clear ();
+		this.#numMatrices = 0;
 	}
 }

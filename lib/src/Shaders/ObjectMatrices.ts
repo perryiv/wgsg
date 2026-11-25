@@ -126,10 +126,10 @@ export class ObjectMatrices
 
 	/**
 	 * Add an object's matrix.
-	 * @param {IMatrix44} matrix - The matrix.
+	 * @param {IMatrix44 | Float32Array} matrix - The matrix.
 	 * @returns {number} The offset to give bind().
 	 */
-	public add ( matrix: Readonly<IMatrix44> ) : number
+	public add ( matrix: ( Readonly<IMatrix44> | Float32Array ) ) : number
 	{
 		if ( this.#count >= this.#capacity )
 		{

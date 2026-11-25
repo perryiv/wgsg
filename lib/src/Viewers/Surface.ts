@@ -1102,7 +1102,7 @@ export class Surface extends BaseClass
 				{ bins: rgi.numBins },
 				{ pipelines: rgi.numPipelines },
 				{ projections: rgi.numProjMatrixGroups },
-				{ viewMatrices: rgi.numViewMatrixGroups },
+				{ matrices: rgi.numMatrices },
 				{ states: rgi.numStateGroups },
 				{ shapes: rgi.numShapes },
 				{ triangles: rgi.numTriangles },

@@ -29,6 +29,7 @@ export class StateGroup extends BaseClass
 {
 	#state: State;
 	#shapes: Shape[] = [];
+	#matrices: number[] = [];
 
 	/**
 	 * Construct the class.
@@ -64,10 +65,13 @@ export class StateGroup extends BaseClass
 	 * Add the shape to the state group.
 	 * @param {IRenderGraphInfo} info - The render graph info.
 	 * @param {Shape} shape - The shape to add.
+	 * @param {number} matrix - The index of the shape's model-view matrix in
+	 * the render graph's root.
 	 */
-	public addShape ( info: IRenderGraphInfo, shape: Shape )
+	public addShape ( info: IRenderGraphInfo, shape: Shape, matrix: number )
 	{
 		this.#shapes.push ( shape );
+		this.#matrices.push ( matrix );
 		info.numShapes++;
 	}
 
@@ -75,9 +79,15 @@ export class StateGroup extends BaseClass
 	 * Call the given function for each shape.
 	 * @param {Function} func - The function to call.
 	 */
-	public forEachShape ( func: ( shape: Shape, index: number ) => void )
+	public forEachShape ( func: ( shape: Shape, index: number, matrix: number ) => void )
 	{
-		this.#shapes.forEach ( func );
+		const shapes = this.#shapes;
+		const matrices = this.#matrices;
+		const count = shapes.length;
+		for ( let i = 0; i < count; ++i )
+		{
+			func ( shapes[i], i, matrices[i] );
+		}
 	}
 
 	/**

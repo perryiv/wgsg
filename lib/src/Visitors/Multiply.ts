@@ -30,6 +30,7 @@ export abstract class Multiply extends BaseClass
 {
 	#viewMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ]; // Has to be a copy.
 	#projMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ]; // Has to be a copy.
+	#projMatrixKey = JSON.stringify ( IDENTITY_MATRIX );
 
 	/**
 	 * Construct the class.
@@ -79,6 +80,17 @@ export abstract class Multiply extends BaseClass
 
 		// Copy the matrix.
 		mat4.copy ( this.#projMatrix, matrix );
+		this.#projMatrixKey = JSON.stringify ( this.#projMatrix );
+	}
+
+	/**
+	 * Return the projection matrix as a string, to use as a key. It's made
+	 * when the matrix is set, not each time it's needed.
+	 * @returns {string} The projection matrix as a string.
+	 */
+	public get projMatrixKey() : string
+	{
+		return this.#projMatrixKey;
 	}
 
 	/**

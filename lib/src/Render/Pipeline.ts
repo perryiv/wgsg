@@ -87,14 +87,16 @@ export class Pipeline extends BaseClass
 	}
 
 	/**
-	 * Get the projection matrix. Make it if we have to.
+	 * Get the projection matrix group. Make it if we have to.
 	 * @param {IRenderGraphInfo} info - The render graph info.
 	 * @param {IMatrix44} matrix - The projection matrix.
-	 * @returns {ProjMatrix} The projection matrix.
+	 * @param {string} [key] - The matrix as a string, if the caller already
+	 * has it. Making it for every shape would be slow.
+	 * @returns {ProjMatrixGroup} The projection matrix group.
 	 */
-	public getProjMatrixGroup ( info: IRenderGraphInfo, matrix: Readonly<IMatrix44> ) : ProjMatrixGroup
+	public getProjMatrixGroup ( info: IRenderGraphInfo, matrix: Readonly<IMatrix44>, key?: string ) : ProjMatrixGroup
 	{
-		const name = JSON.stringify ( matrix );
+		const name = ( key ?? JSON.stringify ( matrix ) );
 		let pmg = this.#projMatrixMap.get ( name );
 		if ( !pmg )
 		{

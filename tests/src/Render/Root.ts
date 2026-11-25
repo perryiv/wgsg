@@ -31,7 +31,6 @@ import {
 	ProjMatrixGroup,
 	Root,
 	StateGroup,
-	ViewMatrixGroup,
 } from "../../../lib/src/Render";
 import {
 	Cull as CullVisitor,
@@ -143,24 +142,23 @@ export function test ()
 
 			const pmg = pipeline.getProjMatrixGroup ( info, IDENTITY_MATRIX );
 			expect ( pmg instanceof ProjMatrixGroup ).to.be.true;
-			expect ( pmg.numViewMatrices ).to.be.equal ( 1 );
+			expect ( pmg.numStateGroups ).to.be.equal ( 1 );
 			expect ( pmg.matrix instanceof Array ).to.be.true;
 			expect ( pmg.matrix.length ).to.be.equal ( 16 );
 			expect ( pmg.matrix ).to.be.deep.equal ( IDENTITY_MATRIX );
 
-			const vmg = pmg.getViewMatrixGroup ( info, IDENTITY_MATRIX );
-			expect ( vmg instanceof ViewMatrixGroup ).to.be.true;
-			expect ( vmg.numStateGroups ).to.be.equal ( 1 );
-			expect ( vmg.matrix instanceof Array ).to.be.true;
-			expect ( vmg.matrix.length ).to.be.equal ( 16 );
-			expect ( vmg.matrix ).to.be.deep.equal ( IDENTITY_MATRIX );
+			// The shapes are not under a transform, so they share one matrix.
+			expect ( root.numMatrices ).to.be.equal ( 1 );
+			expect ( Array.from ( root.getMatrix ( 0 ) ) ).to.be.deep.equal ( IDENTITY_MATRIX );
 
-			vmg.forEachStateGroup ( ( sg: StateGroup ) =>
+			pmg.forEachStateGroup ( ( sg: StateGroup ) =>
 			{
 				expect ( sg.numShapes ).to.be.equal ( 4 );
 
-				sg.forEachShape ( ( shape: Shape, index: number ) =>
+				sg.forEachShape ( ( shape: Shape, index: number, matrix: number ) =>
 				{
+					expect ( matrix ).to.be.equal ( 0 );
+
 					expect ( index ).to.be.greaterThanOrEqual ( 0 );
 					expect ( index ).to.be.lessThan ( 4 );
 

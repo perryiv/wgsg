@@ -19,4 +19,3 @@ export * from "./Pipeline";
 export * from "./ProjMatrixGroup";
 export * from "./Root";
 export * from "./StateGroup";
-export * from "./ViewMatrixGroup";

@@ -69,6 +69,7 @@ export class Cull extends BaseClass
 	#defaultState: State;
 	#currentState: ( State | null ) = null;
 	#info: ( IRenderGraphInfo | null ) = null;
+	#matrix = -1; // The index of the current matrix in the render graph, or -1.
 
 	/**
 	 * Construct the class.
@@ -256,10 +257,16 @@ export class Cull extends BaseClass
 		const original = this.currentState;
 		this.maybeSetCurrentState ( tr.state );
 
+		// The shapes below have a new matrix. It's added to the render graph
+		// when the first of them is.
+		const matrix = this.#matrix;
+		this.#matrix = -1;
+
 		// Call the base class's function.
 		super.visitTransform ( tr );
 
-		// Restore the original state.
+		// Restore the original matrix and state.
+		this.#matrix = matrix;
 		this.alwaysSetCurrentState ( original );
 	}
 
@@ -320,8 +327,6 @@ export class Cull extends BaseClass
 
 		// Shortcuts.
 		const root = this.root;
-		const vm = this.viewMatrix;
-		const pm = this.projMatrix;
 		const state = this.currentState;
 		const { shader } = state;
 		const info = this.renderGraphInfo;
@@ -336,12 +341,17 @@ export class Cull extends BaseClass
 		const layer = root.getLayer ( info, state.layer );
 		const bin = layer.getBin ( info, state.bin );
 		const pipeline = bin.getPipeline ( info, state );
-		const pmg = pipeline.getProjMatrixGroup ( info, pm );
-		const vmg = pmg.getViewMatrixGroup ( info, vm );
-		const sg = vmg.getStateGroup ( info, state );
+		const pmg = pipeline.getProjMatrixGroup ( info, this.projMatrix, this.projMatrixKey );
+		const sg = pmg.getStateGroup ( info, state );
+
+		// Add the current matrix, if this is the first shape that uses it.
+		if ( this.#matrix < 0 )
+		{
+			this.#matrix = root.addMatrix ( info, this.viewMatrix );
+		}
 
 		// Add our shape.
-		sg.addShape ( info, shape );
+		sg.addShape ( info, shape, this.#matrix );
 
 		// Do this last.
 		super.visitShape ( shape );
@@ -372,5 +382,6 @@ export class Cull extends BaseClass
 	{
 		this.root.clear();
 		this.#currentState = null;
+		this.#matrix = -1;
 	}
 }

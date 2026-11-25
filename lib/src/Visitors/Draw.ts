@@ -40,7 +40,6 @@ import {
 	ProjMatrixGroup,
 	Root,
 	StateGroup,
-	ViewMatrixGroup,
 } from "../Render";
 
 
@@ -85,34 +84,6 @@ const requireShader = ( state: State ) : ShaderBase =>
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Count the view matrix groups in the render graph.
- * @param {Root} root - The root of the render graph.
- * @returns {number} The number of view matrix groups.
- */
-///////////////////////////////////////////////////////////////////////////////
-
-const countViewMatrixGroups = ( root: Root ) : number =>
-{
-	let count = 0;
-	root.forEachLayer ( ( layer: Layer ) =>
-	{
-		layer.forEachBin ( ( bin: Bin ) =>
-		{
-			bin.forEachPipeline ( ( pipeline: Pipeline ) =>
-			{
-				pipeline.forEachProjMatrixGroup ( ( pmg: ProjMatrixGroup ) =>
-				{
-					count += pmg.numViewMatrices;
-				} );
-			} );
-		} );
-	} );
-	return count;
-};
-
-
-///////////////////////////////////////////////////////////////////////////////
-/**
  * Draw visitor class.
  * @abstract
  */
@@ -134,6 +105,8 @@ export class Draw extends BaseClass
 	#gpuTimer: ( GpuTimer | null ) = null;
 	#onGpuTime: ( IGpuTimeCallback | null ) = null;
 	#objects = new ObjectMatrices();
+	#offsets: number[] = [];
+	#boundMatrix = -1;
 
 	/**
 	 * Construct the class.
@@ -465,10 +438,10 @@ export class Draw extends BaseClass
 
 		// console.log ( `Render tree root ${root.id} has ${root.numLayers} layers` );
 
-		// Iterate over the layers in order.
-		// Make room for the matrix of each object.
-		this.#objects.begin ( countViewMatrixGroups ( root ) );
+		// Put the shapes' matrices where the shaders can read them.
+		this.addMatrices ( root );
 
+		// Iterate over the layers in order.
 		root.forEachLayer ( ( layer: Layer ) =>
 		{
 			// Draw the layer.
@@ -553,6 +526,24 @@ export class Draw extends BaseClass
 	}
 
 	/**
+	 * Add the matrices of the render graph's shapes to the buffer that the
+	 * shaders read them from, and remember where each one is.
+	 * @param {Root} root - The root of the render graph.
+	 */
+	protected addMatrices ( root: Root ) : void
+	{
+		const objects = this.#objects;
+		const count = root.numMatrices;
+		objects.begin ( count );
+		const offsets = this.#offsets;
+		offsets.length = count;
+		for ( let i = 0; i < count; ++i )
+		{
+			offsets[i] = objects.add ( root.getMatrix ( i ) );
+		}
+	}
+
+	/**
 	 * Draw the projection matrix group.
 	 * @param {Pipeline} pipeline - The pipeline to use.
 	 * @param {ProjMatrixGroup} pmg - The projection matrix group to draw.
@@ -562,32 +553,10 @@ export class Draw extends BaseClass
 		// Set the pipeline's projection matrix.
 		pipeline.projMatrix = pmg.matrix;
 
-		// console.log ( `ProjMatrix ${pmg.id} has ${pmg.numViewMatrices} view matrices` );
-
-		// Draw the view matrix groups.
-		pmg.forEachViewMatrixGroup ( ( vmg: ViewMatrixGroup ) =>
-		{
-			this.drawViewMatrix ( pipeline, pmg, vmg );
-		} );
-	}
-
-	/**
-	 * Draw the view matrix group.
-	 * @param {Pipeline} pipeline - The pipeline to use.
-	 * @param {ProjMatrixGroup} pmg - The projection matrix group.
-	 * @param {ViewMatrixGroup} vmg - The view matrix group to draw.
-	 */
-	protected drawViewMatrix ( pipeline: Pipeline, pmg: ProjMatrixGroup, vmg: ViewMatrixGroup ) : void
-	{
-		// Use the matrix of the objects in this group.
-		this.#objects.bind ( this.renderPassEncoder, this.#objects.add ( vmg.matrix ) );
-
-		// console.log ( `ViewMatrix ${vmg.id} has ${vmg.numStateGroups} state groups` );
-
 		// Draw the state groups.
-		vmg.forEachStateGroup ( ( sg: StateGroup ) =>
+		pmg.forEachStateGroup ( ( sg: StateGroup ) =>
 		{
-			this.drawStateGroup ( pipeline, pmg, vmg, sg );
+			this.drawStateGroup ( pipeline, pmg, sg );
 		} );
 	}
 
@@ -595,22 +564,19 @@ export class Draw extends BaseClass
 	 * Draw the state group.
 	 * @param {Pipeline} pipeline - The pipeline to use.
 	 * @param {ProjMatrixGroup} pmg - The projection matrix group.
-	 * @param {ViewMatrixGroup} vmg - The view matrix group.
 	 * @param {StateGroup} sg - The state group to draw.
 	 */
-	protected drawStateGroup ( pipeline: Pipeline, pmg: ProjMatrixGroup, vmg: ViewMatrixGroup, sg: StateGroup ) : void
+	protected drawStateGroup ( pipeline: Pipeline, pmg: ProjMatrixGroup, sg: StateGroup ) : void
 	{
 		// Shortcuts.
 		const { state } = sg;
-
-		// console.log ( `State group ${sg.id} has state ${state.id} and ${sg.numShapes} shapes` );
+		const pass = this.renderPassEncoder;
 
 		// Input for applying and resetting the state.
 		const input: IStateApplyInput = {
 			state,
 			shader: pipeline.shader,
 			projMatrix: pmg.matrix,
-			viewMatrix: vmg.matrix,
 		};
 
 		// Apply the state.
@@ -618,12 +584,20 @@ export class Draw extends BaseClass
 
 		// Configure the render pass now that the state has been applied.
 		const shader = requireShader ( state );
-		shader.configureRenderPass ( this.renderPassEncoder, this.#frame );
+		shader.configureRenderPass ( pass, this.#frame );
 		this.#shader = shader;
 
-		// Draw the shapes.
-		sg.forEachShape ( ( shape: Shape ) =>
+		// Draw the shapes. Bind each one's matrix, unless it's the same as the
+		// shape before it.
+		this.#boundMatrix = -1;
+		sg.forEachShape ( ( shape: Shape, _index: number, matrix: number ) =>
 		{
+			if ( matrix !== this.#boundMatrix )
+			{
+				this.#objects.bind ( pass, this.#offsets[matrix] );
+				this.#boundMatrix = matrix;
+			}
+
 			// The shape decides which function to call in order to draw itself.
 			shape.accept ( this );
 		} );

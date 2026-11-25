@@ -44,7 +44,7 @@ const defaultRenderGraphInfo: IRenderGraphInfo = {
 	numBins: 0,
 	numPipelines: 0,
 	numProjMatrixGroups: 0,
-	numViewMatrixGroups: 0,
+	numMatrices: 0,
 	numStateGroups: 0,
 	numShapes: 0,
 	numTriangles: 0,
@@ -309,7 +309,7 @@ export function RenderStats()
 			`Bins: ${ intF.format ( rgi.numBins ) }\n` +
 			`Pipelines: ${ intF.format ( rgi.numPipelines ) }\n` +
 			`Projections: ${ intF.format ( rgi.numProjMatrixGroups ) }\n` +
-			`ViewMatrices: ${ intF.format ( rgi.numViewMatrixGroups ) }\n` +
+			`Matrices: ${ intF.format ( rgi.numMatrices ) }\n` +
 			`States: ${ intF.format ( rgi.numStateGroups ) }\n` +
 			`Shapes: ${ intF.format ( rgi.numShapes ) }\n` +
 			`Triangles: ${ intF.format ( rgi.numTriangles ) }\n` +
