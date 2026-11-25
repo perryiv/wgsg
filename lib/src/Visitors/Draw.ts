@@ -84,6 +84,41 @@ const requireShader = ( state: State ) : ShaderBase =>
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
+ * Get the timestamp writes for one of a frame's render passes. The time the
+ * frame starts is written at the start of the first pass, and the time it
+ * ends at the end of the last, so the time covers all of them.
+ * @param {GPURenderPassTimestampWrites | undefined} timestamps - The writes
+ * for the whole frame, or undefined if it's not timed with timestamps.
+ * @param {boolean} first - True if it's the first pass.
+ * @param {boolean} last - True if it's the last pass.
+ * @returns {GPURenderPassTimestampWrites | undefined} The writes for this pass.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+const getPassTimestampWrites = (
+	timestamps: ( GPURenderPassTimestampWrites | undefined ),
+	first: boolean,
+	last: boolean ) : ( GPURenderPassTimestampWrites | undefined ) =>
+{
+	if ( !timestamps || ( !first && !last ) )
+	{
+		return undefined;
+	}
+	const answer: GPURenderPassTimestampWrites = { querySet: timestamps.querySet };
+	if ( first )
+	{
+		answer.beginningOfPassWriteIndex = timestamps.beginningOfPassWriteIndex;
+	}
+	if ( last )
+	{
+		answer.endOfPassWriteIndex = timestamps.endOfPassWriteIndex;
+	}
+	return answer;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
  * Draw visitor class.
  * @abstract
  */
@@ -417,39 +452,59 @@ export class Draw extends BaseClass
 		}
 		const gpuTimer = ( onGpuTime ? this.#gpuTimer : null );
 
-		// Make the render pass encoder.
-		const pass = this.commandEncoder.beginRenderPass ( {
-			label: `Render pass for ${this.type} ${this.id}`,
-			timestampWrites: gpuTimer?.timestampWrites(),
-			colorAttachments: [ {
-				view: colorTexture.createView(),
-				clearValue: this.preMultipliedClearColor,
-				loadOp: "clear",
-				storeOp: "store"
-			} ],
-			depthStencilAttachment: {
-				view: depthTexture.createView(),
-				depthClearValue: 1.0,
-				depthLoadOp: 'clear',
-				depthStoreOp: 'store',
-			},
-		} );
-		this.#renderPassEncoder = pass;
-
-		// console.log ( `Render tree root ${root.id} has ${root.numLayers} layers` );
-
 		// Put the shapes' matrices where the shaders can read them.
 		this.addMatrices ( root );
 
-		// Iterate over the layers in order.
+		// Get the layers in order.
+		const layers: Layer[] = [];
 		root.forEachLayer ( ( layer: Layer ) =>
 		{
-			// Draw the layer.
-			this.drawLayer ( layer );
+			layers.push ( layer );
 		} );
 
-		// End this render pass.
-		pass.end();
+		// Draw each layer in its own render pass. Each pass clears the depth
+		// buffer, so a layer is drawn in front of the ones before it. Only the
+		// first pass clears the colors. With no layers, there is still one pass,
+		// to clear the colors.
+		const colorView = colorTexture.createView();
+		const depthView = depthTexture.createView();
+		const timestamps = gpuTimer?.timestampWrites();
+		const numPasses = Math.max ( 1, layers.length );
+		for ( let i = 0; i < numPasses; ++i )
+		{
+			const first = ( 0 === i );
+			const last = ( ( numPasses - 1 ) === i );
+
+			// Make the render pass encoder.
+			const pass = encoder.beginRenderPass ( {
+				label: `Render pass ${i} for ${this.type} ${this.id}`,
+				timestampWrites: getPassTimestampWrites ( timestamps, first, last ),
+				colorAttachments: [ {
+					view: colorView,
+					clearValue: this.preMultipliedClearColor,
+					loadOp: ( first ? "clear" : "load" ),
+					storeOp: "store"
+				} ],
+				depthStencilAttachment: {
+					view: depthView,
+					depthClearValue: 1.0,
+					depthLoadOp: "clear",
+					depthStoreOp: "store",
+				},
+			} );
+			this.#renderPassEncoder = pass;
+
+			// Draw the layer.
+			const layer = layers[i];
+			if ( layer )
+			{
+				this.drawLayer ( layer );
+			}
+
+			// End this render pass.
+			pass.end();
+			this.#renderPassEncoder = null;
+		}
 
 		// Write all the objects' matrices at once, before the commands run.
 		this.#objects.upload();
