@@ -117,7 +117,7 @@ export function test ()
 			viewer.resize ( 100, 100 );
 
 			expect ( viewer.projMatrix ).to.deep.equal ( mat4.perspectiveZO (
-				[ ...IDENTITY_MATRIX ], 45, 1, 0.1, 10000
+				[ ...IDENTITY_MATRIX ], ( 45 * Math.PI / 180 ), 1, 0.1, 10000
 			) );
 
 			expect ( viewer.viewMatrix ).to.deep.equal ( IDENTITY_MATRIX );

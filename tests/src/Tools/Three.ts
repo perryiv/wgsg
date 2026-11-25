@@ -71,7 +71,7 @@ export function test ()
 	{
 		it ( "Should put the near plane at depth 0 and the far plane at 1 with a perspective projection", function ()
 		{
-			const proj = new Perspective ( { fov: 1, aspect: 1, near: 2, far: 50 } );
+			const proj = new Perspective ( { fov: 60, aspect: 1, near: 2, far: 50 } );
 			const m = proj.matrix;
 			expect ( getDepth ( m, [ 0, 0, -2 ] ) ).to.be.closeTo ( 0, TOLERANCE );
 			expect ( getDepth ( m, [ 0, 0, -50 ] ) ).to.be.closeTo ( 1, TOLERANCE );
@@ -95,7 +95,7 @@ export function test ()
 
 		it ( "Should unproject depth 0 to the near plane and 1 to the far plane", function ()
 		{
-			const proj = new Perspective ( { fov: 1, aspect: 1, near: 2, far: 50 } );
+			const proj = new Perspective ( { fov: 60, aspect: 1, near: 2, far: 50 } );
 			const viewport: IViewport = { x: 0, y: 0, width: 100, height: 100 };
 			const projMatrix = proj.matrix;
 			const viewMatrix = [ ...IDENTITY_MATRIX ] as IMatrix44;
@@ -109,7 +109,7 @@ export function test ()
 
 		it ( "Should make a line from the near plane to the far plane", function ()
 		{
-			const proj = new Perspective ( { fov: 1, aspect: 1, near: 2, far: 50 } );
+			const proj = new Perspective ( { fov: 60, aspect: 1, near: 2, far: 50 } );
 			const viewport: IViewport = { x: 0, y: 0, width: 100, height: 100 };
 			const line = makeLine ( {
 				screenPoint: [ 50, 50 ],
