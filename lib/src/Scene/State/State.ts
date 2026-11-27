@@ -378,6 +378,7 @@ export class State extends BaseClass
 		const options: IPipelineOptions = {
 			topology: this.topology,
 			cullMode: "none",
+			depthWrite: true,
 		};
 		for ( const [ , attribute ] of this.#attributes )
 		{

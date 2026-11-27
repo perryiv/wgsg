@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { test as testCullFace } from "./CullFace";
+import { test as testDepth } from "./Depth";
 import { test as testStateClass } from "./State";
 
 export function test ()
@@ -21,5 +22,6 @@ export function test ()
 	{
 		testStateClass();
 		testCullFace();
+		testDepth();
 	} );
 };

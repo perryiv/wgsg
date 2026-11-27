@@ -71,7 +71,7 @@ const getPipelineError = async ( shader: Lighting ) : Promise < GPUError | null 
 {
 	const device = Device.instance.device;
 	device.pushErrorScope ( "validation" );
-	shader.getPipeline ( { topology: "triangle-list", cullMode: "none" } );
+	shader.getPipeline ( { topology: "triangle-list", cullMode: "none", depthWrite: true } );
 	return await device.popErrorScope();
 };
 
@@ -140,7 +140,7 @@ const renderCenterPixel = async ( shader: Lighting | SolidColor, points: number[
 			depthStoreOp: "store",
 		},
 	} );
-	pass.setPipeline ( shader.getPipeline ( { topology: "triangle-list", cullMode } ) );
+	pass.setPipeline ( shader.getPipeline ( { topology: "triangle-list", cullMode, depthWrite: true } ) );
 	shader.configureRenderPass ( pass, ++frameCount );
 	objects.bind ( pass, objectOffset );
 	pass.setVertexBuffer ( 0, pointBuffer );
@@ -235,7 +235,7 @@ const renderTwoColors = async ( shader: Lighting | SolidColor, normals: number[]
 			depthStoreOp: "store",
 		},
 	} );
-	pass.setPipeline ( shader.getPipeline ( { topology: "triangle-list", cullMode: "none" } ) );
+	pass.setPipeline ( shader.getPipeline ( { topology: "triangle-list", cullMode: "none", depthWrite: true } ) );
 	pass.setIndexBuffer ( indexBuffer!, "uint32" );
 	if ( normalBuffer )
 	{
@@ -365,11 +365,11 @@ export function test ()
 				it ( `Should make one pipeline for each set of options with ${name}`, function ()
 				{
 					const shader = getShader();
-					const none = shader.getPipeline ( { topology: "triangle-list", cullMode: "none" } );
-					const back = shader.getPipeline ( { topology: "triangle-list", cullMode: "back" } );
+					const none = shader.getPipeline ( { topology: "triangle-list", cullMode: "none", depthWrite: true } );
+					const back = shader.getPipeline ( { topology: "triangle-list", cullMode: "back", depthWrite: true } );
 					expect ( back ).not.to.equal ( none );
-					expect ( shader.getPipeline ( { topology: "triangle-list", cullMode: "none" } ) ).to.equal ( none );
-					expect ( shader.getPipeline ( { topology: "triangle-list", cullMode: "back" } ) ).to.equal ( back );
+					expect ( shader.getPipeline ( { topology: "triangle-list", cullMode: "none", depthWrite: true } ) ).to.equal ( none );
+					expect ( shader.getPipeline ( { topology: "triangle-list", cullMode: "back", depthWrite: true } ) ).to.equal ( back );
 				} );
 
 				it ( `Should cull the back faces with ${name}`, async function ()

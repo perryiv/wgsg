@@ -104,7 +104,7 @@ const getPipelineError = async ( shader: WithEdges, cullMode: GPUCullMode = "non
 {
 	const device = Device.instance.device;
 	device.pushErrorScope ( "validation" );
-	shader.getPipeline ( { topology: "triangle-list", cullMode } );
+	shader.getPipeline ( { topology: "triangle-list", cullMode, depthWrite: true } );
 	return await device.popErrorScope();
 };
 
@@ -167,7 +167,7 @@ const render = async ( { shader, points, normals, indices, edgeWidth = 4 }: IRen
 			depthStoreOp: "store",
 		},
 	} );
-	pass.setPipeline ( shader.getPipeline ( { topology: "triangle-list", cullMode: "none" } ) );
+	pass.setPipeline ( shader.getPipeline ( { topology: "triangle-list", cullMode: "none", depthWrite: true } ) );
 	shader.configureRenderPass ( pass, ++frameCount );
 	objects.bind ( pass, objectOffset );
 	const mode = shader.setPulledVertices ( pass, { geometry, indices: indexArray, key: {} } );

@@ -49,18 +49,18 @@ export function test ()
 		it ( "Should not cull without the attribute", function ()
 		{
 			const state = new State ( { topology: "line-list" } );
-			expect ( state.pipelineOptions ).to.deep.equal ( { topology: "line-list", cullMode: "none" } );
+			expect ( state.pipelineOptions ).to.deep.equal ( { topology: "line-list", cullMode: "none", depthWrite: true } );
 
 			// Attributes that are not part of the pipeline don't change it.
 			state.addAttribute ( new TwoSidedLight ( true ) );
-			expect ( state.pipelineOptions ).to.deep.equal ( { topology: "line-list", cullMode: "none" } );
+			expect ( state.pipelineOptions ).to.deep.equal ( { topology: "line-list", cullMode: "none", depthWrite: true } );
 		} );
 
 		it ( "Should put the cull mode in the state's pipeline options", function ()
 		{
 			const state = new State();
 			state.addAttribute ( new CullFace() );
-			expect ( state.pipelineOptions ).to.deep.equal ( { topology: "triangle-list", cullMode: "back" } );
+			expect ( state.pipelineOptions ).to.deep.equal ( { topology: "triangle-list", cullMode: "back", depthWrite: true } );
 			expect ( state.name ).to.include ( "CullFace back" );
 		} );
 
@@ -81,8 +81,8 @@ export function test ()
 			const none = bin.getPipeline ( info, make ( null ) );
 			const back = bin.getPipeline ( info, make ( "back" ) );
 			expect ( back ).not.to.equal ( none );
-			expect ( none.options ).to.deep.equal ( { topology: "triangle-list", cullMode: "none" } );
-			expect ( back.options ).to.deep.equal ( { topology: "triangle-list", cullMode: "back" } );
+			expect ( none.options ).to.deep.equal ( { topology: "triangle-list", cullMode: "none", depthWrite: true } );
+			expect ( back.options ).to.deep.equal ( { topology: "triangle-list", cullMode: "back", depthWrite: true } );
 
 			// The same options share a pipeline, and "none" is the same as no attribute.
 			expect ( bin.getPipeline ( info, make ( "back" ) ) ).to.equal ( back );

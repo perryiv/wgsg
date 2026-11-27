@@ -15,3 +15,4 @@
 export * from "./Box";
 export * from "./Grid";
 export * from "./Lines";
+export * from "./Transparent";
