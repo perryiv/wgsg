@@ -13,8 +13,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { test as testBox } from "./Box";
+import { test as testTransparent } from "./Transparent";
 
 describe ( "Builders", function ()
 {
 	testBox();
+	testTransparent();
 } );

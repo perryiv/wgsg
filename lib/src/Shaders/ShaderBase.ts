@@ -31,11 +31,12 @@ export interface IShaderBaseInput
 }
 
 // The settings that a render pipeline is made with, besides the shader.
-// More can be added, like depth, stencil, and blending.
+// More can be added, like stencil and blending.
 export interface IPipelineOptions
 {
 	topology: GPUPrimitiveTopology;
 	cullMode: GPUCullMode;
+	depthWrite: boolean;
 }
 
 /**
@@ -45,7 +46,7 @@ export interface IPipelineOptions
  */
 export const makePipelineKey = ( options: Readonly<IPipelineOptions> ) : string =>
 {
-	return `${options.topology} ${options.cullMode}`;
+	return `${options.topology} ${options.cullMode} ${options.depthWrite ? "depth-write" : "no-depth-write"}`;
 };
 
 export type IShaderFactory = ( ( this: void ) => ShaderBase );

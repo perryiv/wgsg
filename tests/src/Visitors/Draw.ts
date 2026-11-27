@@ -17,10 +17,13 @@ import { expect } from "chai";
 import { FlatShading } from "../../../lib/src/Shaders/FlatShading";
 import { getPixel, makeTexture, readPixels, type IPixels } from "../Helpers/Pixels";
 import { loseDevice } from "../Helpers/DeviceLoss";
+import { buildTransparentScene } from "../../../lib/src/Builders/Transparent";
 import { makeRenderGraphInfo, Root } from "../../../lib/src/Render";
+import { TRANSPARENT_BIN } from "../../../lib/src/Tools/Constants";
 import type { IVector3, IVector4 } from "../../../lib/src/Types";
 import {
 	ColorAttribute,
+	Depth,
 	Geometry,
 	Group,
 	Indexed,
@@ -102,6 +105,35 @@ const pixelAt = ( pixels: IPixels, x: number, y: number ) : number[] =>
 	const column = Math.floor ( ( ( x + 1 ) / 2 ) * SIZE );
 	const row = Math.floor ( ( ( 1 - y ) / 2 ) * SIZE );
 	return getPixel ( pixels, column, row );
+};
+
+/**
+ * Expect the pixel to be close to the expected one, give or take rounding.
+ * @param {number[]} pixel - The pixel.
+ * @param {number[]} expected - The expected pixel, in RGBA order.
+ */
+const expectPixel = ( pixel: number[], expected: number[] ) : void =>
+{
+	expect ( pixel.length ).to.equal ( expected.length );
+	for ( let i = 0; i < expected.length; ++i )
+	{
+		expect ( pixel[i], `channel ${i} of [${pixel.join ( ", " )}]` ).to.be.closeTo ( expected[i], 2 );
+	}
+};
+
+/**
+ * Make a semi-transparent state in the transparent bin.
+ * @param {IVector4} color - The color. Its alpha should be below one.
+ * @param {boolean} depthWrite - Whether to write depth.
+ * @returns {State} The state.
+ */
+const makeTransparentState = ( color: IVector4, depthWrite: boolean ) : State =>
+{
+	const state = FlatShading.makeState ( { topology: "triangle-list" } );
+	state.addAttribute ( new ColorAttribute ( color ) );
+	state.addAttribute ( new Depth ( { write: depthWrite } ) );
+	state.bin = TRANSPARENT_BIN;
+	return state;
 };
 
 /**
@@ -206,6 +238,79 @@ export function test ()
 			expect ( pixelAt ( pixels, 0.3, 0 ) ).to.deep.equal ( [ 255, 255, 0, 255 ] );
 
 			// The background is still the clear color.
+			expect ( pixelAt ( pixels, -0.95, 0.95 ) ).to.deep.equal ( [ 0, 0, 255, 255 ] );
+		} );
+
+		it ( "Should show a farther transparent shape through a nearer one drawn before it", async function ()
+		{
+			// Two half-transparent windows that overlap in the middle, and an
+			// opaque square in front of the right side. The near red window is
+			// added first, so it's drawn before the far green one.
+			const build = ( depthWrite: boolean ) : Group =>
+			{
+				const scene = new Group();
+				scene.addChild ( makeSquare ( [ -0.2, 0, 0.3 ], true, makeTransparentState ( [ 1, 0, 0, 0.5 ], depthWrite ) ) );
+				scene.addChild ( makeSquare ( [ 0.2, 0, 0.6 ], true, makeTransparentState ( [ 0, 1, 0, 0.5 ], depthWrite ) ) );
+				const opaque = FlatShading.makeState ( { topology: "triangle-list" } );
+				opaque.addAttribute ( new ColorAttribute ( YELLOW ) );
+				scene.addChild ( makeSquare ( [ 0.6, 0, 0.1 ], true, opaque ) );
+				return scene;
+			};
+
+			// Without depth writes, green shows where they overlap. Nothing sorts
+			// the transparent shapes, so green, drawn last, blends over red, which
+			// blends over the blue background.
+			const pixels = await drawScene ( build ( false ) );
+			expectPixel ( pixelAt ( pixels, 0, 0 ), [ 64, 128, 64, 255 ] );
+
+			// Only red over the background.
+			expectPixel ( pixelAt ( pixels, -0.4, 0 ), [ 128, 0, 128, 255 ] );
+
+			// The depth test is still done, so the opaque square in front hides
+			// the green window, although it's drawn first.
+			expect ( pixelAt ( pixels, 0.4, 0 ) ).to.deep.equal ( [ 255, 255, 0, 255 ] );
+
+			// With depth writes, red hides green, as if red were opaque there.
+			const written = await drawScene ( build ( true ) );
+			expectPixel ( pixelAt ( written, 0, 0 ), [ 128, 0, 128, 255 ] );
+		} );
+
+		it ( "Should draw a transparent shape's back faces and then its front faces", async function ()
+		{
+			// A thin closed shape: a near face that faces the camera and a far face
+			// that faces away, like the front and back of a box.
+			const points = [
+				-0.4, -0.4, 0.3,   0.4, -0.4, 0.3,   0.4, 0.4, 0.3,   -0.4, 0.4, 0.3,
+				-0.4, -0.4, 0.6,   0.4, -0.4, 0.6,   0.4, 0.4, 0.6,   -0.4, 0.4, 0.6,
+			];
+			const indices = [ 0, 1, 2,   0, 2, 3,   4, 6, 5,   4, 7, 6 ];
+			const shape = new Geometry ( {
+				points: new Float32Array ( points ),
+				primitives: new Indexed ( { topology: "triangle-list", indices: new Uint16Array ( indices ) } ),
+			} );
+
+			// The back faces are green and the front faces are red.
+			const makeState = ( color: IVector4 ) : State =>
+			{
+				const state = FlatShading.makeState ( { topology: "triangle-list" } );
+				state.addAttribute ( new ColorAttribute ( color ) );
+				return state;
+			};
+			const back = makeState ( [ 0, 1, 0, 0.5 ] );
+			const front = makeState ( [ 1, 0, 0, 0.5 ] );
+			const transparent = buildTransparentScene ( { geometry: shape, back, front } );
+
+			// Put the front faces' group first, so only the bins can put it last.
+			const scene = new Group();
+			scene.addChild ( transparent.getChild ( 1 ) );
+			scene.addChild ( transparent.getChild ( 0 ) );
+
+			// Red over green over the background. The other order would be
+			// green over red, which is [ 64, 128, 64 ].
+			const pixels = await drawScene ( scene );
+			expectPixel ( pixelAt ( pixels, 0, 0 ), [ 128, 64, 64, 255 ] );
+
+			// Outside the shape is the background.
 			expect ( pixelAt ( pixels, -0.95, 0.95 ) ).to.deep.equal ( [ 0, 0, 255, 255 ] );
 		} );
 

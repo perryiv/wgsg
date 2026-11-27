@@ -164,7 +164,7 @@ export class SolidColor extends BaseClass
 	 * @param {IPipelineOptions} options - The pipeline options.
 	 * @returns {GPURenderPipeline} The render pipeline.
 	 */
-	protected makePipeline ( { topology, cullMode }: Readonly<IPipelineOptions> ) : GPURenderPipeline
+	protected makePipeline ( { topology, cullMode, depthWrite }: Readonly<IPipelineOptions> ) : GPURenderPipeline
 	{
 		// Shortcuts
 		const { device, preferredFormat } = Device.instance;
@@ -215,7 +215,7 @@ export class SolidColor extends BaseClass
 				cullMode,
 			},
 			depthStencil: {
-				depthWriteEnabled: true,
+				depthWriteEnabled: depthWrite,
 				depthCompare: "less",
 				format: "depth24plus",
 			},
