@@ -33,7 +33,6 @@ import {
 	Cancelled,
 	clampNumber,
 	Device,
-	// DeviceLost,
 	getNextId,
 	getReader,
 	Node as SceneNode,
@@ -64,35 +63,6 @@ export interface IViewerProps extends React.HTMLAttributes < HTMLDivElement >
 ///////////////////////////////////////////////////////////////////////////////
 
 let componentRenderCount = 0;
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
-//	Handle when there is a new device.
-//
-///////////////////////////////////////////////////////////////////////////////
-
-// const handleNewDevice = ( viewer: InternalViewer ) =>
-// {
-// 	// Tell the viewer to handle the new device.
-// 	viewer.handleNewDevice();
-
-// 	// Get the scene.
-// 	const { scene } = viewer;
-
-// 	// Handle no scene.
-// 	if ( !scene )
-// 	{
-// 		return;
-// 	}
-
-// 	// Visit the scene.
-// 	const visitor = new DeviceLost();
-// 	visitor.handle ( scene );
-
-// 	// Render again so that we see the rebuilt scene.
-// 	viewer.requestRender();
-// };
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -561,26 +531,6 @@ export function Viewer ( { viewerId, ...rest }: IViewerProps )
 		viewerId,
 		viewerStates,
 	] );
-
-	//
-	// Initialize the device.
-	//
-	// const initDevice = useCallback ( async () =>
-	// {
-	// 	// Handle device lost.
-	// 	void Device.instance.device.lost.then ( async () =>
-	// 	{
-	// 		// It's probably already destroyed but make sure.
-	// 		Device.destroy();
-
-	// 		// Make it again.
-	// 		await initDevice();
-
-	// 		// This will rebuild the resources.
-	// 		handleNewDevice ( getOrCreateViewer() );
-	// 	} );
-	// },
-	// [ getOrCreateViewer ] );
 
 	//
 	// Make sure there is a viewer and it rendered.

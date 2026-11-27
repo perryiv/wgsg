@@ -67,15 +67,17 @@ export function Initialize ( { children }: IInitializeProps )
 		// Initialize the singleton device.
 		await Device.init();
 
-		// Handle device lost.
-		void Device.instance.device.lost.then ( () =>
+		// When the device is lost, make a new one. The viewers and scenes catch
+		// up by themselves. Setting Device.autoRecoverWhenDeviceLost to true
+		// would do the same thing.
+		Device.onLost = ( { reason } ) =>
 		{
-			// It's probably already destroyed but make sure.
-			Device.destroy();
-
-			// Make it again.
-			setInitialized ( false );
-		} );
+			console.log ( `Making a new device after the old one was lost (${reason})` );
+			Device.recover().catch ( ( error: unknown ) =>
+			{
+				console.error ( "Failed to make a new device:", error );
+			} );
+		};
 
 		// Set the state.
 		setInitialized ( true );

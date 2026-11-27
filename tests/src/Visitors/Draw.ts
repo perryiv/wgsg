@@ -16,6 +16,7 @@ import { Device } from "../../../lib/src/Tools/Device";
 import { expect } from "chai";
 import { FlatShading } from "../../../lib/src/Shaders/FlatShading";
 import { getPixel, makeTexture, readPixels, type IPixels } from "../Helpers/Pixels";
+import { loseDevice } from "../Helpers/DeviceLoss";
 import { makeRenderGraphInfo, Root } from "../../../lib/src/Render";
 import type { IVector3, IVector4 } from "../../../lib/src/Types";
 import {
@@ -251,6 +252,21 @@ export function test ()
 			{
 				shader.lightDir = original;
 			}
+		} );
+
+		it ( "Should draw the same after the device is lost and made again", async function ()
+		{
+			const before = await drawScene ( buildResetScene() );
+			const scene = buildResetScene();
+			const first = await drawScene ( scene );
+			expect ( Array.from ( first.data ) ).to.deep.equal ( Array.from ( before.data ) );
+
+			// The same scene, so its arrays have buffers from the old device.
+			await loseDevice();
+			await Device.recover();
+			const after = await drawScene ( scene );
+			expect ( Array.from ( after.data ) ).to.deep.equal ( Array.from ( before.data ) );
+			expect ( pixelAt ( after, -0.5, 0 ) ).to.deep.equal ( [ 255, 0, 0, 255 ] );
 		} );
 
 		it ( "Should draw the same after the shader releases its GPU objects", async function ()

@@ -48,6 +48,7 @@ export class Array1 < InternalArrayType extends PossibleArrayType > extends Base
 
 	#values: ( InternalArrayType | null ) = null;
 	#buffer: ( GPUBuffer | null ) = null;
+	#device = 0; // The id of the device the buffer was made with.
 
 	/**
 	 * Construct the class.
@@ -102,9 +103,11 @@ export class Array1 < InternalArrayType extends PossibleArrayType > extends Base
 	{
 		this.#values = values;
 
-		// Can we write the new values into the buffer we have?
+		// Can we write the new values into the buffer we have? Not if it's
+		// from a device that was lost.
 		const buffer = this.#buffer;
 		if ( ( buffer ) && ( values ) &&
+			( Device.valid ) && ( this.#device === Device.instance.id ) &&
 			( buffer.size === Array1.getBufferSize ( values ) ) &&
 			( buffer.usage === Array1.getBufferUsage ( values ) ) )
 		{
@@ -164,6 +167,13 @@ export class Array1 < InternalArrayType extends PossibleArrayType > extends Base
 	 */
 	public get buffer() : ( GPUBuffer | null )
 	{
+		// A buffer from a device that was lost can't be used with the new one.
+		// Make the buffer again.
+		if ( this.#buffer && ( this.#device !== Device.instance.id ) )
+		{
+			this.reset();
+		}
+
 		// Shortcuts.
 		const values = this.#values;
 		const buffer = this.#buffer;
@@ -202,8 +212,9 @@ export class Array1 < InternalArrayType extends PossibleArrayType > extends Base
 				}
 			} );
 
-			// Set our member.
+			// Set our members.
 			this.#buffer = buffer;
+			this.#device = Device.instance.id;
 		}
 
 		// Return what we have.

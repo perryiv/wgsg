@@ -239,11 +239,10 @@ export function App()
 	//
 	const handleSimulateDeviceLost = useCallback ( () =>
 	{
-		// This is a reasonably good test.
-		Device.destroy();
-
-		// For a better test, use "about:gpucrash" as described here:
+		// This destroys the GPU device the way a real loss would. For a real
+		// loss, open "about:gpucrash" in another Chrome tab, as described here:
 		// https://toji.dev/webgpu-best-practices/device-loss.html
+		Device.simulateLost();
 	},
 	[] );
 
