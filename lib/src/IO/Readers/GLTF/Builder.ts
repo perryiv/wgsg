@@ -24,18 +24,28 @@
 //	material gets two-sided lighting, and the others get their back faces
 //	culled, as glTF says. Textures are ignored.
 //
+//	A material with alphaMode BLEND is semi-transparent: its state goes in
+//	TRANSPARENT_BIN, without depth writes, so it's drawn after the opaque
+//	shapes and doesn't hide what's behind it. A double-sided one is drawn
+//	with buildTransparentScene(), back faces first and then front faces.
+//	Transparent shapes are not sorted by depth. The other alpha modes are
+//	drawn opaque, including MASK for now.
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Array1 } from "../../../Arrays";
+import { buildTransparentScene } from "../../../Builders/Transparent";
 import { Cancelled } from "../../Cancelled";
 import { FlatShading, PhongShading } from "../../../Shaders";
 import { readFloats, readIndices } from "./Accessors";
+import { TRANSPARENT_BIN } from "../../../Tools/Constants";
 import { yieldToEventLoop } from "../../Functions";
 import type { IProgressCallback, IVector4 } from "../../../Types";
 import {
 	Arrays,
 	ColorAttribute,
 	CullFace,
+	Depth,
 	Geometry,
 	Group,
 	Indexed,
@@ -57,6 +67,7 @@ import {
 	GLTF_TRIANGLE_STRIP,
 	GLTF_TRIANGLES,
 	type IGltfData,
+	type IGltfMaterial,
 	type IGltfPrimitive,
 } from "./Types";
 import {
@@ -145,6 +156,7 @@ export class Builder
 	readonly #indices = new Map < number, IIndexArray > ();
 	readonly #flipped = new Map < string, IIndexArray > ();
 	readonly #states = new Map < string, State > ();
+	readonly #transparentStates = new Map < string, { back: State, front: State } > ();
 
 	// The nodes being built, to find cycles.
 	readonly #building = new Set < number > ();
@@ -358,7 +370,7 @@ export class Builder
 
 		// Make a geometry for each primitive.
 		const mesh = getItem ( this.#data.json.meshes, index, "mesh" );
-		const geometries: Geometry[] = [];
+		const geometries: SceneNode[] = [];
 		const first = ( false === this.#meshesDone.has ( index ) );
 		this.#meshesDone.add ( index );
 		for ( const [ i, primitive ] of ( mesh.primitives ?? [] ).entries() )
@@ -400,12 +412,14 @@ export class Builder
 	}
 
 	/**
-	 * Build the geometry of a primitive.
+	 * Build the geometry of a primitive. For a double-sided, semi-transparent
+	 * material, it's put in a scene that draws its back faces first and then
+	 * its front faces.
 	 * @param {IGltfPrimitive} primitive The primitive.
 	 * @param {IMatrix33 | null} leftover The matrix to multiply the points by, if any.
-	 * @returns {Geometry | null} The geometry, or null if it is not triangles.
+	 * @returns {SceneNode | null} The geometry or scene, or null if it is not triangles.
 	 */
-	protected buildPrimitive ( primitive: Readonly<IGltfPrimitive>, leftover: ( IMatrix33 | null ) ) : ( Geometry | null )
+	protected buildPrimitive ( primitive: Readonly<IGltfPrimitive>, leftover: ( IMatrix33 | null ) ) : ( SceneNode | null )
 	{
 		// Skip what isn't a triangle list.
 		const mode = ( primitive.mode ?? GLTF_TRIANGLES );
@@ -451,9 +465,20 @@ export class Builder
 		}
 
 		// Make the geometry.
+		const hasNormals = ( null !== normals );
 		const geom = new Geometry ( { points, normals, primitives } );
-		geom.state = this.getState ( primitive.material, ( null !== normals ) );
 		void geom.box; // Calculate the bounds now, to speed things up later.
+
+		// A double-sided, semi-transparent material draws the back faces and
+		// then the front faces.
+		const sides = this.getTransparentStates ( primitive.material, hasNormals );
+		if ( sides )
+		{
+			return buildTransparentScene ( { geometry: geom, ...sides } );
+		}
+
+		// Otherwise the geometry has the material's state.
+		geom.state = this.getState ( primitive.material, hasNormals );
 		return geom;
 	}
 
@@ -537,11 +562,22 @@ export class Builder
 	}
 
 	/**
+	 * Get the material, or null if there is none.
+	 * @param {number | undefined} index The index of the material, if any.
+	 * @returns {IGltfMaterial | null} The material.
+	 */
+	protected getMaterial ( index: ( number | undefined ) ) : ( IGltfMaterial | null )
+	{
+		return ( ( undefined === index ) ? null : getItem ( this.#data.json.materials, index, "material" ) );
+	}
+
+	/**
 	 * Get the state for a material. Primitives with the same material share
 	 * it. With normals the triangles are smooth, otherwise each one is flat.
 	 * A double-sided material has two-sided lighting. Otherwise the back faces
 	 * are culled, as glTF says, which some files need because they have
-	 * triangles on top of each other, facing opposite ways.
+	 * triangles on top of each other, facing opposite ways. A semi-transparent
+	 * material's state goes in TRANSPARENT_BIN, without depth writes.
 	 * @param {number | undefined} index The index of the material, if any.
 	 * @param {boolean} hasNormals Whether the primitive has normals.
 	 * @returns {State} The state.
@@ -550,40 +586,82 @@ export class Builder
 	{
 		const key = `${index ?? "none"} ${hasNormals}`;
 		let state = this.#states.get ( key );
-		if ( state )
+		if ( !state )
 		{
-			return state;
+			state = this.makeState ( index, hasNormals );
+			this.#states.set ( key, state );
+		}
+		return state;
+	}
+
+	/**
+	 * Get the states for the back and front faces of a double-sided,
+	 * semi-transparent material, for buildTransparentScene(). Primitives
+	 * with the same material share them.
+	 * @param {number | undefined} index The index of the material, if any.
+	 * @param {boolean} hasNormals Whether the primitive has normals.
+	 * @returns {object | null} The states, or null if the material is not
+	 * double-sided and semi-transparent.
+	 */
+	protected getTransparentStates ( index: ( number | undefined ), hasNormals: boolean ) : ( { back: State, front: State } | null )
+	{
+		const material = this.getMaterial ( index );
+		if ( ( "BLEND" !== material?.alphaMode ) || ( true !== material.doubleSided ) )
+		{
+			return null;
 		}
 
+		const key = `${index} ${hasNormals}`;
+		let sides = this.#transparentStates.get ( key );
+		if ( !sides )
+		{
+			sides = { back: this.makeState ( index, hasNormals ), front: this.makeState ( index, hasNormals ) };
+			this.#transparentStates.set ( key, sides );
+		}
+		return sides;
+	}
+
+	/**
+	 * Make a new state for a material, as getState() describes.
+	 * @param {number | undefined} index The index of the material, if any.
+	 * @param {boolean} hasNormals Whether the primitive has normals.
+	 * @returns {State} The state.
+	 */
+	protected makeState ( index: ( number | undefined ), hasNormals: boolean ) : State
+	{
 		// The color. The default material is white and one-sided. Without
 		// blending, the alpha is ignored.
+		const material = this.getMaterial ( index );
+		const blend = ( "BLEND" === material?.alphaMode );
+		const doubleSided = ( true === material?.doubleSided );
 		let color: IVector4 = [ 1, 1, 1, 1 ];
-		let doubleSided = false;
-		if ( undefined !== index )
+		const factor = material?.pbrMetallicRoughness?.baseColorFactor;
+		if ( factor )
 		{
-			const material = getItem ( this.#data.json.materials, index, "material" );
-			doubleSided = ( true === material.doubleSided );
-			const factor = material.pbrMetallicRoughness?.baseColorFactor;
-			if ( factor )
+			if ( 4 !== factor.length )
 			{
-				if ( 4 !== factor.length )
-				{
-					throw new Error ( `Material ${index} has a base color with ${factor.length} numbers instead of 4` );
-				}
-				color = [ factor[0], factor[1], factor[2], ( ( "BLEND" === material.alphaMode ) ? factor[3] : 1 ) ];
+				throw new Error ( `Material ${index} has a base color with ${factor.length} numbers instead of 4` );
 			}
+			color = [ factor[0], factor[1], factor[2], ( blend ? factor[3] : 1 ) ];
 		}
 
 		// Make the state.
 		const topology = "triangle-list";
-		state = ( hasNormals ? PhongShading.makeState ( { topology } ) : FlatShading.makeState ( { topology } ) );
+		const state = ( hasNormals ? PhongShading.makeState ( { topology } ) : FlatShading.makeState ( { topology } ) );
 		state.addAttribute ( new ColorAttribute ( color ) );
 		state.addAttribute ( new TwoSidedLight ( doubleSided ) );
 		if ( false === doubleSided )
 		{
 			state.addAttribute ( new CullFace ( "back" ) );
 		}
-		this.#states.set ( key, state );
+
+		// Semi-transparent shapes are drawn after the opaque ones, and don't
+		// hide what's drawn after them.
+		if ( blend )
+		{
+			state.addAttribute ( new Depth ( { write: false } ) );
+			state.bin = TRANSPARENT_BIN;
+		}
 		return state;
 	}
 }
