@@ -706,6 +706,67 @@ export function test ()
 				}
 			} );
 
+			it ( "Should draw transmission as partial alpha, but not below the smallest", async function ()
+			{
+				// The alpha mode, the alpha of the base color, the transmission, and the alpha drawn.
+				const cases: [ string | undefined, number, number, number ][] = [
+					[ undefined, 0.5, 0.5, 0.5 ],
+					[ undefined, 0.5, 0.25, 0.75 ],
+					[ undefined, 0.5, 1, 0.25 ],
+					[ undefined, 0.5, 0.9, 0.25 ],
+					[ "BLEND", 0.5, 0.5, 0.25 ],
+				];
+				for ( const [ alphaMode, baseAlpha, transmissionFactor, alpha ] of cases )
+				{
+					const maker = makeTriangle ( { material: 0 } );
+					maker.addMaterial ( {
+						pbrMetallicRoughness: { baseColorFactor: [ 0.25, 0.5, 0.75, baseAlpha ] },
+						extensions: { KHR_materials_transmission: { transmissionFactor } },
+						...( alphaMode ? { alphaMode } : {} ),
+					} );
+					const geom = await readOne ( maker.glb() );
+					const color = getColor ( geom.state! );
+					expect ( color.slice ( 0, 3 ) ).to.deep.equal ( [ 0.25, 0.5, 0.75 ] );
+					expect ( color[3] ).to.be.closeTo ( alpha, 1e-6 );
+					expect ( geom.state!.bin ).to.equal ( TRANSPARENT_BIN );
+					expect ( geom.state!.pipelineOptions.depthWrite ).to.be.false;
+				}
+			} );
+
+			it ( "Should draw a material without transmission opaque", async function ()
+			{
+				for ( const extensions of [ {}, { KHR_materials_transmission: {} }, { KHR_materials_transmission: { transmissionFactor: 0 } } ] )
+				{
+					const maker = makeTriangle ( { material: 0 } );
+					maker.addMaterial ( { extensions } );
+					const geom = await readOne ( maker.glb() );
+					expect ( getColor ( geom.state! ) ).to.deep.equal ( [ 1, 1, 1, 1 ] );
+					expect ( geom.state!.bin ).to.equal ( 0 );
+					expect ( geom.state!.pipelineOptions.depthWrite ).to.be.true;
+				}
+			} );
+
+			it ( "Should draw a double-sided material with transmission's back faces and then its front faces", async function ()
+			{
+				const maker = makeTriangle ( { material: 0 } );
+				maker.addMaterial ( { doubleSided: true, extensions: { KHR_materials_transmission: { transmissionFactor: 1 } } } );
+				const scene = await read ( maker.glb() );
+				expect ( getGeometries ( scene )[0].state ).to.be.null;
+				const states = getGroupStates ( scene );
+				expect ( states.map ( ( state ) => state.bin ) ).to.deep.equal ( [ TRANSPARENT_BIN, ( TRANSPARENT_BIN + 1 ) ] );
+				expect ( states.map ( ( state ) => getColor ( state )[3] ) ).to.deep.equal ( [ 0.25, 0.25 ] );
+			} );
+
+			it ( "Should reject a transmission factor that is not from 0 to 1", async function ()
+			{
+				for ( const transmissionFactor of [ -0.5, 1.5 ] )
+				{
+					const maker = makeTriangle ( { material: 0 } );
+					maker.addMaterial ( { extensions: { KHR_materials_transmission: { transmissionFactor } } } );
+					expect ( await getMessage ( maker.glb() ) ).to.include ( `Material 0 has a transmission factor of ${transmissionFactor}, which is not from 0 to 1` );
+				}
+			} );
+
 			it ( "Should share the back and front states of a double-sided blended material", async function ()
 			{
 				const maker = new GltfMaker();

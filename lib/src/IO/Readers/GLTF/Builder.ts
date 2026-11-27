@@ -31,6 +31,13 @@
 //	Transparent shapes are not sorted by depth. The other alpha modes are
 //	drawn opaque, including MASK for now.
 //
+//	A material with KHR_materials_transmission, like glass, lets light
+//	through. This reader can't draw that, so it draws the material as
+//	semi-transparent instead, like BLEND, with its alpha multiplied by one
+//	minus the transmission factor. The alpha is kept from going below
+//	MIN_TRANSMISSION_ALPHA, so that clear glass still shows. The
+//	transmission texture is ignored.
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Array1 } from "../../../Arrays";
@@ -92,6 +99,10 @@ const MAX_VERTICES_FOR_16_BIT_INDICES = 65536;
 // How long to work before letting the page update, in milliseconds.
 const WORK_TIME = 50;
 
+// The smallest alpha that transmission makes, so that clear glass still
+// shows. It's a guess at what looks right.
+const MIN_TRANSMISSION_ALPHA = 0.25;
+
 // The names of the primitive modes that are skipped, for the warning.
 const SKIPPED_MODE_NAMES: Readonly<Record<number, string>> = {
 	[GLTF_POINTS]: "points",
@@ -119,6 +130,43 @@ export const checkExtensions = ( data: Readonly<IGltfData> ) : void =>
 	{
 		throw new Error ( `The file requires glTF extensions that are not supported: ${unsupported.join ( ", " )}` );
 	}
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Get how much light the material lets through, from its
+ * KHR_materials_transmission extension. It's zero without one.
+ * @param {IGltfMaterial | null} material The material, if any.
+ * @param {number | undefined} index The index of the material, for errors.
+ * @returns {number} The transmission factor, from 0 to 1.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+const getTransmission = ( material: ( Readonly<IGltfMaterial> | null ), index: ( number | undefined ) ) : number =>
+{
+	const factor = ( material?.extensions?.KHR_materials_transmission?.transmissionFactor ?? 0 );
+	if ( !( ( factor >= 0 ) && ( factor <= 1 ) ) )
+	{
+		throw new Error ( `Material ${index} has a transmission factor of ${factor}, which is not from 0 to 1` );
+	}
+	return factor;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * See if the material is drawn semi-transparent: it blends, or it lets
+ * light through.
+ * @param {IGltfMaterial | null} material The material, if any.
+ * @param {number | undefined} index The index of the material, for errors.
+ * @returns {boolean} Whether it's semi-transparent.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+const isTransparent = ( material: ( Readonly<IGltfMaterial> | null ), index: ( number | undefined ) ) : boolean =>
+{
+	return ( ( "BLEND" === material?.alphaMode ) || ( getTransmission ( material, index ) > 0 ) );
 };
 
 
@@ -577,7 +625,8 @@ export class Builder
 	 * A double-sided material has two-sided lighting. Otherwise the back faces
 	 * are culled, as glTF says, which some files need because they have
 	 * triangles on top of each other, facing opposite ways. A semi-transparent
-	 * material's state goes in TRANSPARENT_BIN, without depth writes.
+	 * material's state, for BLEND or transmission, goes in TRANSPARENT_BIN,
+	 * without depth writes.
 	 * @param {number | undefined} index The index of the material, if any.
 	 * @param {boolean} hasNormals Whether the primitive has normals.
 	 * @returns {State} The state.
@@ -606,7 +655,7 @@ export class Builder
 	protected getTransparentStates ( index: ( number | undefined ), hasNormals: boolean ) : ( { back: State, front: State } | null )
 	{
 		const material = this.getMaterial ( index );
-		if ( ( "BLEND" !== material?.alphaMode ) || ( true !== material.doubleSided ) )
+		if ( ( true !== material?.doubleSided ) || ( false === isTransparent ( material, index ) ) )
 		{
 			return null;
 		}
@@ -645,6 +694,14 @@ export class Builder
 			color = [ factor[0], factor[1], factor[2], ( blend ? factor[3] : 1 ) ];
 		}
 
+		// Light that goes through the material makes it more see-through,
+		// but not invisible.
+		const transmission = getTransmission ( material, index );
+		if ( transmission > 0 )
+		{
+			color[3] *= Math.max ( MIN_TRANSMISSION_ALPHA, ( 1 - transmission ) );
+		}
+
 		// Make the state.
 		const topology = "triangle-list";
 		const state = ( hasNormals ? PhongShading.makeState ( { topology } ) : FlatShading.makeState ( { topology } ) );
@@ -657,7 +714,7 @@ export class Builder
 
 		// Semi-transparent shapes are drawn after the opaque ones, and don't
 		// hide what's drawn after them.
-		if ( blend )
+		if ( isTransparent ( material, index ) )
 		{
 			state.addAttribute ( new Depth ( { write: false } ) );
 			state.bin = TRANSPARENT_BIN;
