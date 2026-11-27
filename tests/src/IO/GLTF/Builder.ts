@@ -16,6 +16,7 @@ import { Cancelled } from "../../../../lib/src/IO";
 import { expect } from "chai";
 import { FlatShading } from "../../../../lib/src/Shaders/FlatShading";
 import { PhongShading } from "../../../../lib/src/Shaders/PhongShading";
+import { TRANSPARENT_BIN } from "../../../../lib/src/Tools/Constants";
 import { mat4, quat, vec3 } from "gl-matrix";
 import {
 	GLTF_FLOAT,
@@ -116,6 +117,25 @@ const getTwoSided = ( state: State ) : boolean =>
 {
 	const twoSided = state.getAttribute ( TwoSidedLight.getClassName() ) as TwoSidedLight;
 	return twoSided.value;
+};
+
+/**
+ * Get the states of the groups in the scene, in the order found, without
+ * repeats.
+ * @param {SceneNode} scene The scene.
+ * @returns {State[]} The states.
+ */
+const getGroupStates = ( scene: SceneNode ) : State[] =>
+{
+	const answer = new Set < State > ();
+	scene.traverse ( ( node ) =>
+	{
+		if ( ( node instanceof Group ) && node.state )
+		{
+			answer.add ( node.state );
+		}
+	} );
+	return [ ...answer ];
 };
 
 /**
@@ -645,6 +665,56 @@ export function test ()
 					const geom = await readOne ( maker.glb() );
 					expect ( getColor ( geom.state! ) ).to.deep.equal ( [ 0.25, 0.5, 0.75, alpha ] );
 				}
+			} );
+
+			it ( "Should put a blended material in the transparent bin, without depth writes", async function ()
+			{
+				const cases: [ string | undefined, number, boolean ][] = [
+					[ undefined, 0, true ], [ "OPAQUE", 0, true ], [ "MASK", 0, true ], [ "BLEND", TRANSPARENT_BIN, false ] ];
+				for ( const [ alphaMode, bin, depthWrite ] of cases )
+				{
+					const maker = makeTriangle ( { material: 0 } );
+					maker.addMaterial ( alphaMode ? { alphaMode } : {} );
+					const geom = await readOne ( maker.glb() );
+					expect ( geom.state!.bin ).to.equal ( bin );
+					expect ( geom.state!.pipelineOptions.depthWrite ).to.equal ( depthWrite );
+					expect ( geom.state!.pipelineOptions.cullMode ).to.equal ( "back" );
+				}
+			} );
+
+			it ( "Should draw a double-sided blended material's back faces and then its front faces", async function ()
+			{
+				const maker = makeTriangle ( { material: 0 } );
+				maker.addMaterial ( { alphaMode: "BLEND", doubleSided: true, pbrMetallicRoughness: { baseColorFactor: [ 0.25, 0.5, 0.75, 0.5 ] } } );
+				const scene = await read ( maker.glb() );
+				const geometries = getGeometries ( scene );
+				expect ( geometries.length ).to.equal ( 1 );
+				expect ( geometries[0].state ).to.be.null;
+
+				const states = getGroupStates ( scene );
+				expect ( states.length ).to.equal ( 2 );
+				const [ back, front ] = states;
+				expect ( back.bin ).to.equal ( TRANSPARENT_BIN );
+				expect ( front.bin ).to.equal ( TRANSPARENT_BIN + 1 );
+				expect ( back.pipelineOptions.cullMode ).to.equal ( "front" );
+				expect ( front.pipelineOptions.cullMode ).to.equal ( "back" );
+				for ( const state of [ back, front ] )
+				{
+					expect ( state.pipelineOptions.depthWrite ).to.be.false;
+					expect ( getColor ( state ) ).to.deep.equal ( [ 0.25, 0.5, 0.75, 0.5 ] );
+					expect ( getTwoSided ( state ) ).to.be.true;
+				}
+			} );
+
+			it ( "Should share the back and front states of a double-sided blended material", async function ()
+			{
+				const maker = new GltfMaker();
+				const POSITION = maker.addPoints ( TRIANGLE_POINTS );
+				const material = maker.addMaterial ( { alphaMode: "BLEND", doubleSided: true } );
+				maker.addMeshNode ( [ { attributes: { POSITION }, material }, { attributes: { POSITION }, material } ] );
+				const scene = await read ( maker.glb() );
+				expect ( getGeometries ( scene ).length ).to.equal ( 2 );
+				expect ( getGroupStates ( scene ).length ).to.equal ( 2 );
 			} );
 
 			it ( "Should share the state of a material", async function ()
