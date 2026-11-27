@@ -136,6 +136,7 @@ export interface IGltfMaterial
 	pbrMetallicRoughness?: { baseColorFactor?: number[] };
 	alphaMode?: string;
 	doubleSided?: boolean;
+	extensions?: { KHR_materials_transmission?: { transmissionFactor?: number } };
 }
 
 export interface IGltfNode
