@@ -20,6 +20,7 @@ import {
 	Array4
 } from "../../../lib/src/Arrays";
 import { Device } from "../../../lib/src/Tools/Device";
+import { loseDevice } from "../Helpers/DeviceLoss";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -174,6 +175,31 @@ export function test ()
 			// A new buffer is made when needed.
 			expect ( a.buffer ).to.not.be.null;
 			expect ( a.buffer ).to.not.equal ( b1 );
+		} );
+
+		it ( "Makes its buffer again after the device is lost and made again", async function ()
+		{
+			const a = new Array1 ( new Float32Array ( [ 1, 2, 3 ] ) );
+			const b1 = a.buffer;
+			expect ( b1 ).to.not.be.null;
+
+			await loseDevice();
+			await Device.recover();
+
+			// A new buffer, on the new device, with the same values.
+			const b2 = a.buffer;
+			expect ( b2 ).to.not.be.null;
+			expect ( b2 ).to.not.equal ( b1 );
+			expect ( Array.from ( a.values! ) ).to.deep.equal ( [ 1, 2, 3 ] );
+
+			// New values of the same size aren't written into the old buffer.
+			const c = new Array1 ( new Float32Array ( [ 1, 2, 3 ] ) );
+			const c1 = c.buffer;
+			await loseDevice();
+			await Device.recover();
+			c.values = new Float32Array ( [ 4, 5, 6 ] );
+			expect ( c.buffer ).to.not.equal ( c1 );
+			expect ( await getWriteError ( c.buffer! ) ).to.be.null;
 		} );
 
 		it ( "Can make a 1D wrapper around Float64Array", function ()

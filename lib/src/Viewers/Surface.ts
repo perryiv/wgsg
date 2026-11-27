@@ -117,6 +117,11 @@ export class Surface extends BaseClass
 	#frameTimes = new FrameTimes();
 	#renderContinuously = false;
 	#frustumCulling = true;
+	#device = 0; // The id of the device the context and draw visitor use.
+	#onDeviceRecovered = () =>
+	{
+		this.requestRender();
+	};
 	#measurement: ( IMeasurementInProgress | null ) = null;
 	#recorder: ( FrameRecorder | null ) = null;
 
@@ -166,6 +171,9 @@ export class Surface extends BaseClass
 
 		// This will make the context and draw visitor.
 		this.handleNewDevice();
+
+		// Draw again when there is a new device after the old one was lost.
+		Device.addRecoveredCallback ( this.#onDeviceRecovered );
 	}
 
 	/**
@@ -182,8 +190,9 @@ export class Surface extends BaseClass
 	 */
 	public override destroy() : void
 	{
-		// Stop any scheduled rendering.
+		// Stop any scheduled rendering, and after a lost device.
 		this.cancelRender();
+		Device.removeRecoveredCallback ( this.#onDeviceRecovered );
 
 		// Finish a measurement with the frames it has.
 		const measurement = this.#measurement;
@@ -257,6 +266,7 @@ export class Surface extends BaseClass
 
 		// Set our members.
 		this.#context = context;
+		this.#device = Device.instance.id;
 		visitors.draw = draw;
 	}
 
@@ -293,8 +303,10 @@ export class Surface extends BaseClass
 			return;
 		}
 
-		// Needed below.
-		const { maxTextureDimension2D: maxDimension } = Device.instance.device.limits;
+		// Needed below. There's no device for a moment after one is lost, so
+		// use the limit every device has.
+		const maxDimension = ( Device.valid ?
+			Device.instance.device.limits.maxTextureDimension2D : 8192 );
 
 		// Make sure it's within the device's range.
 		width  = Math.max ( 1, Math.min ( width,  maxDimension ) );
@@ -843,6 +855,13 @@ export class Surface extends BaseClass
 		if ( !root )
 		{
 			return;
+		}
+
+		// If there's a new device since the last frame, because the old one was
+		// lost, use it for the context and the draw visitor.
+		if ( Device.valid && ( this.#device !== Device.instance.id ) )
+		{
+			this.handleNewDevice();
 		}
 
 		// Shortcuts.

@@ -17,6 +17,23 @@ import { IDeviceOptions, ITextureFormat } from "../Types/Graphics";
 
 
 ///////////////////////////////////////////////////////////////////////////////
+//
+//	Types.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Called when the device is lost.
+ */
+export type IDeviceLostCallback = ( info: GPUDeviceLostInfo ) => void;
+
+/**
+ * Called when the device is made again after it was lost.
+ */
+export type IDeviceRecoveredCallback = () => void;
+
+
+///////////////////////////////////////////////////////////////////////////////
 /**
  * Class that contains the GPU device and other associated resources.
  * @class
@@ -27,6 +44,12 @@ export class Device extends BaseClass
 {
 	static #instance: Device | null = null;
 	static #isInitializing = false;
+	static #options: ( IDeviceOptions | undefined ) = undefined;
+	static #onLost: ( IDeviceLostCallback | null ) = null;
+	static #autoRecover = false;
+	static #recovering: ( Promise < void > | null ) = null;
+	static #recoveredCallbacks = new Set < IDeviceRecoveredCallback > ();
+	#destroyedOnPurpose = false;
 	#device: ( GPUDevice | null ) = null;
 	#preferredFormat: ( ITextureFormat | null ) = null;
 	#adapterInfo: GPUAdapterInfo;
@@ -75,8 +98,10 @@ export class Device extends BaseClass
 			throw new Error ( "WebGPU is not supported" );
 		}
 
-		// If we get to here then we're starting the initialization.
+		// If we get to here then we're starting the initialization. Keep the
+		// options, to make the device the same way if it's lost.
 		Device.#isInitializing = true;
+		Device.#options = options;
 
 		// Get the adapter.
 		const adapter = await gpu.requestAdapter ( options?.requestAdapterOptions );
@@ -121,16 +146,10 @@ export class Device extends BaseClass
 		// Set the label for debugging.
 		device.label = `Device ${instance.id}`;
 
-		// Capture the id now for use below.
-		const id = instance.id;
-
-		// Handle device lost events. We don't have enough information here to
-		// rebuild everything that needs to be rebuilt, so we just destroy the
-		// singleton instance.
-		void device.lost.then ( ( { reason, message }: GPUDeviceLostInfo ) =>
+		// Handle when the device is lost.
+		void device.lost.then ( ( info: GPUDeviceLostInfo ) =>
 		{
-			console.log ( `Device ${id} lost, reason: ${reason}, message: ${message}` );
-			Device.destroy();
+			Device.handleLost ( instance, info );
 		} );
 
 		// If we get to here then set the singleton instance.
@@ -141,7 +160,174 @@ export class Device extends BaseClass
 	}
 
 	/**
-	 * Destroy the singleton instance.
+	 * Handle when a device is lost.
+	 * @param {Device} instance - The instance whose device was lost.
+	 * @param {GPUDeviceLostInfo} info - Why it was lost.
+	 */
+	private static handleLost ( instance: Device, info: GPUDeviceLostInfo ) : void
+	{
+		const { reason, message } = info;
+		console.log ( `Device ${instance.id} lost, reason: ${reason}, message: ${message}` );
+
+		// Forget it, if it's still the current one. A newer one may be.
+		if ( Device.#instance === instance )
+		{
+			Device.#instance = null;
+		}
+
+		// Nothing more to do when it was destroyed on purpose.
+		if ( instance.#destroyedOnPurpose )
+		{
+			return;
+		}
+
+		// Tell the application.
+		const onLost = Device.#onLost;
+		if ( onLost )
+		{
+			try
+			{
+				onLost ( info );
+			}
+			catch ( error )
+			{
+				console.error ( "Error in the device lost callback:", error );
+			}
+		}
+
+		// Make a new device if we're supposed to.
+		if ( Device.#autoRecover )
+		{
+			Device.recover().catch ( ( error: unknown ) =>
+			{
+				console.error ( "Failed to recover from losing the device:", error );
+			} );
+		}
+	}
+
+	/**
+	 * Get the function called when the device is lost. It's not called when
+	 * the device is destroyed on purpose with destroy().
+	 * @returns {IDeviceLostCallback | null} The function, or null.
+	 */
+	public static get onLost () : ( IDeviceLostCallback | null )
+	{
+		return Device.#onLost;
+	}
+
+	/**
+	 * Set the function called when the device is lost. By default, that's all
+	 * that happens: the application decides whether to call recover(). Or set
+	 * autoRecoverWhenDeviceLost to have that done for it.
+	 * @param {IDeviceLostCallback | null} callback - The function, or null.
+	 */
+	public static set onLost ( callback: ( IDeviceLostCallback | null ) )
+	{
+		Device.#onLost = callback;
+	}
+
+	/**
+	 * See if a new device is made by itself when the device is lost.
+	 * @returns {boolean} True if it is.
+	 */
+	public static get autoRecoverWhenDeviceLost () : boolean
+	{
+		return Device.#autoRecover;
+	}
+
+	/**
+	 * Set whether a new device is made by itself when the device is lost, by
+	 * calling recover(), after the onLost function. It's off by default.
+	 * @param {boolean} state - True to make a new device by itself.
+	 */
+	public static set autoRecoverWhenDeviceLost ( state: boolean )
+	{
+		Device.#autoRecover = state;
+	}
+
+	/**
+	 * Make a new device after the device was lost, with the same options as
+	 * before, and then call the functions added with addRecoveredCallback().
+	 * The surfaces use that to draw again. The rest catches up when it's used:
+	 * the shaders and the arrays make their GPU objects again when they see
+	 * that the device changed. Calling this while it's already recovering
+	 * waits for that, and calling it when there is a device does nothing.
+	 * @returns {Promise<void>} Resolves when the new device is ready.
+	 */
+	public static async recover () : Promise < void >
+	{
+		if ( Device.#instance )
+		{
+			return;
+		}
+
+		let recovering = Device.#recovering;
+		if ( !recovering )
+		{
+			recovering = ( async () =>
+			{
+				try
+				{
+					await Device.init ( Device.#options );
+				}
+				finally
+				{
+					Device.#recovering = null;
+				}
+				for ( const callback of Device.#recoveredCallbacks )
+				{
+					try
+					{
+						callback();
+					}
+					catch ( error )
+					{
+						console.error ( "Error in a device recovered callback:", error );
+					}
+				}
+			} ) ();
+			Device.#recovering = recovering;
+		}
+
+		await recovering;
+	}
+
+	/**
+	 * Add a function to call when a new device is made by recover().
+	 * @param {IDeviceRecoveredCallback} callback - The function.
+	 */
+	public static addRecoveredCallback ( callback: IDeviceRecoveredCallback ) : void
+	{
+		Device.#recoveredCallbacks.add ( callback );
+	}
+
+	/**
+	 * Remove a function added with addRecoveredCallback().
+	 * @param {IDeviceRecoveredCallback} callback - The function.
+	 */
+	public static removeRecoveredCallback ( callback: IDeviceRecoveredCallback ) : void
+	{
+		Device.#recoveredCallbacks.delete ( callback );
+	}
+
+	/**
+	 * Lose the device, for testing. It destroys the GPU device the way a real
+	 * loss would, so the onLost function is called, and a new device is made
+	 * if autoRecoverWhenDeviceLost is true. The reason given is "destroyed".
+	 * For a real loss in Chrome, open "about:gpucrash" in another tab.
+	 */
+	public static simulateLost() : void
+	{
+		const instance = Device.#instance;
+		if ( instance )
+		{
+			instance.#device?.destroy();
+		}
+	}
+
+	/**
+	 * Destroy the singleton instance, on purpose. The onLost function is not
+	 * called, and no new device is made.
 	 */
 	public static destroy() : void
 	{
@@ -173,6 +359,7 @@ export class Device extends BaseClass
 		console.log ( `Destroying singleton device ${instance.id}` );
 
 		// Destroy the device. This prevents any future operations on it.
+		instance.#destroyedOnPurpose = true;
 		device.destroy();
 	}
 
