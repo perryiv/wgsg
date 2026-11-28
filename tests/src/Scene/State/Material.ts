@@ -110,6 +110,40 @@ export function test ()
 			expect ( material.emission ).to.deep.equal ( [ 0, 0, 1, 1 ] );
 		} );
 
+		it ( "Should have no alpha mask by default, and a cutoff of 0.5 for when it's on", function ()
+		{
+			const material = new Material();
+			expect ( material.alphaMask ).to.be.false;
+			expect ( material.alphaCutoff ).to.equal ( 0.5 );
+
+			const masked = new Material ( { alphaMask: true, alphaCutoff: 0.25 } );
+			expect ( masked.alphaMask ).to.be.true;
+			expect ( masked.alphaCutoff ).to.equal ( 0.25 );
+			expect ( masked.toString() ).to.include ( "alpha cutoff 0.25" );
+			expect ( material.toString() ).to.not.include ( "alpha cutoff" );
+
+			for ( const alphaCutoff of [ -0.1, 1.1, NaN ] )
+			{
+				expect ( () => new Material ( { alphaCutoff } ) ).to.throw ( "is not from 0 to 1" );
+			}
+		} );
+
+		it ( "Should give the shader its alpha cutoff only when the mask is on", function ()
+		{
+			for ( const [ alphaMask, expected ] of [ [ true, 0.25 ], [ false, null ] ] as const )
+			{
+				const state = new State ( { shader: FlatShading.instance } );
+				state.addAttribute ( new Material ( { alphaMask, alphaCutoff: 0.25 } ) );
+				whileApplied ( state, () =>
+				{
+					expect ( FlatShading.instance.alphaCutoff ).to.equal ( expected );
+				} );
+			}
+
+			// Resetting turns the mask off.
+			expect ( FlatShading.instance.alphaCutoff ).to.be.null;
+		} );
+
 		it ( "Should reject a shininess that is not from 0 to 128", function ()
 		{
 			for ( const shininess of [ -1, 129, NaN ] )

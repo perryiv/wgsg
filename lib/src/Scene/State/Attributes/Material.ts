@@ -17,6 +17,9 @@
 //	- Specular: the color of the highlights.
 //	- Emission: the light the surface gives off itself.
 //	- Shininess: how small the highlights are, from 0 to 128.
+//	- Alpha mask: when it's on, a pixel whose alpha is below the alpha cutoff
+//	  isn't drawn, and the others are drawn opaque, like the leaves of a
+//	  plant drawn on a square. It's off by default.
 //
 //	The colors are linear: 0.5 is half the light, which is drawn as 188 of
 //	255, because the screen's colors are sRGB. The same values are used for
@@ -32,6 +35,7 @@ import { Attribute as BaseClass, IAttributeApplyInput } from "../Attribute";
 import { vec4 } from "gl-matrix";
 import type { IVector4 } from "../../../Types";
 import {
+	DEFAULT_ALPHA_CUTOFF,
 	DEFAULT_AMBIENT,
 	DEFAULT_DIFFUSE,
 	DEFAULT_EMISSION,
@@ -54,6 +58,8 @@ export interface IMaterialInput
 	specular?: Readonly<IVector4>;
 	emission?: Readonly<IVector4>;
 	shininess?: number;
+	alphaMask?: boolean;
+	alphaCutoff?: number;
 }
 
 
@@ -72,6 +78,8 @@ export class Material extends BaseClass
 	#specular: IVector4 = [ ...DEFAULT_SPECULAR ];
 	#emission: IVector4 = [ ...DEFAULT_EMISSION ];
 	#shininess = DEFAULT_SHININESS;
+	#alphaMask = false;
+	#alphaCutoff = DEFAULT_ALPHA_CUTOFF;
 
 	/**
 	 * Construct the class. What's left out has the default value.
@@ -100,6 +108,14 @@ export class Material extends BaseClass
 		if ( undefined !== input?.shininess )
 		{
 			this.shininess = input.shininess;
+		}
+		if ( undefined !== input?.alphaMask )
+		{
+			this.#alphaMask = input.alphaMask;
+		}
+		if ( undefined !== input?.alphaCutoff )
+		{
+			this.alphaCutoff = input.alphaCutoff;
 		}
 	}
 
@@ -216,6 +232,47 @@ export class Material extends BaseClass
 	}
 
 	/**
+	 * See if the alpha mask is on.
+	 * @returns {boolean} True if pixels whose alpha is below the cutoff aren't drawn.
+	 */
+	public get alphaMask () : boolean
+	{
+		return this.#alphaMask;
+	}
+
+	/**
+	 * Turn the alpha mask on or off.
+	 * @param {boolean} alphaMask - True if pixels whose alpha is below the
+	 * cutoff aren't drawn, and the others are drawn opaque.
+	 */
+	public set alphaMask ( alphaMask: boolean )
+	{
+		this.#alphaMask = alphaMask;
+	}
+
+	/**
+	 * Get the alpha cutoff, used when the alpha mask is on.
+	 * @returns {number} The cutoff, from 0 to 1.
+	 */
+	public get alphaCutoff () : number
+	{
+		return this.#alphaCutoff;
+	}
+
+	/**
+	 * Set the alpha cutoff, used when the alpha mask is on.
+	 * @param {number} cutoff - The cutoff, from 0 to 1.
+	 */
+	public set alphaCutoff ( cutoff: number )
+	{
+		if ( !( ( cutoff >= 0 ) && ( cutoff <= 1 ) ) )
+		{
+			throw new Error ( `Alpha cutoff ${cutoff} is not from 0 to 1` );
+		}
+		this.#alphaCutoff = cutoff;
+	}
+
+	/**
 	 * Return the string representation of this attribute.
 	 * @returns {string} The string representation of this attribute.
 	 */
@@ -225,7 +282,8 @@ export class Material extends BaseClass
 		const d = this.#diffuse.join ( ", " );
 		const s = this.#specular.join ( ", " );
 		const e = this.#emission.join ( ", " );
-		return `${this.type} ambient [${a}] diffuse [${d}] specular [${s}] emission [${e}] shininess ${this.#shininess}`;
+		const mask = ( this.#alphaMask ? ` alpha cutoff ${this.#alphaCutoff}` : "" );
+		return `${this.type} ambient [${a}] diffuse [${d}] specular [${s}] emission [${e}] shininess ${this.#shininess}${mask}`;
 	}
 
 	/**
@@ -255,6 +313,10 @@ export class Material extends BaseClass
 		{
 			shader.shininess = this.#shininess;
 		}
+		if ( "alphaCutoff" in shader )
+		{
+			shader.alphaCutoff = ( this.#alphaMask ? this.#alphaCutoff : null );
+		}
 	}
 
 	/**
@@ -270,6 +332,8 @@ export class Material extends BaseClass
 			specular: this.#specular,
 			emission: this.#emission,
 			shininess: this.#shininess,
+			alphaMask: this.#alphaMask,
+			alphaCutoff: this.#alphaCutoff,
 		};
 	}
 }

@@ -156,6 +156,7 @@ export interface IGltfMaterial
 	emissiveFactor?: number[];
 	emissiveTexture?: IGltfTextureInfo;
 	alphaMode?: string;
+	alphaCutoff?: number;
 	doubleSided?: boolean;
 	extensions?: {
 		KHR_materials_emissive_strength?: { emissiveStrength?: number };

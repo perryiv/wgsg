@@ -24,6 +24,7 @@ struct Camera
 struct Material
 {
 	diffuse: vec4f,
+	alphaCutoff: f32, // Negative means no alpha mask.
 };
 
 // The object, in bind group 2, from ObjectMatrices.
@@ -89,6 +90,18 @@ fn makeVertex ( position: vec4f, color: vec4f, texCoord: vec2f ) -> VertexOut
 
 fn shade ( color: vec4f ) -> vec4f
 {
+	// With an alpha mask, a pixel whose alpha is below the cutoff isn't
+	// drawn, and the others are opaque.
+	var alpha = color.a;
+	if ( material.alphaCutoff >= 0.0 )
+	{
+		if ( alpha < material.alphaCutoff )
+		{
+			discard;
+		}
+		alpha = 1.0;
+	}
+
 	// We assume that the canvas is configured for pre-multiplied alpha.
-	return vec4 ( color.rgb * color.a, color.a );
+	return vec4 ( color.rgb * alpha, alpha );
 }

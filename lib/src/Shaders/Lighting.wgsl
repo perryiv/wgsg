@@ -44,6 +44,7 @@ struct Surface
 	emission: vec4f,
 	shininess: f32,
 	twoSided: u32,
+	alphaCutoff: f32, // Negative means no alpha mask.
 };
 
 // The object, in bind group 2, from ObjectMatrices.
@@ -104,8 +105,26 @@ fn light ( normalIn: vec3f, surface: Surface, vertexColor: vec4f, emissiveTexel:
 		rgb += surface.specular.rgb * factor;
 	}
 
-	// Keep the color in range, and pre-multiply it.
+	// Keep the color in range, and pre-multiply it. With an alpha mask, a
+	// pixel whose alpha is below the cutoff isn't drawn, and the others are
+	// opaque.
 	rgb = clamp ( rgb, vec3f ( 0.0 ), vec3f ( 1.0 ) );
-	let alpha = diffuse.a;
+	let alpha = maskAlpha ( diffuse.a, surface.alphaCutoff );
 	return vec4f ( rgb * alpha, alpha );
+}
+
+// Return the alpha to draw with: as it is without an alpha mask (a negative
+// cutoff), and otherwise one, after discarding the pixel if its alpha is
+// below the cutoff.
+fn maskAlpha ( alpha: f32, cutoff: f32 ) -> f32
+{
+	if ( cutoff < 0.0 )
+	{
+		return alpha;
+	}
+	if ( alpha < cutoff )
+	{
+		discard;
+	}
+	return 1.0;
 }

@@ -295,6 +295,24 @@ export function test ()
 			expectPixel ( pixelAt ( pixels, -0.4, -0.4 ), [ 0, 0, 0, 255 ] );
 		} );
 
+		it ( "Should draw an opaque material opaque, even where its texture is clear", async function ()
+		{
+			if ( !Device.valid )
+			{
+				await Device.init();
+			}
+
+			// The checker with its green pixel clear. The material is opaque, by
+			// default, so green is drawn, not the background.
+			const maker = makeTexturedSquare ( { sampler: { magFilter: GLTF_NEAREST } } );
+			const clear = new Uint8Array ( CHECKER.data );
+			clear[7] = 0;
+			maker.json.images![0] = { bufferView: maker.addView ( makePng ( { width: 2, height: 2, data: clear } ) ), mimeType: "image/png" };
+			const scene = new Group();
+			scene.addChild ( await read ( maker.glb() ) );
+			expectPixel ( pixelAt ( await drawScene ( scene ), 0.4, 0.4 ), [ 0, 255, 0, 255 ] );
+		} );
+
 		it ( "Should draw the texture on the shape", async function ()
 		{
 			if ( !Device.valid )
