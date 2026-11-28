@@ -278,19 +278,99 @@ export function test ()
 				expect ( prims.count ).to.equal ( 3 );
 			} );
 
-			it ( "Should skip points, lines, triangle strips, and triangle fans", async function ()
+			it ( "Should skip points and lines, with a warning", async function ()
 			{
 				const maker = new GltfMaker();
 				const POSITION = maker.addPoints ( TRIANGLE_POINTS );
 				maker.addMeshNode ( [
 					{ attributes: { POSITION }, mode: GLTF_LINES },
-					{ attributes: { POSITION }, mode: GLTF_TRIANGLE_STRIP },
 					{ attributes: { POSITION } },
-					{ attributes: { POSITION }, mode: GLTF_TRIANGLE_FAN },
 					{ attributes: { POSITION }, mode: GLTF_POINTS },
+					{ attributes: { POSITION }, mode: GLTF_LINES },
 				] );
-				const geom = await readOne ( maker.glb() );
+				const warnings: string[] = [];
+				const original = console.warn;
+				console.warn = ( ...args: unknown[] ) => { warnings.push ( args.join ( " " ) ); };
+				let geom: ( Geometry | null ) = null;
+				try
+				{
+					geom = await readOne ( maker.glb() );
+				}
+				finally
+				{
+					console.warn = original;
+				}
 				expect ( geom.primitives![0] ).to.be.instanceOf ( Arrays );
+				expect ( warnings ).to.deep.equal ( [ "Skipped glTF primitives that are not supported yet: 2 lines, 1 points" ] );
+			} );
+
+			it ( "Should turn triangle strips and fans into lists, with or without indices", async function ()
+			{
+				// A square, as a strip and as a fan.
+				const SQUARE = [ 0, 0, 0,   1, 0, 0,   1, 1, 0,   0, 1, 0 ];
+				for ( const [ mode, order, expected ] of [
+					[ GLTF_TRIANGLE_STRIP, [ 0, 1, 3, 2 ], [ 0, 1, 3,   1, 2, 3 ] ],
+					[ GLTF_TRIANGLE_FAN, [ 0, 1, 2, 3 ], [ 1, 2, 0,   2, 3, 0 ] ],
+				] as const )
+				{
+					// With indices.
+					const indexed = new GltfMaker();
+					const POSITION = indexed.addPoints ( SQUARE );
+					const indices = indexed.addAccessor ( [ ...order ], GLTF_UNSIGNED_SHORT, "SCALAR" );
+					indexed.addMeshNode ( [ { attributes: { POSITION }, indices, mode } ] );
+					const geom = await readOne ( indexed.glb() );
+					expect ( geom.primitives![0].topology ).to.equal ( "triangle-list" );
+					expect ( ( geom.primitives![0] as Indexed ).indexType ).to.equal ( "uint16" );
+					expect ( getIndices ( geom ), `mode ${mode}` ).to.deep.equal ( expected );
+
+					// Without indices, the points are in the order of the indices.
+					const plain = new GltfMaker();
+					const points = order.flatMap ( ( i ) => SQUARE.slice ( ( i * 3 ), ( ( i * 3 ) + 3 ) ) );
+					plain.addMeshNode ( [ { attributes: { POSITION: plain.addPoints ( points ) }, mode } ] );
+					const flat = await readOne ( plain.glb() );
+					expect ( flat.primitives![0].topology ).to.equal ( "triangle-list" );
+					const corners = getIndices ( flat ).map ( ( i ) => order[i] );
+					expect ( corners, `mode ${mode}` ).to.deep.equal ( expected );
+				}
+			} );
+
+			it ( "Should turn the triangles of a strip or fan around for a mirror", async function ()
+			{
+				const maker = new GltfMaker();
+				const POSITION = maker.addPoints ( [ 0, 0, 0,   1, 0, 0,   0, 1, 0,   1, 1, 0 ] );
+				maker.addMeshNode ( [ { attributes: { POSITION }, mode: GLTF_TRIANGLE_STRIP } ] );
+				maker.json.nodes![0].scale = [ -1, 1, 1 ];
+				expect ( getIndices ( await readOne ( maker.glb() ) ) ).to.deep.equal ( [ 0, 2, 1,   1, 2, 3 ] );
+			} );
+
+			it ( "Should share the triangles of a strip whose indices are used more than once", async function ()
+			{
+				const maker = new GltfMaker();
+				const POSITION = maker.addPoints ( [ 0, 0, 0,   1, 0, 0,   0, 1, 0,   1, 1, 0 ] );
+				const indices = maker.addAccessor ( [ 0, 1, 2, 3 ], GLTF_UNSIGNED_SHORT, "SCALAR" );
+				const a = maker.addMaterial ( {} );
+				const b = maker.addMaterial ( {} );
+				maker.addMeshNode ( [
+					{ attributes: { POSITION }, indices, material: a, mode: GLTF_TRIANGLE_STRIP },
+					{ attributes: { POSITION }, indices, material: b, mode: GLTF_TRIANGLE_STRIP },
+					{ attributes: { POSITION }, indices, material: b, mode: GLTF_TRIANGLE_FAN },
+					{ attributes: { POSITION }, indices, material: b },
+				] );
+				const [ first, second, fan, list ] = getGeometries ( await read ( maker.glb() ) ).map (
+					( geom ) => ( geom.primitives![0] as Indexed ).indices );
+				expect ( first ).to.equal ( second );
+				expect ( fan ).not.to.equal ( first );
+				expect ( list ).not.to.equal ( first );
+				expect ( Array.from ( list!.values! ) ).to.deep.equal ( [ 0, 1, 2, 3 ] );
+			} );
+
+			it ( "Should check the indices of a strip or fan", async function ()
+			{
+				const maker = new GltfMaker();
+				const POSITION = maker.addPoints ( TRIANGLE_POINTS );
+				const indices = maker.addAccessor ( [ 0, 1, 2, 3 ], GLTF_UNSIGNED_SHORT, "SCALAR" );
+				maker.addMeshNode ( [ { attributes: { POSITION }, indices, mode: GLTF_TRIANGLE_FAN } ] );
+				expect ( await getMessage ( maker.glb() ) ).to.include ( "has vertex index 3, but there are 3 vertices" );
 			} );
 
 			it ( "Should say when there are no triangles", async function ()
