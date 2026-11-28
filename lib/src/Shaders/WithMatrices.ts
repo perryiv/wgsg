@@ -14,7 +14,12 @@
 
 import { Device, IDENTITY_MATRIX } from "../Tools";
 import { mat4 } from "gl-matrix";
-import { ShaderBase as BaseClass, type IShaderBaseInput } from "./ShaderBase";
+import {
+	makeVertexBufferLayouts,
+	ShaderBase as BaseClass,
+	type IPipelineOptions,
+	type IShaderBaseInput,
+} from "./ShaderBase";
 import { ObjectMatrices } from "./ObjectMatrices";
 import { UniformPool } from "./UniformPool";
 import type { IMatrix44 } from "../Types";
@@ -202,6 +207,71 @@ export abstract class WithMatrices extends BaseClass
 			} );
 		}
 		return this.#pipelineLayout;
+	}
+
+	/**
+	 * Make the render pipeline. The vertex buffers are the arrays that
+	 * getVertexArrays() says. With vertex colors, the entry points are
+	 * "vsColors" and "fsColors", which use them, and otherwise they are "vs"
+	 * and "fs". Without vertex colors, the drawing is exactly what it was
+	 * before there were any, because interpolating a constant color can be
+	 * off by a little.
+	 * @param {IPipelineOptions} options - The pipeline options.
+	 * @returns {GPURenderPipeline} The render pipeline.
+	 */
+	protected makePipeline ( options: Readonly<IPipelineOptions> ) : GPURenderPipeline
+	{
+		// Shortcuts
+		const { device, preferredFormat } = Device.instance;
+		const { topology, cullMode, depthWrite } = options;
+		const arrays = this.getVertexArrays ( options );
+		const colors = arrays.includes ( "colors" );
+
+		// Make the pipeline.
+		const pipeline = device.createRenderPipeline ( {
+			label: `Render pipeline for shader ${this.type}`,
+			layout: this.pipelineLayout,
+			vertex: {
+				module: this.module,
+				entryPoint: ( colors ? "vsColors" : "vs" ),
+				buffers: makeVertexBufferLayouts ( arrays ),
+			},
+			fragment: {
+				module: this.module,
+				entryPoint: ( colors ? "fsColors" : "fs" ),
+				targets: [ {
+					format: preferredFormat,
+					blend: {
+						color: {
+							srcFactor: "one",
+							dstFactor: "one-minus-src-alpha"
+						},
+						alpha: {
+							srcFactor: "one",
+							dstFactor: "one-minus-src-alpha"
+						},
+					},
+				} ]
+			},
+			primitive: {
+				topology,
+				cullMode,
+			},
+			depthStencil: {
+				depthWriteEnabled: depthWrite,
+				depthCompare: "less",
+				format: "depth24plus",
+			},
+		} );
+
+		// Do not return an invalid pipeline.
+		if ( !pipeline )
+		{
+			throw new Error ( "Failed to create pipeline" );
+		}
+
+		// Return the new pipeline.
+		return pipeline;
 	}
 
 	/**

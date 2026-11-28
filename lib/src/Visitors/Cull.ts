@@ -487,7 +487,8 @@ export class Cull extends BaseClass
 		// Get or make the containers we need.
 		const layer = root.getLayer ( info, state.layer );
 		const bin = layer.getBin ( info, state.bin );
-		const pipeline = bin.getPipeline ( info, state );
+		const vertexColors = ( ( shape instanceof Geometry ) && shape.hasVertexColors );
+		const pipeline = bin.getPipeline ( info, state, vertexColors );
 		const pmg = pipeline.getProjMatrixGroup ( info, this.projMatrix, this.projMatrixKey );
 		const sg = pmg.getStateGroup ( info, state );
 

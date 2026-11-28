@@ -24,7 +24,7 @@
 import { ColorTool as Color, Device } from "../Tools";
 import { vec4 } from "gl-matrix";
 import { Lighting as BaseClass, type ILightingInput } from "./Lighting";
-import type { IPipelineOptions, IPulledVerticesInput } from "./ShaderBase";
+import type { IPipelineOptions, IPulledVerticesInput, IVertexArrayName } from "./ShaderBase";
 import type { IVector4 } from "../Types";
 
 
@@ -42,6 +42,7 @@ interface IPulledVerticesData
 	indices: GPUBuffer;
 	points: GPUBuffer;
 	normals: ( GPUBuffer | null );
+	colors: GPUBuffer;
 }
 
 
@@ -56,6 +57,9 @@ interface IPulledVerticesData
 export const PULLED_INDICES_NONE = 0;
 export const PULLED_INDICES_UINT16 = 1;
 export const PULLED_INDICES_UINT32 = 2;
+
+// Added to the above when there are vertex colors.
+export const PULLED_COLORS = 4;
 
 // The bind group with the buffers that the vertices are pulled from.
 export const PULLED_VERTICES_BIND_GROUP = 3;
@@ -199,6 +203,7 @@ export abstract class WithEdges extends BaseClass
 			{
 				entries.push ( { binding: 2, visibility, buffer } ); // Normals
 			}
+			entries.push ( { binding: 3, visibility, buffer } ); // Colors
 			this.#verticesLayout = Device.instance.device.createBindGroupLayout ( {
 				label: `Bind group layout for pulled vertices in shader ${this.type}`,
 				entries,
@@ -259,14 +264,29 @@ export abstract class WithEdges extends BaseClass
 			mode = ( ( 2 === indices.values?.BYTES_PER_ELEMENT ) ? PULLED_INDICES_UINT16 : PULLED_INDICES_UINT32 );
 		}
 
+		// Get the colors, if there is one for each point. Without them the
+		// binding still needs a buffer, so use the points, which the shader
+		// won't read.
+		let colors = points;
+		if ( geometry.hasVertexColors )
+		{
+			const buffer = geometry.colors?.buffer;
+			if ( !buffer )
+			{
+				return null;
+			}
+			colors = buffer;
+			mode += PULLED_COLORS;
+		}
+
 		// Use the bind group we made before if the buffers are the same.
 		let data = this.#pulled.get ( key );
-		if ( ( data?.indices !== indexBuffer ) || ( data.points !== points ) || ( data.normals !== normals ) )
+		if ( ( data?.indices !== indexBuffer ) || ( data.points !== points ) || ( data.normals !== normals ) || ( data.colors !== colors ) )
 		{
 			// Each buffer has to fit in one storage buffer binding.
 			const { device } = Device.instance;
 			const maxSize = device.limits.maxStorageBufferBindingSize;
-			const tooBig = [ indexBuffer, points, normals ].find (
+			const tooBig = [ indexBuffer, points, normals, colors ].find (
 				( buffer ) => ( ( buffer?.size ?? 0 ) > maxSize ) );
 			if ( tooBig )
 			{
@@ -288,6 +308,7 @@ export abstract class WithEdges extends BaseClass
 			{
 				entries.push ( { binding: 2, resource: { buffer: normals } } );
 			}
+			entries.push ( { binding: 3, resource: { buffer: colors } } );
 			const bindGroup = device.createBindGroup ( {
 				label: `Bind group for pulled vertices in shader ${this.type}`,
 				layout: this.verticesLayout,
@@ -295,71 +316,26 @@ export abstract class WithEdges extends BaseClass
 			} );
 
 			// Save it for next time.
-			data = { bindGroup, indices: indexBuffer, points, normals };
+			data = { bindGroup, indices: indexBuffer, points, normals, colors };
 			this.#pulled.set ( key, data );
 		}
 
 		// Use the bind group.
 		pass.setBindGroup ( PULLED_VERTICES_BIND_GROUP, data.bindGroup );
 
-		// Return how the vertex shader should read the indices.
+		// Return how the vertex shader should read the indices and colors.
 		return mode;
 	}
 
 	/**
-	 * Make the render pipeline. There are no vertex buffers.
+	 * Get the geometry's arrays that the pipeline reads as vertex buffers:
+	 * none, because the vertex shader reads them from storage buffers.
 	 * @param {IPipelineOptions} options - The pipeline options.
-	 * @returns {GPURenderPipeline} The render pipeline.
+	 * @returns {IVertexArrayName[]} The arrays.
 	 */
-	protected makePipeline ( { topology, cullMode, depthWrite }: Readonly<IPipelineOptions> ) : GPURenderPipeline
+	public getVertexArrays ( options: Readonly<IPipelineOptions> ) : IVertexArrayName[]
 	{
-		// Shortcuts
-		const { device, preferredFormat } = Device.instance;
-
-		// Make the pipeline.
-		const pipeline = device.createRenderPipeline ( {
-			label: `Render pipeline for shader ${this.type}`,
-			layout: this.pipelineLayout,
-			vertex: {
-				module: this.module,
-				entryPoint: "vs",
-				buffers: []
-			},
-			fragment: {
-				module: this.module,
-				entryPoint: "fs",
-				targets: [ {
-					format: preferredFormat,
-					blend: {
-						color: {
-							srcFactor: "one",
-							dstFactor: "one-minus-src-alpha"
-						},
-						alpha: {
-							srcFactor: "one",
-							dstFactor: "one-minus-src-alpha"
-						},
-					},
-				} ]
-			},
-			primitive: {
-				topology,
-				cullMode,
-			},
-			depthStencil: {
-				depthWriteEnabled: depthWrite,
-				depthCompare: "less",
-				format: "depth24plus",
-			},
-		} );
-
-		// Do not return an invalid pipeline.
-		if ( !pipeline )
-		{
-			throw new Error ( "Failed to create pipeline" );
-		}
-
-		// Return the new pipeline.
-		return pipeline;
+		void options;
+		return [];
 	}
 }

@@ -17,6 +17,7 @@ import { test as testLighting } from "./Lighting";
 import { test as testObjectMatrices } from "./ObjectMatrices";
 import { test as testShaders } from "./Shaders";
 import { test as testUniformPool } from "./UniformPool";
+import { test as testVertexColors } from "./VertexColors";
 
 describe ( "Shaders", function ()
 {
@@ -25,4 +26,5 @@ describe ( "Shaders", function ()
 	testEdges();
 	testUniformPool();
 	testObjectMatrices();
+	testVertexColors();
 } );

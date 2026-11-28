@@ -806,6 +806,112 @@ export function test ()
 			} );
 		} );
 
+		describe ( "Vertex colors", function ()
+		{
+			/**
+			 * Make a triangle with colors.
+			 * @param {number[]} colors The colors.
+			 * @param {number} componentType The component type of the colors.
+			 * @param {string} type The type of the colors' accessor.
+			 * @param {object} [options] More of the file.
+			 * @param {boolean} [options.normalized] Whether the colors are normalized.
+			 * @param {string} [options.alphaMode] The material's alpha mode.
+			 * @returns {GltfMaker} The maker.
+			 */
+			const makeColored = ( colors: number[], componentType: number, type: string,
+				options?: { normalized?: boolean, alphaMode?: string, baseColorFactor?: number[] } ) : GltfMaker =>
+			{
+				const maker = new GltfMaker();
+				const POSITION = maker.addPoints ( TRIANGLE_POINTS );
+				const COLOR_0 = maker.addAccessor ( colors, componentType, type, ( options?.normalized ? { normalized: true } : {} ) );
+				const material = maker.addMaterial ( {
+					...( options?.alphaMode ? { alphaMode: options.alphaMode } : {} ),
+					...( options?.baseColorFactor ? { pbrMetallicRoughness: { baseColorFactor: options.baseColorFactor } } : {} ),
+				} );
+				maker.addMeshNode ( [ { attributes: { POSITION, COLOR_0 }, material } ] );
+				return maker;
+			};
+
+			it ( "Should have no colors without COLOR_0", async function ()
+			{
+				const geom = await readOne ( makeTriangle().glb() );
+				expect ( geom.colors ).to.be.null;
+			} );
+
+			it ( "Should read three numbers for each color, with an alpha of one", async function ()
+			{
+				const geom = await readOne ( makeColored ( [ 1, 0, 0,   0, 1, 0,   0, 0, 1 ], GLTF_FLOAT, "VEC3" ).glb() );
+				expect ( Array.from ( geom.colors!.values! ) ).to.deep.equal ( [ 1, 0, 0, 1,   0, 1, 0, 1,   0, 0, 1, 1 ] );
+				expect ( geom.hasVertexColors ).to.be.true;
+			} );
+
+			it ( "Should keep the alpha only when blending", async function ()
+			{
+				const colors = [ 1, 0, 0, 0.5,   0, 1, 0, 0.25,   0, 0, 1, 0 ];
+				const opaque = await readOne ( makeColored ( colors, GLTF_FLOAT, "VEC4" ).glb() );
+				expect ( Array.from ( opaque.colors!.values! ) ).to.deep.equal ( [ 1, 0, 0, 1,   0, 1, 0, 1,   0, 0, 1, 1 ] );
+
+				const blended = await readOne ( makeColored ( colors, GLTF_FLOAT, "VEC4", { alphaMode: "BLEND" } ).glb() );
+				expect ( Array.from ( blended.colors!.values! ) ).to.deep.equal ( colors );
+			} );
+
+			it ( "Should scale normalized integers so that the largest is one", async function ()
+			{
+				const bytes = await readOne ( makeColored ( [ 255, 0, 0, 255,   0, 255, 0, 255,   0, 0, 255, 255 ],
+					GLTF_UNSIGNED_BYTE, "VEC4", { normalized: true } ).glb() );
+				expect ( Array.from ( bytes.colors!.values! ) ).to.deep.equal ( [ 1, 0, 0, 1,   0, 1, 0, 1,   0, 0, 1, 1 ] );
+
+				const shorts = await readOne ( makeColored ( [ 65535, 0, 0,   0, 65535, 0,   0, 0, 65535 ],
+					GLTF_UNSIGNED_SHORT, "VEC3", { normalized: true } ).glb() );
+				expect ( Array.from ( shorts.colors!.values! ) ).to.deep.equal ( [ 1, 0, 0, 1,   0, 1, 0, 1,   0, 0, 1, 1 ] );
+			} );
+
+			it ( "Should multiply the colors by the material's color, because they replace it", async function ()
+			{
+				const colors = [ 1, 0.5, 0, 0.5,   0, 1, 0.5, 0.5,   0.5, 0, 1, 0.5 ];
+				const baseColorFactor = [ 0.5, 1, 0.5, 0.5 ];
+
+				// The alpha of both is only kept when blending.
+				const opaque = await readOne ( makeColored ( colors, GLTF_FLOAT, "VEC4", { baseColorFactor } ).glb() );
+				expect ( Array.from ( opaque.colors!.values! ) ).to.deep.equal ( [ 0.5, 0.5, 0, 1,   0, 1, 0.25, 1,   0.25, 0, 0.5, 1 ] );
+
+				const blended = await readOne ( makeColored ( colors, GLTF_FLOAT, "VEC4", { baseColorFactor, alphaMode: "BLEND" } ).glb() );
+				expect ( Array.from ( blended.colors!.values! ) ).to.deep.equal ( [ 0.5, 0.5, 0, 0.25,   0, 1, 0.25, 0.25,   0.25, 0, 0.5, 0.25 ] );
+
+				// Transmission makes them more see-through, like the state's color.
+				const maker = makeColored ( colors, GLTF_FLOAT, "VEC4" );
+				maker.json.materials![0].extensions = { KHR_materials_transmission: { transmissionFactor: 0.5 } };
+				const glass = await readOne ( maker.glb() );
+				expect ( Array.from ( glass.colors!.values! ) ).to.deep.equal ( [ 1, 0.5, 0, 0.5,   0, 1, 0.5, 0.5,   0.5, 0, 1, 0.5 ] );
+			} );
+
+			it ( "Should share the colors of an accessor used more than once with the same material", async function ()
+			{
+				const maker = new GltfMaker();
+				const POSITION = maker.addPoints ( TRIANGLE_POINTS );
+				const COLOR_0 = maker.addAccessor ( [ 1, 0, 0,   0, 1, 0,   0, 0, 1 ], GLTF_FLOAT, "VEC3" );
+				const red = maker.addMaterial ( { pbrMetallicRoughness: { baseColorFactor: [ 1, 0, 0, 1 ] } } );
+				maker.addMeshNode ( [
+					{ attributes: { POSITION, COLOR_0 } },
+					{ attributes: { POSITION, COLOR_0 } },
+					{ attributes: { POSITION, COLOR_0 }, material: red },
+				] );
+				const [ a, b, c ] = getGeometries ( await read ( maker.glb() ) );
+				expect ( a.colors ).to.equal ( b.colors );
+				expect ( a.colors ).not.to.equal ( c.colors );
+				expect ( Array.from ( c.colors!.values! ) ).to.deep.equal ( [ 1, 0, 0, 1,   0, 0, 0, 1,   0, 0, 0, 1 ] );
+			} );
+
+			it ( "Should reject colors of the wrong type or number", async function ()
+			{
+				const scalar = makeColored ( [ 1, 1, 1 ], GLTF_FLOAT, "SCALAR" );
+				expect ( await getMessage ( scalar.glb() ) ).to.include ( "Accessor 1 has colors, so it should be a VEC3 or VEC4, not a SCALAR" );
+
+				const fewer = makeColored ( [ 1, 0, 0,   0, 1, 0 ], GLTF_FLOAT, "VEC3" );
+				expect ( await getMessage ( fewer.glb() ) ).to.include ( "There are 2 colors but 3 points" );
+			} );
+		} );
+
 		describe ( "Extensions", function ()
 		{
 			it ( "Should reject required extensions that are not supported", async function ()

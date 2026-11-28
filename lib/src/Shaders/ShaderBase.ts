@@ -31,12 +31,15 @@ export interface IShaderBaseInput
 }
 
 // The settings that a render pipeline is made with, besides the shader.
-// More can be added, like stencil and blending.
+// More can be added, like stencil and blending. The state decides most of
+// them, but whether there are vertex colors depends on the geometry, so the
+// state leaves that out, which means there are none.
 export interface IPipelineOptions
 {
 	topology: GPUPrimitiveTopology;
 	cullMode: GPUCullMode;
 	depthWrite: boolean;
+	vertexColors?: boolean;
 }
 
 /**
@@ -46,7 +49,33 @@ export interface IPipelineOptions
  */
 export const makePipelineKey = ( options: Readonly<IPipelineOptions> ) : string =>
 {
-	return `${options.topology} ${options.cullMode} ${options.depthWrite ? "depth-write" : "no-depth-write"}`;
+	const key = `${options.topology} ${options.cullMode} ${options.depthWrite ? "depth-write" : "no-depth-write"}`;
+	return ( ( true === options.vertexColors ) ? `${key} vertex-colors` : key );
+};
+
+// The geometry's arrays that a shader can read as vertex buffers. Each one
+// has its own location in the shader code, whichever buffers come before it.
+export type IVertexArrayName = ( "points" | "normals" | "colors" );
+
+// How each array is read, in the shader code and from the buffer.
+const VERTEX_ARRAY_FORMATS: Readonly<Record<IVertexArrayName, { shaderLocation: number, format: GPUVertexFormat, arrayStride: number }>> = {
+	points:  { shaderLocation: 0, format: "float32x3", arrayStride: 12 }, // 3 floats * 4 bytes each.
+	normals: { shaderLocation: 1, format: "float32x3", arrayStride: 12 }, // 3 floats * 4 bytes each.
+	colors:  { shaderLocation: 2, format: "float32x4", arrayStride: 16 }, // 4 floats * 4 bytes each.
+};
+
+/**
+ * Make the layouts of the vertex buffers, one for each array, in order.
+ * @param {IVertexArrayName[]} names - The arrays, in the order of the buffers.
+ * @returns {GPUVertexBufferLayout[]} The layouts.
+ */
+export const makeVertexBufferLayouts = ( names: readonly IVertexArrayName[] ) : GPUVertexBufferLayout[] =>
+{
+	return names.map ( ( name ) =>
+	{
+		const { shaderLocation, format, arrayStride } = VERTEX_ARRAY_FORMATS[name];
+		return { attributes: [ { shaderLocation, offset: 0, format } ], arrayStride, stepMode: "vertex" };
+	} );
 };
 
 export type IShaderFactory = ( ( this: void ) => ShaderBase );
@@ -200,6 +229,14 @@ export abstract class ShaderBase extends Base
 		// Return the pipeline.
 		return pipeline;
 	}
+
+	/**
+	 * Get the geometry's arrays that the pipeline reads as vertex buffers,
+	 * in the order of the buffers.
+	 * @param {IPipelineOptions} options - The pipeline options.
+	 * @returns {IVertexArrayName[]} The arrays.
+	 */
+	public abstract getVertexArrays ( options: Readonly<IPipelineOptions> ) : IVertexArrayName[];
 
 	// Does this shader read the vertices from storage buffers in the vertex
 	// shader (vertex pulling) instead of from vertex and index buffers?

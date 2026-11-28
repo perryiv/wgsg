@@ -42,12 +42,28 @@ struct VertexOut
 {
 	@builtin ( position ) position : vec4f,
 	@location ( 0 ) viewPosition : vec3f,
+	@location ( 1 ) color : vec4f,
 };
 
+// The vertex shader for geometry without vertex colors.
 @vertex fn vs ( @location ( 0 ) position: vec4f ) -> VertexOut
+{
+	return makeVertex ( position, vec4f ( 1.0 ) );
+}
+
+// The vertex shader for geometry with vertex colors.
+@vertex fn vsColors ( @location ( 0 ) position: vec4f, @location ( 2 ) color: vec4f ) -> VertexOut
+{
+	return makeVertex ( position, color );
+}
+
+fn makeVertex ( position: vec4f, color: vec4f ) -> VertexOut
 {
 	// The answer.
 	var answer : VertexOut;
+
+	// The vertex color, for the fragment shader.
+	answer.color = color;
 
 	// Transform the position to view space, and pass it to the fragment
 	// shader so that it can calculate the normal vector.
@@ -61,7 +77,20 @@ struct VertexOut
 	return answer;
 }
 
+// The fragment shader for geometry without vertex colors.
 @fragment fn fs ( fragData: VertexOut, @builtin ( front_facing ) frontFacing: bool ) -> @location ( 0 ) vec4f
+{
+	return shade ( fragData, frontFacing, material.color );
+}
+
+// The fragment shader for geometry with vertex colors, which replace the
+// material's color.
+@fragment fn fsColors ( fragData: VertexOut, @builtin ( front_facing ) frontFacing: bool ) -> @location ( 0 ) vec4f
+{
+	return shade ( fragData, frontFacing, fragData.color );
+}
+
+fn shade ( fragData: VertexOut, frontFacing: bool, color: vec4f ) -> vec4f
 {
 	// How the view-space position changes from one pixel to the next, to the
 	// right (x) and down (y). Both vectors are in the plane of the triangle,
@@ -86,5 +115,5 @@ struct VertexOut
 
 	// Calculate the color, assuming that the canvas is configured
 	// for pre-multiplied alpha.
-	return vec4 ( material.color.rgb * diffuse * material.color.a, material.color.a );
+	return vec4 ( color.rgb * diffuse * color.a, color.a );
 }

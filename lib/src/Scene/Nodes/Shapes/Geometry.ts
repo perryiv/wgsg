@@ -280,7 +280,9 @@ export class Geometry extends Shape
 	}
 
 	/**
-	 * Get the colors.
+	 * Get the colors. There are four for each point: red, green, blue, and
+	 * alpha. When there is one for each point, they are used instead of
+	 * the color of the state.
 	 * @returns {IColorData | null} Colors for this geometry.
 	 */
 	public get colors() : ( IColorData | null )
@@ -311,6 +313,17 @@ export class Geometry extends Shape
 		// If this geometry is in use then count the new array instead of the old one.
 		replaceReference ( ( this.refCount > 0 ), this.#colors, colors );
 		this.#colors = colors;
+	}
+
+	/**
+	 * See if there is a color for each point, so that they can be drawn.
+	 * @returns {boolean} Whether there are vertex colors.
+	 */
+	public get hasVertexColors() : boolean
+	{
+		const numPoints = ( ( this.#points?.values?.length ?? 0 ) / 3 );
+		const numColors = ( ( this.#colors?.values?.length ?? 0 ) / 4 );
+		return ( ( numPoints > 0 ) && ( numColors === numPoints ) );
 	}
 
 	/**

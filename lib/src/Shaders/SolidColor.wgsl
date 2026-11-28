@@ -38,17 +38,46 @@ struct Object
 struct VertexOut
 {
 	@builtin ( position ) position : vec4f,
+	@location ( 0 ) color : vec4f,
 };
 
+// The vertex shader for geometry without vertex colors.
 @vertex fn vs ( @location ( 0 ) position: vec4f ) -> VertexOut
+{
+	return makeVertex ( position, vec4f ( 1.0 ) );
+}
+
+// The vertex shader for geometry with vertex colors.
+@vertex fn vsColors ( @location ( 0 ) position: vec4f, @location ( 2 ) color: vec4f ) -> VertexOut
+{
+	return makeVertex ( position, color );
+}
+
+fn makeVertex ( position: vec4f, color: vec4f ) -> VertexOut
 {
 	var output : VertexOut;
 	output.position = camera.projMatrix * object.viewMatrix * position;
+
+	// The vertex color, for the fragment shader.
+	output.color = color;
 	return output;
 }
 
+// The fragment shader for geometry without vertex colors.
 @fragment fn fs ( fragData: VertexOut ) -> @location ( 0 ) vec4f
 {
+	return shade ( material.color );
+}
+
+// The fragment shader for geometry with vertex colors, which replace the
+// material's color.
+@fragment fn fsColors ( fragData: VertexOut ) -> @location ( 0 ) vec4f
+{
+	return shade ( fragData.color );
+}
+
+fn shade ( color: vec4f ) -> vec4f
+{
 	// We assume that the canvas is configured for pre-multiplied alpha.
-	return vec4 ( material.color.rgb * material.color.a, material.color.a );
+	return vec4 ( color.rgb * color.a, color.a );
 }
