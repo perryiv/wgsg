@@ -77,6 +77,61 @@ const originalCullModes = new WeakMap < CullFace, GPUCullMode > ();
 
 
 ///////////////////////////////////////////////////////////////////////////////
+/**
+ * Turn two-sided lighting on or off for the states in the scene that have
+ * the two-sided light attribute.
+ * @param {SceneNode} scene - The scene.
+ * @param {boolean} on - Whether to light both sides.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+const setTwoSidedLighting = ( scene: SceneNode, on: boolean ) : void =>
+{
+	const type = TwoSidedLight.getClassName();
+	scene.traverse ( ( node: SceneNode ) =>
+	{
+		const twoSidedLight = node.state?.getAttribute ( type );
+		if ( twoSidedLight instanceof TwoSidedLight )
+		{
+			twoSidedLight.value = on;
+		}
+	} );
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Turn culling of the back faces on or off in the scene. Only the culling
+ * that was originally of the back faces changes. Culling of the front faces,
+ * which draws the back faces of a semi-transparent shape first, stays as it
+ * is.
+ * @param {SceneNode} scene - The scene.
+ * @param {boolean} on - Whether to cull the back faces.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+const setCullBackFaces = ( scene: SceneNode, on: boolean ) : void =>
+{
+	const type = CullFace.getClassName();
+	scene.traverse ( ( node: SceneNode ) =>
+	{
+		const cullFace = node.state?.getAttribute ( type );
+		if ( cullFace instanceof CullFace )
+		{
+			if ( !originalCullModes.has ( cullFace ) )
+			{
+				originalCullModes.set ( cullFace, cullFace.mode );
+			}
+			if ( "back" === originalCullModes.get ( cullFace ) )
+			{
+				cullFace.mode = ( on ? "back" : "none" );
+			}
+		}
+	} );
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
 //
 //	Viewer component.
 //
@@ -270,20 +325,8 @@ export function Viewer ( { viewerId, ...rest }: IViewerProps )
 			return;
 		}
 
-		// Traverse the scene and set the two-sided lighting flag.
-		modelScene.traverse ( ( node: SceneNode ) =>
-		{
-			const { state } = node;
-			if ( state )
-			{
-				const type = TwoSidedLight.getClassName();
-				const twoSidedLight = ( state.getAttribute ( type ) as ( TwoSidedLight | null ) );
-				if ( twoSidedLight )
-				{
-					twoSidedLight.value = twoSidedLighting;
-				}
-			}
-		} );
+		// Set the two-sided lighting.
+		setTwoSidedLighting ( modelScene, twoSidedLighting );
 
 		// Render so that we see the change.
 		viewer.requestRender();
@@ -293,9 +336,7 @@ export function Viewer ( { viewerId, ...rest }: IViewerProps )
 	] );
 
 	//
-	// Turn culling of the back faces on or off. Only the culling that was
-	// originally of the back faces changes. Culling of the front faces, which
-	// draws the back faces of a semi-transparent shape first, stays as it is.
+	// Turn culling of the back faces on or off.
 	//
 	useEffect ( () =>
 	{
@@ -306,23 +347,8 @@ export function Viewer ( { viewerId, ...rest }: IViewerProps )
 			return;
 		}
 
-		// Traverse the scene and set the culling.
-		const type = CullFace.getClassName();
-		modelScene.traverse ( ( node: SceneNode ) =>
-		{
-			const cullFace = node.state?.getAttribute ( type );
-			if ( cullFace instanceof CullFace )
-			{
-				if ( !originalCullModes.has ( cullFace ) )
-				{
-					originalCullModes.set ( cullFace, cullFace.mode );
-				}
-				if ( "back" === originalCullModes.get ( cullFace ) )
-				{
-					cullFace.mode = ( cullBackFaces ? "back" : "none" );
-				}
-			}
-		} );
+		// Set the culling.
+		setCullBackFaces ( modelScene, cullBackFaces );
 
 		// Render so that we see the change.
 		viewer.requestRender();
@@ -447,10 +473,20 @@ export function Viewer ( { viewerId, ...rest }: IViewerProps )
 		// To speed things up later, calculate the bounds now.
 		void model.bounds;
 
-		// Show the triangle edges if they are on.
+		// Show the triangle edges if they are on. Do the same for the other
+		// buttons that change the model, when they're not in their default
+		// state, which is what the file says.
 		if ( edgesVisible )
 		{
 			showTriangleEdges ( model, true );
+		}
+		if ( twoSidedLighting )
+		{
+			setTwoSidedLighting ( model, true );
+		}
+		if ( false === cullBackFaces )
+		{
+			setCullBackFaces ( model, false );
 		}
 
 		// Remember the file's name, to say which model was measured.
@@ -474,7 +510,9 @@ export function Viewer ( { viewerId, ...rest }: IViewerProps )
 		viewer.requestRender();
 	}, [
 		boxesScene,
+		cullBackFaces,
 		edgesVisible,
+		twoSidedLighting,
 		viewer,
 		viewerId,
 	] );
