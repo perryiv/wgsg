@@ -10,7 +10,8 @@
 //
 //	Color attribute class.
 //
-//	A shortcut for the Material attribute's diffuse color. The other colors
+//	A shortcut for the Material attribute's diffuse color, which is linear,
+//	like the material's colors. The other colors
 //	are the defaults. If a state has both, the material is used, and in
 //	developer builds the state warns about it.
 //

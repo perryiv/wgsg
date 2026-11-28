@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { clampNumber } from "../Math/Functions";
-import type { IVector4 } from "../Types";
+import type { IVector3, IVector4 } from "../Types";
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -60,6 +60,46 @@ export class Color
 	public static get random(): IVector4
 	{
 		return this.makeRandomColor();
+	}
+
+	/**
+	 * Convert a color from sRGB, how colors are stored in images and shown on
+	 * screens, to linear, where the numbers are amounts of light, like the
+	 * colors the shaders light. The alpha, if any, is not changed.
+	 * @param {number | IVector3 | IVector4} color - The sRGB value or color.
+	 * @returns {number | IVector3 | IVector4} The linear value or color.
+	 */
+	public static sRGBToLinear ( color: number ): number;
+	public static sRGBToLinear ( color: Readonly<IVector3> ): IVector3;
+	public static sRGBToLinear ( color: Readonly<IVector4> ): IVector4;
+	public static sRGBToLinear ( color: ( number | Readonly<IVector3> | Readonly<IVector4> ) ): ( number | IVector3 | IVector4 )
+	{
+		if ( "number" === typeof color )
+		{
+			return ( ( color <= 0.04045 ) ? ( color / 12.92 ) : Math.pow ( ( ( color + 0.055 ) / 1.055 ), 2.4 ) );
+		}
+		const rgb: IVector3 = [ Color.sRGBToLinear ( color[0] ), Color.sRGBToLinear ( color[1] ), Color.sRGBToLinear ( color[2] ) ];
+		return ( ( 4 === color.length ) ? [ ...rgb, color[3] ] : rgb );
+	}
+
+	/**
+	 * Convert a color from linear, where the numbers are amounts of light, to
+	 * sRGB, how colors are stored in images and shown on screens. The alpha,
+	 * if any, is not changed.
+	 * @param {number | IVector3 | IVector4} color - The linear value or color.
+	 * @returns {number | IVector3 | IVector4} The sRGB value or color.
+	 */
+	public static linearToSRGB ( color: number ): number;
+	public static linearToSRGB ( color: Readonly<IVector3> ): IVector3;
+	public static linearToSRGB ( color: Readonly<IVector4> ): IVector4;
+	public static linearToSRGB ( color: ( number | Readonly<IVector3> | Readonly<IVector4> ) ): ( number | IVector3 | IVector4 )
+	{
+		if ( "number" === typeof color )
+		{
+			return ( ( color <= 0.0031308 ) ? ( color * 12.92 ) : ( ( 1.055 * Math.pow ( color, ( 1 / 2.4 ) ) ) - 0.055 ) );
+		}
+		const rgb: IVector3 = [ Color.linearToSRGB ( color[0] ), Color.linearToSRGB ( color[1] ), Color.linearToSRGB ( color[2] ) ];
+		return ( ( 4 === color.length ) ? [ ...rgb, color[3] ] : rgb );
 	}
 
 	/**

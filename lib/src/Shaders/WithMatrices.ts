@@ -222,7 +222,7 @@ export abstract class WithMatrices extends BaseClass
 	protected makePipeline ( options: Readonly<IPipelineOptions> ) : GPURenderPipeline
 	{
 		// Shortcuts
-		const { device, preferredFormat } = Device.instance;
+		const { device, renderFormat } = Device.instance;
 		const { topology, cullMode, depthWrite } = options;
 		const arrays = this.getVertexArrays ( options );
 		const colors = arrays.includes ( "colors" );
@@ -240,7 +240,7 @@ export abstract class WithMatrices extends BaseClass
 				module: this.module,
 				entryPoint: ( colors ? "fsColors" : "fs" ),
 				targets: [ {
-					format: preferredFormat,
+					format: renderFormat,
 					blend: {
 						color: {
 							srcFactor: "one",

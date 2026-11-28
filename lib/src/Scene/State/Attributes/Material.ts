@@ -18,8 +18,10 @@
 //	- Emission: the light the surface gives off itself.
 //	- Shininess: how small the highlights are, from 0 to 128.
 //
-//	The same values are used for both sides. Vertex colors multiply the
-//	ambient and diffuse colors. Shaders without lighting use the diffuse color.
+//	The colors are linear: 0.5 is half the light, which is drawn as 188 of
+//	255, because the screen's colors are sRGB. The same values are used for
+//	both sides. Vertex colors multiply the ambient and diffuse colors. Shaders
+//	without lighting use the diffuse color.
 //
 //	The Color attribute is a shortcut that sets only the diffuse color. If a
 //	state has both, the material is used.

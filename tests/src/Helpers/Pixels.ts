@@ -12,6 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { Color as ColorTool } from "../../../lib/src/Tools/Color";
 import { Device } from "../../../lib/src/Tools/Device";
 
 
@@ -44,10 +45,11 @@ export interface IPixels
 
 export function makeTexture ( size: number ) : GPUTexture
 {
-	const { device, preferredFormat } = Device.instance;
+	const { device, preferredFormat, renderFormat } = Device.instance;
 	return device.createTexture ( {
 		size: [ size, size ],
 		format: preferredFormat,
+		viewFormats: [ renderFormat ],
 		usage: ( GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC ),
 	} );
 }
@@ -111,4 +113,21 @@ export function getPixel ( pixels: IPixels, x: number, y: number ) : number[]
 {
 	const i = ( ( y * pixels.width ) + x ) * 4;
 	return Array.from ( pixels.data.subarray ( i, i + 4 ) );
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Get the pixel value that a linear color value is drawn as: the value
+ * turned into sRGB, from 0 to 255. Values outside 0 to 1 are clamped, like
+ * the shaders do.
+ * @param {number} linear - The linear value.
+ * @returns {number} The pixel value.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export function toPixel ( linear: number ) : number
+{
+	const clamped = Math.min ( Math.max ( linear, 0 ), 1 );
+	return Math.round ( ColorTool.linearToSRGB ( clamped ) * 255 );
 }

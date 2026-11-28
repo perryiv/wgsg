@@ -111,6 +111,7 @@ const renderCenterPixel = async ( shader: Lighting | SolidColor, points: number[
 	const texture = device.createTexture ( {
 		size: [ SIZE, SIZE ],
 		format: preferredFormat,
+		viewFormats: [ Device.instance.renderFormat ],
 		usage: ( GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC ),
 	} );
 	const depth = device.createTexture ( {
@@ -128,7 +129,7 @@ const renderCenterPixel = async ( shader: Lighting | SolidColor, points: number[
 	const encoder = device.createCommandEncoder();
 	const pass = encoder.beginRenderPass ( {
 		colorAttachments: [ {
-			view: texture.createView(),
+			view: texture.createView ( { format: Device.instance.renderFormat } ),
 			clearValue: [ 0, 0, 0, 0 ],
 			loadOp: "clear",
 			storeOp: "store",
@@ -206,6 +207,7 @@ const renderTwoColors = async ( shader: Lighting | SolidColor, normals: number[]
 	const texture = device.createTexture ( {
 		size: [ SIZE, SIZE ],
 		format: preferredFormat,
+		viewFormats: [ Device.instance.renderFormat ],
 		usage: ( GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC ),
 	} );
 	const depth = device.createTexture ( {
@@ -223,7 +225,7 @@ const renderTwoColors = async ( shader: Lighting | SolidColor, normals: number[]
 	const encoder = device.createCommandEncoder();
 	const pass = encoder.beginRenderPass ( {
 		colorAttachments: [ {
-			view: texture.createView(),
+			view: texture.createView ( { format: Device.instance.renderFormat } ),
 			clearValue: [ 0, 0, 0, 0 ],
 			loadOp: "clear",
 			storeOp: "store",
