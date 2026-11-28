@@ -31,10 +31,10 @@ import {
 } from "../../../../lib/src/IO/Readers/GLTF/Types";
 import {
 	Arrays,
-	ColorAttribute,
 	Geometry,
 	Group,
 	Indexed,
+	Material,
 	Node as SceneNode,
 	State,
 	Transform,
@@ -98,14 +98,25 @@ const getIndices = ( geom: Geometry ) : number[] =>
 };
 
 /**
- * Get the color of the state.
+ * Get the material of the state.
+ * @param {State} state The state.
+ * @returns {Material} The material.
+ */
+const getMaterial = ( state: State ) : Material =>
+{
+	const material = state.getAttribute ( Material.getClassName() );
+	expect ( material ).to.be.instanceOf ( Material );
+	return ( material as Material );
+};
+
+/**
+ * Get the color of the state, which is its material's diffuse color.
  * @param {State} state The state.
  * @returns {number[]} The color.
  */
 const getColor = ( state: State ) : number[] =>
 {
-	const color = state.getAttribute ( ColorAttribute.getClassName() ) as ColorAttribute;
-	return [ ...color.color ];
+	return [ ...getMaterial ( state ).diffuse ];
 };
 
 /**
@@ -793,6 +804,48 @@ export function test ()
 				expect ( a.state ).to.equal ( b.state );
 				expect ( a.state ).not.to.equal ( c.state );
 				expect ( getColor ( c.state! ) ).to.deep.equal ( [ 0, 1, 0, 1 ] );
+			} );
+
+			it ( "Should use the base color for the ambient color too, and have no highlights", async function ()
+			{
+				const maker = makeTriangle ( { material: 0 } );
+				maker.addMaterial ( { pbrMetallicRoughness: { baseColorFactor: [ 0.25, 0.5, 0.75, 1 ] } } );
+				const material = getMaterial ( ( await readOne ( maker.glb() ) ).state! );
+				expect ( material.ambient ).to.deep.equal ( [ 0.25, 0.5, 0.75, 1 ] );
+				expect ( material.diffuse ).to.deep.equal ( [ 0.25, 0.5, 0.75, 1 ] );
+				expect ( material.specular ).to.deep.equal ( [ 0, 0, 0, 1 ] );
+				expect ( material.shininess ).to.equal ( 0 );
+
+				// The state has no color attribute, only the material.
+				expect ( ( await readOne ( maker.glb() ) ).state!.attributes.size ).to.equal ( 3 );
+			} );
+
+			it ( "Should use the emissive color, times the emissive strength, for the emission", async function ()
+			{
+				// None by default.
+				const none = makeTriangle ( { material: 0 } );
+				none.addMaterial ( {} );
+				expect ( getMaterial ( ( await readOne ( none.glb() ) ).state! ).emission ).to.deep.equal ( [ 0, 0, 0, 1 ] );
+				expect ( getMaterial ( ( await readOne ( makeTriangle().glb() ) ).state! ).emission ).to.deep.equal ( [ 0, 0, 0, 1 ] );
+
+				const maker = makeTriangle ( { material: 0 } );
+				maker.addMaterial ( { emissiveFactor: [ 0.5, 0.25, 0 ] } );
+				expect ( getMaterial ( ( await readOne ( maker.glb() ) ).state! ).emission ).to.deep.equal ( [ 0.5, 0.25, 0, 1 ] );
+
+				const strong = makeTriangle ( { material: 0 } );
+				strong.addMaterial ( { emissiveFactor: [ 0.5, 0.25, 0 ], extensions: { KHR_materials_emissive_strength: { emissiveStrength: 2 } } } );
+				expect ( getMaterial ( ( await readOne ( strong.glb() ) ).state! ).emission ).to.deep.equal ( [ 1, 0.5, 0, 1 ] );
+			} );
+
+			it ( "Should reject an emissive color of the wrong size, or a negative emissive strength", async function ()
+			{
+				const size = makeTriangle ( { material: 0 } );
+				size.addMaterial ( { emissiveFactor: [ 1, 0 ] } );
+				expect ( await getMessage ( size.glb() ) ).to.include ( "Material 0 has an emissive color with 2 numbers instead of 3" );
+
+				const negative = makeTriangle ( { material: 0 } );
+				negative.addMaterial ( { emissiveFactor: [ 1, 0, 0 ], extensions: { KHR_materials_emissive_strength: { emissiveStrength: -1 } } } );
+				expect ( await getMessage ( negative.glb() ) ).to.include ( "Material 0 has an emissive strength of -1, which is less than 0" );
 			} );
 
 			it ( "Should reject a base color of the wrong size, or a missing material", async function ()
