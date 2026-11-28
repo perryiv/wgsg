@@ -30,6 +30,7 @@ import {
 	State,
 	Transform,
 	TwoSidedLight,
+	type IBinSort,
 } from "../../../lib/src/Scene";
 import {
 	Cull as CullVisitor,
@@ -306,10 +307,10 @@ export function test ()
 			const front = makeState ( [ 1, 0, 0, 0.5 ] );
 			const transparent = buildTransparentScene ( { geometry: shape, back, front } );
 
-			// Put the front faces' group first, so only the bins can put it last.
+			// Both sides are at the same depth in the sorted bin, so they're drawn
+			// in the builder's order, back faces first.
 			const scene = new Group();
-			scene.addChild ( transparent.getChild ( 1 ) );
-			scene.addChild ( transparent.getChild ( 0 ) );
+			scene.addChild ( transparent );
 
 			// Red over green over the background, which is [ 0.505, 0.26, 0.265 ]
 			// with the ambient light. The other order would be green over red,
@@ -319,6 +320,65 @@ export function test ()
 
 			// Outside the shape is the background.
 			expectPixel ( pixelAt ( pixels, -0.95, 0.95 ), [ 0, 0, 255, 255 ] );
+		} );
+
+		it ( "Should draw the farthest transparent shape first in a bin sorted back to front", async function ()
+		{
+			// The near red window and the far green one overlap in the middle.
+			// Each is added in both orders, and sorted the same both times.
+			const build = ( sort: ( IBinSort | null ), nearFirst: boolean ) : Group =>
+			{
+				const make = ( center: IVector3, color: IVector4 ) : Geometry =>
+				{
+					const state = makeTransparentState ( color, false );
+					state.binSort = sort;
+					return makeSquare ( center, true, state );
+				};
+				const near = make ( [ -0.2, 0, 0.3 ], [ 1, 0, 0, 0.5 ] );
+				const far = make ( [ 0.2, 0, 0.6 ], [ 0, 1, 0, 0.5 ] );
+				const scene = new Group();
+				for ( const square of ( nearFirst ? [ near, far ] : [ far, near ] ) )
+				{
+					scene.addChild ( square );
+				}
+				return scene;
+			};
+
+			// Red over green over the background, and green over red. See the
+			// test above for the numbers.
+			const RED_OVER = [ toPixel ( 0.505 ), toPixel ( 0.26 ), toPixel ( 0.265 ), 255 ];
+			const GREEN_OVER = [ toPixel ( 0.26 ), toPixel ( 0.505 ), toPixel ( 0.265 ), 255 ];
+			for ( const nearFirst of [ true, false ] )
+			{
+				const back = await drawScene ( build ( "back-to-front", nearFirst ) );
+				expectPixel ( pixelAt ( back, 0, 0 ), RED_OVER );
+				const front = await drawScene ( build ( "front-to-back", nearFirst ) );
+				expectPixel ( pixelAt ( front, 0, 0 ), GREEN_OVER );
+			}
+
+			// Not sorted, they're drawn in the order they were added.
+			expectPixel ( pixelAt ( await drawScene ( build ( null, true ) ), 0, 0 ), GREEN_OVER );
+			expectPixel ( pixelAt ( await drawScene ( build ( null, false ) ), 0, 0 ), RED_OVER );
+		} );
+
+		it ( "Should sort by the depth after the shape's transforms", async function ()
+		{
+			// The red window is made nearest, but moved behind the green one.
+			const make = ( center: IVector3, color: IVector4 ) : Geometry =>
+			{
+				const state = makeTransparentState ( color, false );
+				state.binSort = "back-to-front";
+				return makeSquare ( center, true, state );
+			};
+			const moved = new Transform ( [ 1, 0, 0, 0,   0, 1, 0, 0,   0, 0, 1, 0,   0, 0, 0.5, 1 ] );
+			moved.addChild ( make ( [ -0.2, 0, 0.3 ], [ 1, 0, 0, 0.5 ] ) );
+			const scene = new Group();
+			scene.addChild ( make ( [ 0.2, 0, 0.6 ], [ 0, 1, 0, 0.5 ] ) );
+			scene.addChild ( moved );
+
+			// Red is now at 0.8, so green is drawn over it.
+			const pixels = await drawScene ( scene );
+			expectPixel ( pixelAt ( pixels, 0, 0 ), [ toPixel ( 0.26 ), toPixel ( 0.505 ), toPixel ( 0.265 ), 255 ] );
 		} );
 
 		it ( "Should blend in linear values", async function ()

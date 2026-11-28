@@ -198,6 +198,45 @@ export function test ()
 			expect ( matrices.get ( b ) ).to.equal ( 0 );
 		} );
 
+		it ( "Should give the shapes in a sorted bin the depth the depth test sees", function ()
+		{
+			// Spheres in front of the eye and one behind it, seen through a
+			// perspective projection. Nothing is culled without a frustum.
+			const proj = Array.from ( mat4.perspectiveZO ( mat4.create(), 1, 1, 0.5, 100 ) ) as IMatrix44;
+			const projection = new ProjectionNode ( proj );
+			projection.state = SolidColor.makeState ( { topology: "triangle-list" } );
+			projection.state.binSort = "back-to-front";
+			const near = new Sphere ( { center: [ 0, 0, -2 ], radius: 0.5 } );
+			const behind = new Sphere ( { center: [ 0, 0, 3 ], radius: 0.5 } );
+			const far = new Sphere ( { center: [ 0, 0, -5 ], radius: 0.5 } );
+			for ( const sphere of [ near, behind, far ] )
+			{
+				projection.addChild ( sphere );
+			}
+			const scene = new Group();
+			scene.addChild ( projection );
+			const { root } = cullScene ( scene );
+
+			// The projected z over w, farthest first, and behind the eye last.
+			const expected = ( z: number ) : number =>
+			{
+				const p = [ 0, 0, z, 1 ];
+				const pz = ( proj[10] * p[2] ) + proj[14];
+				const pw = ( proj[11] * p[2] ) + proj[15];
+				return ( pz / pw );
+			};
+			const found: [ Shape, number ][] = [];
+			root.forEachLayer ( ( layer ) => layer.forEachBin ( ( bin ) =>
+			{
+				bin.forEachSortedShape ( ( item ) => { found.push ( [ item.shape, item.depth ] ); } );
+			} ) );
+			expect ( found.map ( ( [ shape ] ) => shape ) ).to.deep.equal ( [ far, near, behind ] );
+			expect ( found[0][1] ).to.be.closeTo ( expected ( -5 ), 1e-9 );
+			expect ( found[1][1] ).to.be.closeTo ( expected ( -2 ), 1e-9 );
+			expect ( found[1][1] ).to.be.within ( 0, 1 );
+			expect ( found[2][1] ).to.equal ( -Infinity );
+		} );
+
 		it ( "Should start over with the matrices when it resets", function ()
 		{
 			const a = new Sphere();

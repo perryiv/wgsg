@@ -35,6 +35,17 @@ export interface IStateApplyInput
 }
 
 export type IStateResetInput = IStateApplyInput;
+// How a bin sorts its shapes by depth when they're drawn:
+// - null: not sorted by depth, but grouped by pipeline and then by state,
+//   so that the GPU switches as little as possible. This is the default.
+// - "back-to-front": the farthest first, which is what semi-transparent
+//   shapes need.
+// - "front-to-back": the nearest first, so that the depth test skips the
+//   hidden pixels of opaque shapes before they're shaded.
+// The depth of a shape is that of the center of its bounds, as the depth
+// test sees it.
+export type IBinSort = ( "back-to-front" | "front-to-back" );
+
 export type IStateApplyFunction = ( ( input: IStateApplyInput ) => void );
 export type IStateResetFunction = ( ( input: IStateResetInput ) => void );
 
@@ -43,6 +54,7 @@ export interface IStateConstructorInput
 	name?: string;
 	layer?: number;
 	bin?: number;
+	binSort?: ( IBinSort | null );
 	shader?: ShaderBase;
 	topology?: GPUPrimitiveTopology;
 	apply?: IStateApplyFunction;
@@ -100,6 +112,7 @@ export class State extends BaseClass
 	#name: ( string | null ) = null;
 	#layer = 0;
 	#bin = 0;
+	#binSort: ( IBinSort | null ) = null;
 	#shader: ( ShaderBase | null ) = null;
 	#topology: GPUPrimitiveTopology = "triangle-list";
 	#apply: IStateApplyFunction = defaultApplyFunction;
@@ -115,7 +128,7 @@ export class State extends BaseClass
 	{
 		super();
 
-		const { name, layer, bin, shader, topology, apply, reset } = ( input ?? {} );
+		const { name, layer, bin, binSort, shader, topology, apply, reset } = ( input ?? {} );
 
 		if ( name )
 		{
@@ -132,6 +145,12 @@ export class State extends BaseClass
 		if ( bin )
 		{
 			this.#bin = bin;
+		}
+
+		// The default is null, which is not sorted by depth.
+		if ( binSort )
+		{
+			this.#binSort = binSort;
 		}
 
 		if ( shader )
@@ -390,6 +409,29 @@ export class State extends BaseClass
 	}
 
 	/**
+	 * Get how the bin sorts its shapes by depth. The first state that puts a
+	 * shape in a bin decides this for the bin, in each frame, so all the
+	 * states in a bin should have the same. Developer builds warn when they
+	 * don't.
+	 * @returns {IBinSort | null} How the bin sorts its shapes, or null if
+	 * not by depth, which is the default.
+	 */
+	public get binSort() : ( IBinSort | null )
+	{
+		return this.#binSort;
+	}
+
+	/**
+	 * Set how the bin orders its shapes.
+	 * @param {IBinSort | null} binSort - How the bin orders its shapes, or
+	 * null to not sort them by depth.
+	 */
+	public set binSort ( binSort: ( IBinSort | null ) )
+	{
+		this.#binSort = binSort;
+	}
+
+	/**
 	 * Get the topology.
 	 * @returns {GPUPrimitiveTopology} The topology.
 	 */
@@ -466,6 +508,7 @@ export class State extends BaseClass
 			name: this.name,
 			layer: this.layer,
 			bin: this.bin,
+			binSort: this.binSort,
 			shader: ( shader ? shader.type : null ),
 			topology: this.topology,
 			attributes

@@ -120,11 +120,11 @@ const makeState = ( geometry: Geometry, alpha: number ) : State =>
  *
  * Then this adds to them what makes them transparent, replacing any
  * attributes of the same types:
- * - Both: no depth writes.
- * - The back faces' state: culls the front faces, lights both sides, and
- *   goes in TRANSPARENT_BIN.
- * - The front faces' state: culls the back faces, and goes in
- *   TRANSPARENT_BIN + 1, so it's drawn after the back faces.
+ * - Both: no depth writes, and TRANSPARENT_BIN, sorted back to front.
+ *   The geometry is at the same depth in both, so its back faces are drawn
+ *   just before its front faces, and the shapes are drawn farthest first.
+ * - The back faces' state: culls the front faces and lights both sides.
+ * - The front faces' state: culls the back faces.
  * @param {object} input The input object.
  * @param {Geometry} input.geometry The geometry.
  * @param {State} [input.back] The state for the back faces.
@@ -163,12 +163,18 @@ export const buildTransparentScene = ( input: Readonly<ITransparentSceneInput> )
 	back.addAttribute ( new CullFace ( "front" ) );
 	back.addAttribute ( new TwoSidedLight ( true ) );
 	back.addAttribute ( new Depth ( { write: false } ) );
-	back.bin = TRANSPARENT_BIN;
 
 	// The front faces, drawn second.
 	front.addAttribute ( new CullFace ( "back" ) );
 	front.addAttribute ( new Depth ( { write: false } ) );
-	front.bin = TRANSPARENT_BIN + 1;
+
+	// Both in the transparent bin, sorted back to front. The back faces are
+	// added first, so they're drawn first.
+	for ( const state of [ back, front ] )
+	{
+		state.bin = TRANSPARENT_BIN;
+		state.binSort = "back-to-front";
+	}
 
 	// A group for each side, with the geometry in both.
 	const scene = new Group();

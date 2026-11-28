@@ -18,7 +18,8 @@
 //
 //	To draw a semi-transparent shape, give its state a color with an alpha
 //	below one, this attribute with depth writes off, and put the state in
-//	TRANSPARENT_BIN, so that it is drawn after the opaque shapes in its layer.
+//	TRANSPARENT_BIN, sorted "back-to-front" (see State.binSort), so that it is
+//	drawn after the opaque shapes in its layer, and the farthest first.
 //	For a closed shape, buildTransparentScene() draws its back faces and then
 //	its front faces.
 //

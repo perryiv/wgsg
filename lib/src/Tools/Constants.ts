@@ -31,9 +31,9 @@ export const DEFAULT_FAR_DISTANCE = 1e4;
 // Convenience constant(s) when setting the state's bin.
 // Bins are drawn in increasing order within a layer, so semi-transparent
 // shapes in this bin are drawn after the opaque ones. See the Depth attribute.
-// To draw a closed shape's back faces and then its front faces, put the
-// back faces in this bin and the front faces in TRANSPARENT_BIN + 1.
-// The function buildTransparentScene() does that.
+// Their states should also sort the bin "back-to-front" (see State.binSort),
+// so that the farthest are drawn first. The function buildTransparentScene()
+// does both, and draws a closed shape's back faces and then its front faces.
 export const TRANSPARENT_BIN = 1000;
 
 
