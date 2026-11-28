@@ -60,12 +60,18 @@ struct Object
 @group ( 1 ) @binding ( 1 ) var diffuseTexture : texture_2d<f32>;
 @group ( 1 ) @binding ( 2 ) var diffuseSampler : sampler;
 
+// The emissive texture and its sampler, which multiply the emission.
+// Without a texture, it's a white one that gives exactly 1.
+@group ( 1 ) @binding ( 3 ) var emissiveTexture : texture_2d<f32>;
+@group ( 1 ) @binding ( 4 ) var emissiveSampler : sampler;
+
 // Return the lit color, pre-multiplied by its alpha, as the canvas is
 // configured. The normal is in view space and unit length, and points out
 // of the side being drawn when that side faces the light. The vertex color,
 // which is white without vertex colors, multiplies the ambient and diffuse
-// colors. The shaders multiply it by the diffuse texture's color first.
-fn light ( normalIn: vec3f, surface: Surface, vertexColor: vec4f ) -> vec4f
+// colors. The shaders multiply it by the diffuse texture's color first. The
+// emissive texture's color multiplies the emission.
+fn light ( normalIn: vec3f, surface: Surface, vertexColor: vec4f, emissiveTexel: vec4f ) -> vec4f
 {
 	// The colors.
 	let ambient = surface.ambient * vertexColor;
@@ -83,7 +89,7 @@ fn light ( normalIn: vec3f, surface: Surface, vertexColor: vec4f ) -> vec4f
 	nDotL = max ( nDotL, 0.0 );
 
 	// The emission, ambient, and diffuse light.
-	var rgb = surface.emission.rgb + ( camera.ambientLight.rgb * ambient.rgb ) + ( diffuse.rgb * nDotL );
+	var rgb = ( surface.emission.rgb * emissiveTexel.rgb ) + ( camera.ambientLight.rgb * ambient.rgb ) + ( diffuse.rgb * nDotL );
 
 	// The highlight, only on the lit side. The halfway vector is zero when
 	// the light comes from straight behind, which is not lit anyway.

@@ -258,6 +258,43 @@ export function test ()
 			}
 		} );
 
+		it ( "Should give a material's emissive texture to its state", async function ()
+		{
+			const maker = makeTexturedSquare();
+			const material = maker.json.materials![0];
+			material.emissiveTexture = { index: 0 };
+			material.emissiveFactor = [ 1, 1, 1 ];
+			const geom = getGeometries ( await read ( maker.glb() ) )[0];
+			const set = geom.state!.getAttribute ( TextureSet.getClassName() ) as TextureSet;
+			expect ( set.emissive ).to.equal ( set.diffuse );
+			expect ( set.emissive!.srgb ).to.be.true;
+		} );
+
+		it ( "Should make a shape glow only where its emissive texture is light", async function ()
+		{
+			if ( !Device.valid )
+			{
+				await Device.init();
+			}
+
+			// Black, with white emission times a texture that is black except
+			// for its top right pixel, like the lights of a car.
+			const maker = makeTexturedSquare ( { sampler: { magFilter: GLTF_NEAREST } } );
+			const lights: IRawImage = { width: 2, height: 2, data: new Uint8Array ( [
+				0, 0, 0, 255,     255, 255, 255, 255,
+				0, 0, 0, 255,     0, 0, 0, 255,
+			] ) };
+			const source = maker.addImage ( makePng ( lights ) );
+			const emissive = maker.addTexture ( { source, sampler: 0 } );
+			maker.json.materials![0] = { pbrMetallicRoughness: { baseColorFactor: [ 0, 0, 0, 1 ] }, emissiveFactor: [ 1, 1, 1 ], emissiveTexture: { index: emissive } };
+			const scene = new Group();
+			scene.addChild ( await read ( maker.glb() ) );
+			const pixels = await drawScene ( scene );
+			expectPixel ( pixelAt ( pixels, 0.4, 0.4 ), [ 255, 255, 255, 255 ] );
+			expectPixel ( pixelAt ( pixels, -0.4, 0.4 ), [ 0, 0, 0, 255 ] );
+			expectPixel ( pixelAt ( pixels, -0.4, -0.4 ), [ 0, 0, 0, 255 ] );
+		} );
+
 		it ( "Should draw the texture on the shape", async function ()
 		{
 			if ( !Device.valid )

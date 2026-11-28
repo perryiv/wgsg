@@ -47,12 +47,16 @@ interface IUniformGroup
 	pool: ( UniformPool | null );
 	layout: ( GPUBindGroupLayout | null );
 	changed: boolean;
-	textured: boolean; // Whether bindings 1 and 2 are a texture and sampler.
+	numTextures: number; // How many textures, each a view and then a sampler, after the buffer.
 }
+
+// The material's textures: diffuse (bindings 1 and 2) and emissive (bindings
+// 3 and 4).
+const NUM_MATERIAL_TEXTURES = 2;
 
 const makeUniformGroup = () : IUniformGroup =>
 {
-	return { pool: null, layout: null, changed: true, textured: false };
+	return { pool: null, layout: null, changed: true, numTextures: 0 };
 };
 
 
@@ -75,8 +79,9 @@ export abstract class WithMatrices extends BaseClass
 {
 	#projMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
 	#camera: IUniformGroup = makeUniformGroup();
-	#material: IUniformGroup = { ...makeUniformGroup(), textured: true };
+	#material: IUniformGroup = { ...makeUniformGroup(), numTextures: NUM_MATERIAL_TEXTURES };
 	#diffuseTexture: ( Texture | null ) = null;
+	#emissiveTexture: ( Texture | null ) = null;
 	#pipelineLayout: ( GPUPipelineLayout | null ) = null;
 
 	/**
@@ -106,7 +111,7 @@ export abstract class WithMatrices extends BaseClass
 		this.#camera.pool?.destroy();
 		this.#material.pool?.destroy();
 		this.#camera = makeUniformGroup();
-		this.#material = { ...makeUniformGroup(), textured: true };
+		this.#material = { ...makeUniformGroup(), numTextures: NUM_MATERIAL_TEXTURES };
 		this.#pipelineLayout = null;
 		super.releaseGpuObjects();
 	}
@@ -280,8 +285,8 @@ export abstract class WithMatrices extends BaseClass
 	}
 
 	/**
-	 * Get the layout of a bind group with one uniform buffer, and for a
-	 * textured group, a texture and its sampler, making it if we have to.
+	 * Get the layout of a bind group with one uniform buffer, and then the
+	 * group's textures, each a texture and its sampler, making it if we have to.
 	 * @param {IUniformGroup} group - The uniforms.
 	 * @param {string} name - The name, for the label.
 	 * @returns {GPUBindGroupLayout} The bind group layout.
@@ -295,11 +300,11 @@ export abstract class WithMatrices extends BaseClass
 				visibility: ( GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT ),
 				buffer: { type: "uniform" },
 			} ];
-			if ( group.textured )
+			for ( let i = 0; i < group.numTextures; ++i )
 			{
 				entries.push (
-					{ binding: 1, visibility: GPUShaderStage.FRAGMENT, texture: { sampleType: "float" } },
-					{ binding: 2, visibility: GPUShaderStage.FRAGMENT, sampler: { type: "filtering" } },
+					{ binding: ( 1 + ( 2 * i ) ), visibility: GPUShaderStage.FRAGMENT, texture: { sampleType: "float" } },
+					{ binding: ( 2 + ( 2 * i ) ), visibility: GPUShaderStage.FRAGMENT, sampler: { type: "filtering" } },
 				);
 			}
 			group.layout = Device.instance.device.createBindGroupLayout ( {
@@ -329,9 +334,12 @@ export abstract class WithMatrices extends BaseClass
 	{
 		// Note: The render-pass' pipeline should already be set.
 		this.useUniforms ( pass, frame, 0, this.#camera, "camera", this.makeCameraUniforms() );
-		const texture = ( this.#diffuseTexture ?? getWhiteTexture() );
-		const textureInput: IUniformPoolTexture = { view: texture.view, sampler: texture.sampler };
-		this.useUniforms ( pass, frame, 1, this.#material, "material", this.makeMaterialUniforms(), textureInput );
+		const textures = [ this.#diffuseTexture, this.#emissiveTexture ].map ( ( texture ) : IUniformPoolTexture =>
+		{
+			const used = ( texture ?? getWhiteTexture() );
+			return { view: used.view, sampler: used.sampler };
+		} );
+		this.useUniforms ( pass, frame, 1, this.#material, "material", this.makeMaterialUniforms(), textures );
 	}
 
 	/**
@@ -354,12 +362,32 @@ export abstract class WithMatrices extends BaseClass
 	}
 
 	/**
-	 * Put back the default values of what state attributes set: no texture.
+	 * Get the emissive texture.
+	 * @returns {Texture | null} The texture, or null for none.
+	 */
+	public get emissiveTexture () : ( Texture | null )
+	{
+		return this.#emissiveTexture;
+	}
+
+	/**
+	 * Set the emissive texture, which multiplies the emission. Without one,
+	 * a white texture is used, which doesn't change the emission.
+	 * @param {Texture | null} texture - The texture, or null for none.
+	 */
+	public set emissiveTexture ( texture: ( Texture | null ) )
+	{
+		this.#emissiveTexture = texture;
+	}
+
+	/**
+	 * Put back the default values of what state attributes set: no textures.
 	 * Derived classes that override this call it too.
 	 */
 	public override reset () : void
 	{
 		this.#diffuseTexture = null;
+		this.#emissiveTexture = null;
 	}
 
 	/**
@@ -370,19 +398,19 @@ export abstract class WithMatrices extends BaseClass
 	 * @param {IUniformGroup} group - The uniforms.
 	 * @param {string} name - The name, for the labels.
 	 * @param {ArrayBuffer} values - The values.
-	 * @param {IUniformPoolTexture} [texture] - The texture view and sampler,
-	 * for a textured group.
+	 * @param {IUniformPoolTexture[]} [textures] - The texture views and
+	 * samplers, for a group with textures.
 	 */
 	protected useUniforms ( pass: Readonly<GPURenderPassEncoder>, frame: number, index: number,
-		group: IUniformGroup, name: string, values: ArrayBuffer, texture?: Readonly<IUniformPoolTexture> ) : void
+		group: IUniformGroup, name: string, values: ArrayBuffer, textures?: readonly IUniformPoolTexture[] ) : void
 	{
 		group.pool ??= new UniformPool ( {
 			label: `${name} in shader ${this.type}`,
 			layout: this.getLayout ( group, name ),
 			size: values.byteLength,
-			textured: group.textured,
+			numTextures: group.numTextures,
 		} );
-		const bindGroup = group.pool.use ( frame, group.changed, values, texture );
+		const bindGroup = group.pool.use ( frame, group.changed, values, textures );
 		group.changed = false;
 		pass.setBindGroup ( index, bindGroup );
 	}

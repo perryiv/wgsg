@@ -193,6 +193,21 @@ export function test ()
 			set.unref();
 		} );
 
+		it ( "Should count its emissive texture too", function ()
+		{
+			const a = new Texture ( { image: makeImage ( 1, 1 ) } );
+			const b = new Texture ( { image: makeImage ( 1, 1 ) } );
+			const set = new TextureSet ( { emissive: a } );
+			set.ref();
+			expect ( a.refCount ).to.equal ( 1 );
+			set.emissive = b;
+			expect ( a.refCount ).to.equal ( 0 );
+			expect ( b.refCount ).to.equal ( 1 );
+			set.unref();
+			expect ( b.refCount ).to.equal ( 0 );
+			expect ( set.toString() ).to.include ( `emissive ${b.id}` );
+		} );
+
 		it ( "Should release the GPU texture when no shape uses it", function ()
 		{
 			const texture = new Texture ( { image: makeImage ( 4, 4 ) } );
@@ -239,8 +254,18 @@ export function test ()
 			const input = { state, shader, projMatrix: [ ...IDENTITY_MATRIX ] as IMatrix44 };
 			state.doApply ( input );
 			expect ( shader.diffuseTexture ).to.equal ( texture );
+			expect ( shader.emissiveTexture ).to.be.null;
 			state.doReset ( input );
 			expect ( shader.diffuseTexture ).to.be.null;
+
+			// The same for the emissive texture.
+			const glowing = FlatShading.makeState ( { topology: "triangle-list" } );
+			glowing.addAttribute ( new TextureSet ( { emissive: texture } ) );
+			const glowingInput = { state: glowing, shader, projMatrix: [ ...IDENTITY_MATRIX ] as IMatrix44 };
+			glowing.doApply ( glowingInput );
+			expect ( shader.emissiveTexture ).to.equal ( texture );
+			glowing.doReset ( glowingInput );
+			expect ( shader.emissiveTexture ).to.be.null;
 		} );
 	} );
 };

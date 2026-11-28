@@ -72,7 +72,8 @@ fn makeVertex ( position: vec4f, color: vec4f, texCoord: vec2f ) -> VertexOut
 {
 	let normal = getNormal ( fragData, frontFacing );
 	let texel = textureSample ( diffuseTexture, diffuseSampler, fragData.texCoord );
-	return light ( normal, material.surface, texel );
+	let glow = textureSample ( emissiveTexture, emissiveSampler, fragData.texCoord );
+	return light ( normal, material.surface, texel, glow );
 }
 
 // The fragment shader for geometry with vertex colors, which multiply the
@@ -81,7 +82,8 @@ fn makeVertex ( position: vec4f, color: vec4f, texCoord: vec2f ) -> VertexOut
 {
 	let normal = getNormal ( fragData, frontFacing );
 	let texel = textureSample ( diffuseTexture, diffuseSampler, fragData.texCoord );
-	return light ( normal, material.surface, ( fragData.color * texel ) );
+	let glow = textureSample ( emissiveTexture, emissiveSampler, fragData.texCoord );
+	return light ( normal, material.surface, ( fragData.color * texel ), glow );
 }
 
 // Return the normal of the triangle, in view space.

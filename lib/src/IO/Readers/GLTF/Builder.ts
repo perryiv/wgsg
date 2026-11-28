@@ -28,7 +28,9 @@
 //	back faces culled, as glTF says. Textures are ignored.
 //
 //	A base color texture goes in the state's texture set, as its diffuse
-//	texture, sampled with the texture coordinates (TEXCOORD_0). Its images are
+//	texture, and an emissive texture as its emissive texture, which
+//	multiplies the emissive color. They're sampled with the texture
+//	coordinates (TEXCOORD_0). Their images are
 //	decoded before the nodes are built. A texture that can't be read, or that
 //	uses other texture coordinates, is skipped with a warning, and the model
 //	is drawn without it.
@@ -93,6 +95,7 @@ import {
 	type IGltfData,
 	type IGltfMaterial,
 	type IGltfPrimitive,
+	type IGltfTextureInfo,
 } from "./Types";
 import {
 	determinant33,
@@ -724,19 +727,21 @@ export class Builder
 	{
 		for ( const material of ( this.#data.json.materials ?? [] ) )
 		{
-			const info = material.pbrMetallicRoughness?.baseColorTexture;
-			if ( !info )
+			for ( const info of [ material.pbrMetallicRoughness?.baseColorTexture, material.emissiveTexture ] )
 			{
-				continue;
-			}
-			if ( 0 !== ( info.texCoord ?? 0 ) )
-			{
-				this.#warnings.add ( "Skipped glTF textures that use texture coordinates other than TEXCOORD_0, which are not supported yet" );
-				continue;
-			}
-			if ( !this.#textures.has ( info.index ) )
-			{
-				this.#textures.set ( info.index, await this.loadTexture ( info.index ) );
+				if ( !info )
+				{
+					continue;
+				}
+				if ( 0 !== ( info.texCoord ?? 0 ) )
+				{
+					this.#warnings.add ( "Skipped glTF textures that use texture coordinates other than TEXCOORD_0, which are not supported yet" );
+					continue;
+				}
+				if ( !this.#textures.has ( info.index ) )
+				{
+					this.#textures.set ( info.index, await this.loadTexture ( info.index ) );
+				}
 			}
 		}
 	}
@@ -786,14 +791,17 @@ export class Builder
 	}
 
 	/**
-	 * Get the base color texture of a material, if it has one that was read.
-	 * @param {number | undefined} index The index of the material, if any.
+	 * Get a texture of a material, if it was read, and it uses TEXCOORD_0.
+	 * @param {IGltfTextureInfo | undefined} info The material's texture, if any.
 	 * @returns {Texture | null} The texture, if any.
 	 */
-	protected getBaseColorTexture ( index: ( number | undefined ) ) : ( Texture | null )
+	protected getTexture ( info: ( Readonly<IGltfTextureInfo> | undefined ) ) : ( Texture | null )
 	{
-		const info = this.getMaterial ( index )?.pbrMetallicRoughness?.baseColorTexture;
-		return ( info ? ( this.#textures.get ( info.index ) ?? null ) : null );
+		if ( ( !info ) || ( 0 !== ( info.texCoord ?? 0 ) ) )
+		{
+			return null;
+		}
+		return ( this.#textures.get ( info.index ) ?? null );
 	}
 
 	/**
@@ -930,10 +938,11 @@ export class Builder
 		const topology = "triangle-list";
 		const state = ( hasNormals ? PhongShading.makeState ( { topology } ) : FlatShading.makeState ( { topology } ) );
 		state.addAttribute ( new Material ( { ambient: color, diffuse: color, emission } ) );
-		const diffuse = this.getBaseColorTexture ( index );
-		if ( diffuse )
+		const diffuse = this.getTexture ( material?.pbrMetallicRoughness?.baseColorTexture );
+		const emissive = this.getTexture ( material?.emissiveTexture );
+		if ( diffuse || emissive )
 		{
-			state.addAttribute ( new TextureSet ( { diffuse } ) );
+			state.addAttribute ( new TextureSet ( { diffuse, emissive } ) );
 		}
 		state.addAttribute ( new TwoSidedLight ( doubleSided ) );
 		if ( false === doubleSided )
