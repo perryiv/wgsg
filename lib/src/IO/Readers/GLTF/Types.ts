@@ -45,6 +45,19 @@ export const GLTF_TRIANGLES = 4;
 export const GLTF_TRIANGLE_STRIP = 5;
 export const GLTF_TRIANGLE_FAN = 6;
 
+// The filters of samplers, which are OpenGL's.
+export const GLTF_NEAREST = 9728;
+export const GLTF_LINEAR = 9729;
+export const GLTF_NEAREST_MIPMAP_NEAREST = 9984;
+export const GLTF_LINEAR_MIPMAP_NEAREST = 9985;
+export const GLTF_NEAREST_MIPMAP_LINEAR = 9986;
+export const GLTF_LINEAR_MIPMAP_LINEAR = 9987;
+
+// The wrap modes of samplers, which are OpenGL's.
+export const GLTF_CLAMP_TO_EDGE = 33071;
+export const GLTF_MIRRORED_REPEAT = 33648;
+export const GLTF_REPEAT = 10497;
+
 // The number of components for each accessor type.
 export const GLTF_NUM_COMPONENTS: Readonly<Record<string, number>> = {
 	SCALAR: 1,
@@ -130,10 +143,16 @@ export interface IGltfMesh
 	primitives: IGltfPrimitive[];
 }
 
+export interface IGltfTextureInfo
+{
+	index: number;
+	texCoord?: number;
+}
+
 export interface IGltfMaterial
 {
 	name?: string;
-	pbrMetallicRoughness?: { baseColorFactor?: number[] };
+	pbrMetallicRoughness?: { baseColorFactor?: number[], baseColorTexture?: IGltfTextureInfo };
 	emissiveFactor?: number[];
 	alphaMode?: string;
 	doubleSided?: boolean;
@@ -141,6 +160,29 @@ export interface IGltfMaterial
 		KHR_materials_emissive_strength?: { emissiveStrength?: number };
 		KHR_materials_transmission?: { transmissionFactor?: number };
 	};
+}
+
+export interface IGltfImage
+{
+	name?: string;
+	uri?: string;
+	mimeType?: string;
+	bufferView?: number;
+}
+
+export interface IGltfSampler
+{
+	magFilter?: number;
+	minFilter?: number;
+	wrapS?: number;
+	wrapT?: number;
+}
+
+export interface IGltfTexture
+{
+	name?: string;
+	sampler?: number;
+	source?: number;
 }
 
 export interface IGltfNode
@@ -168,6 +210,9 @@ export interface IGltfJson
 	accessors?: IGltfAccessor[];
 	meshes?: IGltfMesh[];
 	materials?: IGltfMaterial[];
+	textures?: IGltfTexture[];
+	images?: IGltfImage[];
+	samplers?: IGltfSampler[];
 	nodes?: IGltfNode[];
 	scenes?: IGltfScene[];
 	scene?: number;

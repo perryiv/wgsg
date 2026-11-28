@@ -20,6 +20,7 @@ import { Node as SceneNode } from "../../Scene/Nodes";
 import { Reader as BaseClass } from "../Reader";
 import { readGlb, readGltf } from "./GLTF/Container";
 import { Builder as SceneBuilder } from "./GLTF/Builder";
+import { decodeImage, type IImageDecoder } from "./GLTF/Images";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -31,6 +32,10 @@ import { Builder as SceneBuilder } from "./GLTF/Builder";
 
 export class GLTF extends BaseClass
 {
+	// Decodes the images of textures. The default is the browser's
+	// createImageBitmap(). Set it to decode images another way.
+	public imageDecoder: IImageDecoder = decodeImage;
+
 	/**
 	 * Construct the class.
 	 * @class
@@ -61,7 +66,7 @@ export class GLTF extends BaseClass
 		{
 			const isJson = file.name.toLowerCase().endsWith ( ".gltf" );
 			const data = await ( isJson ? readGltf ( file ) : readGlb ( file ) );
-			return await new SceneBuilder ( data, this.getProgressCallback() ).build();
+			return await new SceneBuilder ( data, this.getProgressCallback(), this.imageDecoder ).build();
 		}
 		catch ( error )
 		{
