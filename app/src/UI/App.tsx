@@ -99,7 +99,7 @@ export function App()
 	//
 	// Get the viewer state.
 	//
-	const { boxesVisible, edgesVisible, twoSidedLighting } = useMemo ( () =>
+	const { boxesVisible, cullBackFaces, edgesVisible, twoSidedLighting } = useMemo ( () =>
 	{
 		const state = ( currentViewerId ? ( viewerStates.get ( currentViewerId ) ) : null );
 		return ( state ?? createViewerState() );
@@ -346,6 +346,25 @@ export function App()
 	] );
 
 	//
+	// Handle the cull back faces button.
+	//
+	const handleCullBackFaces = useCallback ( () =>
+	{
+		if ( currentViewerId )
+		{
+			const vs = viewerStates.get ( currentViewerId );
+			if ( vs )
+			{
+				setViewerState ( currentViewerId, { ...vs, cullBackFaces: !vs.cullBackFaces } );
+			}
+		}
+	}, [
+		currentViewerId,
+		setViewerState,
+		viewerStates,
+	] );
+
+	//
 	// Handle the use two-sided lighting button.
 	//
 	const handleUseTwoSidedLighting = useCallback ( () =>
@@ -542,6 +561,13 @@ export function App()
 					</Button>
 					<Button
 						disabled = { disabled }
+						onClick = { handleCullBackFaces }
+						value = { cullBackFaces }
+					>
+						Cull back faces
+					</Button>
+					<Button
+						disabled = { disabled }
 						onClick = { handleUse16BitIndices }
 						value = { use16BitIndices }
 					>
@@ -564,8 +590,10 @@ export function App()
 	}, [
 		boxesVisible,
 		buildTimeStamp,
+		cullBackFaces,
 		edgesVisible,
 		handleAllowAnimations,
+		handleCullBackFaces,
 		handleFrustumCulling,
 		handleShowBoundingBoxes,
 		handleShowGrid,
