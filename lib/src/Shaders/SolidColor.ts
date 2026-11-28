@@ -18,6 +18,7 @@ import { State } from "../Scene";
 import type { IPipelineOptions, IVertexArrayName } from "./ShaderBase";
 import { vec4 } from "gl-matrix";
 import { WithMatrices as BaseClass } from "./WithMatrices";
+import { makeSingleton } from "../Tools/Singleton";
 import code from "./SolidColor.wgsl?raw";
 import type { IVector4 } from "../Types";
 
@@ -43,7 +44,7 @@ interface ISolidColorShaderInput
 
 export class SolidColor extends BaseClass
 {
-	static #instance: ( SolidColor | null ) = null;
+	static readonly #singleton = makeSingleton ( () => new SolidColor() );
 	#diffuse: IVector4 = [ ...DEFAULT_DIFFUSE ];
 
 	// The uniform values. The camera's is the projection matrix, and the
@@ -72,11 +73,7 @@ export class SolidColor extends BaseClass
 	 */
 	public static get instance () : SolidColor
 	{
-		if ( !SolidColor.#instance )
-		{
-			SolidColor.#instance = new SolidColor();
-		}
-		return SolidColor.#instance;
+		return SolidColor.#singleton.get();
 	}
 
 	/**
@@ -84,11 +81,7 @@ export class SolidColor extends BaseClass
 	 */
 	public static destroy() : void
 	{
-		if ( SolidColor.#instance )
-		{
-			SolidColor.#instance.destroy();
-			SolidColor.#instance = null;
-		}
+		SolidColor.#singleton.destroy();
 	}
 
 	/**

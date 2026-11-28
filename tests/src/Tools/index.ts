@@ -14,11 +14,13 @@
 
 import { test as testDevice } from "./Device";
 import { test as testFunctions } from "./Functions";
+import { test as testSingleton } from "./Singleton";
 import { test as testThree } from "./Three";
 
 describe ( "Tools", function ()
 {
 	testDevice();
 	testFunctions();
+	testSingleton();
 	testThree();
 } );
