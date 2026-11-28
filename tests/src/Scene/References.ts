@@ -17,9 +17,10 @@ import { Array1 } from "../../../lib/src/Arrays";
 import { Base } from "../../../lib/src/Base";
 import { Device } from "../../../lib/src/Tools/Device";
 import { expect } from "chai";
-import { Geometry, Group, SphereNode } from "../../../lib/src/Scene/Nodes";
+import { buildTransparentScene } from "../../../lib/src/Builders/Transparent";
+import { Geometry, Group, Node as SceneNode, ProjectionNode, SphereNode, Transform } from "../../../lib/src/Scene/Nodes";
 import { Indexed } from "../../../lib/src/Scene/Primitives/Indexed";
-import { ColorAttribute, CullFace, State } from "../../../lib/src/Scene/State";
+import { Attribute, ColorAttribute, CullFace, State, TwoSidedLight } from "../../../lib/src/Scene/State";
 import { Viewer } from "../../../lib/src/Viewers/Viewer";
 
 
@@ -70,6 +71,22 @@ const makeGeometry = () : Geometry =>
  * @param {Geometry} geom - The geometry.
  * @returns {Array1[]} The arrays.
  */
+const getStatesAndAttributes = ( scene: SceneNode ) : { states: Set < State >, attributes: Set < Attribute > } =>
+{
+	const states = new Set < State > ();
+	const attributes = new Set < Attribute > ();
+	scene.traverse ( ( node ) =>
+	{
+		const { state } = node;
+		if ( state )
+		{
+			states.add ( state );
+			state.attributes.forEach ( ( attribute ) => { attributes.add ( attribute ); } );
+		}
+	} );
+	return { states, attributes };
+};
+
 const getArrays = ( geom: Geometry ) : Array1 < Float32Array | Uint32Array | Uint16Array >[] =>
 {
 	const indexed = geom.primitives![0] as Indexed;
@@ -533,6 +550,149 @@ export function test ()
 				root.removeChild ( 0 );
 				expect ( state.refCount ).to.equal ( 0 );
 				expect ( color.refCount ).to.equal ( 0 );
+			} );
+		} );
+
+		describe ( "State, more cases", function ()
+		{
+			it ( "Should count a state given to the constructor", function ()
+			{
+				const state = new State();
+				const geom = new Geometry ( { state } );
+				expect ( state.refCount ).to.equal ( 0 );
+				geom.ref();
+				expect ( state.refCount ).to.equal ( 1 );
+				geom.unref();
+				expect ( state.refCount ).to.equal ( 0 );
+			} );
+
+			it ( "Should count the state of every kind of node", function ()
+			{
+				const nodes: SceneNode[] = [ new Transform(), new ProjectionNode(), new SphereNode(), new Group(), makeGeometry() ];
+				for ( const node of nodes )
+				{
+					const state = new State();
+					node.state = state;
+					node.ref();
+					expect ( state.refCount, node.type ).to.equal ( 1 );
+					node.unref();
+					expect ( state.refCount, node.type ).to.equal ( 0 );
+				}
+			} );
+
+			it ( "Should count an attribute shared by two used states twice", function ()
+			{
+				const color = new ColorAttribute ( [ 1, 0, 0, 1 ] );
+				const a = new State();
+				const b = new State();
+				a.addAttribute ( color );
+				b.addAttribute ( color );
+				a.ref();
+				b.ref();
+				expect ( color.refCount ).to.equal ( 2 );
+				a.unref();
+				expect ( color.refCount ).to.equal ( 1 );
+				b.unref();
+				expect ( color.refCount ).to.equal ( 0 );
+			} );
+
+			it ( "Should count its attributes again when it's used again", function ()
+			{
+				const root = new Group();
+				const geom = makeGeometry();
+				const state = new State();
+				const color = new ColorAttribute ( [ 1, 0, 0, 1 ] );
+				state.addAttribute ( color );
+				geom.state = state;
+				root.addChild ( geom );
+
+				for ( let i = 0; i < 3; ++i )
+				{
+					root.ref();
+					expect ( state.refCount ).to.equal ( 1 );
+					expect ( color.refCount ).to.equal ( 1 );
+					root.unref();
+					expect ( state.refCount ).to.equal ( 0 );
+					expect ( color.refCount ).to.equal ( 0 );
+				}
+			} );
+
+			it ( "Should balance the counts of a transparent scene, whose states share attributes", function ()
+			{
+				// The geometry's state is copied for the back and front faces, with
+				// its attributes shared, and then taken away from the geometry.
+				const geom = makeGeometry();
+				const original = new State();
+				const color = new ColorAttribute ( [ 1, 0, 0, 0.5 ] );
+				original.addAttribute ( color );
+				geom.state = original;
+				const transparent = buildTransparentScene ( { geometry: geom } );
+
+				const root = new Group();
+				root.ref();
+				root.addChild ( transparent );
+				const back = ( transparent.getChild ( 0 ) as Group ).state!;
+				const front = ( transparent.getChild ( 1 ) as Group ).state!;
+				expect ( original.refCount ).to.equal ( 0 );
+				expect ( back.refCount ).to.equal ( 1 );
+				expect ( front.refCount ).to.equal ( 1 );
+				expect ( color.refCount ).to.equal ( 2 );
+
+				root.unref();
+				expect ( back.refCount ).to.equal ( 0 );
+				expect ( front.refCount ).to.equal ( 0 );
+				expect ( color.refCount ).to.equal ( 0 );
+			} );
+
+			it ( "Should bring every state and attribute of a mixed scene back to zero", function ()
+			{
+				// Shared states and attributes, nested groups and transforms, a
+				// geometry in two places, a state changed while used, and a
+				// transparent scene.
+				const shared = new State();
+				shared.addAttribute ( new ColorAttribute ( [ 0, 1, 0, 1 ] ) );
+				shared.addAttribute ( new CullFace ( "back" ) );
+				const twoSided = new TwoSidedLight ( true );
+				const other = new State();
+				other.addAttribute ( twoSided );
+				other.addAttribute ( shared.getAttribute ( ColorAttribute.getClassName() )! );
+
+				const root = new Group();
+				root.state = new State();
+				const transform = new Transform();
+				transform.state = other;
+				const a = makeGeometry();
+				a.state = shared;
+				const b = makeGeometry();
+				b.state = shared;
+				transform.addChild ( a );
+				transform.addChild ( b );
+				root.addChild ( transform );
+				root.addChild ( a );
+				const glass = makeGeometry();
+				glass.state = other;
+				root.addChild ( buildTransparentScene ( { geometry: glass } ) );
+
+				for ( let i = 0; i < 2; ++i )
+				{
+					root.ref();
+					const { states, attributes } = getStatesAndAttributes ( root );
+					for ( const state of states )
+					{
+						expect ( state.refCount ).to.be.above ( 0 );
+					}
+					b.state = other;
+					b.state = shared;
+					root.unref();
+					for ( const state of states )
+					{
+						expect ( state.refCount, state.name ).to.equal ( 0 );
+					}
+					for ( const attribute of attributes )
+					{
+						expect ( attribute.refCount, attribute.type ).to.equal ( 0 );
+					}
+				}
 			} );
 		} );
 
