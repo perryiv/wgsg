@@ -20,9 +20,12 @@
 //	Only triangle lists are read for now. Points, lines, triangle strips, and
 //	triangle fans are skipped with a warning.
 //
-//	Each material becomes a state with its base color. A double-sided
-//	material gets two-sided lighting, and the others get their back faces
-//	culled, as glTF says. Textures are ignored.
+//	Each material becomes a state with a Material attribute: the base color
+//	is its diffuse and ambient color, and the emissive color, times the
+//	KHR_materials_emissive_strength if there is one, is its emission. The
+//	metallic and roughness are ignored, so there are no highlights. A
+//	double-sided material gets two-sided lighting, and the others get their
+//	back faces culled, as glTF says. Textures are ignored.
 //
 //	The vertex colors (COLOR_0) multiply the material's color when they are
 //	drawn, as glTF says. Their alpha is only kept for BLEND materials, like
@@ -54,12 +57,12 @@ import { yieldToEventLoop } from "../../Functions";
 import type { IProgressCallback, IVector4 } from "../../../Types";
 import {
 	Arrays,
-	ColorAttribute,
 	CullFace,
 	Depth,
 	Geometry,
 	Group,
 	Indexed,
+	Material,
 	Node as SceneNode,
 	State,
 	Transform,
@@ -759,6 +762,28 @@ export class Builder
 	}
 
 	/**
+	 * Get the emission of a material: its emissive color, times its emissive
+	 * strength if it has one. The default is black.
+	 * @param {number | undefined} index The index of the material, if any.
+	 * @returns {IVector4} The emission, with an alpha of 1.
+	 */
+	protected getEmission ( index: ( number | undefined ) ) : IVector4
+	{
+		const material = this.getMaterial ( index );
+		const factor = ( material?.emissiveFactor ?? [ 0, 0, 0 ] );
+		if ( 3 !== factor.length )
+		{
+			throw new Error ( `Material ${index} has an emissive color with ${factor.length} numbers instead of 3` );
+		}
+		const strength = ( material?.extensions?.KHR_materials_emissive_strength?.emissiveStrength ?? 1 );
+		if ( !( strength >= 0 ) )
+		{
+			throw new Error ( `Material ${index} has an emissive strength of ${strength}, which is less than 0` );
+		}
+		return [ factor[0] * strength, factor[1] * strength, factor[2] * strength, 1 ];
+	}
+
+	/**
 	 * Make a new state for a material, as getState() describes.
 	 * @param {number | undefined} index The index of the material, if any.
 	 * @param {boolean} hasNormals Whether the primitive has normals.
@@ -770,11 +795,12 @@ export class Builder
 		const material = this.getMaterial ( index );
 		const doubleSided = ( true === material?.doubleSided );
 		const color = this.getMaterialColor ( index );
+		const emission = this.getEmission ( index );
 
 		// Make the state.
 		const topology = "triangle-list";
 		const state = ( hasNormals ? PhongShading.makeState ( { topology } ) : FlatShading.makeState ( { topology } ) );
-		state.addAttribute ( new ColorAttribute ( color ) );
+		state.addAttribute ( new Material ( { ambient: color, diffuse: color, emission } ) );
 		state.addAttribute ( new TwoSidedLight ( doubleSided ) );
 		if ( false === doubleSided )
 		{
