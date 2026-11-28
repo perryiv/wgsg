@@ -17,6 +17,7 @@ import { test as testContainer } from "./Container";
 import { test as testTransforms } from "./Transforms";
 import { test as testBuilder } from "./Builder";
 import { test as testTextures } from "./Textures";
+import { test as testSpecular } from "./Specular";
 
 export function test ()
 {
@@ -27,5 +28,6 @@ export function test ()
 		testTransforms();
 		testBuilder();
 		testTextures();
+		testSpecular();
 	} );
 };
