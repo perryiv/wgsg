@@ -46,8 +46,8 @@ export const getSampler = ( settings: Readonly<ISamplerSettings> ) : GPUSampler 
 	}
 
 	// Make it if we have to.
-	const { wrapU, wrapV, magFilter, minFilter } = settings;
-	const key = `${wrapU} ${wrapV} ${magFilter} ${minFilter}`;
+	const { wrapU, wrapV, magFilter, minFilter, mipmapFilter } = settings;
+	const key = `${wrapU} ${wrapV} ${magFilter} ${minFilter} ${mipmapFilter}`;
 	let sampler = samplers.get ( key );
 	if ( !sampler )
 	{
@@ -57,6 +57,7 @@ export const getSampler = ( settings: Readonly<ISamplerSettings> ) : GPUSampler 
 			addressModeV: wrapV,
 			magFilter,
 			minFilter,
+			mipmapFilter,
 		} );
 		samplers.set ( key, sampler );
 	}

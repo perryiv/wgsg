@@ -13,5 +13,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 export * from "./Defaults";
+export * from "./Mipmaps";
 export * from "./Samplers";
 export * from "./Texture";

@@ -12,9 +12,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { test as testMipmaps } from "./Mipmaps";
 import { test as testTexture } from "./Texture";
 
 describe ( "Textures", function ()
 {
 	testTexture();
+	testMipmaps();
 } );
