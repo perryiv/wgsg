@@ -14,6 +14,7 @@
 
 import { Base as BaseClass } from "../../Base";
 import { ShaderBase, type IPipelineOptions } from "../../Shaders";
+import type { State } from "./State";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -25,6 +26,7 @@ import { ShaderBase, type IPipelineOptions } from "../../Shaders";
 export interface IAttributeApplyInput
 {
 	shader: ShaderBase;
+	state: State;
 }
 
 

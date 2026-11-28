@@ -8,7 +8,8 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Shader code that renders a solid color.
+//	Shader code that renders a solid color, without lighting: the material's
+//	diffuse color, times the vertex colors if there are any.
 //	https://gist.github.com/ccincotti3/f5bbfca9acd27c0efb9a2d22509b5aca
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -22,7 +23,7 @@ struct Camera
 // The material, in bind group 1. This has to match makeMaterialUniforms().
 struct Material
 {
-	color: vec4f,
+	diffuse: vec4f,
 };
 
 // The object, in bind group 2, from ObjectMatrices.
@@ -66,14 +67,14 @@ fn makeVertex ( position: vec4f, color: vec4f ) -> VertexOut
 // The fragment shader for geometry without vertex colors.
 @fragment fn fs ( fragData: VertexOut ) -> @location ( 0 ) vec4f
 {
-	return shade ( material.color );
+	return shade ( material.diffuse );
 }
 
-// The fragment shader for geometry with vertex colors, which replace the
-// material's color.
+// The fragment shader for geometry with vertex colors, which multiply the
+// material's diffuse color.
 @fragment fn fsColors ( fragData: VertexOut ) -> @location ( 0 ) vec4f
 {
-	return shade ( fragData.color );
+	return shade ( material.diffuse * fragData.color );
 }
 
 fn shade ( color: vec4f ) -> vec4f

@@ -17,6 +17,7 @@ import { Lighting as BaseClass } from "./Lighting";
 import { State } from "../Scene";
 import type { IPipelineOptions, IVertexArrayName } from "./ShaderBase";
 import code from "./PhongShading.wgsl?raw";
+import lighting from "./Lighting.wgsl?raw";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -52,7 +53,7 @@ export class PhongShading extends BaseClass
 		const topology = input?.topology;
 
 		super ( {
-			code,
+			code: ( lighting + code ),
 			topology: ( topology ?? "triangle-list" )
 		} );
 	}

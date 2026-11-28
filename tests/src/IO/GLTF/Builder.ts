@@ -866,40 +866,30 @@ export function test ()
 				expect ( Array.from ( shorts.colors!.values! ) ).to.deep.equal ( [ 1, 0, 0, 1,   0, 1, 0, 1,   0, 0, 1, 1 ] );
 			} );
 
-			it ( "Should multiply the colors by the material's color, because they replace it", async function ()
+			it ( "Should leave the colors for the shader to multiply by the material's color", async function ()
 			{
 				const colors = [ 1, 0.5, 0, 0.5,   0, 1, 0.5, 0.5,   0.5, 0, 1, 0.5 ];
 				const baseColorFactor = [ 0.5, 1, 0.5, 0.5 ];
-
-				// The alpha of both is only kept when blending.
-				const opaque = await readOne ( makeColored ( colors, GLTF_FLOAT, "VEC4", { baseColorFactor } ).glb() );
-				expect ( Array.from ( opaque.colors!.values! ) ).to.deep.equal ( [ 0.5, 0.5, 0, 1,   0, 1, 0.25, 1,   0.25, 0, 0.5, 1 ] );
-
-				const blended = await readOne ( makeColored ( colors, GLTF_FLOAT, "VEC4", { baseColorFactor, alphaMode: "BLEND" } ).glb() );
-				expect ( Array.from ( blended.colors!.values! ) ).to.deep.equal ( [ 0.5, 0.5, 0, 0.25,   0, 1, 0.25, 0.25,   0.25, 0, 0.5, 0.25 ] );
-
-				// Transmission makes them more see-through, like the state's color.
-				const maker = makeColored ( colors, GLTF_FLOAT, "VEC4" );
-				maker.json.materials![0].extensions = { KHR_materials_transmission: { transmissionFactor: 0.5 } };
-				const glass = await readOne ( maker.glb() );
-				expect ( Array.from ( glass.colors!.values! ) ).to.deep.equal ( [ 1, 0.5, 0, 0.5,   0, 1, 0.5, 0.5,   0.5, 0, 1, 0.5 ] );
+				const geom = await readOne ( makeColored ( colors, GLTF_FLOAT, "VEC4", { baseColorFactor, alphaMode: "BLEND" } ).glb() );
+				expect ( Array.from ( geom.colors!.values! ) ).to.deep.equal ( colors );
 			} );
 
-			it ( "Should share the colors of an accessor used more than once with the same material", async function ()
+			it ( "Should share the colors of an accessor used more than once that keep the alpha the same way", async function ()
 			{
 				const maker = new GltfMaker();
 				const POSITION = maker.addPoints ( TRIANGLE_POINTS );
-				const COLOR_0 = maker.addAccessor ( [ 1, 0, 0,   0, 1, 0,   0, 0, 1 ], GLTF_FLOAT, "VEC3" );
+				const COLOR_0 = maker.addAccessor ( [ 1, 0, 0, 0.5,   0, 1, 0, 0.5,   0, 0, 1, 0.5 ], GLTF_FLOAT, "VEC4" );
 				const red = maker.addMaterial ( { pbrMetallicRoughness: { baseColorFactor: [ 1, 0, 0, 1 ] } } );
+				const blend = maker.addMaterial ( { alphaMode: "BLEND" } );
 				maker.addMeshNode ( [
 					{ attributes: { POSITION, COLOR_0 } },
-					{ attributes: { POSITION, COLOR_0 } },
 					{ attributes: { POSITION, COLOR_0 }, material: red },
+					{ attributes: { POSITION, COLOR_0 }, material: blend },
 				] );
 				const [ a, b, c ] = getGeometries ( await read ( maker.glb() ) );
 				expect ( a.colors ).to.equal ( b.colors );
 				expect ( a.colors ).not.to.equal ( c.colors );
-				expect ( Array.from ( c.colors!.values! ) ).to.deep.equal ( [ 1, 0, 0, 1,   0, 0, 0, 1,   0, 0, 0, 1 ] );
+				expect ( Array.from ( c.colors!.values! ) ).to.deep.equal ( [ 1, 0, 0, 0.5,   0, 1, 0, 0.5,   0, 0, 1, 0.5 ] );
 			} );
 
 			it ( "Should reject colors of the wrong type or number", async function ()

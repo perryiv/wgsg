@@ -13,7 +13,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { ColorTool as Color } from "../Tools";
+import { DEFAULT_DIFFUSE } from "../Tools/Constants";
 import { State } from "../Scene";
 import type { IPipelineOptions, IVertexArrayName } from "./ShaderBase";
 import { vec4 } from "gl-matrix";
@@ -44,10 +44,10 @@ interface ISolidColorShaderInput
 export class SolidColor extends BaseClass
 {
 	static #instance: ( SolidColor | null ) = null;
-	#color: IVector4 = [ ...Color.gray ];
+	#diffuse: IVector4 = [ ...DEFAULT_DIFFUSE ];
 
 	// The uniform values. The camera's is the projection matrix, and the
-	// material's is the color.
+	// material's is the diffuse color.
 	#camera = new ArrayBuffer ( 16 * 4 );
 	#material = new ArrayBuffer ( 4 * 4 );
 
@@ -111,21 +111,21 @@ export class SolidColor extends BaseClass
 	// }
 
 	/**
-	 * Return the color.
+	 * Return the diffuse color, which is the color drawn.
 	 * @returns {IVector4} The color.
 	 */
-	public get color () : IVector4
+	public get diffuse () : IVector4
 	{
-		return [ ...this.#color ];
+		return [ ...this.#diffuse ];
 	}
 
 	/**
-	 * Set the color.
+	 * Set the diffuse color, which is the color drawn.
 	 * @param {IVector4} color - The color.
 	 */
-	public set color ( color: Readonly<IVector4> )
+	public set diffuse ( color: Readonly<IVector4> )
 	{
-		vec4.copy ( this.#color, color );
+		vec4.copy ( this.#diffuse, color );
 		this.materialChanged();
 	}
 
@@ -134,7 +134,7 @@ export class SolidColor extends BaseClass
 	 */
 	public override reset () : void
 	{
-		this.color = Color.gray;
+		this.diffuse = DEFAULT_DIFFUSE;
 	}
 
 	/**
@@ -150,12 +150,12 @@ export class SolidColor extends BaseClass
 
 	/**
 	 * Return the material's uniform values, in the same order as the
-	 * "Material" struct in the shader code: the color.
+	 * "Material" struct in the shader code: the diffuse color.
 	 * @returns {ArrayBuffer} The uniform values.
 	 */
 	protected makeMaterialUniforms () : ArrayBuffer
 	{
-		new Float32Array ( this.#material ).set ( this.#color, 0 );
+		new Float32Array ( this.#material ).set ( this.#diffuse, 0 );
 		return this.#material;
 	}
 
