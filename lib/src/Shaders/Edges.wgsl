@@ -45,17 +45,21 @@ struct Object
 // indices, the indices binding holds a buffer that isn't read.
 @group ( 3 ) @binding ( 0 ) var<storage, read> indices : array<u32>;
 @group ( 3 ) @binding ( 1 ) var<storage, read> points : array<f32>;
+@group ( 3 ) @binding ( 3 ) var<storage, read> colors : array<f32>;
 
-// How to read the indices. These are the same as in WithEdges.ts.
+// How to read the indices, in the low bits of the mode, and the bit that
+// says there are vertex colors. These are the same as in WithEdges.ts.
 const PULLED_INDICES_NONE = 0u;
 const PULLED_INDICES_UINT16 = 1u;
 const PULLED_INDICES_UINT32 = 2u;
+const PULLED_INDICES_MASK = 3u;
+const PULLED_COLORS = 4u;
 
 // Return the index of the vertex at the given corner. The corners are
 // counted from the start of the draw, three for each triangle.
 fn getIndex ( corner: u32, mode: u32 ) -> u32
 {
-	switch ( mode )
+	switch ( mode & PULLED_INDICES_MASK )
 	{
 		case PULLED_INDICES_UINT16:
 		{
@@ -80,6 +84,31 @@ fn getPoint ( index: u32 ) -> vec4f
 {
 	let i = index * 3u;
 	return vec4f ( points[i], points[i + 1u], points[i + 2u], 1.0 );
+}
+
+// See if there are vertex colors.
+fn hasColors ( mode: u32 ) -> u32
+{
+	return select ( 0u, 1u, ( 0u != ( mode & PULLED_COLORS ) ) );
+}
+
+// Return the color of the vertex, or white if there are no vertex colors.
+fn getColor ( index: u32, mode: u32 ) -> vec4f
+{
+	if ( 0u == hasColors ( mode ) )
+	{
+		return vec4f ( 1.0 );
+	}
+	let i = index * 4u;
+	return vec4f ( colors[i], colors[i + 1u], colors[i + 2u], colors[i + 3u] );
+}
+
+// Return the color to light: the vertex color if there are vertex colors,
+// which replace the material's color, and otherwise the material's color.
+// The material's color is not interpolated, so it's exact.
+fn getBaseColor ( color: vec4f, hasColors: u32 ) -> vec4f
+{
+	return select ( material.color, color, ( 0u != hasColors ) );
 }
 
 // Return the barycentric coordinate of the given corner. This assumes that

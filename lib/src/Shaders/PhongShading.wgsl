@@ -41,12 +41,28 @@ struct VertexOut
 {
 	@builtin ( position ) position : vec4f,
 	@location ( 0 ) normal : vec3f,
+	@location ( 1 ) color : vec4f,
 };
 
+// The vertex shader for geometry without vertex colors.
 @vertex fn vs ( @location ( 0 ) position: vec4f, @location ( 1 ) normal: vec3f ) -> VertexOut
+{
+	return makeVertex ( position, normal, vec4f ( 1.0 ) );
+}
+
+// The vertex shader for geometry with vertex colors.
+@vertex fn vsColors ( @location ( 0 ) position: vec4f, @location ( 1 ) normal: vec3f, @location ( 2 ) color: vec4f ) -> VertexOut
+{
+	return makeVertex ( position, normal, color );
+}
+
+fn makeVertex ( position: vec4f, normal: vec3f, color: vec4f ) -> VertexOut
 {
 	// The answer.
 	var answer : VertexOut;
+
+	// The vertex color, for the fragment shader.
+	answer.color = color;
 
 	// Transform the position to view space.
 	answer.position = camera.projMatrix * object.viewMatrix * position;
@@ -58,7 +74,20 @@ struct VertexOut
 	return answer;
 }
 
+// The fragment shader for geometry without vertex colors.
 @fragment fn fs ( fragData: VertexOut ) -> @location ( 0 ) vec4f
+{
+	return shade ( fragData, material.color );
+}
+
+// The fragment shader for geometry with vertex colors, which replace the
+// material's color.
+@fragment fn fsColors ( fragData: VertexOut ) -> @location ( 0 ) vec4f
+{
+	return shade ( fragData, fragData.color );
+}
+
+fn shade ( fragData: VertexOut, color: vec4f ) -> vec4f
 {
 	// Make sure the normal vector is unit length.
 	let normal = normalize ( fragData.normal );
@@ -69,5 +98,5 @@ struct VertexOut
 
 	// Calculate the color, assuming that the canvas is configured
 	// for pre-multiplied alpha.
-	return vec4 ( material.color.rgb * diffuse * material.color.a, material.color.a );
+	return vec4 ( color.rgb * diffuse * color.a, color.a );
 }

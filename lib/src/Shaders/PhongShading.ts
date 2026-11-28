@@ -13,10 +13,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Device } from "../Tools";
 import { Lighting as BaseClass } from "./Lighting";
 import { State } from "../Scene";
-import type { IPipelineOptions } from "./ShaderBase";
+import type { IPipelineOptions, IVertexArrayName } from "./ShaderBase";
 import code from "./PhongShading.wgsl?raw";
 
 
@@ -93,89 +92,6 @@ export class PhongShading extends BaseClass
 	}
 
 	/**
-	 * Make the render pipeline.
-	 * @param {IPipelineOptions} options - The pipeline options.
-	 * @returns {GPURenderPipeline} The render pipeline.
-	 */
-	protected makePipeline ( { topology, cullMode, depthWrite }: Readonly<IPipelineOptions> ) : GPURenderPipeline
-	{
-		// Shortcuts
-		const { device, preferredFormat } = Device.instance;
-
-		// Define the array strides.
-		// https://www.w3.org/TR/webgpu/#enumdef-gpuvertexstepmode
-		const positionStride = 12; // 3 floats * 4 bytes each.
-		const normalStride   = 12; // 3 floats * 4 bytes each.
-
-		// Make the pipeline.
-		const pipeline = device.createRenderPipeline ( {
-			label: `Render pipeline for shader ${this.type}`,
-			layout: this.pipelineLayout,
-			vertex: {
-				module: this.module,
-				entryPoint: "vs",
-				buffers: [
-				{
-					attributes: [
-					{
-						// Position
-						shaderLocation: 0,
-						offset: 0,
-						format: "float32x3",
-					} ],
-					arrayStride: positionStride,
-					stepMode: "vertex",
-				}, {
-					attributes: [
-					{
-						// Normal vector
-						shaderLocation: 1,
-						offset: 0,
-						format: "float32x3",
-					} ],
-					arrayStride: normalStride,
-					stepMode: "vertex",
-				} ]
-			},
-			fragment: {
-				module: this.module,
-				entryPoint: "fs",
-				targets: [ {
-					format: preferredFormat,
-					blend: {
-						color: {
-							srcFactor: "one",
-							dstFactor: "one-minus-src-alpha"
-						},
-						alpha: {
-							srcFactor: "one",
-							dstFactor: "one-minus-src-alpha"
-						},
-					},
-				} ]
-			},
-			primitive: {
-				topology,
-				cullMode,
-			},
-			depthStencil: {
-				depthWriteEnabled: depthWrite,
-				depthCompare: "less",
-				format: "depth24plus",
-			},
-		} );
-
-		// Do not return an invalid pipeline.
-		if ( !pipeline )
-		{
-			throw new Error ( "Failed to create pipeline" );
-		}
-
-		// Return the new pipeline.
-		return pipeline;
-	}
-
-	/**
 	 * Make and return a state object that uses this shader.
 	 * @param {object} input - The input object.
 	 * @param {GPUPrimitiveTopology} input.topology - The primitive topology.
@@ -188,5 +104,16 @@ export class PhongShading extends BaseClass
 
 		// Return the new state.
 		return new State ( { shader, topology } );
+	}
+
+	/**
+	 * Get the geometry's arrays that the pipeline reads as vertex buffers:
+	 * the points and normals, and the colors if there are vertex colors.
+	 * @param {IPipelineOptions} options - The pipeline options.
+	 * @returns {IVertexArrayName[]} The arrays.
+	 */
+	public getVertexArrays ( options: Readonly<IPipelineOptions> ) : IVertexArrayName[]
+	{
+		return ( ( true === options.vertexColors ) ? [ "points", "normals", "colors" ] : [ "points", "normals" ] );
 	}
 }

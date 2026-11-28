@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { ObjectMatrices, ShaderBase } from "../Shaders";
+import { ObjectMatrices, ShaderBase, type IVertexArrayName } from "../Shaders";
 import { vec4 } from "gl-matrix";
 import { Visitor as BaseClass } from "./Visitor";
 import type { IRenderGraphInfo, IVector4 } from "../Types";
@@ -134,6 +134,7 @@ export class Draw extends BaseClass
 	#commandEncoder: ( GPUCommandEncoder | null ) = null;
 	#geometry: ( Geometry | null ) = null;
 	#shader: ( ShaderBase | null ) = null;
+	#vertexArrays: IVertexArrayName[] = [];
 	#info: ( IRenderGraphInfo | null ) = null;
 	#device: ( number | null ) = null;
 	#frame = 0;
@@ -568,8 +569,10 @@ export class Draw extends BaseClass
 		const pass = this.renderPassEncoder;
 		const { shader, options } = pipeline;
 
-		// Set the render pass' pipeline.
+		// Set the render pass' pipeline, and remember which of the geometry's
+		// arrays it reads.
 		pass.setPipeline ( shader.getPipeline ( options ) );
+		this.#vertexArrays = shader.getVertexArrays ( options );
 
 		// console.log ( `Pipeline ${pipeline.id} has ${pipeline.numProjMatrices} projection matrices` );
 
@@ -842,8 +845,10 @@ export class Draw extends BaseClass
 	}
 
 	/**
-	 * Set the vertex buffers of the geometry being drawn.
-	 * @returns {boolean} False if there is no geometry or it has no points.
+	 * Set the vertex buffers of the geometry being drawn: the arrays that
+	 * the pipeline reads, in its order.
+	 * @returns {boolean} False if there is no geometry or it does not have
+	 * all the arrays.
 	 */
 	protected setVertexBuffers() : boolean
 	{
@@ -854,39 +859,22 @@ export class Draw extends BaseClass
 			return false;
 		}
 
-		// We need points to continue.
-		const points = geom.points?.buffer;
-		if ( !points )
+		// Get the buffers. We need them all to continue.
+		const arrays = this.#vertexArrays;
+		const buffers: GPUBuffer[] = [];
+		for ( const name of arrays )
 		{
-			return false;
+			const buffer = geom[name]?.buffer;
+			if ( !buffer )
+			{
+				return false;
+			}
+			buffers.push ( buffer );
 		}
 
-		// Get the render pass encoder.
+		// Set them.
 		const pass = this.renderPassEncoder;
-
-		// Set the points.
-		pass.setVertexBuffer ( 0, points );
-
-		// Set the buffer of normals if we can.
-		const normals = geom.normals?.buffer;
-		if ( normals )
-		{
-			pass.setVertexBuffer ( 1, normals );
-		}
-
-		// Set the buffer of colors if we can.
-		const colors = geom.colors?.buffer;
-		if ( colors )
-		{
-			pass.setVertexBuffer ( 2, colors );
-		}
-
-		// Set the buffer of texture coordinates if we can.
-		const texCoords = geom.texCoords?.buffer;
-		if ( texCoords )
-		{
-			pass.setVertexBuffer ( 3, texCoords );
-		}
+		buffers.forEach ( ( buffer, slot ) => { pass.setVertexBuffer ( slot, buffer ); } );
 
 		// It worked.
 		return true;

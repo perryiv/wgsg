@@ -63,9 +63,11 @@ export class Bin extends BaseClass
 	 * Get the pipeline. Make it if we have to.
 	 * @param {IRenderGraphInfo} info - The render graph info.
 	 * @param {State} state - The state.
+	 * @param {boolean} [vertexColors] - Whether the shapes have vertex
+	 * colors. The default is false.
 	 * @returns {Pipeline} The pipeline.
 	 */
-	public getPipeline ( info: IRenderGraphInfo, state: State ) : Pipeline
+	public getPipeline ( info: IRenderGraphInfo, state: State, vertexColors = false ) : Pipeline
 	{
 		const { shader } = state;
 
@@ -75,6 +77,10 @@ export class Bin extends BaseClass
 		}
 
 		const options = state.pipelineOptions;
+		if ( vertexColors )
+		{
+			options.vertexColors = true;
+		}
 		const name = `${shader.type}, ${makePipelineKey ( options )}`;
 		let pipeline: ( Pipeline | undefined ) = this.#pipelines.get ( name );
 

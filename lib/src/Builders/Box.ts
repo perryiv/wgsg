@@ -16,7 +16,6 @@ import { Box } from "../Math";
 import { ColorTool } from "../Tools";
 import { Multiply as BaseClass } from "../Visitors";
 import { SolidColor } from "../Shaders";
-import { vec4 } from "gl-matrix";
 import type { IVector3, IVector4 } from "../Types";
 import {
 	ColorAttribute,
@@ -249,7 +248,7 @@ class BuildBoxes extends BaseClass
 			// Make the geometry.
 			const geom = new Geometry ( { points, colors, primitives } );
 
-			// Add a state.
+			// Add a state. The lines are the colors of the vertices.
 			const state = SolidColor.makeState ( { topology: "line-list" } );
 			state.addAttribute ( new ColorAttribute ( [ ...ColorTool.gray ] ) );
 			geom.state = state;
@@ -312,18 +311,11 @@ class BuildBoxes extends BaseClass
 			urf[0], urf[1], urf[2],
 		);
 
-		// Initialize the color.
-		const c: IVector4 = [ ...ColorTool.gray ];
-
-		// Try to get the color.
-		if ( state )
-		{
-			const { shader } = state;
-			if ( shader instanceof SolidColor )
-			{
-				vec4.copy ( c, shader.color );
-			}
-		}
+		// The color of the node's state, if it has one, or gray. The lines
+		// are opaque, so that they show for semi-transparent nodes too.
+		const attribute = state?.getAttribute ( ColorAttribute.getClassName() );
+		const color = ( ( attribute instanceof ColorAttribute ) ? attribute.color : ColorTool.gray );
+		const c: IVector4 = [ color[0], color[1], color[2], 1 ];
 
 		// Append a color for each new point.
 		colors.push (

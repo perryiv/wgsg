@@ -20,6 +20,8 @@ struct VertexOut
 	@builtin ( position ) position : vec4f,
 	@location ( 0 ) normal : vec3f,
 	@location ( 1 ) barycentric : vec3f,
+	@location ( 2 ) color : vec4f,
+	@location ( 3 ) @interpolate ( flat ) hasColors : u32,
 };
 
 @vertex fn vs ( @builtin ( vertex_index ) corner: u32, @builtin ( instance_index ) mode: u32 ) -> VertexOut
@@ -32,6 +34,10 @@ struct VertexOut
 	let position = getPoint ( index );
 	let i = index * 3u;
 	let normal = vec3f ( normals[i], normals[i + 1u], normals[i + 2u] );
+
+	// The vertex color, if there are any.
+	answer.color = getColor ( index, mode );
+	answer.hasColors = hasColors ( mode );
 
 	// Transform the position to clip space.
 	answer.position = camera.projMatrix * object.viewMatrix * position;
@@ -60,7 +66,8 @@ struct VertexOut
 
 	// Calculate the color, assuming that the canvas is configured
 	// for pre-multiplied alpha.
-	let color = vec4 ( material.color.rgb * diffuse * material.color.a, material.color.a );
+	let base = getBaseColor ( fragData.color, fragData.hasColors );
+	let color = vec4 ( base.rgb * diffuse * base.a, base.a );
 
 	// Add the edges.
 	return addEdges ( color, fragData.barycentric, change );
