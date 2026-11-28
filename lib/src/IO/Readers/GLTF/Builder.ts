@@ -27,6 +27,12 @@
 //	double-sided material gets two-sided lighting, and the others get their
 //	back faces culled, as glTF says. Textures are ignored.
 //
+//	A base color texture goes in the state's texture set, as its diffuse
+//	texture, sampled with the texture coordinates (TEXCOORD_0). Its images are
+//	decoded before the nodes are built. A texture that can't be read, or that
+//	uses other texture coordinates, is skipped with a warning, and the model
+//	is drawn without it.
+//
 //	The vertex colors (COLOR_0) multiply the material's color when they are
 //	drawn, as glTF says. Their alpha is only kept for BLEND materials, like
 //	the base color's.
@@ -51,7 +57,10 @@ import { Array1 } from "../../../Arrays";
 import { buildTransparentScene } from "../../../Builders/Transparent";
 import { Cancelled } from "../../Cancelled";
 import { FlatShading, PhongShading } from "../../../Shaders";
+import { decodeImage, getImageBytes, getSamplerSettings, type IImageDecoder } from "./Images";
+import { getErrorMessage } from "../../Functions";
 import { readFloats, readIndices } from "./Accessors";
+import { Texture, type ITextureImage } from "../../../Textures/Texture";
 import { TRANSPARENT_BIN } from "../../../Tools/Constants";
 import { yieldToEventLoop } from "../../Functions";
 import type { IProgressCallback, IVector4 } from "../../../Types";
@@ -64,6 +73,7 @@ import {
 	Indexed,
 	Material,
 	Node as SceneNode,
+	TextureSet,
 	State,
 	Transform,
 	TwoSidedLight,
@@ -208,6 +218,7 @@ export class Builder
 	readonly #nodes = new Map < string, ( SceneNode | null ) > ();
 	readonly #meshes = new Map < string, ( SceneNode | null ) > ();
 	readonly #floats = new Map < string, Array1 < Float32Array > > ();
+	readonly #texCoords = new Map < number, Array1 < Float32Array > > ();
 	readonly #colors = new Map < string, Array1 < Float32Array > > ();
 	readonly #indices = new Map < number, IIndexArray > ();
 	readonly #flipped = new Map < string, IIndexArray > ();
@@ -228,17 +239,27 @@ export class Builder
 	// The number of primitives skipped for each mode.
 	readonly #skipped = new Map < number, number > ();
 
+	// The textures by their index, or null if they can't be read, and the
+	// images by their index, decoded once each.
+	readonly #decoder: IImageDecoder;
+	readonly #textures = new Map < number, ( Texture | null ) > ();
+	readonly #images = new Map < number, Promise < ITextureImage > > ();
+	readonly #warnings = new Set < string > ();
+
 	/**
 	 * Construct the class.
 	 * @class
 	 * @param {IGltfData} data The JSON and the buffers.
 	 * @param {IProgressCallback} onProgress Called with the number of
 	 * primitives done and the total. Return false to stop.
+	 * @param {IImageDecoder} [decoder] Decodes the images of the textures.
+	 * The default is the browser's createImageBitmap().
 	 */
-	constructor ( data: IGltfData, onProgress: IProgressCallback )
+	constructor ( data: IGltfData, onProgress: IProgressCallback, decoder: IImageDecoder = decodeImage )
 	{
 		this.#data = data;
 		this.#onProgress = onProgress;
+		this.#decoder = decoder;
 		this.#numPrimitives = ( data.json.meshes ?? [] ).reduce (
 			( sum, mesh ) => ( sum + ( mesh.primitives?.length ?? 0 ) ), 0 );
 	}
@@ -264,6 +285,9 @@ export class Builder
 		// Make sure we can read it.
 		checkExtensions ( this.#data );
 
+		// Read the textures that the materials use.
+		await this.loadTextures();
+
 		// Get the nodes at the top of the scene.
 		const roots = this.getRootNodes();
 
@@ -286,6 +310,7 @@ export class Builder
 				`${count} ${SKIPPED_MODE_NAMES[mode] ?? `with mode ${mode}`}` );
 			console.warn ( `Skipped glTF primitives that are not supported yet: ${counts.join ( ", " )}` );
 		}
+		this.#warnings.forEach ( ( warning ) => { console.warn ( warning ); } );
 
 		// There has to be something to draw.
 		if ( scene.empty )
@@ -486,7 +511,7 @@ export class Builder
 		}
 
 		// Get the points.
-		const { POSITION: position, NORMAL: normal, COLOR_0: color } = primitive.attributes;
+		const { POSITION: position, NORMAL: normal, COLOR_0: color, TEXCOORD_0: texCoord } = primitive.attributes;
 		if ( undefined === position )
 		{
 			throw new Error ( "There are no points" );
@@ -507,6 +532,13 @@ export class Builder
 		if ( colors && ( colors.values?.length !== ( numVertices * 4 ) ) )
 		{
 			throw new Error ( `There are ${( colors.values?.length ?? 0 ) / 4} colors but ${numVertices} points` );
+		}
+
+		// Get the texture coordinates, if any.
+		const texCoords = ( ( undefined === texCoord ) ? null : this.getTexCoords ( texCoord ) );
+		if ( texCoords && ( texCoords.values?.length !== ( numVertices * 2 ) ) )
+		{
+			throw new Error ( `There are ${( texCoords.values?.length ?? 0 ) / 2} texture coordinates but ${numVertices} points` );
 		}
 
 		// Make the list of triangles. Without indices, every three vertices
@@ -530,7 +562,7 @@ export class Builder
 
 		// Make the geometry.
 		const hasNormals = ( null !== normals );
-		const geom = new Geometry ( { points, normals, colors, primitives } );
+		const geom = new Geometry ( { points, normals, colors, texCoords, primitives } );
 		void geom.box; // Calculate the bounds now, to speed things up later.
 
 		// A double-sided, semi-transparent material draws the back faces and
@@ -668,6 +700,103 @@ export class Builder
 	}
 
 	/**
+	 * Get the texture coordinates of an accessor, which can be shared.
+	 * @param {number} index The index of the accessor.
+	 * @returns {Array1<Float32Array>} The array.
+	 */
+	protected getTexCoords ( index: number ) : Array1 < Float32Array >
+	{
+		let array = this.#texCoords.get ( index );
+		if ( !array )
+		{
+			array = new Array1 ( readFloats ( this.#data, index, "VEC2" ) );
+			this.#texCoords.set ( index, array );
+		}
+		return array;
+	}
+
+	/**
+	 * Read the textures that the materials use, so that they're ready when
+	 * the states are made.
+	 * @returns {Promise<void>} Resolves when they're read.
+	 */
+	protected async loadTextures () : Promise < void >
+	{
+		for ( const material of ( this.#data.json.materials ?? [] ) )
+		{
+			const info = material.pbrMetallicRoughness?.baseColorTexture;
+			if ( !info )
+			{
+				continue;
+			}
+			if ( 0 !== ( info.texCoord ?? 0 ) )
+			{
+				this.#warnings.add ( "Skipped glTF textures that use texture coordinates other than TEXCOORD_0, which are not supported yet" );
+				continue;
+			}
+			if ( !this.#textures.has ( info.index ) )
+			{
+				this.#textures.set ( info.index, await this.loadTexture ( info.index ) );
+			}
+		}
+	}
+
+	/**
+	 * Read a texture: decode its image, and use its sampler's settings.
+	 * @param {number} index The index of the texture.
+	 * @returns {Promise<Texture | null>} The texture, or null if it can't be read.
+	 */
+	protected async loadTexture ( index: number ) : Promise < Texture | null >
+	{
+		const texture = getItem ( this.#data.json.textures, index, "texture" );
+		const { source, sampler } = texture;
+		if ( undefined === source )
+		{
+			this.#warnings.add ( `Skipped glTF texture ${index}, which has no image that's supported` );
+			return null;
+		}
+		try
+		{
+			const image = await this.getImage ( source );
+			const settings = getSamplerSettings ( ( undefined === sampler ) ? undefined : getItem ( this.#data.json.samplers, sampler, "sampler" ) );
+			return new Texture ( { image, ...settings } );
+		}
+		catch ( error )
+		{
+			this.#warnings.add ( `Skipped glTF texture ${index}: ${getErrorMessage ( error )}` );
+			return null;
+		}
+	}
+
+	/**
+	 * Get an image, decoding it the first time.
+	 * @param {number} index The index of the image.
+	 * @returns {Promise<ITextureImage>} The image.
+	 */
+	protected getImage ( index: number ) : Promise < ITextureImage >
+	{
+		let image = this.#images.get ( index );
+		if ( !image )
+		{
+			const { bytes, mimeType } = getImageBytes ( this.#data, index );
+			image = this.#decoder ( bytes, mimeType );
+			this.#images.set ( index, image );
+		}
+		return image;
+	}
+
+	/**
+	 * Get the base color texture of a material, if it has one that was read.
+	 * @param {number | undefined} index The index of the material, if any.
+	 * @returns {Texture | null} The texture, if any.
+	 */
+	protected getBaseColorTexture ( index: ( number | undefined ) ) : ( Texture | null )
+	{
+		const info = this.getMaterial ( index )?.pbrMetallicRoughness?.baseColorTexture;
+		return ( info ? ( this.#textures.get ( info.index ) ?? null ) : null );
+	}
+
+	/**
 	 * Get the material, or null if there is none.
 	 * @param {number | undefined} index The index of the material, if any.
 	 * @returns {IGltfMaterial | null} The material.
@@ -801,6 +930,11 @@ export class Builder
 		const topology = "triangle-list";
 		const state = ( hasNormals ? PhongShading.makeState ( { topology } ) : FlatShading.makeState ( { topology } ) );
 		state.addAttribute ( new Material ( { ambient: color, diffuse: color, emission } ) );
+		const diffuse = this.getBaseColorTexture ( index );
+		if ( diffuse )
+		{
+			state.addAttribute ( new TextureSet ( { diffuse } ) );
+		}
 		state.addAttribute ( new TwoSidedLight ( doubleSided ) );
 		if ( false === doubleSided )
 		{

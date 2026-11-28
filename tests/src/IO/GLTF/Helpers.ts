@@ -12,7 +12,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { decodePng } from "../../Helpers/Png";
 import { getReader } from "../../../../lib/src/IO";
+import { GLTF } from "../../../../lib/src/IO/Readers/GLTF";
 import { Geometry, Node as SceneNode } from "../../../../lib/src/Scene";
 import type { IProgressCallback } from "../../../../lib/src/Types";
 import {
@@ -26,10 +28,13 @@ import {
 	GLTF_UNSIGNED_INT,
 	GLTF_UNSIGNED_SHORT,
 	type IGltfAccessor,
+	type IGltfImage,
 	type IGltfJson,
 	type IGltfMaterial,
 	type IGltfNode,
 	type IGltfPrimitive,
+	type IGltfSampler,
+	type IGltfTexture,
 } from "../../../../lib/src/IO/Readers/GLTF/Types";
 
 
@@ -155,6 +160,53 @@ export class GltfMaker
 		const materials = ( this.json.materials ??= [] );
 		materials.push ( material );
 		return ( materials.length - 1 );
+	}
+
+	/**
+	 * Add an image in a buffer view.
+	 * @param {Uint8Array} bytes The bytes of the image file.
+	 * @param {string} [mimeType] The type. The default is PNG.
+	 * @returns {number} The index of the image.
+	 */
+	public addImage ( bytes: Uint8Array, mimeType = "image/png" ) : number
+	{
+		return this.addRawImage ( { bufferView: this.addView ( bytes ), mimeType } );
+	}
+
+	/**
+	 * Add an image as it is.
+	 * @param {IGltfImage} image The image.
+	 * @returns {number} The index of the image.
+	 */
+	public addRawImage ( image: IGltfImage ) : number
+	{
+		const images = ( this.json.images ??= [] );
+		images.push ( image );
+		return ( images.length - 1 );
+	}
+
+	/**
+	 * Add a sampler.
+	 * @param {IGltfSampler} sampler The sampler.
+	 * @returns {number} The index of the sampler.
+	 */
+	public addSampler ( sampler: IGltfSampler ) : number
+	{
+		const samplers = ( this.json.samplers ??= [] );
+		samplers.push ( sampler );
+		return ( samplers.length - 1 );
+	}
+
+	/**
+	 * Add a texture.
+	 * @param {IGltfTexture} texture The texture.
+	 * @returns {number} The index of the texture.
+	 */
+	public addTexture ( texture: IGltfTexture ) : number
+	{
+		const textures = ( this.json.textures ??= [] );
+		textures.push ( texture );
+		return ( textures.length - 1 );
 	}
 
 	/**
@@ -294,6 +346,13 @@ export const read = async ( file: File, progress?: IProgressCallback ) : Promise
 {
 	const ext = file.name.split ( "." ).pop()!;
 	const reader = getReader ( ext )!();
+
+	// Where there is no browser image decoder, like in Node, decode the PNGs
+	// the tests make.
+	if ( ( reader instanceof GLTF ) && ( "function" !== typeof createImageBitmap ) )
+	{
+		reader.imageDecoder = async ( bytes: Uint8Array ) => Promise.resolve ( decodePng ( bytes ) );
+	}
 	if ( progress )
 	{
 		reader.progress = progress;

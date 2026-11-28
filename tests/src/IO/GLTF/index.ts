@@ -16,6 +16,7 @@ import { test as testAccessors } from "./Accessors";
 import { test as testContainer } from "./Container";
 import { test as testTransforms } from "./Transforms";
 import { test as testBuilder } from "./Builder";
+import { test as testTextures } from "./Textures";
 
 export function test ()
 {
@@ -25,5 +26,6 @@ export function test ()
 		testAccessors();
 		testTransforms();
 		testBuilder();
+		testTextures();
 	} );
 };
