@@ -17,6 +17,9 @@
 //	- Specular: the color of the highlights.
 //	- Emission: the light the surface gives off itself.
 //	- Shininess: how small the highlights are, from 0 to 128.
+//	- Clear coat: a thin clear layer on top, like the lacquer on car paint,
+//	  which adds a white highlight of its own, from 0 (none, the default) to
+//	  1. Its shininess is separate, and it's 128, a smooth coat, by default.
 //	- Alpha mask: when it's on, a pixel whose alpha is below the alpha cutoff
 //	  isn't drawn, and the others are drawn opaque, like the leaves of a
 //	  plant drawn on a square. It's off by default.
@@ -60,6 +63,8 @@ export interface IMaterialInput
 	shininess?: number;
 	alphaMask?: boolean;
 	alphaCutoff?: number;
+	clearcoat?: number;
+	clearcoatShininess?: number;
 }
 
 
@@ -80,6 +85,8 @@ export class Material extends BaseClass
 	#shininess = DEFAULT_SHININESS;
 	#alphaMask = false;
 	#alphaCutoff = DEFAULT_ALPHA_CUTOFF;
+	#clearcoat = 0;
+	#clearcoatShininess = MAX_SHININESS;
 
 	/**
 	 * Construct the class. What's left out has the default value.
@@ -116,6 +123,14 @@ export class Material extends BaseClass
 		if ( undefined !== input?.alphaCutoff )
 		{
 			this.alphaCutoff = input.alphaCutoff;
+		}
+		if ( undefined !== input?.clearcoat )
+		{
+			this.clearcoat = input.clearcoat;
+		}
+		if ( undefined !== input?.clearcoatShininess )
+		{
+			this.clearcoatShininess = input.clearcoatShininess;
 		}
 	}
 
@@ -273,6 +288,50 @@ export class Material extends BaseClass
 	}
 
 	/**
+	 * Get the strength of the clear coat.
+	 * @returns {number} The strength, from 0 (none) to 1.
+	 */
+	public get clearcoat () : number
+	{
+		return this.#clearcoat;
+	}
+
+	/**
+	 * Set the strength of the clear coat.
+	 * @param {number} clearcoat - The strength, from 0 (none) to 1.
+	 */
+	public set clearcoat ( clearcoat: number )
+	{
+		if ( !( ( clearcoat >= 0 ) && ( clearcoat <= 1 ) ) )
+		{
+			throw new Error ( `Clear coat ${clearcoat} is not from 0 to 1` );
+		}
+		this.#clearcoat = clearcoat;
+	}
+
+	/**
+	 * Get the shininess of the clear coat.
+	 * @returns {number} The shininess, from 0 to 128.
+	 */
+	public get clearcoatShininess () : number
+	{
+		return this.#clearcoatShininess;
+	}
+
+	/**
+	 * Set the shininess of the clear coat. Below 1, it has no highlight.
+	 * @param {number} shininess - The shininess, from 0 to 128.
+	 */
+	public set clearcoatShininess ( shininess: number )
+	{
+		if ( !( ( shininess >= 0 ) && ( shininess <= MAX_SHININESS ) ) )
+		{
+			throw new Error ( `Clear coat shininess ${shininess} is not from 0 to ${MAX_SHININESS}` );
+		}
+		this.#clearcoatShininess = shininess;
+	}
+
+	/**
 	 * Return the string representation of this attribute.
 	 * @returns {string} The string representation of this attribute.
 	 */
@@ -283,7 +342,8 @@ export class Material extends BaseClass
 		const s = this.#specular.join ( ", " );
 		const e = this.#emission.join ( ", " );
 		const mask = ( this.#alphaMask ? ` alpha cutoff ${this.#alphaCutoff}` : "" );
-		return `${this.type} ambient [${a}] diffuse [${d}] specular [${s}] emission [${e}] shininess ${this.#shininess}${mask}`;
+		const coat = ( ( this.#clearcoat > 0 ) ? ` clear coat ${this.#clearcoat} shininess ${this.#clearcoatShininess}` : "" );
+		return `${this.type} ambient [${a}] diffuse [${d}] specular [${s}] emission [${e}] shininess ${this.#shininess}${mask}${coat}`;
 	}
 
 	/**
@@ -317,6 +377,14 @@ export class Material extends BaseClass
 		{
 			shader.alphaCutoff = ( this.#alphaMask ? this.#alphaCutoff : null );
 		}
+		if ( "clearcoat" in shader )
+		{
+			shader.clearcoat = this.#clearcoat;
+		}
+		if ( "clearcoatShininess" in shader )
+		{
+			shader.clearcoatShininess = this.#clearcoatShininess;
+		}
 	}
 
 	/**
@@ -334,6 +402,8 @@ export class Material extends BaseClass
 			shininess: this.#shininess,
 			alphaMask: this.#alphaMask,
 			alphaCutoff: this.#alphaCutoff,
+			clearcoat: this.#clearcoat,
+			clearcoatShininess: this.#clearcoatShininess,
 		};
 	}
 }

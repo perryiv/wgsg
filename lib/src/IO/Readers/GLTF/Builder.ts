@@ -24,7 +24,9 @@
 //	is its diffuse and ambient color, and the emissive color, times the
 //	KHR_materials_emissive_strength if there is one, is its emission. The
 //	metallic and roughness become its specular color and shininess (see
-//	Specular.ts), unless they're in a texture, which isn't read yet. A
+//	Specular.ts), unless they're in a texture, which isn't read yet. A clear
+//	coat (KHR_materials_clearcoat) becomes its clear coat, with the shininess
+//	like its roughness. Its textures aren't read yet. A
 //	double-sided material gets two-sided lighting, and the others get their
 //	back faces culled, as glTF says. Textures are ignored.
 //
@@ -64,7 +66,7 @@ import { Cancelled } from "../../Cancelled";
 import { FlatShading, PhongShading } from "../../../Shaders";
 import { decodeImage, getImageBytes, getSamplerSettings, type IImageDecoder } from "./Images";
 import { getErrorMessage } from "../../Functions";
-import { getSpecular } from "./Specular";
+import { getShininess, getSpecular } from "./Specular";
 import { readFloats, readIndices } from "./Accessors";
 import { Texture, type ITextureImage } from "../../../Textures/Texture";
 import { DEFAULT_ALPHA_CUTOFF, TRANSPARENT_BIN } from "../../../Tools/Constants";
@@ -946,6 +948,28 @@ export class Builder
 	}
 
 	/**
+	 * Get the clear coat of a material: its strength, and the shininess like
+	 * its roughness, which are 0 by default.
+	 * @param {IGltfMaterial | null} material The material, if any.
+	 * @param {number | undefined} index The index of the material, for errors.
+	 * @returns {object} The clear coat and its shininess.
+	 */
+	protected getClearcoat ( material: ( Readonly<IGltfMaterial> | null ), index: ( number | undefined ) ) : { clearcoat: number, clearcoatShininess: number }
+	{
+		const coat = material?.extensions?.KHR_materials_clearcoat;
+		const clearcoat = ( coat?.clearcoatFactor ?? 0 );
+		const roughness = ( coat?.clearcoatRoughnessFactor ?? 0 );
+		for ( const [ name, value ] of [ [ "clear coat", clearcoat ], [ "clear coat roughness", roughness ] ] as const )
+		{
+			if ( !( ( value >= 0 ) && ( value <= 1 ) ) )
+			{
+				throw new Error ( `Material ${index} has a ${name} of ${value}, which is not from 0 to 1` );
+			}
+		}
+		return { clearcoat, clearcoatShininess: getShininess ( roughness ) };
+	}
+
+	/**
 	 * Get the alpha mask of a material. A MASK material draws the pixels
 	 * whose alpha is at least its cutoff, which is 0.5 by default, and an
 	 * opaque one draws every pixel, with a cutoff of 0, so that the alpha of
@@ -1019,6 +1043,7 @@ export class Builder
 			emission,
 			specular,
 			shininess,
+			...this.getClearcoat ( material, index ),
 			...this.getAlphaMask ( material, index ),
 		} ) );
 		const diffuse = this.getTexture ( material?.pbrMetallicRoughness?.baseColorTexture );

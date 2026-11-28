@@ -52,6 +52,8 @@ export abstract class Lighting extends BaseClass
 	#emission: IVector4 = [ ...DEFAULT_EMISSION ];
 	#shininess = DEFAULT_SHININESS;
 	#alphaCutoff: ( number | null ) = null;
+	#clearcoat = 0;
+	#clearcoatShininess = MAX_SHININESS;
 	#twoSidedLight = false;
 	#lightDir: IVector4 = [ 0.0, 0.0, -1.0, 0.0 ];
 	#ambientLight: IVector4 = [ ...DEFAULT_AMBIENT_LIGHT ];
@@ -208,6 +210,45 @@ export abstract class Lighting extends BaseClass
 	}
 
 	/**
+	 * Get the strength of the clear coat.
+	 * @returns {number} The strength, from 0 (none) to 1.
+	 */
+	public get clearcoat () : number
+	{
+		return this.#clearcoat;
+	}
+
+	/**
+	 * Set the strength of the clear coat, a thin clear layer on top that adds
+	 * a white highlight of its own.
+	 * @param {number} clearcoat - The strength, from 0 (none) to 1.
+	 */
+	public set clearcoat ( clearcoat: number )
+	{
+		this.#clearcoat = clearcoat;
+		this.materialChanged();
+	}
+
+	/**
+	 * Get the shininess of the clear coat.
+	 * @returns {number} The shininess, from 0 to 128.
+	 */
+	public get clearcoatShininess () : number
+	{
+		return this.#clearcoatShininess;
+	}
+
+	/**
+	 * Set the shininess of the clear coat. Below 1, it has no highlight.
+	 * @param {number} shininess - The shininess, from 0 to 128.
+	 */
+	public set clearcoatShininess ( shininess: number )
+	{
+		this.#clearcoatShininess = shininess;
+		this.materialChanged();
+	}
+
+	/**
 	 * Return whether to use two-sided lighting.
 	 * @returns {boolean} Whether to use two-sided lighting.
 	 */
@@ -239,6 +280,8 @@ export abstract class Lighting extends BaseClass
 		this.emission = DEFAULT_EMISSION;
 		this.shininess = DEFAULT_SHININESS;
 		this.alphaCutoff = null;
+		this.clearcoat = 0;
+		this.clearcoatShininess = MAX_SHININESS;
 		this.twoSidedLight = false;
 	}
 
@@ -302,14 +345,15 @@ export abstract class Lighting extends BaseClass
 	 * Get the number of 4-byte values in the material's uniforms, like the
 	 * "Surface" struct in Lighting.wgsl: the ambient, diffuse, specular, and
 	 * emission colors, the shininess, the two-sided flag, the alpha cutoff,
-	 * which is negative without an alpha mask, and one unused value so that
-	 * the size is a multiple of 16 bytes. Derived classes that
+	 * which is negative without an alpha mask, the clear coat and its
+	 * shininess, and three unused values so that the size is a multiple of 16
+	 * bytes. Derived classes that
 	 * add uniforms after these override this.
 	 * @returns {number} The number of 4-byte values.
 	 */
 	protected get numMaterialValues () : number
 	{
-		return ( ( 4 * 4 ) + 1 + 1 + 2 );
+		return ( ( 4 * 4 ) + 1 + 1 + 1 + 1 + 1 + 3 );
 	}
 
 	/**
@@ -328,6 +372,8 @@ export abstract class Lighting extends BaseClass
 		floats[16] = this.#shininess;
 		new Uint32Array ( this.#material )[17] = ( this.#twoSidedLight ? 1 : 0 );
 		floats[18] = ( this.#alphaCutoff ?? -1 ); // Negative means no alpha mask.
+		floats[19] = this.#clearcoat;
+		floats[20] = this.#clearcoatShininess;
 		return this.#material;
 	}
 }

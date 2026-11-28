@@ -45,6 +45,24 @@ export const DIELECTRIC_SPECULAR = 0.04;
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
+ * Get the Blinn-Phong exponent like the roughness: 2 / roughness^4 - 2, at
+ * most 128.
+ * @param {number} roughness - How rough, from 0 to 1.
+ * @returns {number} The shininess.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+export const getShininess = ( roughness: number ) : number =>
+{
+	// A roughness of zero would be infinite.
+	const r4 = Math.pow ( roughness, 4 );
+	const exponent = ( ( r4 > 0 ) ? ( ( 2 / r4 ) - 2 ) : MAX_SHININESS );
+	return Math.min ( exponent, MAX_SHININESS );
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
  * Get the specular color and shininess like the metallic and roughness.
  * @param {IVector4} baseColor - The base color.
  * @param {number} metallic - How metallic, from 0 to 1.
@@ -55,10 +73,7 @@ export const DIELECTRIC_SPECULAR = 0.04;
 
 export const getSpecular = ( baseColor: Readonly<IVector4>, metallic: number, roughness: number ) : { specular: IVector4, shininess: number } =>
 {
-	// The exponent. A roughness of zero would be infinite.
-	const r4 = Math.pow ( roughness, 4 );
-	const exponent = ( ( r4 > 0 ) ? ( ( 2 / r4 ) - 2 ) : MAX_SHININESS );
-	const shininess = Math.min ( exponent, MAX_SHININESS );
+	const shininess = getShininess ( roughness );
 
 	// Too rough for a highlight.
 	if ( shininess < 1 )

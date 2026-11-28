@@ -124,6 +124,31 @@ export function test ()
 			expect ( textured.shininess ).to.equal ( 0 );
 		} );
 
+		it ( "Should read a material's clear coat, with its shininess like its roughness", async function ()
+		{
+			const none = await readMaterial ( {} );
+			expect ( none.clearcoat ).to.equal ( 0 );
+
+			const smooth = await readMaterial ( { extensions: { KHR_materials_clearcoat: { clearcoatFactor: 1 } } } );
+			expect ( smooth.clearcoat ).to.equal ( 1 );
+			expect ( smooth.clearcoatShininess ).to.equal ( 128 );
+
+			const rough = await readMaterial ( { extensions: { KHR_materials_clearcoat: { clearcoatFactor: 0.25, clearcoatRoughnessFactor: 0.5 } } } );
+			expect ( rough.clearcoat ).to.equal ( 0.25 );
+			expect ( rough.clearcoatShininess ).to.be.closeTo ( 30, 1e-6 );
+
+			let error = "";
+			try
+			{
+				await readMaterial ( { extensions: { KHR_materials_clearcoat: { clearcoatFactor: 2 } } } );
+			}
+			catch ( e )
+			{
+				error = ( e as Error ).message;
+			}
+			expect ( error ).to.include ( "Material 0 has a clear coat of 2, which is not from 0 to 1" );
+		} );
+
 		it ( "Should reject a metallic or roughness that is not from 0 to 1", async function ()
 		{
 			for ( const [ pbr, message ] of [
