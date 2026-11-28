@@ -14,6 +14,7 @@
 
 import { WithEdges as BaseClass } from "./WithEdges";
 import { State } from "../Scene";
+import { makeSingleton } from "../Tools/Singleton";
 import common from "./Edges.wgsl?raw";
 import lighting from "./Lighting.wgsl?raw";
 import code from "./PhongEdges.wgsl?raw";
@@ -40,7 +41,7 @@ interface IPhongEdgesShaderInput
 
 export class PhongEdges extends BaseClass
 {
-	static #instance: ( PhongEdges | null ) = null;
+	static readonly #singleton = makeSingleton ( () => new PhongEdges() );
 
 	/**
 	 * Construct the class.
@@ -63,11 +64,7 @@ export class PhongEdges extends BaseClass
 	 */
 	public static get instance () : PhongEdges
 	{
-		if ( !PhongEdges.#instance )
-		{
-			PhongEdges.#instance = new PhongEdges();
-		}
-		return PhongEdges.#instance;
+		return PhongEdges.#singleton.get();
 	}
 
 	/**
@@ -75,11 +72,7 @@ export class PhongEdges extends BaseClass
 	 */
 	public static destroy() : void
 	{
-		if ( PhongEdges.#instance )
-		{
-			PhongEdges.#instance.destroy();
-			PhongEdges.#instance = null;
-		}
+		PhongEdges.#singleton.destroy();
 	}
 
 	/**

@@ -16,6 +16,7 @@
 import { Lighting as BaseClass } from "./Lighting";
 import { State } from "../Scene";
 import type { IPipelineOptions, IVertexArrayName } from "./ShaderBase";
+import { makeSingleton } from "../Tools/Singleton";
 import code from "./PhongShading.wgsl?raw";
 import lighting from "./Lighting.wgsl?raw";
 
@@ -41,7 +42,7 @@ interface IPhongShadingShaderInput
 
 export class PhongShading extends BaseClass
 {
-	static #instance: ( PhongShading | null ) = null;
+	static readonly #singleton = makeSingleton ( () => new PhongShading() );
 
 	/**
 	 * Construct the class.
@@ -64,11 +65,7 @@ export class PhongShading extends BaseClass
 	 */
 	public static get instance () : PhongShading
 	{
-		if ( !PhongShading.#instance )
-		{
-			PhongShading.#instance = new PhongShading();
-		}
-		return PhongShading.#instance;
+		return PhongShading.#singleton.get();
 	}
 
 	/**
@@ -76,11 +73,7 @@ export class PhongShading extends BaseClass
 	 */
 	public static destroy() : void
 	{
-		if ( PhongShading.#instance )
-		{
-			PhongShading.#instance.destroy();
-			PhongShading.#instance = null;
-		}
+		PhongShading.#singleton.destroy();
 	}
 
 	/**

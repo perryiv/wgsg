@@ -14,6 +14,7 @@
 
 import { WithEdges as BaseClass } from "./WithEdges";
 import { State } from "../Scene";
+import { makeSingleton } from "../Tools/Singleton";
 import common from "./Edges.wgsl?raw";
 import lighting from "./Lighting.wgsl?raw";
 import code from "./FlatEdges.wgsl?raw";
@@ -40,7 +41,7 @@ interface IFlatEdgesShaderInput
 
 export class FlatEdges extends BaseClass
 {
-	static #instance: ( FlatEdges | null ) = null;
+	static readonly #singleton = makeSingleton ( () => new FlatEdges() );
 
 	/**
 	 * Construct the class.
@@ -63,11 +64,7 @@ export class FlatEdges extends BaseClass
 	 */
 	public static get instance () : FlatEdges
 	{
-		if ( !FlatEdges.#instance )
-		{
-			FlatEdges.#instance = new FlatEdges();
-		}
-		return FlatEdges.#instance;
+		return FlatEdges.#singleton.get();
 	}
 
 	/**
@@ -75,11 +72,7 @@ export class FlatEdges extends BaseClass
 	 */
 	public static destroy() : void
 	{
-		if ( FlatEdges.#instance )
-		{
-			FlatEdges.#instance.destroy();
-			FlatEdges.#instance = null;
-		}
+		FlatEdges.#singleton.destroy();
 	}
 
 	/**

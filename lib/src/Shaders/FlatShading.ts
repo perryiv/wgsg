@@ -16,6 +16,7 @@
 import { Lighting as BaseClass } from "./Lighting";
 import { State } from "../Scene";
 import type { IPipelineOptions, IVertexArrayName } from "./ShaderBase";
+import { makeSingleton } from "../Tools/Singleton";
 import code from "./FlatShading.wgsl?raw";
 import lighting from "./Lighting.wgsl?raw";
 
@@ -41,7 +42,7 @@ interface IFlatShadingShaderInput
 
 export class FlatShading extends BaseClass
 {
-	static #instance: ( FlatShading | null ) = null;
+	static readonly #singleton = makeSingleton ( () => new FlatShading() );
 
 	/**
 	 * Construct the class.
@@ -64,11 +65,7 @@ export class FlatShading extends BaseClass
 	 */
 	public static get instance () : FlatShading
 	{
-		if ( !FlatShading.#instance )
-		{
-			FlatShading.#instance = new FlatShading();
-		}
-		return FlatShading.#instance;
+		return FlatShading.#singleton.get();
 	}
 
 	/**
@@ -76,11 +73,7 @@ export class FlatShading extends BaseClass
 	 */
 	public static destroy() : void
 	{
-		if ( FlatShading.#instance )
-		{
-			FlatShading.#instance.destroy();
-			FlatShading.#instance = null;
-		}
+		FlatShading.#singleton.destroy();
 	}
 
 	/**
