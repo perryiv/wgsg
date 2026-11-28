@@ -152,7 +152,13 @@ export interface IGltfTextureInfo
 export interface IGltfMaterial
 {
 	name?: string;
-	pbrMetallicRoughness?: { baseColorFactor?: number[], baseColorTexture?: IGltfTextureInfo };
+	pbrMetallicRoughness?: {
+		baseColorFactor?: number[];
+		baseColorTexture?: IGltfTextureInfo;
+		metallicFactor?: number;
+		roughnessFactor?: number;
+		metallicRoughnessTexture?: IGltfTextureInfo;
+	};
 	emissiveFactor?: number[];
 	emissiveTexture?: IGltfTextureInfo;
 	alphaMode?: string;

@@ -23,7 +23,8 @@
 //	Each material becomes a state with a Material attribute: the base color
 //	is its diffuse and ambient color, and the emissive color, times the
 //	KHR_materials_emissive_strength if there is one, is its emission. The
-//	metallic and roughness are ignored, so there are no highlights. A
+//	metallic and roughness become its specular color and shininess (see
+//	Specular.ts), unless they're in a texture, which isn't read yet. A
 //	double-sided material gets two-sided lighting, and the others get their
 //	back faces culled, as glTF says. Textures are ignored.
 //
@@ -63,6 +64,7 @@ import { Cancelled } from "../../Cancelled";
 import { FlatShading, PhongShading } from "../../../Shaders";
 import { decodeImage, getImageBytes, getSamplerSettings, type IImageDecoder } from "./Images";
 import { getErrorMessage } from "../../Functions";
+import { getSpecular } from "./Specular";
 import { readFloats, readIndices } from "./Accessors";
 import { Texture, type ITextureImage } from "../../../Textures/Texture";
 import { DEFAULT_ALPHA_CUTOFF, TRANSPARENT_BIN } from "../../../Tools/Constants";
@@ -916,6 +918,34 @@ export class Builder
 	}
 
 	/**
+	 * Get the specular color and shininess like a material's metallic and
+	 * roughness, which glTF says are 1 when they're left out. When they're
+	 * in a texture, which isn't read yet, there is no highlight.
+	 * @param {IGltfMaterial | null} material The material, if any.
+	 * @param {number | undefined} index The index of the material, for errors.
+	 * @param {IVector4} baseColor The base color.
+	 * @returns {object} The specular color and the shininess.
+	 */
+	protected getSpecularOf ( material: ( Readonly<IGltfMaterial> | null ), index: ( number | undefined ), baseColor: Readonly<IVector4> ) : { specular: IVector4, shininess: number }
+	{
+		const pbr = material?.pbrMetallicRoughness;
+		if ( pbr?.metallicRoughnessTexture )
+		{
+			return { specular: [ 0, 0, 0, 1 ], shininess: 0 };
+		}
+		const metallic = ( pbr?.metallicFactor ?? 1 );
+		const roughness = ( pbr?.roughnessFactor ?? 1 );
+		for ( const [ name, value ] of [ [ "metallic", metallic ], [ "roughness", roughness ] ] as const )
+		{
+			if ( !( ( value >= 0 ) && ( value <= 1 ) ) )
+			{
+				throw new Error ( `Material ${index} has a ${name} of ${value}, which is not from 0 to 1` );
+			}
+		}
+		return getSpecular ( baseColor, metallic, roughness );
+	}
+
+	/**
 	 * Get the alpha mask of a material. A MASK material draws the pixels
 	 * whose alpha is at least its cutoff, which is 0.5 by default, and an
 	 * opaque one draws every pixel, with a cutoff of 0, so that the alpha of
@@ -982,7 +1012,15 @@ export class Builder
 		// Make the state.
 		const topology = "triangle-list";
 		const state = ( hasNormals ? PhongShading.makeState ( { topology } ) : FlatShading.makeState ( { topology } ) );
-		state.addAttribute ( new Material ( { ambient: color, diffuse: color, emission, ...this.getAlphaMask ( material, index ) } ) );
+		const { specular, shininess } = this.getSpecularOf ( material, index, color );
+		state.addAttribute ( new Material ( {
+			ambient: color,
+			diffuse: color,
+			emission,
+			specular,
+			shininess,
+			...this.getAlphaMask ( material, index ),
+		} ) );
 		const diffuse = this.getTexture ( material?.pbrMetallicRoughness?.baseColorTexture );
 		const emissive = this.getTexture ( material?.emissiveTexture );
 		if ( diffuse || emissive )
