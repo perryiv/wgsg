@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { expect } from "chai";
-import { IDENTITY_MATRIX } from "../../../lib/src/Tools/Constants";
+import { IDENTITY_MATRIX } from "../../../lib/src/Math/Constants";
 import { makeLine, unProject } from "../../../lib/src/Tools/Three";
 import { Orthographic } from "../../../lib/src/Projections/Orthographic";
 import { Perspective } from "../../../lib/src/Projections/Perspective";

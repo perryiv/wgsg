@@ -30,10 +30,7 @@ import {
 	Sphere,
 	type ILineSphereIntersection,
 } from "../Math";
-import {
-	DEG_TO_RAD,
-	IDENTITY_MATRIX,
-} from "../Tools";
+import { DEG_TO_RAD, IDENTITY_MATRIX } from "../Math/Constants";
 import {
 	ICoordinateSystem,
 	IEvent,

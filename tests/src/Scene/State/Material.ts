@@ -15,7 +15,7 @@
 import { DEVELOPER_BUILD } from "../../../../lib/src/Tools/Environment";
 import { expect } from "chai";
 import { FlatShading } from "../../../../lib/src/Shaders/FlatShading";
-import { IDENTITY_MATRIX } from "../../../../lib/src/Tools/Constants";
+import { IDENTITY_MATRIX } from "../../../../lib/src/Math/Constants";
 import { SolidColor } from "../../../../lib/src/Shaders/SolidColor";
 import { State } from "../../../../lib/src/Scene/State";
 import type { IMatrix44, IVector4 } from "../../../../lib/src/Types";

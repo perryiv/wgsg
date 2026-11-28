@@ -13,7 +13,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Cancelled } from "../../Cancelled";
-import { ColorTool as Color, DEVELOPER_BUILD } from "../../../Tools";
+import { DEVELOPER_BUILD } from "../../../Tools";
+import { Color } from "../../../Math/Color";
 import { Common as BaseClass } from "./Common";
 import { findBytes, getErrorMessage, readBytes, yieldToEventLoop } from "../../Functions";
 import { Group, Node as SceneNode } from "../../../Scene/Nodes";

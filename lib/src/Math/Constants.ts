@@ -8,38 +8,25 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Test code for constants.
+//	Math constants.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { expect } from "chai";
-import { IDENTITY_MATRIX } from "../../../lib/src/Tools/Constants";
+import type { IMatrix44 } from "../Types/Matrix";
 
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Test the code.
+//	Constants.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export function test ()
-{
-	describe ( "Constants", function ()
-	{
-		it ( "Check the identity matrix", function ()
-		{
-			expect ( IDENTITY_MATRIX instanceof Object ).to.be.true;
-			expect ( IDENTITY_MATRIX.length ).to.equal ( 16 );
-			expect ( IDENTITY_MATRIX ).to.deep.equal ( [
-				1, 0, 0, 0,
-				0, 1, 0, 0,
-				0, 0, 1, 0,
-				0, 0, 0, 1
-			] );
-			for ( let i = 0; i < 16; ++i )
-			{
-				expect ( typeof IDENTITY_MATRIX[i] ).to.equal ( "number" );
-			}
-		} );
-	} );
-};
+export const IDENTITY_MATRIX: Readonly<IMatrix44> = [
+	1, 0, 0, 0,
+	0, 1, 0, 0,
+	0, 0, 1, 0,
+	0, 0, 0, 1
+];
+
+export const DEG_TO_RAD = ( Math.PI / 180 );
+export const RAD_TO_DEG = ( 180 / Math.PI );

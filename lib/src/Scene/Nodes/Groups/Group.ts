@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { hasBits } from "../../../Tools";
+import { hasBits } from "../../../Math/Bits";
 import { Sphere } from "../../../Math";
 import { Visitor } from "../../../Visitors/Visitor";
 import {

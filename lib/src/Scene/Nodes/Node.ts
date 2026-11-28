@@ -15,7 +15,7 @@
 import { Base } from "../../Base/Base";
 import { Sphere } from "../../Math";
 import { Group } from "./Groups/Group";
-import { hasBits, setBits } from "../../Tools";
+import { hasBits, setBits } from "../../Math/Bits";
 import { State } from "../State";
 import { Visitor } from "../../Visitors/Visitor";
 

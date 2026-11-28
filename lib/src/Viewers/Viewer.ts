@@ -29,12 +29,8 @@ import {
 	type ISurfaceConstructor,
 	Surface as BaseClass,
 } from "./Surface";
-import {
-	DEVELOPER_BUILD,
-	hasBits,
-	makeLine as makeLineUnderScreenPoint,
-	setBits,
-} from "../Tools";
+import { DEVELOPER_BUILD, makeLine as makeLineUnderScreenPoint } from "../Tools";
+import { hasBits, setBits } from "../Math/Bits";
 import type {
 	IAnimations,
 	ICommand,

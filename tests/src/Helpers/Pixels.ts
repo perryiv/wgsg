@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Color as ColorTool } from "../../../lib/src/Tools/Color";
+import { Color as ColorTool } from "../../../lib/src/Math/Color";
 import { Device } from "../../../lib/src/Tools/Device";
 
 

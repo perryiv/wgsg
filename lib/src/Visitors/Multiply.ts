@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IDENTITY_MATRIX } from "../Tools/Constants";
+import { IDENTITY_MATRIX } from "../Math/Constants";
 import { mat4 } from "gl-matrix";
 import { ProjectionNode as Projection, Transform } from "../Scene";
 import { Visitor as BaseClass } from "./Visitor";

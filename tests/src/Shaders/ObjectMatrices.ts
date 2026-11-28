@@ -14,7 +14,7 @@
 
 import { Device } from "../../../lib/src/Tools/Device";
 import { expect } from "chai";
-import { IDENTITY_MATRIX } from "../../../lib/src/Tools/Constants";
+import { IDENTITY_MATRIX } from "../../../lib/src/Math/Constants";
 import { ObjectMatrices } from "../../../lib/src/Shaders/ObjectMatrices";
 
 

@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Color } from "../../../lib/src/Tools/Color";
+import { Color } from "../../../lib/src/Math/Color";
 import { expect } from "chai";
 
 

@@ -15,7 +15,7 @@
 import { Device } from "../../../lib/src/Tools/Device";
 import { getPixel, makeTexture, readPixels } from "../Helpers/Pixels";
 import { expect } from "chai";
-import { IDENTITY_MATRIX } from "../../../lib/src/Tools/Constants";
+import { IDENTITY_MATRIX } from "../../../lib/src/Math/Constants";
 import { SolidColor } from "../../../lib/src/Shaders/SolidColor";
 import {
 	Group,

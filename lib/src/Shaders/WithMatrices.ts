@@ -12,7 +12,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Device, IDENTITY_MATRIX } from "../Tools";
+import { Device } from "../Tools";
+import { IDENTITY_MATRIX } from "../Math/Constants";
 import { mat4 } from "gl-matrix";
 import {
 	makeVertexBufferLayouts,

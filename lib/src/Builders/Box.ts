@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Box } from "../Math";
-import { ColorTool } from "../Tools";
+import { Color as ColorTool } from "../Math/Color";
 import { Multiply as BaseClass } from "../Visitors";
 import { SolidColor } from "../Shaders";
 import type { IVector3, IVector4 } from "../Types";

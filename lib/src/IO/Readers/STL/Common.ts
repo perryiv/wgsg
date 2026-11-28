@@ -12,7 +12,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { ColorTool, DEVELOPER_BUILD } from "../../../Tools";
+import { DEVELOPER_BUILD } from "../../../Tools";
+import { Color as ColorTool } from "../../../Math/Color";
 import { FlatShading } from "../../../Shaders";
 import { Reader as BaseClass } from "../../Reader";
 import { vec4 } from "gl-matrix";

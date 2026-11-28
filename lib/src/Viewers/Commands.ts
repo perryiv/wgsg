@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base as BaseClass } from "../Base";
-import { DEG_TO_RAD } from "../Tools";
+import { DEG_TO_RAD } from "../Math/Constants";
 import { Grid } from "../Decorators/Grid";
 import { vec3 } from "gl-matrix";
 import type {

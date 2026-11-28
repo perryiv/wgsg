@@ -24,12 +24,12 @@ import { SolidColor } from "../Shaders";
 import { vec4 } from "gl-matrix";
 import {
 	BUILD_TIME_LOG_LEVEL,
-	ColorTool as Color,
 	Device,
-	IDENTITY_MATRIX,
 	KEEP_PERFORMANCE_INFO,
 	LogLevel,
 } from "../Tools";
+import { Color } from "../Math/Color";
+import { IDENTITY_MATRIX } from "../Math/Constants";
 import {
 	Node,
 	State,

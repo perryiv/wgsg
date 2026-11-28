@@ -19,7 +19,7 @@
 
 import { Attribute as BaseClass, IAttributeApplyInput } from "../Attribute";
 import { Material } from "./Material";
-import { ColorTool } from "../../../Tools";
+import { Color as ColorTool } from "../../../Math/Color";
 import { IVector4 } from "../../../Types";
 import { vec4 } from "gl-matrix";
 

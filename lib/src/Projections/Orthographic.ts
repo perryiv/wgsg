@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IDENTITY_MATRIX } from "../Tools/Constants";
+import { IDENTITY_MATRIX } from "../Math/Constants";
 import { mat4 } from "gl-matrix";
 import { Projection } from "./Projection";
 import type { IMatrix44, IViewport } from "../Types";

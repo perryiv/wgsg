@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { DEG_TO_RAD, IDENTITY_MATRIX } from "../Tools";
+import { DEG_TO_RAD, IDENTITY_MATRIX } from "../Math/Constants";
 import { isPositiveFiniteNumber, Sphere } from "../Math";
 import { mat4 } from "gl-matrix";
 import { Projection } from "./Projection";
