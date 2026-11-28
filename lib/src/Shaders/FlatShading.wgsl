@@ -30,27 +30,29 @@ struct VertexOut
 	@builtin ( position ) position : vec4f,
 	@location ( 0 ) viewPosition : vec3f,
 	@location ( 1 ) color : vec4f,
+	@location ( 2 ) texCoord : vec2f,
 };
 
 // The vertex shader for geometry without vertex colors.
-@vertex fn vs ( @location ( 0 ) position: vec4f ) -> VertexOut
+@vertex fn vs ( @location ( 0 ) position: vec4f, @location ( 3 ) texCoord: vec2f ) -> VertexOut
 {
-	return makeVertex ( position, vec4f ( 1.0 ) );
+	return makeVertex ( position, vec4f ( 1.0 ), texCoord );
 }
 
 // The vertex shader for geometry with vertex colors.
-@vertex fn vsColors ( @location ( 0 ) position: vec4f, @location ( 2 ) color: vec4f ) -> VertexOut
+@vertex fn vsColors ( @location ( 0 ) position: vec4f, @location ( 2 ) color: vec4f, @location ( 3 ) texCoord: vec2f ) -> VertexOut
 {
-	return makeVertex ( position, color );
+	return makeVertex ( position, color, texCoord );
 }
 
-fn makeVertex ( position: vec4f, color: vec4f ) -> VertexOut
+fn makeVertex ( position: vec4f, color: vec4f, texCoord: vec2f ) -> VertexOut
 {
 	// The answer.
 	var answer : VertexOut;
 
 	// The vertex color, for the fragment shader.
 	answer.color = color;
+	answer.texCoord = texCoord;
 
 	// Transform the position to view space, and pass it to the fragment
 	// shader so that it can calculate the normal vector.
@@ -68,14 +70,18 @@ fn makeVertex ( position: vec4f, color: vec4f ) -> VertexOut
 // interpolated white, which can be off by a little.
 @fragment fn fs ( fragData: VertexOut, @builtin ( front_facing ) frontFacing: bool ) -> @location ( 0 ) vec4f
 {
-	return light ( getNormal ( fragData, frontFacing ), material.surface, vec4f ( 1.0 ) );
+	let normal = getNormal ( fragData, frontFacing );
+	let texel = textureSample ( diffuseTexture, diffuseSampler, fragData.texCoord );
+	return light ( normal, material.surface, texel );
 }
 
 // The fragment shader for geometry with vertex colors, which multiply the
 // material's ambient and diffuse colors.
 @fragment fn fsColors ( fragData: VertexOut, @builtin ( front_facing ) frontFacing: bool ) -> @location ( 0 ) vec4f
 {
-	return light ( getNormal ( fragData, frontFacing ), material.surface, fragData.color );
+	let normal = getNormal ( fragData, frontFacing );
+	let texel = textureSample ( diffuseTexture, diffuseSampler, fragData.texCoord );
+	return light ( normal, material.surface, ( fragData.color * texel ) );
 }
 
 // Return the normal of the triangle, in view space.

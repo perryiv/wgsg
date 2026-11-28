@@ -65,9 +65,11 @@ export class Bin extends BaseClass
 	 * @param {State} state - The state.
 	 * @param {boolean} [vertexColors] - Whether the shapes have vertex
 	 * colors. The default is false.
+	 * @param {boolean} [texCoords] - Whether the shapes have texture
+	 * coordinates. The default is false.
 	 * @returns {Pipeline} The pipeline.
 	 */
-	public getPipeline ( info: IRenderGraphInfo, state: State, vertexColors = false ) : Pipeline
+	public getPipeline ( info: IRenderGraphInfo, state: State, vertexColors = false, texCoords = false ) : Pipeline
 	{
 		const { shader } = state;
 
@@ -80,6 +82,10 @@ export class Bin extends BaseClass
 		if ( vertexColors )
 		{
 			options.vertexColors = true;
+		}
+		if ( texCoords )
+		{
+			options.texCoords = true;
 		}
 		const name = `${shader.type}, ${makePipelineKey ( options )}`;
 		let pipeline: ( Pipeline | undefined ) = this.#pipelines.get ( name );

@@ -31,14 +31,17 @@ struct Material
 @group ( 3 ) @binding ( 0 ) var<storage, read> indices : array<u32>;
 @group ( 3 ) @binding ( 1 ) var<storage, read> points : array<f32>;
 @group ( 3 ) @binding ( 3 ) var<storage, read> colors : array<f32>;
+@group ( 3 ) @binding ( 4 ) var<storage, read> texCoords : array<f32>;
 
-// How to read the indices, in the low bits of the mode, and the bit that
-// says there are vertex colors. These are the same as in WithEdges.ts.
+// How to read the indices, in the low bits of the mode, and the bits that
+// say there are vertex colors and texture coordinates. These are the same as
+// in WithEdges.ts.
 const PULLED_INDICES_NONE = 0u;
 const PULLED_INDICES_UINT16 = 1u;
 const PULLED_INDICES_UINT32 = 2u;
 const PULLED_INDICES_MASK = 3u;
 const PULLED_COLORS = 4u;
+const PULLED_TEX_COORDS = 8u;
 
 // Return the index of the vertex at the given corner. The corners are
 // counted from the start of the draw, three for each triangle.
@@ -86,6 +89,18 @@ fn getColor ( index: u32, mode: u32 ) -> vec4f
 	}
 	let i = index * 4u;
 	return vec4f ( colors[i], colors[i + 1u], colors[i + 2u], colors[i + 3u] );
+}
+
+// Return the texture coordinate of the vertex, or zero if there are no
+// texture coordinates.
+fn getTexCoord ( index: u32, mode: u32 ) -> vec2f
+{
+	if ( 0u == ( mode & PULLED_TEX_COORDS ) )
+	{
+		return vec2f ( 0.0 );
+	}
+	let i = index * 2u;
+	return vec2f ( texCoords[i], texCoords[i + 1u] );
 }
 
 // Return the vertex color for the lighting: the interpolated one if there

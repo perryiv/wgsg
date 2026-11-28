@@ -55,11 +55,16 @@ struct Object
 @group ( 0 ) @binding ( 0 ) var<uniform> camera : Camera;
 @group ( 2 ) @binding ( 0 ) var<uniform> object : Object;
 
+// The diffuse texture and its sampler, after the material in bind group 1.
+// Without a texture, it's a white one that gives exactly 1.
+@group ( 1 ) @binding ( 1 ) var diffuseTexture : texture_2d<f32>;
+@group ( 1 ) @binding ( 2 ) var diffuseSampler : sampler;
+
 // Return the lit color, pre-multiplied by its alpha, as the canvas is
 // configured. The normal is in view space and unit length, and points out
 // of the side being drawn when that side faces the light. The vertex color,
 // which is white without vertex colors, multiplies the ambient and diffuse
-// colors.
+// colors. The shaders multiply it by the diffuse texture's color first.
 fn light ( normalIn: vec3f, surface: Surface, vertexColor: vec4f ) -> vec4f
 {
 	// The colors.

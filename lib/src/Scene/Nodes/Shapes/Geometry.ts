@@ -328,6 +328,18 @@ export class Geometry extends Shape
 	}
 
 	/**
+	 * See if there are texture coordinates for each point, two numbers (u and
+	 * v) each, so that textures can be drawn on it.
+	 * @returns {boolean} Whether there are texture coordinates.
+	 */
+	public get hasTexCoords() : boolean
+	{
+		const numPoints = ( ( this.#points?.values?.length ?? 0 ) / 3 );
+		const numTexCoords = ( ( this.#texCoords?.values?.length ?? 0 ) / 2 );
+		return ( ( numPoints > 0 ) && ( numTexCoords === numPoints ) );
+	}
+
+	/**
 	 * Get the texture coordinates.
 	 * @returns {ITexCoordData | null} Texture coordinates for this geometry.
 	 */

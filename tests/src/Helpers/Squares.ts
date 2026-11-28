@@ -59,11 +59,14 @@ export interface IShaderClass
  * the order lower left, lower right, upper right, and upper left.
  * @param {IVector3} [normal] - The normal of every corner. The default is
  * towards the camera.
+ * @param {number[] | null} [texCoords] - The texture coordinates of each
+ * corner, if any, two numbers each, in the same order as the colors.
  * @returns {Geometry} The square.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const makeSquare = ( center: IVector3, state: State, colors: ( IVector4[] | null ) = null, normal: IVector3 = [ 0, 0, 1 ] ) : Geometry =>
+export const makeSquare = ( center: IVector3, state: State, colors: ( IVector4[] | null ) = null,
+	normal: IVector3 = [ 0, 0, 1 ], texCoords: ( number[] | null ) = null ) : Geometry =>
 {
 	const h = 0.4;
 	const [ x, y, z ] = center;
@@ -72,6 +75,7 @@ export const makeSquare = ( center: IVector3, state: State, colors: ( IVector4[]
 		points: new Float32Array ( points ),
 		normals: new Float32Array ( [ ...normal, ...normal, ...normal, ...normal ] ),
 		colors: ( colors ? new Float32Array ( colors.flat() ) : null ),
+		texCoords: ( texCoords ? new Float32Array ( texCoords ) : null ),
 		primitives: new Indexed ( { topology: "triangle-list", indices: new Uint16Array ( [ 0, 1, 2,   0, 2, 3 ] ) } ),
 	} );
 	square.state = state;

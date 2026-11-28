@@ -44,6 +44,7 @@ interface IPulledVerticesData
 	points: GPUBuffer;
 	normals: ( GPUBuffer | null );
 	colors: GPUBuffer;
+	texCoords: GPUBuffer;
 }
 
 
@@ -61,6 +62,9 @@ export const PULLED_INDICES_UINT32 = 2;
 
 // Added to the above when there are vertex colors.
 export const PULLED_COLORS = 4;
+
+// Added to the above when there are texture coordinates.
+export const PULLED_TEX_COORDS = 8;
 
 // The bind group with the buffers that the vertices are pulled from.
 export const PULLED_VERTICES_BIND_GROUP = 3;
@@ -205,6 +209,7 @@ export abstract class WithEdges extends BaseClass
 				entries.push ( { binding: 2, visibility, buffer } ); // Normals
 			}
 			entries.push ( { binding: 3, visibility, buffer } ); // Colors
+			entries.push ( { binding: 4, visibility, buffer } ); // Texture coordinates
 			this.#verticesLayout = Device.instance.device.createBindGroupLayout ( {
 				label: `Bind group layout for pulled vertices in shader ${this.type}`,
 				entries,
@@ -280,14 +285,28 @@ export abstract class WithEdges extends BaseClass
 			mode += PULLED_COLORS;
 		}
 
+		// The same for the texture coordinates.
+		let texCoords = points;
+		if ( geometry.hasTexCoords )
+		{
+			const buffer = geometry.texCoords?.buffer;
+			if ( !buffer )
+			{
+				return null;
+			}
+			texCoords = buffer;
+			mode += PULLED_TEX_COORDS;
+		}
+
 		// Use the bind group we made before if the buffers are the same.
 		let data = this.#pulled.get ( key );
-		if ( ( data?.indices !== indexBuffer ) || ( data.points !== points ) || ( data.normals !== normals ) || ( data.colors !== colors ) )
+		if ( ( data?.indices !== indexBuffer ) || ( data.points !== points ) || ( data.normals !== normals ) ||
+			( data.colors !== colors ) || ( data.texCoords !== texCoords ) )
 		{
 			// Each buffer has to fit in one storage buffer binding.
 			const { device } = Device.instance;
 			const maxSize = device.limits.maxStorageBufferBindingSize;
-			const tooBig = [ indexBuffer, points, normals, colors ].find (
+			const tooBig = [ indexBuffer, points, normals, colors, texCoords ].find (
 				( buffer ) => ( ( buffer?.size ?? 0 ) > maxSize ) );
 			if ( tooBig )
 			{
@@ -310,6 +329,7 @@ export abstract class WithEdges extends BaseClass
 				entries.push ( { binding: 2, resource: { buffer: normals } } );
 			}
 			entries.push ( { binding: 3, resource: { buffer: colors } } );
+			entries.push ( { binding: 4, resource: { buffer: texCoords } } );
 			const bindGroup = device.createBindGroup ( {
 				label: `Bind group for pulled vertices in shader ${this.type}`,
 				layout: this.verticesLayout,
@@ -317,7 +337,7 @@ export abstract class WithEdges extends BaseClass
 			} );
 
 			// Save it for next time.
-			data = { bindGroup, indices: indexBuffer, points, normals, colors };
+			data = { bindGroup, indices: indexBuffer, points, normals, colors, texCoords };
 			this.#pulled.set ( key, data );
 		}
 

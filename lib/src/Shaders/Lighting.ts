@@ -211,6 +211,7 @@ export abstract class Lighting extends BaseClass
 	 */
 	public override reset () : void
 	{
+		super.reset();
 		this.ambient = DEFAULT_AMBIENT;
 		this.diffuse = DEFAULT_DIFFUSE;
 		this.specular = DEFAULT_SPECULAR;

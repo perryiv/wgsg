@@ -22,7 +22,9 @@ import {
 	type IShaderBaseInput,
 } from "./ShaderBase";
 import { ObjectMatrices } from "./ObjectMatrices";
-import { UniformPool } from "./UniformPool";
+import { getWhiteTexture } from "../Textures/Defaults";
+import { UniformPool, type IUniformPoolTexture } from "./UniformPool";
+import type { Texture } from "../Textures/Texture";
 import type { IMatrix44 } from "../Types";
 
 
@@ -45,11 +47,12 @@ interface IUniformGroup
 	pool: ( UniformPool | null );
 	layout: ( GPUBindGroupLayout | null );
 	changed: boolean;
+	textured: boolean; // Whether bindings 1 and 2 are a texture and sampler.
 }
 
 const makeUniformGroup = () : IUniformGroup =>
 {
-	return { pool: null, layout: null, changed: true };
+	return { pool: null, layout: null, changed: true, textured: false };
 };
 
 
@@ -72,7 +75,8 @@ export abstract class WithMatrices extends BaseClass
 {
 	#projMatrix: IMatrix44 = [ ...IDENTITY_MATRIX ];
 	#camera: IUniformGroup = makeUniformGroup();
-	#material: IUniformGroup = makeUniformGroup();
+	#material: IUniformGroup = { ...makeUniformGroup(), textured: true };
+	#diffuseTexture: ( Texture | null ) = null;
 	#pipelineLayout: ( GPUPipelineLayout | null ) = null;
 
 	/**
@@ -102,7 +106,7 @@ export abstract class WithMatrices extends BaseClass
 		this.#camera.pool?.destroy();
 		this.#material.pool?.destroy();
 		this.#camera = makeUniformGroup();
-		this.#material = makeUniformGroup();
+		this.#material = { ...makeUniformGroup(), textured: true };
 		this.#pipelineLayout = null;
 		super.releaseGpuObjects();
 	}
@@ -235,7 +239,7 @@ export abstract class WithMatrices extends BaseClass
 			vertex: {
 				module: this.module,
 				entryPoint: ( colors ? "vsColors" : "vs" ),
-				buffers: makeVertexBufferLayouts ( arrays ),
+				buffers: makeVertexBufferLayouts ( arrays, options ),
 			},
 			fragment: {
 				module: this.module,
@@ -276,22 +280,33 @@ export abstract class WithMatrices extends BaseClass
 	}
 
 	/**
-	 * Get the layout of a bind group with one uniform buffer, making it if
-	 * we have to.
+	 * Get the layout of a bind group with one uniform buffer, and for a
+	 * textured group, a texture and its sampler, making it if we have to.
 	 * @param {IUniformGroup} group - The uniforms.
 	 * @param {string} name - The name, for the label.
 	 * @returns {GPUBindGroupLayout} The bind group layout.
 	 */
 	protected getLayout ( group: IUniformGroup, name: string ) : GPUBindGroupLayout
 	{
-		group.layout ??= Device.instance.device.createBindGroupLayout ( {
-			label: `Bind group layout for the ${name} in shader ${this.type}`,
-			entries: [ {
+		if ( !group.layout )
+		{
+			const entries: GPUBindGroupLayoutEntry[] = [ {
 				binding: 0,
 				visibility: ( GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT ),
 				buffer: { type: "uniform" },
-			} ],
-		} );
+			} ];
+			if ( group.textured )
+			{
+				entries.push (
+					{ binding: 1, visibility: GPUShaderStage.FRAGMENT, texture: { sampleType: "float" } },
+					{ binding: 2, visibility: GPUShaderStage.FRAGMENT, sampler: { type: "filtering" } },
+				);
+			}
+			group.layout = Device.instance.device.createBindGroupLayout ( {
+				label: `Bind group layout for the ${name} in shader ${this.type}`,
+				entries,
+			} );
+		}
 		return group.layout;
 	}
 
@@ -314,7 +329,37 @@ export abstract class WithMatrices extends BaseClass
 	{
 		// Note: The render-pass' pipeline should already be set.
 		this.useUniforms ( pass, frame, 0, this.#camera, "camera", this.makeCameraUniforms() );
-		this.useUniforms ( pass, frame, 1, this.#material, "material", this.makeMaterialUniforms() );
+		const texture = ( this.#diffuseTexture ?? getWhiteTexture() );
+		const textureInput: IUniformPoolTexture = { view: texture.view, sampler: texture.sampler };
+		this.useUniforms ( pass, frame, 1, this.#material, "material", this.makeMaterialUniforms(), textureInput );
+	}
+
+	/**
+	 * Get the diffuse texture.
+	 * @returns {Texture | null} The texture, or null for none.
+	 */
+	public get diffuseTexture () : ( Texture | null )
+	{
+		return this.#diffuseTexture;
+	}
+
+	/**
+	 * Set the diffuse texture. Without one, a white texture is used, which
+	 * doesn't change the colors.
+	 * @param {Texture | null} texture - The texture, or null for none.
+	 */
+	public set diffuseTexture ( texture: ( Texture | null ) )
+	{
+		this.#diffuseTexture = texture;
+	}
+
+	/**
+	 * Put back the default values of what state attributes set: no texture.
+	 * Derived classes that override this call it too.
+	 */
+	public override reset () : void
+	{
+		this.#diffuseTexture = null;
 	}
 
 	/**
@@ -325,16 +370,19 @@ export abstract class WithMatrices extends BaseClass
 	 * @param {IUniformGroup} group - The uniforms.
 	 * @param {string} name - The name, for the labels.
 	 * @param {ArrayBuffer} values - The values.
+	 * @param {IUniformPoolTexture} [texture] - The texture view and sampler,
+	 * for a textured group.
 	 */
 	protected useUniforms ( pass: Readonly<GPURenderPassEncoder>, frame: number, index: number,
-		group: IUniformGroup, name: string, values: ArrayBuffer ) : void
+		group: IUniformGroup, name: string, values: ArrayBuffer, texture?: Readonly<IUniformPoolTexture> ) : void
 	{
 		group.pool ??= new UniformPool ( {
 			label: `${name} in shader ${this.type}`,
 			layout: this.getLayout ( group, name ),
 			size: values.byteLength,
+			textured: group.textured,
 		} );
-		const bindGroup = group.pool.use ( frame, group.changed, values );
+		const bindGroup = group.pool.use ( frame, group.changed, values, texture );
 		group.changed = false;
 		pass.setBindGroup ( index, bindGroup );
 	}
