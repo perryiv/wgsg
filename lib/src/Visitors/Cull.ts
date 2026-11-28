@@ -486,7 +486,7 @@ export class Cull extends BaseClass
 
 		// Get or make the containers we need.
 		const layer = root.getLayer ( info, state.layer );
-		const bin = layer.getBin ( info, state.bin );
+		const bin = layer.getBin ( info, state.bin, state.binSort );
 		const vertexColors = ( ( shape instanceof Geometry ) && shape.hasVertexColors );
 		const texCoords = ( ( shape instanceof Geometry ) && shape.hasTexCoords );
 		const pipeline = bin.getPipeline ( info, state, vertexColors, texCoords );
@@ -499,14 +499,44 @@ export class Cull extends BaseClass
 			this.#matrix = root.addMatrix ( info, this.viewMatrix );
 		}
 
-		// Add our shape.
-		sg.addShape ( info, shape, this.#matrix );
+		// Add our shape, with its depth if the bin is sorted by it.
+		const depth = ( bin.sorted ? this.getDepth ( shape ) : 0 );
+		bin.addShape ( info, { pipeline, pmg, sg, shape, matrix: this.#matrix, depth } );
 
 		// Do this last.
 		super.visitShape ( shape );
 
 		// Restore the original state.
 		this.alwaysSetCurrentState ( original );
+	}
+
+	/**
+	 * Get the depth of the center of the shape's bounds, as the depth test
+	 * sees it: its projected z over w, which is larger when it's farther.
+	 * @param {Shape} shape - The shape.
+	 * @returns {number} The depth, or zero if the shape has no bounds. A
+	 * center behind the eye is the nearest of all.
+	 */
+	protected getDepth ( shape: Shape ) : number
+	{
+		const sphere = shape.bounds;
+		if ( false === sphere.valid )
+		{
+			return 0;
+		}
+
+		// The center in view space.
+		const [ x, y, z ] = sphere.center;
+		const m = this.viewMatrix;
+		const vx = ( m[0] * x ) + ( m[4] * y ) + ( m[8] * z ) + m[12];
+		const vy = ( m[1] * x ) + ( m[5] * y ) + ( m[9] * z ) + m[13];
+		const vz = ( m[2] * x ) + ( m[6] * y ) + ( m[10] * z ) + m[14];
+
+		// Its projected z and w.
+		const p = this.projMatrix;
+		const pz = ( p[2] * vx ) + ( p[6] * vy ) + ( p[10] * vz ) + p[14];
+		const pw = ( p[3] * vx ) + ( p[7] * vy ) + ( p[11] * vz ) + p[15];
+		return ( ( pw > 0 ) ? ( pz / pw ) : -Infinity );
 	}
 
 	/**

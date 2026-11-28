@@ -557,7 +557,12 @@ export class Draw extends BaseClass
 	 */
 	protected drawBin ( bin: Bin ) : void
 	{
-		// console.log ( `Bin ${bin.id} has ${bin.numPipelines} pipelines` );
+		// A bin sorted by depth has its own list.
+		if ( bin.sorted )
+		{
+			this.drawSortedBin ( bin );
+			return;
+		}
 
 		// Draw the pipelines.
 		bin.forEachPipeline ( ( pipeline: Pipeline ) =>
@@ -567,22 +572,71 @@ export class Draw extends BaseClass
 	}
 
 	/**
+	 * Draw the shapes of a bin sorted by depth, in order. The pipeline and
+	 * state are only changed when they're not the same as the shape before.
+	 * @param {Bin} bin - The bin to draw.
+	 */
+	protected drawSortedBin ( bin: Bin ) : void
+	{
+		let pipeline: ( Pipeline | null ) = null;
+		let pmg: ( ProjMatrixGroup | null ) = null;
+		let sg: ( StateGroup | null ) = null;
+		let input: ( IStateApplyInput | null ) = null;
+
+		bin.forEachSortedShape ( ( item ) =>
+		{
+			// Change the state, and the pipeline and projection if needed.
+			if ( item.sg !== sg )
+			{
+				if ( input )
+				{
+					this.resetState ( input );
+				}
+				if ( item.pipeline !== pipeline )
+				{
+					pipeline = item.pipeline;
+					this.setPipeline ( pipeline );
+				}
+				if ( item.pmg !== pmg )
+				{
+					pmg = item.pmg;
+					pipeline.projMatrix = pmg.matrix;
+				}
+				sg = item.sg;
+				input = this.applyState ( pipeline, pmg, sg );
+			}
+
+			// Draw the shape.
+			this.drawWithMatrix ( item.shape, item.matrix );
+		} );
+
+		// Reset the last state.
+		if ( input )
+		{
+			this.resetState ( input );
+		}
+	}
+
+	/**
+	 * Set the render pass' pipeline, and remember which of the geometry's
+	 * arrays it reads.
+	 * @param {Pipeline} pipeline - The pipeline.
+	 */
+	protected setPipeline ( pipeline: Pipeline ) : void
+	{
+		const { shader, options } = pipeline;
+		this.renderPassEncoder.setPipeline ( shader.getPipeline ( options ) );
+		this.#vertexArrays = shader.getVertexArrays ( options );
+		this.#texCoords = ( true === options.texCoords );
+	}
+
+	/**
 	 * Draw the pipeline.
 	 * @param {Pipeline} pipeline - The pipeline to draw.
 	 */
 	protected drawPipeline ( pipeline: Pipeline ) : void
 	{
-		// Shortcuts.
-		const pass = this.renderPassEncoder;
-		const { shader, options } = pipeline;
-
-		// Set the render pass' pipeline, and remember which of the geometry's
-		// arrays it reads.
-		pass.setPipeline ( shader.getPipeline ( options ) );
-		this.#vertexArrays = shader.getVertexArrays ( options );
-		this.#texCoords = ( true === options.texCoords );
-
-		// console.log ( `Pipeline ${pipeline.id} has ${pipeline.numProjMatrices} projection matrices` );
+		this.setPipeline ( pipeline );
 
 		// Draw the projection matrix groups.
 		pipeline.forEachProjMatrixGroup ( ( pmg: ProjMatrixGroup ) =>
@@ -634,11 +688,25 @@ export class Draw extends BaseClass
 	 */
 	protected drawStateGroup ( pipeline: Pipeline, pmg: ProjMatrixGroup, sg: StateGroup ) : void
 	{
-		// Shortcuts.
-		const { state } = sg;
-		const pass = this.renderPassEncoder;
+		const input = this.applyState ( pipeline, pmg, sg );
+		sg.forEachShape ( ( shape: Shape, _index: number, matrix: number ) =>
+		{
+			this.drawWithMatrix ( shape, matrix );
+		} );
+		this.resetState ( input );
+	}
 
+	/**
+	 * Apply the state group's state and get the shader ready to draw.
+	 * @param {Pipeline} pipeline - The pipeline in use.
+	 * @param {ProjMatrixGroup} pmg - The projection matrix group.
+	 * @param {StateGroup} sg - The state group.
+	 * @returns {IStateApplyInput} The input, for resetting the state.
+	 */
+	protected applyState ( pipeline: Pipeline, pmg: ProjMatrixGroup, sg: StateGroup ) : IStateApplyInput
+	{
 		// Input for applying and resetting the state.
+		const { state } = sg;
 		const input: IStateApplyInput = {
 			state,
 			shader: pipeline.shader,
@@ -650,27 +718,40 @@ export class Draw extends BaseClass
 
 		// Configure the render pass now that the state has been applied.
 		const shader = requireShader ( state );
-		shader.configureRenderPass ( pass, this.#frame );
+		shader.configureRenderPass ( this.renderPassEncoder, this.#frame );
 		this.#shader = shader;
 
-		// Draw the shapes. Bind each one's matrix, unless it's the same as the
-		// shape before it.
+		// The next shape binds its matrix.
 		this.#boundMatrix = -1;
-		sg.forEachShape ( ( shape: Shape, _index: number, matrix: number ) =>
-		{
-			if ( matrix !== this.#boundMatrix )
-			{
-				this.#objects.bind ( pass, this.#offsets[matrix] );
-				this.#boundMatrix = matrix;
-			}
+		return input;
+	}
 
-			// The shape decides which function to call in order to draw itself.
-			shape.accept ( this );
-		} );
-
-		// Reset the state.
-		state.doReset ( input );
+	/**
+	 * Reset the state that applyState() applied.
+	 * @param {IStateApplyInput} input - What it returned.
+	 */
+	protected resetState ( input: IStateApplyInput ) : void
+	{
+		input.state.doReset ( input );
 		this.#shader = null;
+	}
+
+	/**
+	 * Draw the shape, binding its matrix unless it's the same as the shape
+	 * before it.
+	 * @param {Shape} shape - The shape.
+	 * @param {number} matrix - The index of its matrix.
+	 */
+	protected drawWithMatrix ( shape: Shape, matrix: number ) : void
+	{
+		if ( matrix !== this.#boundMatrix )
+		{
+			this.#objects.bind ( this.renderPassEncoder, this.#offsets[matrix] );
+			this.#boundMatrix = matrix;
+		}
+
+		// The shape decides which function to call in order to draw itself.
+		shape.accept ( this );
 	}
 
 	/**

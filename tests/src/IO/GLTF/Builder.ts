@@ -768,6 +768,7 @@ export function test ()
 					maker.addMaterial ( alphaMode ? { alphaMode } : {} );
 					const geom = await readOne ( maker.glb() );
 					expect ( geom.state!.bin ).to.equal ( bin );
+					expect ( geom.state!.binSort ).to.equal ( ( TRANSPARENT_BIN === bin ) ? "back-to-front" : null );
 					expect ( geom.state!.pipelineOptions.depthWrite ).to.equal ( depthWrite );
 					expect ( geom.state!.pipelineOptions.cullMode ).to.equal ( "back" );
 				}
@@ -786,7 +787,9 @@ export function test ()
 				expect ( states.length ).to.equal ( 2 );
 				const [ back, front ] = states;
 				expect ( back.bin ).to.equal ( TRANSPARENT_BIN );
-				expect ( front.bin ).to.equal ( TRANSPARENT_BIN + 1 );
+				expect ( front.bin ).to.equal ( TRANSPARENT_BIN );
+				expect ( back.binSort ).to.equal ( "back-to-front" );
+				expect ( front.binSort ).to.equal ( "back-to-front" );
 				expect ( back.pipelineOptions.cullMode ).to.equal ( "front" );
 				expect ( front.pipelineOptions.cullMode ).to.equal ( "back" );
 				for ( const state of [ back, front ] )
@@ -844,7 +847,7 @@ export function test ()
 				const scene = await read ( maker.glb() );
 				expect ( getGeometries ( scene )[0].state ).to.be.null;
 				const states = getGroupStates ( scene );
-				expect ( states.map ( ( state ) => state.bin ) ).to.deep.equal ( [ TRANSPARENT_BIN, ( TRANSPARENT_BIN + 1 ) ] );
+				expect ( states.map ( ( state ) => state.bin ) ).to.deep.equal ( [ TRANSPARENT_BIN, TRANSPARENT_BIN ] );
 				expect ( states.map ( ( state ) => getColor ( state )[3] ) ).to.deep.equal ( [ 0.25, 0.25 ] );
 			} );
 

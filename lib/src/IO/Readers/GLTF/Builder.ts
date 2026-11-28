@@ -45,9 +45,10 @@
 //
 //	A material with alphaMode BLEND is semi-transparent: its state goes in
 //	TRANSPARENT_BIN, without depth writes, so it's drawn after the opaque
-//	shapes and doesn't hide what's behind it. A double-sided one is drawn
-//	with buildTransparentScene(), back faces first and then front faces.
-//	Transparent shapes are not sorted by depth. A MASK material draws only
+//	shapes and doesn't hide what's behind it. That bin is sorted back to
+//	front, so the farthest shapes are drawn first. A double-sided one is
+//	drawn with buildTransparentScene(), back faces first and then front
+//	faces. A MASK material draws only
 //	the pixels whose alpha is at least its cutoff, and draws them opaque. An
 //	OPAQUE one draws every pixel opaque, ignoring the alpha of its textures
 //	and vertex colors.
@@ -1099,6 +1100,7 @@ export class Builder
 		{
 			state.addAttribute ( new Depth ( { write: false } ) );
 			state.bin = TRANSPARENT_BIN;
+			state.binSort = "back-to-front";
 		}
 		return state;
 	}

@@ -69,10 +69,16 @@ export function test ()
 		{
 			const back = new State();
 			const front = new State();
-			buildTransparentScene ( { geometry: buildBox(), back, front } );
+			const scene = buildTransparentScene ( { geometry: buildBox(), back, front } );
 
-			expect ( back.bin ).to.equal ( TRANSPARENT_BIN );
-			expect ( front.bin ).to.equal ( TRANSPARENT_BIN + 1 );
+			// Both in the transparent bin, sorted back to front, with the back
+			// faces first, so they're drawn first.
+			for ( const state of [ back, front ] )
+			{
+				expect ( state.bin ).to.equal ( TRANSPARENT_BIN );
+				expect ( state.binSort ).to.equal ( "back-to-front" );
+			}
+			expect ( ( scene.getChild ( 0 ) as Group ).state ).to.equal ( back );
 			expect ( back.pipelineOptions ).to.deep.equal ( { topology: "triangle-list", cullMode: "front", depthWrite: false } );
 			expect ( front.pipelineOptions ).to.deep.equal ( { topology: "triangle-list", cullMode: "back", depthWrite: false } );
 
@@ -133,7 +139,8 @@ export function test ()
 
 				// Not copied: the name is made, and the bin is the transparent one.
 				expect ( state.name ).not.to.equal ( "Glass" );
-				expect ( state.bin ).to.be.at.least ( TRANSPARENT_BIN );
+				expect ( state.bin ).to.equal ( TRANSPARENT_BIN );
+				expect ( state.binSort ).to.equal ( "back-to-front" );
 			}
 
 			// The geometry's culling is replaced, on each side, and the original
@@ -161,7 +168,7 @@ export function test ()
 				const front = ( scene.getChild ( 1 ) as Group ).state!;
 				expect ( back ).not.to.equal ( front );
 				expect ( back.bin ).to.equal ( TRANSPARENT_BIN );
-				expect ( front.bin ).to.equal ( TRANSPARENT_BIN + 1 );
+				expect ( front.bin ).to.equal ( TRANSPARENT_BIN );
 			};
 
 			// The box has no normals, so it gets flat shading.

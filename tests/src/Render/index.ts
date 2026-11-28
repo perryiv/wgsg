@@ -12,9 +12,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { test as testBin } from "./Bin";
 import { test as testRoot } from "./Root";
 
 describe ( "Render", function ()
 {
+	testBin();
 	testRoot();
 } );

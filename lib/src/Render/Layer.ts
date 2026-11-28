@@ -15,6 +15,8 @@
 import { Base as BaseClass } from "../Base";
 import { IRenderGraphInfo } from "../Types";
 import { Bin } from "./Bin";
+import { DEVELOPER_BUILD } from "../Tools/Environment";
+import type { IBinSort } from "../Scene";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -24,6 +26,9 @@ import { Bin } from "./Bin";
 ///////////////////////////////////////////////////////////////////////////////
 
 export type IBinMap = Map < number, Bin >;
+
+// The bins whose states disagreed on the sort, so each is said only once.
+const warned = new Set < string > ();
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -59,16 +64,31 @@ export class Layer extends BaseClass
 	 * Get the bin. Make it if we have to.
 	 * @param {IRenderGraphInfo} info - The render graph info.
 	 * @param {number} id - The bin ID.
+	 * @param {IBinSort | null} [sort] - How a new bin sorts its shapes by
+	 * depth. An existing bin keeps its own. The default is null, which is not
+	 * at all.
 	 * @returns {Bin} The bin.
 	 */
-	public getBin ( info: IRenderGraphInfo, id: Readonly<number> ) : Bin
+	public getBin ( info: IRenderGraphInfo, id: Readonly<number>, sort: ( IBinSort | null ) = null ) : Bin
 	{
 		let bin: ( Bin | undefined ) = this.#bins.get ( id );
 		if ( !bin )
 		{
-			bin = new Bin ();
+			bin = new Bin ( sort );
 			this.#bins.set ( id, bin );
 			info.numBins++;
+		}
+
+		// In developer builds, say when states in the same bin disagree.
+		else if ( DEVELOPER_BUILD && ( sort !== bin.sort ) )
+		{
+			const describe = ( mode: ( IBinSort | null ) ) : string => ( mode ? `sorted ${mode}` : "not sorted by depth" );
+			const key = `${id} ${bin.sort} ${sort}`;
+			if ( !warned.has ( key ) )
+			{
+				warned.add ( key );
+				console.warn ( `Bin ${id} is ${describe ( bin.sort )}, so a state that wants it ${describe ( sort )} is not used` );
+			}
 		}
 		return bin;
 	}
