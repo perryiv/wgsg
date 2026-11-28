@@ -16,7 +16,7 @@ import { Attribute } from "./Attribute";
 import { Color } from "./Attributes/Color";
 import { DEVELOPER_BUILD } from "../../Tools/Environment";
 import { Material } from "./Attributes/Material";
-import { Base as BaseClass } from "../../Base";
+import { Base as BaseClass, replaceReference } from "../../Base";
 import { IMatrix44 } from "../../Types";
 import { ShaderBase, type IPipelineOptions } from "../../Shaders";
 
@@ -165,12 +165,31 @@ export class State extends BaseClass
 	}
 
 	/**
-	 * Get the state attributes.
-	 * @returns {IStateAttributes} The state attributes.
+	 * Get the state attributes. Use addAttribute() to change them, so that
+	 * the ones in use are counted.
+	 * @returns {ReadonlyMap<string, Attribute>} The state attributes.
 	 */
-	public get attributes() : IStateAttributes
+	public get attributes() : ReadonlyMap < string, Attribute >
 	{
 		return this.#attributes;
+	}
+
+	/**
+	 * Called when this state starts being used. Its attributes are now used
+	 * too, which matters for those that hold GPU resources.
+	 */
+	protected override onFirstRef() : void
+	{
+		this.#attributes.forEach ( ( attribute ) => { attribute.ref(); } );
+	}
+
+	/**
+	 * Called when this state is no longer used. Neither are its attributes,
+	 * but they stay in the state so that it can be used again later.
+	 */
+	protected override onLastUnref() : void
+	{
+		this.#attributes.forEach ( ( attribute ) => { attribute.unref(); } );
 	}
 
 	/**
@@ -179,6 +198,10 @@ export class State extends BaseClass
 	 */
 	public addAttribute ( attribute: Attribute ) : void
 	{
+		// If this state is in use then count the new attribute instead of the
+		// one of the same type that it replaces, if any.
+		const old = this.#attributes.get ( attribute.type );
+		replaceReference ( ( this.refCount > 0 ), old, attribute );
 		this.#attributes.set ( attribute.type, attribute );
 
 		// In developer builds, say when the state has both a color and a
