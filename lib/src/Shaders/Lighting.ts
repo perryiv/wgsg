@@ -51,6 +51,7 @@ export abstract class Lighting extends BaseClass
 	#specular: IVector4 = [ ...DEFAULT_SPECULAR ];
 	#emission: IVector4 = [ ...DEFAULT_EMISSION ];
 	#shininess = DEFAULT_SHININESS;
+	#alphaCutoff: ( number | null ) = null;
 	#twoSidedLight = false;
 	#lightDir: IVector4 = [ 0.0, 0.0, -1.0, 0.0 ];
 	#ambientLight: IVector4 = [ ...DEFAULT_AMBIENT_LIGHT ];
@@ -187,6 +188,26 @@ export abstract class Lighting extends BaseClass
 	}
 
 	/**
+	 * Get the alpha cutoff: a pixel whose alpha is below it isn't drawn, and
+	 * the others are drawn opaque. Null means there's no alpha mask.
+	 * @returns {number | null} The cutoff, from 0 to 1, or null.
+	 */
+	public get alphaCutoff () : ( number | null )
+	{
+		return this.#alphaCutoff;
+	}
+
+	/**
+	 * Set the alpha cutoff, or null for no alpha mask.
+	 * @param {number | null} cutoff - The cutoff, from 0 to 1, or null.
+	 */
+	public set alphaCutoff ( cutoff: ( number | null ) )
+	{
+		this.#alphaCutoff = cutoff;
+		this.materialChanged();
+	}
+
+	/**
 	 * Return whether to use two-sided lighting.
 	 * @returns {boolean} Whether to use two-sided lighting.
 	 */
@@ -217,6 +238,7 @@ export abstract class Lighting extends BaseClass
 		this.specular = DEFAULT_SPECULAR;
 		this.emission = DEFAULT_EMISSION;
 		this.shininess = DEFAULT_SHININESS;
+		this.alphaCutoff = null;
 		this.twoSidedLight = false;
 	}
 
@@ -279,8 +301,9 @@ export abstract class Lighting extends BaseClass
 	/**
 	 * Get the number of 4-byte values in the material's uniforms, like the
 	 * "Surface" struct in Lighting.wgsl: the ambient, diffuse, specular, and
-	 * emission colors, the shininess, the two-sided flag, and two unused
-	 * values so that the size is a multiple of 16 bytes. Derived classes that
+	 * emission colors, the shininess, the two-sided flag, the alpha cutoff,
+	 * which is negative without an alpha mask, and one unused value so that
+	 * the size is a multiple of 16 bytes. Derived classes that
 	 * add uniforms after these override this.
 	 * @returns {number} The number of 4-byte values.
 	 */
@@ -304,6 +327,7 @@ export abstract class Lighting extends BaseClass
 		floats.set ( this.#emission, 12 );
 		floats[16] = this.#shininess;
 		new Uint32Array ( this.#material )[17] = ( this.#twoSidedLight ? 1 : 0 );
+		floats[18] = ( this.#alphaCutoff ?? -1 ); // Negative means no alpha mask.
 		return this.#material;
 	}
 }

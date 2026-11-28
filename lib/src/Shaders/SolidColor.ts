@@ -46,11 +46,13 @@ export class SolidColor extends BaseClass
 {
 	static readonly #singleton = makeSingleton ( () => new SolidColor() );
 	#diffuse: IVector4 = [ ...DEFAULT_DIFFUSE ];
+	#alphaCutoff: ( number | null ) = null;
 
 	// The uniform values. The camera's is the projection matrix, and the
-	// material's is the diffuse color.
+	// material's is the diffuse color, the alpha cutoff, and three unused
+	// values so that the size is a multiple of 16 bytes.
 	#camera = new ArrayBuffer ( 16 * 4 );
-	#material = new ArrayBuffer ( 4 * 4 );
+	#material = new ArrayBuffer ( 8 * 4 );
 
 	/**
 	 * Construct the class.
@@ -123,12 +125,33 @@ export class SolidColor extends BaseClass
 	}
 
 	/**
+	 * Get the alpha cutoff: a pixel whose alpha is below it isn't drawn, and
+	 * the others are drawn opaque. Null means there's no alpha mask.
+	 * @returns {number | null} The cutoff, from 0 to 1, or null.
+	 */
+	public get alphaCutoff () : ( number | null )
+	{
+		return this.#alphaCutoff;
+	}
+
+	/**
+	 * Set the alpha cutoff, or null for no alpha mask.
+	 * @param {number | null} cutoff - The cutoff, from 0 to 1, or null.
+	 */
+	public set alphaCutoff ( cutoff: ( number | null ) )
+	{
+		this.#alphaCutoff = cutoff;
+		this.materialChanged();
+	}
+
+	/**
 	 * Put back the default values of what state attributes set.
 	 */
 	public override reset () : void
 	{
 		super.reset();
 		this.diffuse = DEFAULT_DIFFUSE;
+		this.alphaCutoff = null;
 	}
 
 	/**
@@ -144,12 +167,15 @@ export class SolidColor extends BaseClass
 
 	/**
 	 * Return the material's uniform values, in the same order as the
-	 * "Material" struct in the shader code: the diffuse color.
+	 * "Material" struct in the shader code: the diffuse color and the alpha
+	 * cutoff.
 	 * @returns {ArrayBuffer} The uniform values.
 	 */
 	protected makeMaterialUniforms () : ArrayBuffer
 	{
-		new Float32Array ( this.#material ).set ( this.#diffuse, 0 );
+		const floats = new Float32Array ( this.#material );
+		floats.set ( this.#diffuse, 0 );
+		floats[4] = ( this.#alphaCutoff ?? -1 ); // Negative means no alpha mask.
 		return this.#material;
 	}
 

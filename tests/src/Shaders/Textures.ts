@@ -190,6 +190,33 @@ export function test ()
 			}
 		} );
 
+		it ( "Should not draw the pixels whose alpha is below the cutoff, and draw the others opaque, with each shader", async function ()
+		{
+			// Opaque red and clear green on top, and yellow with an alpha of 0.6
+			// and white with an alpha of 0.4 on the bottom. Where a pixel isn't
+			// drawn, the blue background shows.
+			const data = new Uint8Array ( [
+				255, 0, 0, 255,     0, 255, 0, 0,
+				255, 255, 0, 153,   255, 255, 255, 102,
+			] );
+			for ( const shader of [ FlatShading, PhongShading, SolidColor, FlatEdges, PhongEdges ] )
+			{
+				const state = shader.makeState ( { topology: "triangle-list" } );
+				state.addAttribute ( new Material ( { diffuse: WHITE, ambient: BLACK, alphaMask: true, alphaCutoff: 0.5 } ) );
+				state.addAttribute ( new TextureSet ( { diffuse: new Texture ( { image: { width: 2, height: 2, data }, magFilter: "nearest" } ) } ) );
+				const scene = new Group();
+				const square = makeSquare ( [ 0, 0, 0 ], state, null, [ 0, 0, 1 ], ONCE );
+				square.points = square.points!.values!.map ( ( value, i ) => ( ( 2 === ( i % 3 ) ) ? value : ( value * 2 ) ) );
+				scene.addChild ( square );
+				const pixels = await drawScene ( scene );
+				const at = ( x: number, y: number ) => pixelAt ( pixels, ( x * 0.8 ), ( y * 0.8 ) );
+				expectPixel ( at ( -0.4, 0.6 ), [ 255, 0, 0, 255 ] );
+				expectPixel ( at ( 0.6, 0.4 ), [ 0, 0, 255, 255 ] );
+				expectPixel ( at ( -0.7, -0.2 ), [ 255, 255, 0, 255 ] );
+				expectPixel ( at ( 0.6, -0.4 ), [ 0, 0, 255, 255 ] );
+			}
+		} );
+
 		it ( "Should multiply the emission by the emissive texture, with each lit shader", async function ()
 		{
 			// No diffuse or ambient color, only white emission, which the checker

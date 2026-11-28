@@ -666,9 +666,9 @@ export function test ()
 				expect ( geom.state!.pipelineOptions.cullMode ).to.equal ( "back" );
 			} );
 
-			it ( "Should use the base color, and its alpha only when blending", async function ()
+			it ( "Should use the base color, and its alpha only when blending or masking", async function ()
 			{
-				const cases: [ string | undefined, number ][] = [ [ undefined, 1 ], [ "OPAQUE", 1 ], [ "MASK", 1 ], [ "BLEND", 0.5 ] ];
+				const cases: [ string | undefined, number ][] = [ [ undefined, 1 ], [ "OPAQUE", 1 ], [ "MASK", 0.5 ], [ "BLEND", 0.5 ] ];
 				for ( const [ alphaMode, alpha ] of cases )
 				{
 					const maker = makeTriangle ( { material: 0 } );
@@ -787,6 +787,39 @@ export function test ()
 				const scene = await read ( maker.glb() );
 				expect ( getGeometries ( scene ).length ).to.equal ( 2 );
 				expect ( getGroupStates ( scene ).length ).to.equal ( 2 );
+			} );
+
+			it ( "Should mask the alpha of MASK and OPAQUE materials, but not of semi-transparent ones", async function ()
+			{
+				// The alpha mode, the transmission, and the mask and cutoff.
+				const cases: [ string | undefined, number, boolean, number ][] = [
+					[ undefined, 0, true, 0 ],
+					[ "OPAQUE", 0, true, 0 ],
+					[ "MASK", 0, true, 0.5 ],
+					[ "BLEND", 0, false, 0.5 ],
+					[ undefined, 0.5, false, 0.5 ],
+				];
+				for ( const [ alphaMode, transmissionFactor, alphaMask, alphaCutoff ] of cases )
+				{
+					const maker = makeTriangle ( { material: 0 } );
+					maker.addMaterial ( {
+						...( alphaMode ? { alphaMode } : {} ),
+						...( transmissionFactor ? { extensions: { KHR_materials_transmission: { transmissionFactor } } } : {} ),
+					} );
+					const material = getMaterial ( ( await readOne ( maker.glb() ) ).state! );
+					expect ( material.alphaMask, `${alphaMode} ${transmissionFactor}` ).to.equal ( alphaMask );
+					expect ( material.alphaCutoff ).to.equal ( alphaCutoff );
+				}
+
+				// A MASK material's own cutoff.
+				const maker = makeTriangle ( { material: 0 } );
+				maker.addMaterial ( { alphaMode: "MASK", alphaCutoff: 0.25 } );
+				expect ( getMaterial ( ( await readOne ( maker.glb() ) ).state! ).alphaCutoff ).to.equal ( 0.25 );
+
+				// One that can't be.
+				const bad = makeTriangle ( { material: 0 } );
+				bad.addMaterial ( { alphaMode: "MASK", alphaCutoff: 2 } );
+				expect ( await getMessage ( bad.glb() ) ).to.include ( "Material 0 has an alpha cutoff of 2, which is not from 0 to 1" );
 			} );
 
 			it ( "Should share the state of a material", async function ()

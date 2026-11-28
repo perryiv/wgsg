@@ -47,5 +47,9 @@ export const DEFAULT_SHININESS = 0;
 // The largest shininess, as in OpenGL.
 export const MAX_SHININESS = 128;
 
+// The default alpha cutoff, used when a material's alpha mask is on: a
+// pixel whose alpha is below it isn't drawn. glTF's default is the same.
+export const DEFAULT_ALPHA_CUTOFF = 0.5;
+
 // The default ambient light.
 export const DEFAULT_AMBIENT_LIGHT: Readonly<IVector4> = [ 0.1, 0.1, 0.1, 1.0 ];

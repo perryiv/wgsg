@@ -43,8 +43,10 @@
 //	TRANSPARENT_BIN, without depth writes, so it's drawn after the opaque
 //	shapes and doesn't hide what's behind it. A double-sided one is drawn
 //	with buildTransparentScene(), back faces first and then front faces.
-//	Transparent shapes are not sorted by depth. The other alpha modes are
-//	drawn opaque, including MASK for now.
+//	Transparent shapes are not sorted by depth. A MASK material draws only
+//	the pixels whose alpha is at least its cutoff, and draws them opaque. An
+//	OPAQUE one draws every pixel opaque, ignoring the alpha of its textures
+//	and vertex colors.
 //
 //	A material with KHR_materials_transmission, like glass, lets light
 //	through. This reader can't draw that, so it draws the material as
@@ -63,7 +65,7 @@ import { decodeImage, getImageBytes, getSamplerSettings, type IImageDecoder } fr
 import { getErrorMessage } from "../../Functions";
 import { readFloats, readIndices } from "./Accessors";
 import { Texture, type ITextureImage } from "../../../Textures/Texture";
-import { TRANSPARENT_BIN } from "../../../Tools/Constants";
+import { DEFAULT_ALPHA_CUTOFF, TRANSPARENT_BIN } from "../../../Tools/Constants";
 import { yieldToEventLoop } from "../../Functions";
 import type { IProgressCallback, IVector4 } from "../../../Types";
 import {
@@ -171,6 +173,20 @@ const getTransmission = ( material: ( Readonly<IGltfMaterial> | null ), index: (
 		throw new Error ( `Material ${index} has a transmission factor of ${factor}, which is not from 0 to 1` );
 	}
 	return factor;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * See if the material uses the alpha of its colors: it blends or masks.
+ * @param {IGltfMaterial | null} material The material, if any.
+ * @returns {boolean} Whether the alpha is used.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+const hasAlpha = ( material: ( Readonly<IGltfMaterial> | null ) ) : boolean =>
+{
+	return ( ( "BLEND" === material?.alphaMode ) || ( "MASK" === material?.alphaMode ) );
 };
 
 
@@ -529,9 +545,10 @@ export class Builder
 			throw new Error ( `There are ${( normals.values?.length ?? 0 ) / 3} normals but ${numVertices} points` );
 		}
 
-		// Get the colors, if any. Their alpha is only used when blending.
-		const blend = ( "BLEND" === this.getMaterial ( primitive.material )?.alphaMode );
-		const colors = ( ( undefined === color ) ? null : this.getColors ( color, blend ) );
+		// Get the colors, if any. Their alpha is only used when blending or
+		// masking.
+		const keepAlpha = hasAlpha ( this.getMaterial ( primitive.material ) );
+		const colors = ( ( undefined === color ) ? null : this.getColors ( color, keepAlpha ) );
 		if ( colors && ( colors.values?.length !== ( numVertices * 4 ) ) )
 		{
 			throw new Error ( `There are ${( colors.values?.length ?? 0 ) / 4} colors but ${numVertices} points` );
@@ -874,9 +891,9 @@ export class Builder
 	 */
 	protected getMaterialColor ( index: ( number | undefined ) ) : IVector4
 	{
-		// The base color. Without blending, the alpha is ignored.
+		// The base color. Without blending or masking, the alpha is ignored.
 		const material = this.getMaterial ( index );
-		const blend = ( "BLEND" === material?.alphaMode );
+		const keepAlpha = hasAlpha ( material );
 		let color: IVector4 = [ 1, 1, 1, 1 ];
 		const factor = material?.pbrMetallicRoughness?.baseColorFactor;
 		if ( factor )
@@ -885,7 +902,7 @@ export class Builder
 			{
 				throw new Error ( `Material ${index} has a base color with ${factor.length} numbers instead of 4` );
 			}
-			color = [ factor[0], factor[1], factor[2], ( blend ? factor[3] : 1 ) ];
+			color = [ factor[0], factor[1], factor[2], ( keepAlpha ? factor[3] : 1 ) ];
 		}
 
 		// Light that goes through the material makes it more see-through,
@@ -896,6 +913,34 @@ export class Builder
 			color[3] *= Math.max ( MIN_TRANSMISSION_ALPHA, ( 1 - transmission ) );
 		}
 		return color;
+	}
+
+	/**
+	 * Get the alpha mask of a material. A MASK material draws the pixels
+	 * whose alpha is at least its cutoff, which is 0.5 by default, and an
+	 * opaque one draws every pixel, with a cutoff of 0, so that the alpha of
+	 * textures and vertex colors is ignored, as glTF says. Semi-transparent
+	 * materials, which blend or let light through, have no mask.
+	 * @param {IGltfMaterial | null} material The material, if any.
+	 * @param {number | undefined} index The index of the material, for errors.
+	 * @returns {object} The material's alpha mask settings.
+	 */
+	protected getAlphaMask ( material: ( Readonly<IGltfMaterial> | null ), index: ( number | undefined ) ) : { alphaMask: boolean, alphaCutoff: number }
+	{
+		if ( isTransparent ( material, index ) )
+		{
+			return { alphaMask: false, alphaCutoff: DEFAULT_ALPHA_CUTOFF };
+		}
+		if ( "MASK" !== material?.alphaMode )
+		{
+			return { alphaMask: true, alphaCutoff: 0 };
+		}
+		const cutoff = ( material.alphaCutoff ?? DEFAULT_ALPHA_CUTOFF );
+		if ( !( ( cutoff >= 0 ) && ( cutoff <= 1 ) ) )
+		{
+			throw new Error ( `Material ${index} has an alpha cutoff of ${cutoff}, which is not from 0 to 1` );
+		}
+		return { alphaMask: true, alphaCutoff: cutoff };
 	}
 
 	/**
@@ -937,7 +982,7 @@ export class Builder
 		// Make the state.
 		const topology = "triangle-list";
 		const state = ( hasNormals ? PhongShading.makeState ( { topology } ) : FlatShading.makeState ( { topology } ) );
-		state.addAttribute ( new Material ( { ambient: color, diffuse: color, emission } ) );
+		state.addAttribute ( new Material ( { ambient: color, diffuse: color, emission, ...this.getAlphaMask ( material, index ) } ) );
 		const diffuse = this.getTexture ( material?.pbrMetallicRoughness?.baseColorTexture );
 		const emissive = this.getTexture ( material?.emissiveTexture );
 		if ( diffuse || emissive )
