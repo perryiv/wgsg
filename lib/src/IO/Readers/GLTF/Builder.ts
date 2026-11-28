@@ -17,8 +17,9 @@
 //	by more than one node is shared, unless the nodes scale it differently.
 //	Accessors used by more than one primitive share their arrays.
 //
-//	Only triangle lists are read for now. Points, lines, triangle strips, and
-//	triangle fans are skipped with a warning.
+//	Triangle lists are read as they are. Triangle strips and fans are turned
+//	into lists (see Algorithms/Triangles.ts), so that everything else only
+//	has to handle lists. Points and lines are skipped with a warning.
 //
 //	Each material becomes a state with a Material attribute: the base color
 //	is its diffuse and ambient color, and the emissive color, times the
@@ -61,6 +62,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Array1 } from "../../../Arrays";
+import { makeVertexSequence, toTriangles } from "../../../Algorithms/Triangles";
 import { buildTransparentScene } from "../../../Builders/Transparent";
 import { Cancelled } from "../../Cancelled";
 import { FlatShading, PhongShading } from "../../../Shaders";
@@ -119,9 +121,6 @@ import {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-// The most vertices that can use 16-bit indices.
-const MAX_VERTICES_FOR_16_BIT_INDICES = 65536;
-
 // How long to work before letting the page update, in milliseconds.
 const WORK_TIME = 50;
 
@@ -135,9 +134,14 @@ const SKIPPED_MODE_NAMES: Readonly<Record<number, string>> = {
 	[GLTF_LINES]: "lines",
 	[GLTF_LINE_LOOP]: "line loops",
 	[GLTF_LINE_STRIP]: "line strips",
-	[GLTF_TRIANGLE_STRIP]: "triangle strips",
-	[GLTF_TRIANGLE_FAN]: "triangle fans",
 };
+
+// The topologies of the triangle modes, which are all turned into lists.
+const TRIANGLE_TOPOLOGIES = {
+	[GLTF_TRIANGLES]: "triangle-list",
+	[GLTF_TRIANGLE_STRIP]: "triangle-strip",
+	[GLTF_TRIANGLE_FAN]: "triangle-fan",
+} as const;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -245,6 +249,7 @@ export class Builder
 	readonly #colors = new Map < string, Array1 < Float32Array > > ();
 	readonly #indices = new Map < number, IIndexArray > ();
 	readonly #flipped = new Map < string, IIndexArray > ();
+	readonly #triangles = new Map < string, IIndexArray > ();
 	readonly #states = new Map < string, State > ();
 	readonly #transparentStates = new Map < string, { back: State, front: State } > ();
 
@@ -289,7 +294,7 @@ export class Builder
 
 	/**
 	 * Get the number of primitives that were skipped because they are not
-	 * triangle lists.
+	 * triangles.
 	 * @returns {number} The number of primitives.
 	 */
 	public get numSkipped () : number
@@ -525,9 +530,9 @@ export class Builder
 	 */
 	protected buildPrimitive ( primitive: Readonly<IGltfPrimitive>, leftover: ( IMatrix33 | null ) ) : ( SceneNode | null )
 	{
-		// Skip what isn't a triangle list.
+		// Skip what isn't triangles.
 		const mode = ( primitive.mode ?? GLTF_TRIANGLES );
-		if ( GLTF_TRIANGLES !== mode )
+		if ( !isTriangleMode ( mode ) )
 		{
 			this.#skipped.set ( mode, ( ( this.#skipped.get ( mode ) ?? 0 ) + 1 ) );
 			return null;
@@ -566,16 +571,21 @@ export class Builder
 		}
 
 		// Make the list of triangles. Without indices, every three vertices
-		// are a triangle. A mirror turns the triangles around, so they are
-		// turned back to keep the front on the same side.
+		// are a triangle. Strips and fans are turned into lists. A mirror
+		// turns the triangles around, so they are turned back to keep the
+		// front on the same side.
 		const topology = "triangle-list";
 		const flip = ( ( null !== leftover ) && ( determinant33 ( leftover ) < 0 ) );
 		let primitives: ( Arrays | Indexed );
-		if ( undefined === primitive.indices )
+		if ( GLTF_TRIANGLES !== mode )
+		{
+			primitives = new Indexed ( { topology, indices: this.getTriangles ( primitive.indices, mode, numVertices, flip ) } );
+		}
+		else if ( undefined === primitive.indices )
 		{
 			const count = ( numVertices - ( numVertices % 3 ) );
 			primitives = ( flip ?
-				new Indexed ( { topology, indices: new Array1 ( flipTriangles ( makeSequence ( count, numVertices ) ) ) } ) :
+				new Indexed ( { topology, indices: new Array1 ( flipTriangles ( makeVertexSequence ( 0, count ) ) ) } ) :
 				new Arrays ( { topology, first: 0, count } ) );
 		}
 		else
@@ -719,6 +729,31 @@ export class Builder
 		{
 			array = new Array1 ( flipTriangles ( indices.values! ) );
 			this.#flipped.set ( key, array );
+		}
+		return array;
+	}
+
+	/**
+	 * Get the list of triangles of a strip or fan. Those with indices are
+	 * shared like the other indices.
+	 * @param {number | undefined} index The index of the accessor, if any.
+	 * @param {number} mode The strip or fan mode.
+	 * @param {number} numVertices The number of vertices.
+	 * @param {boolean} flip Whether to turn each triangle around.
+	 * @returns {IIndexArray} The array.
+	 */
+	protected getTriangles ( index: ( number | undefined ), mode: ITriangleMode, numVertices: number, flip: boolean ) : IIndexArray
+	{
+		const key = `${mode} ${index ?? "none"} ${numVertices} ${flip}`;
+		let array = this.#triangles.get ( key );
+		if ( !array )
+		{
+			const vertices = ( ( undefined === index ) ?
+				makeVertexSequence ( 0, numVertices ) :
+				this.getIndices ( index, numVertices ).values! );
+			const triangles = toTriangles ( TRIANGLE_TOPOLOGIES[mode], vertices );
+			array = new Array1 ( flip ? flipTriangles ( triangles ) : triangles );
+			this.#triangles.set ( key, array );
 		}
 		return array;
 	}
@@ -1072,19 +1107,15 @@ export class Builder
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Make the indices 0, 1, 2, and so on.
- * @param {number} count The number of indices.
- * @param {number} numVertices The number of vertices, which decides the index size.
- * @returns {Uint16Array | Uint32Array} The indices.
+ * See if the primitive mode is triangles: a list, strip, or fan.
+ * @param {number} mode The mode.
+ * @returns {boolean} True if it is.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-const makeSequence = ( count: number, numVertices: number ) : ( Uint16Array | Uint32Array ) =>
+type ITriangleMode = keyof typeof TRIANGLE_TOPOLOGIES;
+
+const isTriangleMode = ( mode: number ) : mode is ITriangleMode =>
 {
-	const answer = ( ( numVertices <= MAX_VERTICES_FOR_16_BIT_INDICES ) ? new Uint16Array ( count ) : new Uint32Array ( count ) );
-	for ( let i = 0; i < count; ++i )
-	{
-		answer[i] = i;
-	}
-	return answer;
+	return ( mode in TRIANGLE_TOPOLOGIES );
 };

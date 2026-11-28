@@ -13,8 +13,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { test as testSphere } from "./Sphere";
+import { test as testTriangles } from "./Triangles";
 
 describe ( "Algorithms", function ()
 {
 	testSphere();
+	testTriangles();
 } );

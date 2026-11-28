@@ -14,3 +14,4 @@
 
 export * from "./Lines";
 export * from "./Sphere";
+export * from "./Triangles";
