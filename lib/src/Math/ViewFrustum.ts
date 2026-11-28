@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Frustum } from "./Frustum";
-import { IDENTITY_MATRIX } from "../Tools/Constants";
+import { IDENTITY_MATRIX } from "./Constants";
 import { Plane } from "./Plane";
 import type { IMatrix44 } from "../Types";
 

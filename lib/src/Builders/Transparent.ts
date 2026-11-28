@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Color as ColorTool } from "../Tools/Color";
+import { Color as ColorTool } from "../Math/Color";
 import { FlatShading } from "../Shaders/FlatShading";
 import { PhongShading } from "../Shaders/PhongShading";
 import { TRANSPARENT_BIN } from "../Tools/Constants";

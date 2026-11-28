@@ -15,7 +15,7 @@
 import { Device } from "../../../../lib/src/Tools/Device";
 import { expect } from "chai";
 import { FlatShading } from "../../../../lib/src/Shaders/FlatShading";
-import { IDENTITY_MATRIX } from "../../../../lib/src/Tools/Constants";
+import { IDENTITY_MATRIX } from "../../../../lib/src/Math/Constants";
 import { SolidColor } from "../../../../lib/src/Shaders/SolidColor";
 import { ColorAttribute, TwoSidedLight } from "../../../../lib/src/Scene/State/Attributes";
 import type { IMatrix44, IVector4 } from "../../../../lib/src/Types";

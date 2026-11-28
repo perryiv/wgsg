@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Group } from "./Group";
-import { IDENTITY_MATRIX } from "../../../Tools";
+import { IDENTITY_MATRIX } from "../../../Math/Constants";
 import { IMatrix44, IVector3 } from "../../../Types";
 import { mat4 } from "gl-matrix";
 import { Sphere, isValidMatrix } from "../../../Math";

@@ -13,13 +13,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { expect } from "chai";
-import { 
-	hasBits,
+import {
 	addBits,
+	hasBits,
 	removeBits,
-	toggleBits,
 	setBits,
-} from "../../../lib/src/Tools/Bits";
+	toggleBits,
+} from "../../../lib/src/Math/Bits";
 
 
 ///////////////////////////////////////////////////////////////////////////////

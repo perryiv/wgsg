@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { Color as ColorTool } from "../Tools/Color";
+import { Color as ColorTool } from "../Math/Color";
 import { Decorator as BaseClass } from "./Decorator";
 import { mat4, vec2, vec3 } from "gl-matrix";
 import { Node as SceneNode, Transform } from "../Scene/Nodes";

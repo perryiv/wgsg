@@ -17,7 +17,7 @@ import { Line } from "../Math";
 import { makeTriangleEdges } from "../Algorithms";
 import { Multiply as BaseClass } from "../Visitors/Multiply";
 import { SolidColor } from "../Shaders";
-import { ColorTool } from "../Tools";
+import { Color as ColorTool } from "../Math/Color";
 import {
 	ColorAttribute,
 	Geometry,

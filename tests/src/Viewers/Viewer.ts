@@ -21,12 +21,8 @@ import { Sphere } from "../../../lib/src/Math/Sphere";
 import { SphereNode } from "../../../lib/src/Scene/Nodes";
 import { Viewer } from "../../../lib/src/Viewers/Viewer";
 import type { IMatrix44, IVector3 } from "../../../lib/src/Types";
-import {
-	DEG_TO_RAD,
-	IDENTITY_MATRIX,
-	MAX_FAR_DISTANCE,
-	MIN_NEAR_DISTANCE,
-} from "../../../lib/src/Tools/Constants";
+import { MAX_FAR_DISTANCE, MIN_NEAR_DISTANCE } from "../../../lib/src/Tools/Constants";
+import { DEG_TO_RAD, IDENTITY_MATRIX } from "../../../lib/src/Math/Constants";
 
 
 ///////////////////////////////////////////////////////////////////////////////

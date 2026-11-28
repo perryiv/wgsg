@@ -21,7 +21,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { ColorTool, DEVELOPER_BUILD } from "../../../Tools";
+import { DEVELOPER_BUILD } from "../../../Tools";
+import { Color as ColorTool } from "../../../Math/Color";
 import { FlatShading, PhongShading } from "../../../Shaders";
 import { findElement, type IPlyElement, type IPlyHeader } from "./Header";
 import type { IVector4 } from "../../../Types";

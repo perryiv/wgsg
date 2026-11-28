@@ -14,7 +14,7 @@
 
 import { expect } from "chai";
 import { Group, SphereNode, Transform } from "../../../../../lib/src/Scene";
-import { IDENTITY_MATRIX } from "../../../../../lib/src/Tools";
+import { IDENTITY_MATRIX } from "../../../../../lib/src/Math/Constants";
 
 
 ///////////////////////////////////////////////////////////////////////////////

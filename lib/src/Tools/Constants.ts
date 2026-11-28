@@ -12,25 +12,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import type { IMatrix44 } from "../Types/Matrix";
 import type { IVector4 } from "../Types/Vector";
 
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Constants.
+//	Constants. The math constants are in Math/Constants.ts.
 //
 ///////////////////////////////////////////////////////////////////////////////
-
-export const IDENTITY_MATRIX: Readonly<IMatrix44> = [
-	1, 0, 0, 0,
-	0, 1, 0, 0,
-	0, 0, 1, 0,
-	0, 0, 0, 1
-];
-
-export const DEG_TO_RAD = ( Math.PI / 180 );
-export const RAD_TO_DEG = ( 180 / Math.PI );
 
 // Constants used in projections.
 export const MIN_NEAR_DISTANCE = ( 0.001 );

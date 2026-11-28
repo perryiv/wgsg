@@ -17,12 +17,12 @@ import { vec4 } from "gl-matrix";
 import { Visitor as BaseClass } from "./Visitor";
 import type { IRenderGraphInfo, IVector4 } from "../Types";
 import {
-	ColorTool as Color,
 	Device,
 	GpuTimer,
 	type IGpuTimeCallback,
 	KEEP_PERFORMANCE_INFO,
 } from "../Tools";
+import { Color } from "../Math/Color";
 import {
 	Arrays,
 	Geometry,

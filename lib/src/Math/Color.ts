@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { clampNumber } from "../Math/Functions";
+import { clampNumber } from "./Functions";
 import type { IVector3, IVector4 } from "../Types";
 
 

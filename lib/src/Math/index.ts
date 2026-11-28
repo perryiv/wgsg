@@ -12,7 +12,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+export { Color as ColorTool } from "./Color";
+export * from "./Bits";
 export * from "./Box";
+export * from "./Constants";
 export * from "./Frustum";
 export * from "./Functions";
 export * from "./Intersect";

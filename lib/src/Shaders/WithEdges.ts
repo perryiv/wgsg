@@ -21,7 +21,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { ColorTool as Color, Device } from "../Tools";
+import { Device } from "../Tools";
+import { Color } from "../Math/Color";
 import { vec4 } from "gl-matrix";
 import { Lighting as BaseClass, type ILightingInput } from "./Lighting";
 import type { IPipelineOptions, IPulledVerticesInput, IVertexArrayName } from "./ShaderBase";

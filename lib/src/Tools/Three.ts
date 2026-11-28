@@ -15,7 +15,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-import { IDENTITY_MATRIX } from "./Constants";
+import { IDENTITY_MATRIX } from "../Math/Constants";
 import { Line } from "../Math";
 import { mat4, vec4 } from "gl-matrix";
 import type {
