@@ -58,6 +58,9 @@ const H = toPixel ( 0.5 );
 const T = toPixel ( Math.SQRT1_2 );
 const S = toPixel ( Math.pow ( Math.SQRT1_2, 10 ) );
 
+// A smooth clear coat's highlight, head on: 0.04 times ( 128 + 8 ) / 8.
+const C = toPixel ( 0.04 * 17 );
+
 /**
  * Draw one square with the shader and material, and return its center pixel.
  * The material's colors are black unless given.
@@ -157,6 +160,27 @@ export function test ()
 
 				// None on the side away from the light.
 				expectPixel ( await drawMaterial ( shader, { specular: WHITE }, AWAY ), [ 0, 0, 0, 255 ] );
+			}
+		} );
+
+		it ( "Should add the clear coat's white highlight, with each Phong shader", async function ()
+		{
+			for ( const shader of [ PhongShading, PhongEdges ] )
+			{
+				// Head on, a smooth coat reflects 0.04, times ( 128 + 8 ) / 8.
+				expectPixel ( await drawMaterial ( shader, { clearcoat: 1 } ), [ C, C, C, 255 ] );
+
+				// Half as strong.
+				const half = toPixel ( 0.04 * 17 * 0.5 );
+				expectPixel ( await drawMaterial ( shader, { clearcoat: 0.5 } ), [ half, half, half, 255 ] );
+
+				// None without a clear coat, or when it's too rough.
+				expectPixel ( await drawMaterial ( shader, { clearcoat: 0 } ), [ 0, 0, 0, 255 ] );
+				expectPixel ( await drawMaterial ( shader, { clearcoat: 1, clearcoatShininess: 0.5 } ), [ 0, 0, 0, 255 ] );
+
+				// It adds to the material's own highlight, in white.
+				expectPixel ( await drawMaterial ( shader, { clearcoat: 1, specular: [ 0.3, 0, 0, 1 ], shininess: 50 } ),
+					[ toPixel ( 0.3 + 0.68 ), C, C, 255 ] );
 			}
 		} );
 

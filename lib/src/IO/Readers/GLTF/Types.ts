@@ -165,6 +165,7 @@ export interface IGltfMaterial
 	alphaCutoff?: number;
 	doubleSided?: boolean;
 	extensions?: {
+		KHR_materials_clearcoat?: { clearcoatFactor?: number, clearcoatRoughnessFactor?: number };
 		KHR_materials_emissive_strength?: { emissiveStrength?: number };
 		KHR_materials_transmission?: { transmissionFactor?: number };
 	};

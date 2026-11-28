@@ -144,6 +144,29 @@ export function test ()
 			expect ( FlatShading.instance.alphaCutoff ).to.be.null;
 		} );
 
+		it ( "Should have no clear coat by default, and give the shader its clear coat", function ()
+		{
+			const material = new Material();
+			expect ( material.clearcoat ).to.equal ( 0 );
+			expect ( material.clearcoatShininess ).to.equal ( 128 );
+			expect ( material.toString() ).to.not.include ( "clear coat" );
+
+			const coated = new Material ( { clearcoat: 0.5, clearcoatShininess: 30 } );
+			expect ( coated.toString() ).to.include ( "clear coat 0.5 shininess 30" );
+			expect ( () => new Material ( { clearcoat: 1.5 } ) ).to.throw ( "Clear coat 1.5 is not from 0 to 1" );
+			expect ( () => new Material ( { clearcoatShininess: 200 } ) ).to.throw ( "Clear coat shininess 200 is not from 0 to 128" );
+
+			const state = new State ( { shader: FlatShading.instance } );
+			state.addAttribute ( coated );
+			whileApplied ( state, () =>
+			{
+				expect ( FlatShading.instance.clearcoat ).to.equal ( 0.5 );
+				expect ( FlatShading.instance.clearcoatShininess ).to.equal ( 30 );
+			} );
+			expect ( FlatShading.instance.clearcoat ).to.equal ( 0 );
+			expect ( FlatShading.instance.clearcoatShininess ).to.equal ( 128 );
+		} );
+
 		it ( "Should reject a shininess that is not from 0 to 128", function ()
 		{
 			for ( const shininess of [ -1, 129, NaN ] )

@@ -16,7 +16,13 @@
 //	      + ambientLight * ambient
 //	      + diffuse * max ( N.L, 0 )
 //	      + specular * max ( N.H, 0 ) ^ shininess, where N.L > 0
+//	      + the clear coat's highlight, where N.L > 0
 //	alpha = the diffuse alpha
+//
+//	A clear coat is a thin clear layer on top, which reflects 4% of the light,
+//	like glass, as a white highlight with its own shininess. It's made
+//	brighter by ( shininess + 8 ) / 8, as normalized Blinn-Phong does, so that
+//	a small highlight is about as bright overall as a wide one.
 //
 //	The viewer is infinitely far away, as in OpenGL by default, so H is
 //	halfway between the light and the view direction, (0, 0, 1).
@@ -45,6 +51,8 @@ struct Surface
 	shininess: f32,
 	twoSided: u32,
 	alphaCutoff: f32, // Negative means no alpha mask.
+	clearcoat: f32, // Zero means no clear coat.
+	clearcoatShininess: f32,
 };
 
 // The object, in bind group 2, from ObjectMatrices.
@@ -103,6 +111,13 @@ fn light ( normalIn: vec3f, surface: Surface, vertexColor: vec4f, emissiveTexel:
 		// in OpenGL. The power is not used then, since pow ( 0, 0 ) is undefined.
 		let factor = select ( pow ( nDotH, surface.shininess ), 1.0, ( surface.shininess <= 0.0 ) );
 		rgb += surface.specular.rgb * factor;
+
+		// The clear coat's highlight, if it has one.
+		let n = surface.clearcoatShininess;
+		if ( ( surface.clearcoat > 0.0 ) && ( n >= 1.0 ) )
+		{
+			rgb += vec3f ( surface.clearcoat * 0.04 * ( ( n + 8.0 ) / 8.0 ) * pow ( nDotH, n ) );
+		}
 	}
 
 	// Keep the color in range, and pre-multiply it. With an alpha mask, a
