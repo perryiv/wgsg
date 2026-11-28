@@ -32,6 +32,7 @@ import {
 	buildBoundingBoxes,
 	Cancelled,
 	clampNumber,
+	CullFace,
 	Device,
 	getNextId,
 	getReader,
@@ -63,6 +64,16 @@ export interface IViewerProps extends React.HTMLAttributes < HTMLDivElement >
 ///////////////////////////////////////////////////////////////////////////////
 
 let componentRenderCount = 0;
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//	The cull mode of each cull face attribute before the "Cull back faces"
+//	button changed it, so that it can be put back.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+const originalCullModes = new WeakMap < CullFace, GPUCullMode > ();
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -106,7 +117,7 @@ export function Viewer ( { viewerId, ...rest }: IViewerProps )
 	//
 	// Get the viewer state.
 	//
-	const { boxesVisible, edgesVisible, twoSidedLighting } = useMemo ( () =>
+	const { boxesVisible, cullBackFaces, edgesVisible, twoSidedLighting } = useMemo ( () =>
 	{
 		const state = viewerStates.get ( viewerId );
 		return ( state ?? createViewerState() );
@@ -278,6 +289,45 @@ export function Viewer ( { viewerId, ...rest }: IViewerProps )
 		viewer.requestRender();
 	}, [
 		twoSidedLighting,
+		viewer,
+	] );
+
+	//
+	// Turn culling of the back faces on or off. Only the culling that was
+	// originally of the back faces changes. Culling of the front faces, which
+	// draws the back faces of a semi-transparent shape first, stays as it is.
+	//
+	useEffect ( () =>
+	{
+		// Get the model scene.
+		const modelScene = viewer?.modelScene;
+		if ( !modelScene )
+		{
+			return;
+		}
+
+		// Traverse the scene and set the culling.
+		const type = CullFace.getClassName();
+		modelScene.traverse ( ( node: SceneNode ) =>
+		{
+			const cullFace = node.state?.getAttribute ( type );
+			if ( cullFace instanceof CullFace )
+			{
+				if ( !originalCullModes.has ( cullFace ) )
+				{
+					originalCullModes.set ( cullFace, cullFace.mode );
+				}
+				if ( "back" === originalCullModes.get ( cullFace ) )
+				{
+					cullFace.mode = ( cullBackFaces ? "back" : "none" );
+				}
+			}
+		} );
+
+		// Render so that we see the change.
+		viewer.requestRender();
+	}, [
+		cullBackFaces,
 		viewer,
 	] );
 

@@ -29,6 +29,7 @@ export interface IViewerState
 	boxesVisible: boolean;
 	edgesVisible: boolean;
 	twoSidedLighting: boolean;
+	cullBackFaces: boolean;
 }
 
 export interface IViewerStore
@@ -113,6 +114,7 @@ export const useViewerStore = create < IViewerStore > () ( ( set, get ) => (
 			boxesVisible: false,
 			edgesVisible: false,
 			twoSidedLighting: false,
+			cullBackFaces: true,
 		};
 	},
 
