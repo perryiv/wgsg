@@ -399,10 +399,12 @@ export class Geometry extends Shape
 	}
 
 	/**
-	 * Called when this geometry starts being used. So do its arrays and primitives.
+	 * Called when this geometry starts being used. So do its state, arrays,
+	 * and primitives.
 	 */
 	protected override onFirstRef() : void
 	{
+		super.onFirstRef();
 		this.#points?.ref();
 		this.#normals?.ref();
 		this.#colors?.ref();
@@ -411,8 +413,9 @@ export class Geometry extends Shape
 	}
 
 	/**
-	 * Called when this geometry is no longer used. Neither are its arrays and
-	 * primitives, which releases their GPU buffers if nothing else uses them.
+	 * Called when this geometry is no longer used. Neither are its state,
+	 * arrays, and primitives, which releases their GPU resources if nothing
+	 * else uses them.
 	 */
 	protected override onLastUnref() : void
 	{
@@ -421,6 +424,7 @@ export class Geometry extends Shape
 		this.#colors?.unref();
 		this.#texCoords?.unref();
 		this.#primitives?.forEach ( ( primitive ) => { primitive.unref(); } );
+		super.onLastUnref();
 	}
 
 	/**

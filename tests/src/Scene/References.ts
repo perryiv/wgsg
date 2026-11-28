@@ -19,6 +19,7 @@ import { Device } from "../../../lib/src/Tools/Device";
 import { expect } from "chai";
 import { Geometry, Group, SphereNode } from "../../../lib/src/Scene/Nodes";
 import { Indexed } from "../../../lib/src/Scene/Primitives/Indexed";
+import { ColorAttribute, CullFace, State } from "../../../lib/src/Scene/State";
 import { Viewer } from "../../../lib/src/Viewers/Viewer";
 
 
@@ -420,6 +421,118 @@ export function test ()
 				expect ( sphere.points ).to.not.equal ( oldPoints );
 				expect ( sphere.points!.refCount ).to.equal ( 1 );
 				expect ( oldPoints.refCount ).to.equal ( 0 );
+			} );
+		} );
+
+		describe ( "State", function ()
+		{
+			it ( "Should count a node's state only while the node is used", function ()
+			{
+				for ( const node of [ new Group(), makeGeometry() ] )
+				{
+					const state = new State();
+					node.state = state;
+					expect ( state.refCount ).to.equal ( 0 );
+
+					node.ref();
+					expect ( state.refCount ).to.equal ( 1 );
+
+					node.unref();
+					expect ( state.refCount ).to.equal ( 0 );
+					expect ( node.state ).to.equal ( state );
+				}
+			} );
+
+			it ( "Should count a new state instead of the old one when the node is used", function ()
+			{
+				const node = new Group();
+				const a = new State();
+				const b = new State();
+				node.state = a;
+				node.ref();
+
+				node.state = b;
+				expect ( a.refCount ).to.equal ( 0 );
+				expect ( b.refCount ).to.equal ( 1 );
+
+				// The same state again doesn't change the count.
+				node.state = b;
+				expect ( b.refCount ).to.equal ( 1 );
+
+				node.state = null;
+				expect ( b.refCount ).to.equal ( 0 );
+			} );
+
+			it ( "Should count a state shared by two used nodes twice", function ()
+			{
+				const state = new State();
+				const root = new Group();
+				root.ref();
+				const a = makeGeometry();
+				const b = makeGeometry();
+				a.state = state;
+				b.state = state;
+				root.addChild ( a );
+				root.addChild ( b );
+				expect ( state.refCount ).to.equal ( 2 );
+
+				root.removeChild ( 0 );
+				expect ( state.refCount ).to.equal ( 1 );
+			} );
+
+			it ( "Should count its attributes only while it is used", function ()
+			{
+				const state = new State();
+				const color = new ColorAttribute ( [ 1, 0, 0, 1 ] );
+				state.addAttribute ( color );
+				expect ( color.refCount ).to.equal ( 0 );
+
+				state.ref();
+				expect ( color.refCount ).to.equal ( 1 );
+
+				// An attribute added while it's used is counted.
+				const cull = new CullFace ( "back" );
+				state.addAttribute ( cull );
+				expect ( cull.refCount ).to.equal ( 1 );
+
+				state.unref();
+				expect ( color.refCount ).to.equal ( 0 );
+				expect ( cull.refCount ).to.equal ( 0 );
+			} );
+
+			it ( "Should count a new attribute instead of the one of the same type it replaces", function ()
+			{
+				const state = new State();
+				const red = new ColorAttribute ( [ 1, 0, 0, 1 ] );
+				const green = new ColorAttribute ( [ 0, 1, 0, 1 ] );
+				state.addAttribute ( red );
+				state.ref();
+
+				state.addAttribute ( green );
+				expect ( red.refCount ).to.equal ( 0 );
+				expect ( green.refCount ).to.equal ( 1 );
+
+				// The same attribute again doesn't change the count.
+				state.addAttribute ( green );
+				expect ( green.refCount ).to.equal ( 1 );
+			} );
+
+			it ( "Should stop counting the state and attributes of a geometry removed from a used group", function ()
+			{
+				const root = new Group();
+				root.ref();
+				const geom = makeGeometry();
+				const state = new State();
+				const color = new ColorAttribute ( [ 1, 0, 0, 1 ] );
+				state.addAttribute ( color );
+				geom.state = state;
+				root.addChild ( geom );
+				expect ( state.refCount ).to.equal ( 1 );
+				expect ( color.refCount ).to.equal ( 1 );
+
+				root.removeChild ( 0 );
+				expect ( state.refCount ).to.equal ( 0 );
+				expect ( color.refCount ).to.equal ( 0 );
 			} );
 		} );
 

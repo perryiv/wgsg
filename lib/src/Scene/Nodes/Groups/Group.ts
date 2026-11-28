@@ -389,10 +389,12 @@ export class Group extends BaseClass
 	}
 
 	/**
-	 * Called when this group starts being used. Its children are now used too.
+	 * Called when this group starts being used. Its state and children are now
+	 * used too.
 	 */
 	protected override onFirstRef() : void
 	{
+		super.onFirstRef();
 		this.forEachChild ( ( child: ChildType ) =>
 		{
 			child.ref();
@@ -400,8 +402,8 @@ export class Group extends BaseClass
 	}
 
 	/**
-	 * Called when this group is no longer used. Neither are its children, but
-	 * they stay in the group so that it can be used again later.
+	 * Called when this group is no longer used. Neither are its state and
+	 * children, but they stay in the group so that it can be used again later.
 	 */
 	protected override onLastUnref() : void
 	{
@@ -409,6 +411,7 @@ export class Group extends BaseClass
 		{
 			child.unref();
 		} );
+		super.onLastUnref();
 	}
 
 	/**

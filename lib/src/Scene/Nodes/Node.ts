@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Base } from "../../Base/Base";
+import { replaceReference } from "../../Base/References";
 import { Sphere } from "../../Math";
 import { Group } from "./Groups/Group";
 import { hasBits, setBits } from "../../Math/Bits";
@@ -132,7 +133,28 @@ export abstract class Node extends Base
 	 */
 	public set state ( state: ( State | null ) )
 	{
+		// If this node is in use then count the new state instead of the old one.
+		replaceReference ( ( this.refCount > 0 ), this.#state, state );
 		this.#state = state;
+	}
+
+	/**
+	 * Called when this node starts being used. Its state is now used too.
+	 * Derived classes that override this call it too.
+	 */
+	protected override onFirstRef() : void
+	{
+		this.#state?.ref();
+	}
+
+	/**
+	 * Called when this node is no longer used. Neither is its state, but it
+	 * stays the node's state so that the node can be used again later.
+	 * Derived classes that override this call it too.
+	 */
+	protected override onLastUnref() : void
+	{
+		this.#state?.unref();
 	}
 
 	/**
