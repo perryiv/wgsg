@@ -60,6 +60,7 @@ struct VertexOut
 	let dy = dpdy ( fragData.viewPosition );
 	let change = fwidth ( fragData.barycentric );
 	let texel = textureSample ( diffuseTexture, diffuseSampler, fragData.texCoord );
+	let glow = textureSample ( emissiveTexture, emissiveSampler, fragData.texCoord );
 
 	// The normal of the triangle. See FlatShading.wgsl.
 	var normal = normalize ( cross ( dy, dx ) );
@@ -70,7 +71,7 @@ struct VertexOut
 
 	// Light it. The diffuse texture multiplies the vertex color.
 	let vertexColor = getVertexColor ( fragData.color, fragData.hasColors ) * texel;
-	let color = light ( normal, material.surface, vertexColor );
+	let color = light ( normal, material.surface, vertexColor, glow );
 
 	// Add the edges.
 	return addEdges ( color, fragData.barycentric, change );

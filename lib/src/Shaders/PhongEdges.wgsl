@@ -60,10 +60,11 @@ struct VertexOut
 	// These have to be called before any branching.
 	let change = fwidth ( fragData.barycentric );
 	let texel = textureSample ( diffuseTexture, diffuseSampler, fragData.texCoord );
+	let glow = textureSample ( emissiveTexture, emissiveSampler, fragData.texCoord );
 
 	// Light it. The diffuse texture multiplies the vertex color.
 	let vertexColor = getVertexColor ( fragData.color, fragData.hasColors ) * texel;
-	let color = light ( normalize ( fragData.normal ), material.surface, vertexColor );
+	let color = light ( normalize ( fragData.normal ), material.surface, vertexColor, glow );
 
 	// Add the edges.
 	return addEdges ( color, fragData.barycentric, change );

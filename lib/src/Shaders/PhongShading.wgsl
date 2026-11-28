@@ -68,7 +68,8 @@ fn makeVertex ( position: vec4f, normal: vec3f, color: vec4f, texCoord: vec2f ) 
 @fragment fn fs ( fragData: VertexOut ) -> @location ( 0 ) vec4f
 {
 	let texel = textureSample ( diffuseTexture, diffuseSampler, fragData.texCoord );
-	return light ( normalize ( fragData.normal ), material.surface, texel );
+	let glow = textureSample ( emissiveTexture, emissiveSampler, fragData.texCoord );
+	return light ( normalize ( fragData.normal ), material.surface, texel, glow );
 }
 
 // The fragment shader for geometry with vertex colors, which multiply the
@@ -76,5 +77,6 @@ fn makeVertex ( position: vec4f, normal: vec3f, color: vec4f, texCoord: vec2f ) 
 @fragment fn fsColors ( fragData: VertexOut ) -> @location ( 0 ) vec4f
 {
 	let texel = textureSample ( diffuseTexture, diffuseSampler, fragData.texCoord );
-	return light ( normalize ( fragData.normal ), material.surface, ( fragData.color * texel ) );
+	let glow = textureSample ( emissiveTexture, emissiveSampler, fragData.texCoord );
+	return light ( normalize ( fragData.normal ), material.surface, ( fragData.color * texel ), glow );
 }

@@ -154,6 +154,7 @@ export interface IGltfMaterial
 	name?: string;
 	pbrMetallicRoughness?: { baseColorFactor?: number[], baseColorTexture?: IGltfTextureInfo };
 	emissiveFactor?: number[];
+	emissiveTexture?: IGltfTextureInfo;
 	alphaMode?: string;
 	doubleSided?: boolean;
 	extensions?: {

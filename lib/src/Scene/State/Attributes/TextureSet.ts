@@ -10,9 +10,11 @@
 //
 //	Texture set attribute class.
 //
-//	The textures of a material, each in its named slot. For now there is one:
+//	The textures of a material, each in its named slot:
 //	- Diffuse: its colors multiply the material's ambient and diffuse colors,
 //	  like vertex colors do. Its alpha multiplies the material's alpha.
+//	- Emissive: its colors multiply the material's emission, so that a shape
+//	  can glow only in places, like the lights of a car.
 //
 //	The shapes need texture coordinates (Geometry.texCoords). Shapes without
 //	them use the texture's top-left pixel.
@@ -36,6 +38,7 @@ import type { Texture } from "../../../Textures/Texture";
 export interface ITextureSetInput
 {
 	diffuse?: ( Texture | null );
+	emissive?: ( Texture | null );
 }
 
 
@@ -49,6 +52,7 @@ export interface ITextureSetInput
 export class TextureSet extends BaseClass
 {
 	#diffuse: ( Texture | null ) = null;
+	#emissive: ( Texture | null ) = null;
 
 	/**
 	 * Construct the class.
@@ -59,6 +63,7 @@ export class TextureSet extends BaseClass
 	{
 		super();
 		this.#diffuse = ( input?.diffuse ?? null );
+		this.#emissive = ( input?.emissive ?? null );
 	}
 
 	/**
@@ -100,11 +105,32 @@ export class TextureSet extends BaseClass
 	}
 
 	/**
+	 * Get the emissive texture.
+	 * @returns {Texture | null} The texture, if any.
+	 */
+	public get emissive () : ( Texture | null )
+	{
+		return this.#emissive;
+	}
+
+	/**
+	 * Set the emissive texture.
+	 * @param {Texture | null} texture - The texture, or null for none.
+	 */
+	public set emissive ( texture: ( Texture | null ) )
+	{
+		// If this is in use then count the new texture instead of the old one.
+		replaceReference ( ( this.refCount > 0 ), this.#emissive, texture );
+		this.#emissive = texture;
+	}
+
+	/**
 	 * Called when this starts being used. Its textures are now used too.
 	 */
 	protected override onFirstRef() : void
 	{
 		this.#diffuse?.ref();
+		this.#emissive?.ref();
 	}
 
 	/**
@@ -114,6 +140,7 @@ export class TextureSet extends BaseClass
 	protected override onLastUnref() : void
 	{
 		this.#diffuse?.unref();
+		this.#emissive?.unref();
 	}
 
 	/**
@@ -123,7 +150,7 @@ export class TextureSet extends BaseClass
 	 */
 	public override toString() : string
 	{
-		return `${this.type} diffuse ${this.#diffuse?.id ?? "none"}`;
+		return `${this.type} diffuse ${this.#diffuse?.id ?? "none"} emissive ${this.#emissive?.id ?? "none"}`;
 	}
 
 	/**
@@ -137,6 +164,10 @@ export class TextureSet extends BaseClass
 		{
 			shader.diffuseTexture = this.#diffuse;
 		}
+		if ( "emissiveTexture" in shader )
+		{
+			shader.emissiveTexture = this.#emissive;
+		}
 	}
 
 	/**
@@ -148,6 +179,7 @@ export class TextureSet extends BaseClass
 		return {
 			...super.toJSON(),
 			diffuse: ( this.#diffuse?.id ?? null ),
+			emissive: ( this.#emissive?.id ?? null ),
 		};
 	}
 }

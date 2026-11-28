@@ -189,5 +189,26 @@ export function test ()
 				expectPixel ( at ( 0.4, -0.6 ), [ 255, 0, 0, 255 ] );
 			}
 		} );
+
+		it ( "Should multiply the emission by the emissive texture, with each lit shader", async function ()
+		{
+			// No diffuse or ambient color, only white emission, which the checker
+			// multiplies, so the shape shows the checker, even facing away.
+			for ( const shader of [ FlatShading, PhongShading, FlatEdges, PhongEdges ] )
+			{
+				const state = shader.makeState ( { topology: "triangle-list" } );
+				state.addAttribute ( new Material ( { diffuse: BLACK, ambient: BLACK, emission: WHITE } ) );
+				const emissive = new Texture ( { image: { width: 2, height: 2, data: CHECKER }, magFilter: "nearest" } );
+				state.addAttribute ( new TextureSet ( { emissive } ) );
+				const scene = new Group();
+				const square = makeSquare ( [ 0, 0, 0 ], state, null, [ 0, 0, 1 ], ONCE );
+				square.points = square.points!.values!.map ( ( value, i ) => ( ( 2 === ( i % 3 ) ) ? value : ( value * 2 ) ) );
+				scene.addChild ( square );
+				const pixels = await drawScene ( scene );
+				expectPixel ( pixelAt ( pixels, ( -0.4 * 0.8 ), ( 0.6 * 0.8 ) ), [ 255, 0, 0, 255 ] );
+				expectPixel ( pixelAt ( pixels, ( 0.6 * 0.8 ), ( -0.4 * 0.8 ) ), [ 255, 255, 255, 255 ] );
+				expectPixel ( pixelAt ( pixels, ( -0.7 * 0.8 ), ( -0.2 * 0.8 ) ), [ 0, 0, 255, 255 ] );
+			}
+		} );
 	} );
 };
