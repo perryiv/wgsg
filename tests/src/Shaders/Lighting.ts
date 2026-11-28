@@ -16,7 +16,7 @@ import { Array1 } from "../../../lib/src/Arrays";
 import { Device } from "../../../lib/src/Tools/Device";
 import { expect } from "chai";
 import { FlatShading } from "../../../lib/src/Shaders/FlatShading";
-import { IDENTITY_MATRIX } from "../../../lib/src/Tools/Constants";
+import { DEFAULT_AMBIENT_LIGHT, IDENTITY_MATRIX } from "../../../lib/src/Tools/Constants";
 import { Lighting } from "../../../lib/src/Shaders/Lighting";
 import { ObjectMatrices } from "../../../lib/src/Shaders/ObjectMatrices";
 import { PhongShading } from "../../../lib/src/Shaders/PhongShading";
@@ -100,7 +100,7 @@ const renderCenterPixel = async ( shader: Lighting | SolidColor, points: number[
 	if ( setUp )
 	{
 		shader.projMatrix = IDENTITY_MATRIX;
-		shader.color = [ 1, 0, 0, 1 ];
+		shader.diffuse = [ 1, 0, 0, 1 ];
 		if ( shader instanceof Lighting )
 		{
 			shader.twoSidedLight = twoSidedLight;
@@ -245,13 +245,13 @@ const renderTwoColors = async ( shader: Lighting | SolidColor, normals: number[]
 	// The same frame for both, like the draw stage of one frame.
 	const frame = ++frameCount;
 
-	shader.color = [ 1, 0, 0, 1 ];
+	shader.diffuse = [ 1, 0, 0, 1 ];
 	shader.configureRenderPass ( pass, frame );
 	objects.bind ( pass, objectOffset );
 	pass.setVertexBuffer ( 0, left );
 	pass.drawIndexed ( 3 );
 
-	shader.color = [ 0, 1, 0, 1 ];
+	shader.diffuse = [ 0, 1, 0, 1 ];
 	shader.configureRenderPass ( pass, frame );
 	pass.setVertexBuffer ( 0, right );
 	pass.drawIndexed ( 3 );
@@ -299,6 +299,23 @@ export function test ()
 {
 	describe ( "Lighting", function ()
 	{
+		// These tests are about the light from the light direction, so the
+		// ambient light is off, and back to the default after them.
+		this.beforeAll ( function ()
+		{
+			for ( const shader of [ PhongShading.instance, FlatShading.instance ] )
+			{
+				shader.ambientLight = [ 0, 0, 0, 1 ];
+			}
+		} );
+		this.afterAll ( function ()
+		{
+			for ( const shader of [ PhongShading.instance, FlatShading.instance ] )
+			{
+				shader.ambientLight = DEFAULT_AMBIENT_LIGHT;
+			}
+		} );
+
 		const shaders: [ string, () => Lighting ][] = [
 			[ "PhongShading", () => PhongShading.instance ],
 			[ "FlatShading", () => FlatShading.instance ],

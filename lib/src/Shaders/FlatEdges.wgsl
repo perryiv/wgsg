@@ -9,7 +9,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Shader code that renders with flat shading and draws the triangle edges.
-//	It is appended to Edges.wgsl. The lighting is the same as FlatShading.wgsl.
+//	It is appended to Lighting.wgsl and Edges.wgsl. The lighting is the same
+//	as FlatShading.wgsl.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -64,14 +65,9 @@ struct VertexOut
 		normal = -normal;
 	}
 
-	// Calculate the diffuse lighting factor.
-	let dotProduct = dot ( normal, -camera.lightDir );
-	let diffuse = select ( max ( dotProduct, 0.0 ), abs ( dotProduct ), ( material.twoSided != 0u ) );
-
-	// Calculate the color, assuming that the canvas is configured
-	// for pre-multiplied alpha.
-	let base = getBaseColor ( fragData.color, fragData.hasColors );
-	let color = vec4 ( base.rgb * diffuse * base.a, base.a );
+	// Light it.
+	let vertexColor = getVertexColor ( fragData.color, fragData.hasColors );
+	let color = light ( normal, material.surface, vertexColor );
 
 	// Add the edges.
 	return addEdges ( color, fragData.barycentric, change );

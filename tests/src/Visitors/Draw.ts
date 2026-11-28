@@ -50,6 +50,10 @@ const RED: IVector4 = [ 1, 0, 0, 1 ];
 const GREEN: IVector4 = [ 0, 1, 0, 1 ];
 const YELLOW: IVector4 = [ 1, 1, 0, 1 ];
 
+// The ambient light (0.1) times the default ambient color (0.2), as a pixel
+// value. It's added to every lit color, so black is [ A, A, A ].
+const A = 5;
+
 /**
  * Make a square in front of the camera.
  * @param {IVector3} center - The center.
@@ -137,14 +141,15 @@ const makeTransparentState = ( color: IVector4, depthWrite: boolean ) : State =>
 };
 
 /**
- * Expect the pixel to be the default gray, give or take rounding.
+ * Expect the pixel to be the default diffuse gray (0.8) plus the ambient
+ * (0.02), give or take rounding.
  * @param {number[]} pixel - The pixel.
  */
 const expectGray = ( pixel: number[] ) : void =>
 {
-	expect ( pixel[0] ).to.be.closeTo ( 128, 1 );
-	expect ( pixel[1] ).to.be.closeTo ( 128, 1 );
-	expect ( pixel[2] ).to.be.closeTo ( 128, 1 );
+	expect ( pixel[0] ).to.be.closeTo ( 209, 1 );
+	expect ( pixel[1] ).to.be.closeTo ( 209, 1 );
+	expect ( pixel[2] ).to.be.closeTo ( 209, 1 );
 	expect ( pixel[3] ).to.equal ( 255 );
 };
 
@@ -195,13 +200,14 @@ export function test ()
 			const pixels = await drawScene ( buildResetScene() );
 
 			// The first state's square is red.
-			expect ( pixelAt ( pixels, -0.5, 0 ) ).to.deep.equal ( [ 255, 0, 0, 255 ] );
+			expect ( pixelAt ( pixels, -0.5, 0 ) ).to.deep.equal ( [ 255, A, A, 255 ] );
 
 			// The second state's square that faces the camera is gray, not red.
 			expectGray ( pixelAt ( pixels, 0.5, 0.5 ) );
 
-			// The one that faces away is dark, because the lighting is one-sided.
-			expect ( pixelAt ( pixels, 0.5, -0.5 ) ).to.deep.equal ( [ 0, 0, 0, 255 ] );
+			// The one that faces away only has the ambient light, because the
+			// lighting is one-sided.
+			expect ( pixelAt ( pixels, 0.5, -0.5 ) ).to.deep.equal ( [ A, A, A, 255 ] );
 
 			// The background is the clear color.
 			expect ( pixelAt ( pixels, -0.95, 0.95 ) ).to.deep.equal ( [ 0, 0, 255, 255 ] );
@@ -228,14 +234,14 @@ export function test ()
 			const pixels = await drawScene ( scene );
 
 			// Only red.
-			expect ( pixelAt ( pixels, -0.3, 0 ) ).to.deep.equal ( [ 255, 0, 0, 255 ] );
+			expect ( pixelAt ( pixels, -0.3, 0 ) ).to.deep.equal ( [ 255, A, A, 255 ] );
 
 			// Red and green: green is in the later layer.
-			expect ( pixelAt ( pixels, -0.1, 0 ) ).to.deep.equal ( [ 0, 255, 0, 255 ] );
+			expect ( pixelAt ( pixels, -0.1, 0 ) ).to.deep.equal ( [ A, 255, A, 255 ] );
 
 			// Red, green, and yellow: yellow is in the later layer, and nearer than
 			// green in it.
-			expect ( pixelAt ( pixels, 0.3, 0 ) ).to.deep.equal ( [ 255, 255, 0, 255 ] );
+			expect ( pixelAt ( pixels, 0.3, 0 ) ).to.deep.equal ( [ 255, 255, A, 255 ] );
 
 			// The background is still the clear color.
 			expect ( pixelAt ( pixels, -0.95, 0.95 ) ).to.deep.equal ( [ 0, 0, 255, 255 ] );
@@ -259,20 +265,22 @@ export function test ()
 
 			// Without depth writes, green shows where they overlap. Nothing sorts
 			// the transparent shapes, so green, drawn last, blends over red, which
-			// blends over the blue background.
+			// blends over the blue background. Each lit color has the ambient
+			// 0.02 too, so red over blue is [ 0.5, 0.01, 0.51 ], and green over
+			// that is [ 0.26, 0.505, 0.265 ].
 			const pixels = await drawScene ( build ( false ) );
-			expectPixel ( pixelAt ( pixels, 0, 0 ), [ 64, 128, 64, 255 ] );
+			expectPixel ( pixelAt ( pixels, 0, 0 ), [ 66, 129, 68, 255 ] );
 
 			// Only red over the background.
-			expectPixel ( pixelAt ( pixels, -0.4, 0 ), [ 128, 0, 128, 255 ] );
+			expectPixel ( pixelAt ( pixels, -0.4, 0 ), [ 128, 3, 130, 255 ] );
 
 			// The depth test is still done, so the opaque square in front hides
 			// the green window, although it's drawn first.
-			expect ( pixelAt ( pixels, 0.4, 0 ) ).to.deep.equal ( [ 255, 255, 0, 255 ] );
+			expect ( pixelAt ( pixels, 0.4, 0 ) ).to.deep.equal ( [ 255, 255, A, 255 ] );
 
 			// With depth writes, red hides green, as if red were opaque there.
 			const written = await drawScene ( build ( true ) );
-			expectPixel ( pixelAt ( written, 0, 0 ), [ 128, 0, 128, 255 ] );
+			expectPixel ( pixelAt ( written, 0, 0 ), [ 128, 3, 130, 255 ] );
 		} );
 
 		it ( "Should draw a transparent shape's back faces and then its front faces", async function ()
@@ -306,9 +314,9 @@ export function test ()
 			scene.addChild ( transparent.getChild ( 0 ) );
 
 			// Red over green over the background. The other order would be
-			// green over red, which is [ 64, 128, 64 ].
+			// green over red, which is [ 66, 129, 68 ], with the ambient light.
 			const pixels = await drawScene ( scene );
-			expectPixel ( pixelAt ( pixels, 0, 0 ), [ 128, 64, 64, 255 ] );
+			expectPixel ( pixelAt ( pixels, 0, 0 ), [ 129, 66, 68, 255 ] );
 
 			// Outside the shape is the background.
 			expect ( pixelAt ( pixels, -0.95, 0.95 ) ).to.deep.equal ( [ 0, 0, 255, 255 ] );
@@ -336,8 +344,8 @@ export function test ()
 			}
 
 			const pixels = await drawScene ( scene );
-			expect ( pixelAt ( pixels, -0.5, 0 ) ).to.deep.equal ( [ 255, 0, 0, 255 ] );
-			expect ( pixelAt ( pixels, 0.5, 0 ) ).to.deep.equal ( [ 255, 0, 0, 255 ] );
+			expect ( pixelAt ( pixels, -0.5, 0 ) ).to.deep.equal ( [ 255, A, A, 255 ] );
+			expect ( pixelAt ( pixels, 0.5, 0 ) ).to.deep.equal ( [ 255, A, A, 255 ] );
 
 			// Between them, and where the square was before it moved, is the background.
 			expect ( pixelAt ( pixels, 0, 0 ) ).to.deep.equal ( [ 0, 0, 255, 255 ] );
@@ -371,7 +379,7 @@ export function test ()
 			await Device.recover();
 			const after = await drawScene ( scene );
 			expect ( Array.from ( after.data ) ).to.deep.equal ( Array.from ( before.data ) );
-			expect ( pixelAt ( after, -0.5, 0 ) ).to.deep.equal ( [ 255, 0, 0, 255 ] );
+			expect ( pixelAt ( after, -0.5, 0 ) ).to.deep.equal ( [ 255, A, A, 255 ] );
 		} );
 
 		it ( "Should draw the same after the shader releases its GPU objects", async function ()
@@ -380,7 +388,7 @@ export function test ()
 			FlatShading.instance.releaseGpuObjects();
 			const after = await drawScene ( buildResetScene() );
 			expect ( Array.from ( after.data ) ).to.deep.equal ( Array.from ( before.data ) );
-			expect ( pixelAt ( after, -0.5, 0 ) ).to.deep.equal ( [ 255, 0, 0, 255 ] );
+			expect ( pixelAt ( after, -0.5, 0 ) ).to.deep.equal ( [ 255, A, A, 255 ] );
 		} );
 	} );
 };

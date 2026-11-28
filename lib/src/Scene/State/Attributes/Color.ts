@@ -10,9 +10,14 @@
 //
 //	Color attribute class.
 //
+//	A shortcut for the Material attribute's diffuse color. The other colors
+//	are the defaults. If a state has both, the material is used, and in
+//	developer builds the state warns about it.
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Attribute as BaseClass, IAttributeApplyInput } from "../Attribute";
+import { Material } from "./Material";
 import { ColorTool } from "../../../Tools";
 import { IVector4 } from "../../../Types";
 import { vec4 } from "gl-matrix";
@@ -96,10 +101,17 @@ export class Color extends BaseClass
 	 */
 	public override apply ( input: IAttributeApplyInput ) : void
 	{
-		const { shader } = input;
-		if ( "color" in shader )
+		// A material in the same state is used instead.
+		const { shader, state } = input;
+		if ( state.getAttribute ( Material.getClassName() ) )
 		{
-			shader.color = this.color;
+			return;
+		}
+
+		// Set the diffuse color, if the shader has one.
+		if ( "diffuse" in shader )
+		{
+			shader.diffuse = this.color;
 		}
 	}
 

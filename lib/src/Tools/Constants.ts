@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import type { IMatrix44 } from "../Types/Matrix";
+import type { IVector4 } from "../Types/Vector";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -45,3 +46,17 @@ export const DEFAULT_FAR_DISTANCE = 1e4;
 // back faces in this bin and the front faces in TRANSPARENT_BIN + 1.
 // The function buildTransparentScene() does that.
 export const TRANSPARENT_BIN = 1000;
+
+
+// The default material, the same as OpenGL's. See the Material attribute.
+export const DEFAULT_AMBIENT:  Readonly<IVector4> = [ 0.2, 0.2, 0.2, 1.0 ];
+export const DEFAULT_DIFFUSE:  Readonly<IVector4> = [ 0.8, 0.8, 0.8, 1.0 ];
+export const DEFAULT_SPECULAR: Readonly<IVector4> = [ 0.0, 0.0, 0.0, 1.0 ];
+export const DEFAULT_EMISSION: Readonly<IVector4> = [ 0.0, 0.0, 0.0, 1.0 ];
+export const DEFAULT_SHININESS = 0;
+
+// The largest shininess, as in OpenGL.
+export const MAX_SHININESS = 128;
+
+// The default ambient light.
+export const DEFAULT_AMBIENT_LIGHT: Readonly<IVector4> = [ 0.1, 0.1, 0.1, 1.0 ];

@@ -118,20 +118,20 @@ export function test ()
 			const matrix = [ ...IDENTITY_MATRIX ] as IMatrix44;
 			const red: IVector4 = [ 1, 0, 0, 1 ];
 
-			// A state that sets the color and two-sided lighting.
+			// A state that sets the color (the diffuse color) and two-sided lighting.
 			const state1 = FlatShading.makeState ( { topology: "triangle-list" } );
 			state1.addAttribute ( new ColorAttribute ( red ) );
 			state1.addAttribute ( new TwoSidedLight ( true ) );
 			const input1 = { state: state1, shader, projMatrix: matrix };
 			state1.doApply ( input1 );
-			expect ( shader.color ).to.deep.equal ( red );
+			expect ( shader.diffuse ).to.deep.equal ( red );
 			expect ( shader.twoSidedLight ).to.be.true;
 			state1.doReset ( input1 );
 
 			// The next state sets neither, so it gets the defaults.
 			const state2 = FlatShading.makeState ( { topology: "triangle-list" } );
 			state2.doApply ( { state: state2, shader, projMatrix: matrix } );
-			expect ( shader.color ).to.deep.equal ( [ 0.5, 0.5, 0.5, 1 ] );
+			expect ( shader.diffuse ).to.deep.equal ( [ 0.8, 0.8, 0.8, 1 ] );
 			expect ( shader.twoSidedLight ).to.be.false;
 		} );
 
@@ -150,11 +150,11 @@ export function test ()
 			const input = { state, shader, projMatrix: matrix };
 			state.doApply ( input );
 			state.doReset ( input );
-			expect ( shader.color ).to.deep.equal ( red );
+			expect ( shader.diffuse ).to.deep.equal ( red );
 
 			// The default reset function puts it back.
 			defaultResetFunction ( input );
-			expect ( shader.color ).to.deep.equal ( [ 0.5, 0.5, 0.5, 1 ] );
+			expect ( shader.diffuse ).to.deep.equal ( [ 0.8, 0.8, 0.8, 1 ] );
 		} );
 	} );
 };

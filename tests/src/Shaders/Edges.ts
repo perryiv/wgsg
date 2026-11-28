@@ -18,7 +18,7 @@ import { expect } from "chai";
 import { FlatEdges } from "../../../lib/src/Shaders/FlatEdges";
 import { FlatShading } from "../../../lib/src/Shaders/FlatShading";
 import { Geometry, Group } from "../../../lib/src/Scene/Nodes";
-import { IDENTITY_MATRIX } from "../../../lib/src/Tools/Constants";
+import { DEFAULT_AMBIENT_LIGHT, IDENTITY_MATRIX } from "../../../lib/src/Tools/Constants";
 import { ObjectMatrices } from "../../../lib/src/Shaders/ObjectMatrices";
 import { PhongEdges } from "../../../lib/src/Shaders/PhongEdges";
 import { PhongShading } from "../../../lib/src/Shaders/PhongShading";
@@ -126,7 +126,7 @@ const render = async ( { shader, points, normals, indices, edgeWidth = 4 }: IRen
 
 	// Set up the shader.
 	shader.projMatrix = IDENTITY_MATRIX;
-	shader.color = [ 1, 0, 0, 1 ];
+	shader.diffuse = [ 1, 0, 0, 1 ];
 	shader.twoSidedLight = false;
 	shader.edgeColor = [ 0, 0, 0, 1 ];
 	shader.edgeWidth = edgeWidth;
@@ -222,6 +222,23 @@ export function test ()
 {
 	describe ( "Edges", function ()
 	{
+		// These tests are about the edges and the light from the light direction, so the
+		// ambient light is off, and back to the default after them.
+		this.beforeAll ( function ()
+		{
+			for ( const shader of [ PhongEdges.instance, FlatEdges.instance ] )
+			{
+				shader.ambientLight = [ 0, 0, 0, 1 ];
+			}
+		} );
+		this.afterAll ( function ()
+		{
+			for ( const shader of [ PhongEdges.instance, FlatEdges.instance ] )
+			{
+				shader.ambientLight = DEFAULT_AMBIENT_LIGHT;
+			}
+		} );
+
 		const shaders: [ string, () => WithEdges, number[] | undefined ][] = [
 			[ "FlatEdges", () => FlatEdges.instance, undefined ],
 			[ "PhongEdges", () => PhongEdges.instance, NORMALS ],

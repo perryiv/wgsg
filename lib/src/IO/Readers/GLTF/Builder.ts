@@ -24,10 +24,9 @@
 //	material gets two-sided lighting, and the others get their back faces
 //	culled, as glTF says. Textures are ignored.
 //
-//	The vertex colors (COLOR_0) are multiplied by the material's color here,
-//	as glTF says, because vertex colors replace the state's color when they
-//	are drawn. Their alpha is only kept for BLEND materials, like the base
-//	color's.
+//	The vertex colors (COLOR_0) multiply the material's color when they are
+//	drawn, as glTF says. Their alpha is only kept for BLEND materials, like
+//	the base color's.
 //
 //	A material with alphaMode BLEND is semi-transparent: its state goes in
 //	TRANSPARENT_BIN, without depth writes, so it's drawn after the opaque
@@ -499,8 +498,9 @@ export class Builder
 			throw new Error ( `There are ${( normals.values?.length ?? 0 ) / 3} normals but ${numVertices} points` );
 		}
 
-		// Get the colors, if any, already multiplied by the material's color.
-		const colors = ( ( undefined === color ) ? null : this.getColors ( color, primitive.material ) );
+		// Get the colors, if any. Their alpha is only used when blending.
+		const blend = ( "BLEND" === this.getMaterial ( primitive.material )?.alphaMode );
+		const colors = ( ( undefined === color ) ? null : this.getColors ( color, blend ) );
 		if ( colors && ( colors.values?.length !== ( numVertices * 4 ) ) )
 		{
 			throw new Error ( `There are ${( colors.values?.length ?? 0 ) / 4} colors but ${numVertices} points` );
@@ -573,17 +573,17 @@ export class Builder
 	}
 
 	/**
-	 * Get the colors of an accessor, as red, green, blue, and alpha,
-	 * multiplied by the material's color, as glTF says. Their alpha is only
-	 * kept when the material blends. They are shared by primitives that use
-	 * the same accessor and material.
+	 * Get the colors of an accessor, as red, green, blue, and alpha. They
+	 * are shared by primitives that use the same accessor, and keep or drop
+	 * the alpha the same way.
 	 * @param {number} index The index of the accessor.
-	 * @param {number | undefined} material The index of the material, if any.
+	 * @param {boolean} keepAlpha Whether to keep the alpha. If not, or if
+	 * there is none, it's 1.
 	 * @returns {Array1<Float32Array>} The array.
 	 */
-	protected getColors ( index: number, material: ( number | undefined ) ) : Array1 < Float32Array >
+	protected getColors ( index: number, keepAlpha: boolean ) : Array1 < Float32Array >
 	{
-		const key = `${index} ${material ?? "none"}`;
+		const key = `${index} ${keepAlpha}`;
 		let array = this.#colors.get ( key );
 		if ( !array )
 		{
@@ -596,10 +596,6 @@ export class Builder
 			const size = ( ( "VEC3" === type ) ? 3 : 4 );
 			const values = readFloats ( this.#data, index, type );
 
-			// The material's color, and whether to keep the alpha.
-			const keepAlpha = ( ( 4 === size ) && ( "BLEND" === this.getMaterial ( material )?.alphaMode ) );
-			const [ r, g, b, a ] = this.getMaterialColor ( material );
-
 			// Make four of each.
 			const count = ( values.length / size );
 			const rgba = new Float32Array ( count * 4 );
@@ -607,10 +603,10 @@ export class Builder
 			{
 				const from = ( i * size );
 				const to = ( i * 4 );
-				rgba[to]     = ( values[from]     * r );
-				rgba[to + 1] = ( values[from + 1] * g );
-				rgba[to + 2] = ( values[from + 2] * b );
-				rgba[to + 3] = ( ( keepAlpha ? values[from + 3] : 1 ) * a );
+				rgba[to]     = values[from];
+				rgba[to + 1] = values[from + 1];
+				rgba[to + 2] = values[from + 2];
+				rgba[to + 3] = ( ( keepAlpha && ( 4 === size ) ) ? values[from + 3] : 1 );
 			}
 			array = new Array1 ( rgba );
 			this.#colors.set ( key, array );

@@ -9,37 +9,22 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Shader code shared by the shaders that draw triangle edges. Each of them
-//	starts with this code. See WithEdges.ts for how it works.
+//	starts with Lighting.wgsl and then this code. See WithEdges.ts for how it
+//	works.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-// The camera, in bind group 0. This has to match makeCameraUniforms().
-struct Camera
-{
-	projMatrix: mat4x4f,
-	lightDir: vec3f,
-};
-
-// The material, in bind group 1, with the edge values after the ones in the
-// other shaders that use the Lighting class. This has to match
-// makeMaterialUniforms().
+// The material, in bind group 1: the surface, and then the edge values.
+// This has to match makeMaterialUniforms(). The camera, the object, and the
+// lighting are in Lighting.wgsl, which comes first.
 struct Material
 {
-	color: vec4f,
-	twoSided: u32,
+	surface: Surface,
 	edgeColor: vec4f,
 	edgeWidth: f32,
 };
 
-// The object, in bind group 2, from ObjectMatrices.
-struct Object
-{
-	viewMatrix: mat4x4f,
-};
-
-@group ( 0 ) @binding ( 0 ) var<uniform> camera : Camera;
 @group ( 1 ) @binding ( 0 ) var<uniform> material : Material;
-@group ( 2 ) @binding ( 0 ) var<uniform> object : Object;
 
 // The buffers that the vertices are pulled from, in bind group 3. Without
 // indices, the indices binding holds a buffer that isn't read.
@@ -103,12 +88,12 @@ fn getColor ( index: u32, mode: u32 ) -> vec4f
 	return vec4f ( colors[i], colors[i + 1u], colors[i + 2u], colors[i + 3u] );
 }
 
-// Return the color to light: the vertex color if there are vertex colors,
-// which replace the material's color, and otherwise the material's color.
-// The material's color is not interpolated, so it's exact.
-fn getBaseColor ( color: vec4f, hasColors: u32 ) -> vec4f
+// Return the vertex color for the lighting: the interpolated one if there
+// are vertex colors, and otherwise exactly white, since the interpolated
+// white can be off by a little.
+fn getVertexColor ( color: vec4f, hasColors: u32 ) -> vec4f
 {
-	return select ( material.color, color, ( 0u != hasColors ) );
+	return select ( vec4f ( 1.0 ), color, ( 0u != hasColors ) );
 }
 
 // Return the barycentric coordinate of the given corner. This assumes that

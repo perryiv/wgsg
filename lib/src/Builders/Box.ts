@@ -22,6 +22,7 @@ import {
 	Geometry,
 	Group,
 	Indexed,
+	Material,
 	Node as SceneNode,
 	State,
 	Transform,
@@ -186,12 +187,52 @@ export const buildBox = ( input?: IBoxBuilderInput ) : Geometry =>
 
 ///////////////////////////////////////////////////////////////////////////////
 //
+//	The colors of the bounding boxes, if given.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+export interface IBoundingBoxesInput
+{
+	shapeColor?: Readonly<IVector4>;
+	groupColor?: Readonly<IVector4>;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Get the color of the state: its material's diffuse color, or else its
+ * color attribute's, or gray if it has neither, or if there is no state.
+ * @param {State | null} state - The state, if any.
+ * @returns {IVector4} The color.
+ */
+///////////////////////////////////////////////////////////////////////////////
+
+const getStateColor = ( state: ( Readonly<State> | null ) ) : Readonly<IVector4> =>
+{
+	const material = state?.getAttribute ( Material.getClassName() );
+	if ( material instanceof Material )
+	{
+		return material.diffuse;
+	}
+	const color = state?.getAttribute ( ColorAttribute.getClassName() );
+	if ( color instanceof ColorAttribute )
+	{
+		return color.color;
+	}
+	return ColorTool.gray;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
 //	Local visitor class that builds bounding boxes.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 class BuildBoxes extends BaseClass
 {
+	readonly #shapeColor: ( Readonly<IVector4> | null );
+	readonly #groupColor: ( Readonly<IVector4> | null );
 	#indices: number[] = [];
 	#points: number[] = [];
 	#colors: number[] = [];
@@ -201,10 +242,13 @@ class BuildBoxes extends BaseClass
 	/**
 	 * Construct the class.
 	 * @class
+	 * @param {IBoundingBoxesInput} [input] - The colors of the boxes, if any.
 	 */
-	constructor()
+	constructor ( input?: Readonly<IBoundingBoxesInput> )
 	{
 		super();
+		this.#shapeColor = ( input?.shapeColor ?? null );
+		this.#groupColor = ( input?.groupColor ?? null );
 	}
 
 	/**
@@ -248,9 +292,10 @@ class BuildBoxes extends BaseClass
 			// Make the geometry.
 			const geom = new Geometry ( { points, colors, primitives } );
 
-			// Add a state. The lines are the colors of the vertices.
+			// Add a state. It's white, because the colors of the vertices
+			// multiply it, and they are the colors of the boxes.
 			const state = SolidColor.makeState ( { topology: "line-list" } );
-			state.addAttribute ( new ColorAttribute ( [ ...ColorTool.gray ] ) );
+			state.addAttribute ( new ColorAttribute ( [ ...ColorTool.white ] ) );
 			geom.state = state;
 
 			// Save for next time.
@@ -264,9 +309,9 @@ class BuildBoxes extends BaseClass
 	/**
 	 * Add the box.
 	 * @param {Box} box - The box to add.
-	 * @param {State | null} state - The state of the corresponding shape.
+	 * @param {IVector4} color - The color of the box.
 	 */
-	protected addBox ( box: Readonly<Box>, state: ( Readonly<State> | null ) ) : void
+	protected addBox ( box: Readonly<Box>, color: Readonly<IVector4> ) : void
 	{
 		// Handle invalid box
 		if ( false === box.valid )
@@ -311,10 +356,7 @@ class BuildBoxes extends BaseClass
 			urf[0], urf[1], urf[2],
 		);
 
-		// The color of the node's state, if it has one, or gray. The lines
-		// are opaque, so that they show for semi-transparent nodes too.
-		const attribute = state?.getAttribute ( ColorAttribute.getClassName() );
-		const color = ( ( attribute instanceof ColorAttribute ) ? attribute.color : ColorTool.gray );
+		// The lines are opaque, so that they show for semi-transparent nodes too.
 		const c: IVector4 = [ color[0], color[1], color[2], 1 ];
 
 		// Append a color for each new point.
@@ -374,7 +416,7 @@ class BuildBoxes extends BaseClass
 		this.#boxes.set ( geom.id, box );
 
 		// Make a box for this shape.
-		this.addBox ( box, geom.state );
+		this.addBox ( box, ( this.#shapeColor ?? getStateColor ( geom.state ) ) );
 	}
 
 	/**
@@ -393,7 +435,7 @@ class BuildBoxes extends BaseClass
 		this.#boxes.set ( group.id, box );
 
 		// Add our box geometry to the scene.
-		this.addBox ( box, group.state );
+		this.addBox ( box, ( this.#groupColor ?? getStateColor ( group.state ) ) );
 	}
 
 	/**
@@ -413,23 +455,30 @@ class BuildBoxes extends BaseClass
 
 		// Add our box geometry to the scene.
 		// The box is already transformed so we pass identity.
-		this.addBox ( box, tr.state );
+		this.addBox ( box, ( this.#groupColor ?? getStateColor ( tr.state ) ) );
 	}
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Build a geometry for the bounding boxes of the given scene.
+ * Build a geometry for the bounding boxes of the given scene. Each box is the
+ * color of its node's state, its material's diffuse color or else its color
+ * attribute, or gray when it has neither. The given colors are used instead,
+ * for all the shapes or all the groups.
  * @param {SceneNode} scene - The scene to build the bounding boxes for.
+ * @param {IBoundingBoxesInput} [input] - The colors to use, if any.
+ * @param {IVector4} [input.shapeColor] - The color of every shape's box.
+ * @param {IVector4} [input.groupColor] - The color of every group's box,
+ * including transforms.
  * @returns {Geometry} The built bounding box geometry.
  */
 ///////////////////////////////////////////////////////////////////////////////
 
-export const buildBoundingBoxes = ( scene: SceneNode ) : Geometry =>
+export const buildBoundingBoxes = ( scene: SceneNode, input?: Readonly<IBoundingBoxesInput> ) : Geometry =>
 {
 	// Visit the scene.
-	const visitor = new BuildBoxes();
+	const visitor = new BuildBoxes ( input );
 	scene.accept ( visitor );
 
 	// Return the geometry.

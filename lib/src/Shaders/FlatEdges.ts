@@ -15,6 +15,7 @@
 import { WithEdges as BaseClass } from "./WithEdges";
 import { State } from "../Scene";
 import common from "./Edges.wgsl?raw";
+import lighting from "./Lighting.wgsl?raw";
 import code from "./FlatEdges.wgsl?raw";
 
 
@@ -51,7 +52,7 @@ export class FlatEdges extends BaseClass
 		const topology = input?.topology;
 
 		super ( {
-			code: ( common + code ),
+			code: ( lighting + common + code ),
 			topology: ( topology ?? "triangle-list" )
 		} );
 	}

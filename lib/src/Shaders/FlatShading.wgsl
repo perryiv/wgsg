@@ -10,33 +10,20 @@
 //
 //	Shader code that renders with flat shading. The geometry does not need
 //	normal vectors. The fragment shader calculates the normal of the triangle
-//	from how the position changes between neighboring pixels.
+//	from how the position changes between neighboring pixels. It is appended
+//	to Lighting.wgsl.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-// The camera, in bind group 0. This has to match makeCameraUniforms().
-struct Camera
-{
-	projMatrix: mat4x4f,
-	lightDir: vec3f,
-};
-
 // The material, in bind group 1. This has to match makeMaterialUniforms().
+// The camera, the object, and the lighting are in Lighting.wgsl, which comes
+// first.
 struct Material
 {
-	color: vec4f,
-	twoSided: u32,
+	surface: Surface,
 };
 
-// The object, in bind group 2, from ObjectMatrices.
-struct Object
-{
-	viewMatrix: mat4x4f,
-};
-
-@group ( 0 ) @binding ( 0 ) var<uniform> camera : Camera;
 @group ( 1 ) @binding ( 0 ) var<uniform> material : Material;
-@group ( 2 ) @binding ( 0 ) var<uniform> object : Object;
 
 struct VertexOut
 {
@@ -77,20 +64,22 @@ fn makeVertex ( position: vec4f, color: vec4f ) -> VertexOut
 	return answer;
 }
 
-// The fragment shader for geometry without vertex colors.
+// The fragment shader for geometry without vertex colors. It doesn't use the
+// interpolated white, which can be off by a little.
 @fragment fn fs ( fragData: VertexOut, @builtin ( front_facing ) frontFacing: bool ) -> @location ( 0 ) vec4f
 {
-	return shade ( fragData, frontFacing, material.color );
+	return light ( getNormal ( fragData, frontFacing ), material.surface, vec4f ( 1.0 ) );
 }
 
-// The fragment shader for geometry with vertex colors, which replace the
-// material's color.
+// The fragment shader for geometry with vertex colors, which multiply the
+// material's ambient and diffuse colors.
 @fragment fn fsColors ( fragData: VertexOut, @builtin ( front_facing ) frontFacing: bool ) -> @location ( 0 ) vec4f
 {
-	return shade ( fragData, frontFacing, fragData.color );
+	return light ( getNormal ( fragData, frontFacing ), material.surface, fragData.color );
 }
 
-fn shade ( fragData: VertexOut, frontFacing: bool, color: vec4f ) -> vec4f
+// Return the normal of the triangle, in view space.
+fn getNormal ( fragData: VertexOut, frontFacing: bool ) -> vec3f
 {
 	// How the view-space position changes from one pixel to the next, to the
 	// right (x) and down (y). Both vectors are in the plane of the triangle,
@@ -108,12 +97,5 @@ fn shade ( fragData: VertexOut, frontFacing: bool, color: vec4f ) -> vec4f
 	{
 		normal = -normal;
 	}
-
-	// Calculate the diffuse lighting factor.
-	let dotProduct = dot ( normal, -camera.lightDir );
-	let diffuse = select ( max ( dotProduct, 0.0 ), abs ( dotProduct ), ( material.twoSided != 0u ) );
-
-	// Calculate the color, assuming that the canvas is configured
-	// for pre-multiplied alpha.
-	return vec4 ( color.rgb * diffuse * color.a, color.a );
+	return normal;
 }

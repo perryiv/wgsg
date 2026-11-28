@@ -13,6 +13,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Attribute } from "./Attribute";
+import { Color } from "./Attributes/Color";
+import { DEVELOPER_BUILD } from "../../Tools/Environment";
+import { Material } from "./Attributes/Material";
 import { Base as BaseClass } from "../../Base";
 import { IMatrix44 } from "../../Types";
 import { ShaderBase, type IPipelineOptions } from "../../Shaders";
@@ -63,7 +66,7 @@ export const defaultApplyFunction: IStateApplyFunction = ( input: IStateApplyInp
 	const { attributes } = state;
 	for ( const [ , attribute ] of attributes )
 	{
-		attribute.apply ( { shader } );
+		attribute.apply ( { shader, state } );
 	}
 };
 
@@ -177,6 +180,20 @@ export class State extends BaseClass
 	public addAttribute ( attribute: Attribute ) : void
 	{
 		this.#attributes.set ( attribute.type, attribute );
+
+		// In developer builds, say when the state has both a color and a
+		// material, because the color is not used.
+		if ( DEVELOPER_BUILD )
+		{
+			const color = Color.getClassName();
+			const material = Material.getClassName();
+			const added = attribute.type;
+			const both = ( this.#attributes.has ( color ) && this.#attributes.has ( material ) );
+			if ( both && ( ( color === added ) || ( material === added ) ) )
+			{
+				console.warn ( `State '${this.name}' has both a color and a material, so the color is not used` );
+			}
+		}
 	}
 
 	/**

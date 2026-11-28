@@ -8,34 +8,21 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Shader code that renders with Phong shading.
+//	Shader code that renders with Phong shading. It is appended to
+//	Lighting.wgsl.
 //	https://gist.github.com/ccincotti3/f5bbfca9acd27c0efb9a2d22509b5aca
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-// The camera, in bind group 0. This has to match makeCameraUniforms().
-struct Camera
-{
-	projMatrix: mat4x4f,
-	lightDir: vec3f,
-};
-
 // The material, in bind group 1. This has to match makeMaterialUniforms().
+// The camera, the object, and the lighting are in Lighting.wgsl, which comes
+// first.
 struct Material
 {
-	color: vec4f,
-	twoSided: u32,
+	surface: Surface,
 };
 
-// The object, in bind group 2, from ObjectMatrices.
-struct Object
-{
-	viewMatrix: mat4x4f,
-};
-
-@group ( 0 ) @binding ( 0 ) var<uniform> camera : Camera;
 @group ( 1 ) @binding ( 0 ) var<uniform> material : Material;
-@group ( 2 ) @binding ( 0 ) var<uniform> object : Object;
 
 struct VertexOut
 {
@@ -74,29 +61,16 @@ fn makeVertex ( position: vec4f, normal: vec3f, color: vec4f ) -> VertexOut
 	return answer;
 }
 
-// The fragment shader for geometry without vertex colors.
+// The fragment shader for geometry without vertex colors. It doesn't use the
+// interpolated white, which can be off by a little.
 @fragment fn fs ( fragData: VertexOut ) -> @location ( 0 ) vec4f
 {
-	return shade ( fragData, material.color );
+	return light ( normalize ( fragData.normal ), material.surface, vec4f ( 1.0 ) );
 }
 
-// The fragment shader for geometry with vertex colors, which replace the
-// material's color.
+// The fragment shader for geometry with vertex colors, which multiply the
+// material's ambient and diffuse colors.
 @fragment fn fsColors ( fragData: VertexOut ) -> @location ( 0 ) vec4f
 {
-	return shade ( fragData, fragData.color );
-}
-
-fn shade ( fragData: VertexOut, color: vec4f ) -> vec4f
-{
-	// Make sure the normal vector is unit length.
-	let normal = normalize ( fragData.normal );
-
-	// Calculate the diffuse lighting factor.
-	let dotProduct = dot ( normal, -camera.lightDir );
-	let diffuse = select ( max ( dotProduct, 0.0 ), abs ( dotProduct ), ( material.twoSided != 0u ) );
-
-	// Calculate the color, assuming that the canvas is configured
-	// for pre-multiplied alpha.
-	return vec4 ( color.rgb * diffuse * color.a, color.a );
+	return light ( normalize ( fragData.normal ), material.surface, fragData.color );
 }
