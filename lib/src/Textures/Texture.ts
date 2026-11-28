@@ -20,6 +20,12 @@
 //	linear values when the shaders sample them. Set srgb to false for data,
 //	like normal maps.
 //
+//	By default a texture has mipmaps: smaller copies of the image, each half
+//	the size of the one before, down to one pixel. They're made on the GPU
+//	(see Mipmaps.ts), and the sampler blends between them (trilinear
+//	filtering), so a texture seen small or far away is smooth instead of
+//	sparkling.
+//
 //	The GPU texture is made when it's first needed, and again after the
 //	device is lost or the image changes. When nothing uses the texture any
 //	more (see Base.ref() and unref()), the GPU texture is destroyed, but the
@@ -29,6 +35,7 @@
 
 import { Base as BaseClass } from "../Base/Base";
 import { Device } from "../Tools/Device";
+import { generateMipmaps } from "./Mipmaps";
 import { getSampler } from "./Samplers";
 
 
@@ -49,19 +56,22 @@ export interface IRawImage
 // What a texture's image can be.
 export type ITextureImage = ( ImageBitmap | HTMLCanvasElement | OffscreenCanvas | IRawImage );
 
-// How the texture is sampled.
+// How the texture is sampled. The mipmap filter is only used when the
+// texture has mipmaps.
 export interface ISamplerSettings
 {
 	wrapU: GPUAddressMode;
 	wrapV: GPUAddressMode;
 	magFilter: GPUFilterMode;
 	minFilter: GPUFilterMode;
+	mipmapFilter: GPUMipmapFilterMode;
 }
 
 export interface ITextureInput extends Partial < ISamplerSettings >
 {
 	image: ITextureImage;
 	srgb?: boolean;
+	mipmaps?: boolean;
 }
 
 
@@ -93,7 +103,8 @@ export class Texture extends BaseClass
 
 	#image: ITextureImage;
 	#srgb = true;
-	#sampler: ISamplerSettings = { wrapU: "repeat", wrapV: "repeat", magFilter: "linear", minFilter: "linear" };
+	#mipmaps = true;
+	#sampler: ISamplerSettings = { wrapU: "repeat", wrapV: "repeat", magFilter: "linear", minFilter: "linear", mipmapFilter: "linear" };
 	#texture: ( GPUTexture | null ) = null;
 	#view: ( GPUTextureView | null ) = null;
 	#device = 0; // The id of the device the texture was made with.
@@ -102,7 +113,8 @@ export class Texture extends BaseClass
 	 * Construct the class.
 	 * @class
 	 * @param {ITextureInput} input - The image, and how to sample it. The
-	 * defaults are sRGB, repeat, and linear filtering.
+	 * defaults are sRGB, mipmaps, repeat, and linear filtering, including
+	 * between the mipmaps.
 	 */
 	constructor ( input: Readonly<ITextureInput> )
 	{
@@ -110,12 +122,14 @@ export class Texture extends BaseClass
 		Texture.checkImage ( input.image );
 		this.#image = input.image;
 		this.#srgb = ( input.srgb ?? true );
-		const { wrapU, wrapV, magFilter, minFilter } = input;
+		this.#mipmaps = ( input.mipmaps ?? true );
+		const { wrapU, wrapV, magFilter, minFilter, mipmapFilter } = input;
 		this.#sampler = {
 			wrapU: ( wrapU ?? "repeat" ),
 			wrapV: ( wrapV ?? "repeat" ),
 			magFilter: ( magFilter ?? "linear" ),
 			minFilter: ( minFilter ?? "linear" ),
+			mipmapFilter: ( mipmapFilter ?? "linear" ),
 		};
 	}
 
@@ -216,6 +230,40 @@ export class Texture extends BaseClass
 	}
 
 	/**
+	 * See if this texture has mipmaps.
+	 * @returns {boolean} True if it has mipmaps.
+	 */
+	public get mipmaps() : boolean
+	{
+		return this.#mipmaps;
+	}
+
+	/**
+	 * Set whether this texture has mipmaps.
+	 * @param {boolean} mipmaps - True if it has mipmaps.
+	 */
+	public set mipmaps ( mipmaps: boolean )
+	{
+		if ( mipmaps !== this.#mipmaps )
+		{
+			this.#mipmaps = mipmaps;
+			this.releaseGpuObjects();
+		}
+	}
+
+	/**
+	 * Get the number of levels of the GPU texture: one for the image, and
+	 * with mipmaps, one more for each halving of its larger side down to one
+	 * pixel.
+	 * @returns {number} The number of levels.
+	 */
+	public get numLevels() : number
+	{
+		const largest = Math.max ( this.width, this.height );
+		return ( this.#mipmaps ? ( Math.floor ( Math.log2 ( largest ) ) + 1 ) : 1 );
+	}
+
+	/**
 	 * Get the format of the GPU texture.
 	 * @returns {GPUTextureFormat} The format.
 	 */
@@ -257,6 +305,26 @@ export class Texture extends BaseClass
 	 */
 	public get view() : GPUTextureView
 	{
+		this.makeTextureIfNeeded();
+		return this.#view!;
+	}
+
+	/**
+	 * Get the GPU texture, making it if we have to. It can be copied from,
+	 * for example to read its pixels back.
+	 * @returns {GPUTexture} The texture.
+	 */
+	public get gpuTexture() : GPUTexture
+	{
+		this.makeTextureIfNeeded();
+		return this.#texture!;
+	}
+
+	/**
+	 * Make the GPU texture if we don't have one for the current device.
+	 */
+	protected makeTextureIfNeeded() : void
+	{
 		// A texture from a device that was lost can't be used with the new one.
 		if ( this.#texture && ( this.#device !== Device.instance.id ) )
 		{
@@ -268,7 +336,21 @@ export class Texture extends BaseClass
 		{
 			this.makeTexture();
 		}
-		return this.#view!;
+	}
+
+	/**
+	 * Get the size of the GPU texture in bytes, with all its levels.
+	 * @param {GPUTexture} texture - The texture.
+	 * @returns {number} The size in bytes.
+	 */
+	protected static getBytes ( texture: GPUTexture ) : number
+	{
+		let bytes = 0;
+		for ( let level = 0; level < texture.mipLevelCount; ++level )
+		{
+			bytes += ( Math.max ( 1, ( texture.width >> level ) ) * Math.max ( 1, ( texture.height >> level ) ) * 4 );
+		}
+		return bytes;
 	}
 
 	/**
@@ -287,12 +369,13 @@ export class Texture extends BaseClass
 			throw new Error ( `Texture image of ${width} by ${height} pixels is larger than this GPU's limit of ${max}` );
 		}
 
-		// Make the texture.
+		// Make the texture. It's drawn into to make the mipmaps.
 		const texture = device.createTexture ( {
 			label: `Texture ${this.id}`,
 			size: [ width, height ],
 			format: this.format,
-			usage: ( GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT ),
+			mipLevelCount: this.numLevels,
+			usage: ( GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT ),
 		} );
 
 		// Fill it.
@@ -308,11 +391,17 @@ export class Texture extends BaseClass
 			device.queue.copyExternalImageToTexture ( { source: image }, { texture, premultipliedAlpha: false }, [ width, height ] );
 		}
 
+		// Make the mipmaps from the image.
+		if ( texture.mipLevelCount > 1 )
+		{
+			generateMipmaps ( texture );
+		}
+
 		// Save it.
 		this.#texture = texture;
 		this.#view = texture.createView ( { label: `View of texture ${this.id}` } );
 		this.#device = Device.instance.id;
-		Texture.#totalBytes += ( width * height * 4 );
+		Texture.#totalBytes += Texture.getBytes ( texture );
 	}
 
 	/**
@@ -323,7 +412,7 @@ export class Texture extends BaseClass
 		const texture = this.#texture;
 		if ( texture )
 		{
-			Texture.#totalBytes -= ( texture.width * texture.height * 4 );
+			Texture.#totalBytes -= Texture.getBytes ( texture );
 			texture.destroy();
 			this.#texture = null;
 			this.#view = null;

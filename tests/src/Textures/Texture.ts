@@ -67,25 +67,26 @@ export function test ()
 			}
 		} );
 
-		it ( "Should be an sRGB color texture with repeat and linear filtering by default", function ()
+		it ( "Should be an sRGB color texture with mipmaps, repeat, and linear filtering by default", function ()
 		{
 			const texture = new Texture ( { image: makeImage ( 2, 3 ) } );
 			expect ( texture.width ).to.equal ( 2 );
 			expect ( texture.height ).to.equal ( 3 );
 			expect ( texture.srgb ).to.be.true;
 			expect ( texture.format ).to.equal ( "rgba8unorm-srgb" );
-			expect ( texture.samplerSettings ).to.deep.equal ( { wrapU: "repeat", wrapV: "repeat", magFilter: "linear", minFilter: "linear" } );
+			expect ( texture.mipmaps ).to.be.true;
+			expect ( texture.samplerSettings ).to.deep.equal ( { wrapU: "repeat", wrapV: "repeat", magFilter: "linear", minFilter: "linear", mipmapFilter: "linear" } );
 		} );
 
 		it ( "Should use the settings it's given", function ()
 		{
 			const texture = new Texture ( { image: makeImage ( 1, 1 ), srgb: false, wrapU: "clamp-to-edge", minFilter: "nearest" } );
 			expect ( texture.format ).to.equal ( "rgba8unorm" );
-			expect ( texture.samplerSettings ).to.deep.equal ( { wrapU: "clamp-to-edge", wrapV: "repeat", magFilter: "linear", minFilter: "nearest" } );
+			expect ( texture.samplerSettings ).to.deep.equal ( { wrapU: "clamp-to-edge", wrapV: "repeat", magFilter: "linear", minFilter: "nearest", mipmapFilter: "linear" } );
 
 			// Changing some settings keeps the rest.
 			texture.samplerSettings = { wrapV: "mirror-repeat" };
-			expect ( texture.samplerSettings ).to.deep.equal ( { wrapU: "clamp-to-edge", wrapV: "mirror-repeat", magFilter: "linear", minFilter: "nearest" } );
+			expect ( texture.samplerSettings ).to.deep.equal ( { wrapU: "clamp-to-edge", wrapV: "mirror-repeat", magFilter: "linear", minFilter: "nearest", mipmapFilter: "linear" } );
 		} );
 
 		it ( "Should reject images that can't be used", function ()
@@ -100,17 +101,18 @@ export function test ()
 
 		it ( "Should make its GPU texture when needed, and again when the image or format changes", function ()
 		{
+			// With its mipmaps, a 4 by 4 texture is 64 + 16 + 4 bytes.
 			const texture = new Texture ( { image: makeImage ( 4, 4 ) } );
 			const before = Texture.totalBytes;
 			const view = texture.view;
 			expect ( texture.view ).to.equal ( view );
-			expect ( Texture.totalBytes ).to.equal ( before + 64 );
+			expect ( Texture.totalBytes ).to.equal ( before + 84 );
 
 			texture.image = makeImage ( 2, 2 );
 			expect ( Texture.totalBytes ).to.equal ( before );
 			const second = texture.view;
 			expect ( second ).to.not.equal ( view );
-			expect ( Texture.totalBytes ).to.equal ( before + 16 );
+			expect ( Texture.totalBytes ).to.equal ( before + 20 );
 
 			// Setting the same format again keeps it, and a new one makes it again.
 			texture.srgb = true;
@@ -129,7 +131,7 @@ export function test ()
 			const view = texture.view;
 			const before = Texture.totalBytes;
 			texture.unref();
-			expect ( Texture.totalBytes ).to.equal ( before - 64 );
+			expect ( Texture.totalBytes ).to.equal ( before - 84 );
 			expect ( texture.width ).to.equal ( 4 );
 
 			// Used again, it makes a new one.
@@ -205,7 +207,7 @@ export function test ()
 
 			root.removeChild ( 0 );
 			expect ( texture.refCount ).to.equal ( 0 );
-			expect ( Texture.totalBytes ).to.equal ( before - 64 );
+			expect ( Texture.totalBytes ).to.equal ( before - 84 );
 		} );
 
 		it ( "Should tell states with different textures apart", function ()

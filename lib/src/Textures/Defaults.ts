@@ -33,6 +33,8 @@ const white = makeSingleton ( () => new Texture ( {
 	image: { width: 1, height: 1, data: new Uint8Array ( [ 255, 255, 255, 255 ] ) },
 	magFilter: "nearest",
 	minFilter: "nearest",
+	mipmapFilter: "nearest",
+	mipmaps: false,
 } ) );
 
 
