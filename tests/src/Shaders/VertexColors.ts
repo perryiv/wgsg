@@ -38,6 +38,7 @@ import {
 	pixelAt,
 	type IShaderClass,
 } from "../Helpers/Squares";
+import { toPixel } from "../Helpers/Pixels";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -54,8 +55,8 @@ const GREEN: IVector4 = [ 0, 1, 0, 1 ];
 // material's color alone and times the vertex color.
 const MATERIAL: IVector4 = [ 0.5, 1, 1, 1 ];
 const VERTEX: IVector4 = [ 1, 0.5, 0, 1 ];
-const MATERIAL_PIXEL = [ 128, 255, 255, 255 ];
-const BOTH_PIXEL = [ 128, 128, 0, 255 ];
+const MATERIAL_PIXEL = [ toPixel ( 0.5 ), 255, 255, 255 ];
+const BOTH_PIXEL = [ toPixel ( 0.5 ), toPixel ( 0.5 ), 0, 255 ];
 const BLACK: IVector4 = [ 0, 0, 0, 1 ];
 const WHITE: IVector4 = [ 1, 1, 1, 1 ];
 
@@ -148,8 +149,8 @@ export function test ()
 			const pixels = await drawScene ( scene );
 
 			// The diffuse alpha is black's, which is 1.
-			expectPixel ( pixelAt ( pixels, -0.5, 0 ), [ 26, 26, 26, 255 ] );
-			expectPixel ( pixelAt ( pixels, 0.5, 0 ), [ 26, 0, 0, 255 ] );
+			expectPixel ( pixelAt ( pixels, -0.5, 0 ), [ toPixel ( 0.1 ), toPixel ( 0.1 ), toPixel ( 0.1 ), 255 ] );
+			expectPixel ( pixelAt ( pixels, 0.5, 0 ), [ toPixel ( 0.1 ), 0, 0, 255 ] );
 		} );
 
 		it ( "Should blend the vertex colors across the triangles", async function ()
@@ -163,12 +164,14 @@ export function test ()
 			const left = pixelAt ( pixels, -0.35, 0 );
 			const middle = pixelAt ( pixels, 0, 0 );
 			const right = pixelAt ( pixels, 0.35, 0 );
-			expect ( left[0] ).to.be.above ( 200 );
-			expect ( left[1] ).to.be.below ( 55 );
-			expect ( right[0] ).to.be.below ( 55 );
-			expect ( right[1] ).to.be.above ( 200 );
-			expect ( middle[0] ).to.be.closeTo ( 128, 20 );
-			expect ( middle[1] ).to.be.closeTo ( 128, 20 );
+			// Near the sides it's mostly one color, and in the middle it's half
+			// of each, in linear values.
+			expect ( left[0] ).to.be.above ( toPixel ( 0.8 ) );
+			expect ( left[1] ).to.be.below ( toPixel ( 0.2 ) );
+			expect ( right[0] ).to.be.below ( toPixel ( 0.2 ) );
+			expect ( right[1] ).to.be.above ( toPixel ( 0.8 ) );
+			expect ( middle[0] ).to.be.closeTo ( toPixel ( 0.5 ), 10 );
+			expect ( middle[1] ).to.be.closeTo ( toPixel ( 0.5 ), 10 );
 		} );
 
 		it ( "Should make each bounding box the color of its node", function ()

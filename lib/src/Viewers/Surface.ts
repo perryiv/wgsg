@@ -381,7 +381,8 @@ export class Surface extends BaseClass
 	}
 
 	/**
-	 * Set the clear color.
+	 * Set the clear color. It's sRGB, like a color picked in a paint program
+	 * or written in CSS, so the background is drawn as it's given.
 	 * @param {IVector4} color - The clear color to use.
 	 */
 	public set clearColor ( color: ( Readonly<IVector3> | Readonly<IVector4> ) )

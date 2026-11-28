@@ -53,9 +53,11 @@ import {
  * What the draw visitor renders into. Give it one or the other:
  * - context: A canvas's context. Each frame goes to the canvas.
  * - texture: A texture, to render without a canvas. It must have the
- *   device's preferred format (Device.instance.preferredFormat), because the
- *   shaders make their pipelines for that format, and RENDER_ATTACHMENT
- *   usage. Add COPY_SRC usage to read the pixels back.
+ *   device's preferred format (Device.instance.preferredFormat), with its
+ *   sRGB version (Device.instance.renderFormat) in its view formats, because
+ *   the shaders draw through a view in that format, and RENDER_ATTACHMENT
+ *   usage. Add COPY_SRC usage to read the pixels back. The pixels are sRGB,
+ *   like the canvas's.
  */
 export type IDrawVisitorInput = (
 	{ context: GPUCanvasContext, texture?: undefined } |
@@ -268,7 +270,7 @@ export class Draw extends BaseClass
 		const texture = this.#texture;
 		if ( texture )
 		{
-			// It has to match the format the shaders make their pipelines for.
+			// The shaders draw through an sRGB view of this format.
 			const { preferredFormat } = Device.instance;
 			if ( texture.format !== preferredFormat )
 			{
@@ -336,7 +338,8 @@ export class Draw extends BaseClass
 	}
 
 	/**
-	 * Get the clear color.
+	 * Get the clear color. It's sRGB, like a color picked in a paint program
+	 * or written in CSS, so the background is drawn as it's given.
 	 * @returns {IVector4} The clear color.
 	 */
 	public get clearColor () : IVector4
@@ -345,7 +348,8 @@ export class Draw extends BaseClass
 	}
 
 	/**
-	 * Set the clear color.
+	 * Set the clear color. It's sRGB, like a color picked in a paint program
+	 * or written in CSS, so the background is drawn as it's given.
 	 * @param {IVector4} color - The clear color to use.
 	 */
 	public set clearColor ( color: Readonly<IVector4> )
@@ -358,12 +362,13 @@ export class Draw extends BaseClass
 	}
 
 	/**
-	 * Get the pre-multiplied clear color.
-	 * @returns {IVector4} The pre-multiplied clear color.
+	 * Get the clear color to clear with: linear, because the GPU turns it
+	 * into sRGB when it writes it, and pre-multiplied by its alpha.
+	 * @returns {IVector4} The linear, pre-multiplied clear color.
 	 */
 	public get preMultipliedClearColor () : IVector4
 	{
-		return Color.preMultiply ( this.#clearColor );
+		return Color.preMultiply ( Color.sRGBToLinear ( this.#clearColor ) );
 	}
 
 	/**
@@ -467,7 +472,7 @@ export class Draw extends BaseClass
 		// buffer, so a layer is drawn in front of the ones before it. Only the
 		// first pass clears the colors. With no layers, there is still one pass,
 		// to clear the colors.
-		const colorView = colorTexture.createView();
+		const colorView = colorTexture.createView ( { format: Device.instance.renderFormat } );
 		const depthView = depthTexture.createView();
 		const timestamps = gpuTimer?.timestampWrites();
 		const numPasses = Math.max ( 1, layers.length );

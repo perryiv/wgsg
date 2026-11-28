@@ -281,8 +281,9 @@ export class Geometry extends Shape
 
 	/**
 	 * Get the colors. There are four for each point: red, green, blue, and
-	 * alpha. When there is one for each point, they are used instead of
-	 * the color of the state.
+	 * alpha, and they are linear, like the material's colors. When there is
+	 * one for each point, they multiply the material's ambient and diffuse
+	 * colors.
 	 * @returns {IColorData | null} Colors for this geometry.
 	 */
 	public get colors() : ( IColorData | null )

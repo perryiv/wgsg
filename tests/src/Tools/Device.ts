@@ -51,6 +51,9 @@ export function test ()
 			expect ( preferredFormat ).to.exist;
 			expect ( device.preferredFormat ).to.be.equal ( preferredFormat );
 
+			// The shaders draw in its sRGB version.
+			expect ( device.renderFormat ).to.equal ( `${preferredFormat}-srgb` );
+
 			const canvas = document.createElement ( "canvas" );
 			expect ( canvas ).to.exist;
 			expect ( canvas instanceof HTMLCanvasElement ).to.be.true;

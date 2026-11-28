@@ -475,14 +475,47 @@ export class Device extends BaseClass
 		}
 
 		// Configure the context.
+		// The shaders draw into an sRGB view of the canvas's textures, so that
+		// the GPU turns their linear colors into sRGB, and blends in linear.
+		const { device, preferredFormat, renderFormat } = this;
+		device.pushErrorScope ( "validation" );
 		context.configure ( {
-			device: this.device,
-			format: this.preferredFormat,
+			device,
+			format: preferredFormat,
+			viewFormats: [ renderFormat ],
 			alphaMode: "premultiplied",
+		} );
+		void device.popErrorScope().then ( ( error ) =>
+		{
+			if ( error )
+			{
+				console.error ( `This browser's WebGPU can't draw into the canvas through an ${renderFormat} view, which wgsg needs: ${error.message}` );
+			}
 		} );
 
 		// Return the context.
 		return context;
+	}
+
+	/**
+	 * Get the format the shaders draw in: the sRGB version of the preferred
+	 * format. The shaders make linear colors, and the GPU turns them into
+	 * sRGB when it writes them. Textures that are drawn into need this in
+	 * their view formats.
+	 * @returns {ITextureFormat} The format.
+	 */
+	public get renderFormat() : ITextureFormat
+	{
+		const format = this.preferredFormat;
+		switch ( format )
+		{
+			case "bgra8unorm": return "bgra8unorm-srgb";
+			case "rgba8unorm": return "rgba8unorm-srgb";
+			default:
+			{
+				throw new Error ( `Canvas format ${format} has no sRGB version` );
+			}
+		}
 	}
 
 	/**
