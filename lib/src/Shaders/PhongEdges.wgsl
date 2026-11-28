@@ -23,6 +23,7 @@ struct VertexOut
 	@location ( 1 ) barycentric : vec3f,
 	@location ( 2 ) color : vec4f,
 	@location ( 3 ) @interpolate ( flat ) hasColors : u32,
+	@location ( 4 ) texCoord : vec2f,
 };
 
 @vertex fn vs ( @builtin ( vertex_index ) corner: u32, @builtin ( instance_index ) mode: u32 ) -> VertexOut
@@ -39,6 +40,7 @@ struct VertexOut
 	// The vertex color, if there are any.
 	answer.color = getColor ( index, mode );
 	answer.hasColors = hasColors ( mode );
+	answer.texCoord = getTexCoord ( index, mode );
 
 	// Transform the position to clip space.
 	answer.position = camera.projMatrix * object.viewMatrix * position;
@@ -55,11 +57,12 @@ struct VertexOut
 
 @fragment fn fs ( fragData: VertexOut ) -> @location ( 0 ) vec4f
 {
-	// This has to be called before any branching.
+	// These have to be called before any branching.
 	let change = fwidth ( fragData.barycentric );
+	let texel = textureSample ( diffuseTexture, diffuseSampler, fragData.texCoord );
 
-	// Light it.
-	let vertexColor = getVertexColor ( fragData.color, fragData.hasColors );
+	// Light it. The diffuse texture multiplies the vertex color.
+	let vertexColor = getVertexColor ( fragData.color, fragData.hasColors ) * texel;
 	let color = light ( normalize ( fragData.normal ), material.surface, vertexColor );
 
 	// Add the edges.

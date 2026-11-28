@@ -488,7 +488,8 @@ export class Cull extends BaseClass
 		const layer = root.getLayer ( info, state.layer );
 		const bin = layer.getBin ( info, state.bin );
 		const vertexColors = ( ( shape instanceof Geometry ) && shape.hasVertexColors );
-		const pipeline = bin.getPipeline ( info, state, vertexColors );
+		const texCoords = ( ( shape instanceof Geometry ) && shape.hasTexCoords );
+		const pipeline = bin.getPipeline ( info, state, vertexColors, texCoords );
 		const pmg = pipeline.getProjMatrixGroup ( info, this.projMatrix, this.projMatrixKey );
 		const sg = pmg.getStateGroup ( info, state );
 

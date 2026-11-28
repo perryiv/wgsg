@@ -102,12 +102,13 @@ export class PhongShading extends BaseClass
 
 	/**
 	 * Get the geometry's arrays that the pipeline reads as vertex buffers:
-	 * the points and normals, and the colors if there are vertex colors.
+	 * the points and normals, the colors if there are vertex colors, and the
+	 * texture coordinates.
 	 * @param {IPipelineOptions} options - The pipeline options.
 	 * @returns {IVertexArrayName[]} The arrays.
 	 */
 	public getVertexArrays ( options: Readonly<IPipelineOptions> ) : IVertexArrayName[]
 	{
-		return ( ( true === options.vertexColors ) ? [ "points", "normals", "colors" ] : [ "points", "normals" ] );
+		return ( ( true === options.vertexColors ) ? [ "points", "normals", "colors", "texCoords" ] : [ "points", "normals", "texCoords" ] );
 	}
 }

@@ -18,6 +18,7 @@ import { expect } from "chai";
 import { FlatShading } from "../../../lib/src/Shaders/FlatShading";
 import { DEFAULT_AMBIENT_LIGHT } from "../../../lib/src/Tools/Constants";
 import { IDENTITY_MATRIX } from "../../../lib/src/Math/Constants";
+import { getZeroTexCoordsBuffer } from "../../../lib/src/Textures/Defaults";
 import { Lighting } from "../../../lib/src/Shaders/Lighting";
 import { ObjectMatrices } from "../../../lib/src/Shaders/ObjectMatrices";
 import { PhongShading } from "../../../lib/src/Shaders/PhongShading";
@@ -74,6 +75,21 @@ const getPipelineError = async ( shader: Lighting ) : Promise < GPUError | null 
 	device.pushErrorScope ( "validation" );
 	shader.getPipeline ( { topology: "triangle-list", cullMode: "none", depthWrite: true } );
 	return await device.popErrorScope();
+};
+
+/**
+ * Bind the zero texture coordinates where the shader reads them, like the
+ * draw visitor does for geometry without them.
+ * @param {GPURenderPassEncoder} pass The render pass.
+ * @param {Lighting | SolidColor} shader The shader.
+ */
+const bindZeroTexCoords = ( pass: GPURenderPassEncoder, shader: Lighting | SolidColor ) : void =>
+{
+	const slot = shader.getVertexArrays ( { topology: "triangle-list", cullMode: "none", depthWrite: true } ).indexOf ( "texCoords" );
+	if ( slot >= 0 )
+	{
+		pass.setVertexBuffer ( slot, getZeroTexCoordsBuffer() );
+	}
 };
 
 /**
@@ -150,6 +166,7 @@ const renderCenterPixel = async ( shader: Lighting | SolidColor, points: number[
 	{
 		pass.setVertexBuffer ( 1, normalBuffer );
 	}
+	bindZeroTexCoords ( pass, shader );
 	pass.setIndexBuffer ( indexBuffer!, "uint32" );
 	pass.drawIndexed ( 3 );
 	pass.end();
@@ -244,6 +261,7 @@ const renderTwoColors = async ( shader: Lighting | SolidColor, normals: number[]
 	{
 		pass.setVertexBuffer ( 1, normalBuffer );
 	}
+	bindZeroTexCoords ( pass, shader );
 
 	// The same frame for both, like the draw stage of one frame.
 	const frame = ++frameCount;

@@ -37,6 +37,7 @@ void ( async () =>
 	await import ( "./Render" );
 	await import ( "./Scene" );
 	await import ( "./Shaders" );
+	await import ( "./Textures" );
 	await import ( "./Types" );
 	await import ( "./Viewers" );
 	await import ( "./Visitors" );

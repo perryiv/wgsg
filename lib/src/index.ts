@@ -24,6 +24,7 @@ export * from "./Projections";
 export * from "./Render"; // Exported for testing purposes.
 export * from "./Scene";
 export * from "./Shaders";
+export * from "./Textures";
 export * from "./Tools";
 export * from "./Types";
 export * from "./Viewers";

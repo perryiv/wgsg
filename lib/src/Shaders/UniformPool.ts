@@ -19,6 +19,11 @@
 //
 //	See also how Babylon.js does it in "Materials/uniformBuffer.ts".
 //
+//	A pool can also bind a texture and its sampler, after the buffer. Then
+//	each buffer has a bind group for each texture view and sampler it's used
+//	with, kept with the view and sampler as weak keys, so a texture that's
+//	made again gets a new bind group by itself.
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Device } from "../Tools";
@@ -35,12 +40,21 @@ export interface IUniformPoolInput
 	label: string;
 	layout: GPUBindGroupLayout;
 	size: number;
+	textured?: boolean; // Whether bindings 1 and 2 are a texture and sampler.
+}
+
+// The texture view and sampler to bind after the buffer.
+export interface IUniformPoolTexture
+{
+	view: GPUTextureView;
+	sampler: GPUSampler;
 }
 
 interface IUniformPoolItem
 {
 	buffer: GPUBuffer;
-	bindGroup: GPUBindGroup;
+	bindGroup: ( GPUBindGroup | null ); // Without a texture.
+	textured: WeakMap < GPUTextureView, WeakMap < GPUSampler, GPUBindGroup > >;
 	values: ( Uint8Array | null ); // What was last written to the buffer.
 }
 
@@ -60,6 +74,7 @@ export class UniformPool
 	#label: string;
 	#layout: GPUBindGroupLayout;
 	#size: number;
+	#textured: boolean;
 	#items: IUniformPoolItem[] = [];
 	#index = 0;
 	#frame: ( number | null ) = null;
@@ -72,12 +87,15 @@ export class UniformPool
 	 * @param {string} input.label - The label for the buffers and bind groups.
 	 * @param {GPUBindGroupLayout} input.layout - The layout for the bind groups.
 	 * @param {number} input.size - The size of each buffer in bytes.
+	 * @param {boolean} [input.textured] - Whether bindings 1 and 2 are a
+	 * texture and its sampler.
 	 */
-	constructor ( { label, layout, size }: Readonly<IUniformPoolInput> )
+	constructor ( { label, layout, size, textured }: Readonly<IUniformPoolInput> )
 	{
 		this.#label = label;
 		this.#layout = layout;
 		this.#size = size;
+		this.#textured = ( true === textured );
 	}
 
 	/**
@@ -119,9 +137,11 @@ export class UniformPool
 	 * @param {number} frame - The number of the frame being drawn.
 	 * @param {boolean} changed - Whether the values changed since the last call.
 	 * @param {ArrayBuffer} values - The uniform values.
+	 * @param {IUniformPoolTexture} [texture] - The texture view and sampler,
+	 * which a textured pool needs.
 	 * @returns {GPUBindGroup} The bind group.
 	 */
-	public use ( frame: number, changed: boolean, values: ArrayBuffer ) : GPUBindGroup
+	public use ( frame: number, changed: boolean, values: ArrayBuffer, texture?: Readonly<IUniformPoolTexture> ) : GPUBindGroup
 	{
 		// Is this a new frame?
 		if ( frame !== this.#frame )
@@ -132,13 +152,13 @@ export class UniformPool
 		// If the values did not change then the current buffer has them.
 		else if ( false === changed )
 		{
-			return this.#items[this.#index].bindGroup;
+			return this.getBindGroup ( this.#items[this.#index], texture );
 		}
 
 		// The values changed, but maybe back to what the current buffer has.
 		else if ( true === this.hasValues ( this.#items[this.#index], values ) )
 		{
-			return this.#items[this.#index].bindGroup;
+			return this.getBindGroup ( this.#items[this.#index], texture );
 		}
 
 		// The values changed and the current buffer is used by draw calls in
@@ -156,7 +176,50 @@ export class UniformPool
 			Device.instance.device.queue.writeBuffer ( item.buffer, 0, values );
 			item.values = new Uint8Array ( values.slice ( 0 ) );
 		}
-		return item.bindGroup;
+		return this.getBindGroup ( item, texture );
+	}
+
+	/**
+	 * Get the item's bind group, with the texture if this pool is textured.
+	 * @param {IUniformPoolItem} item - The item.
+	 * @param {IUniformPoolTexture} [texture] - The texture view and sampler.
+	 * @returns {GPUBindGroup} The bind group.
+	 */
+	protected getBindGroup ( item: IUniformPoolItem, texture?: Readonly<IUniformPoolTexture> ) : GPUBindGroup
+	{
+		// Without textures there is one bind group.
+		if ( !this.#textured )
+		{
+			return item.bindGroup!;
+		}
+		if ( !texture )
+		{
+			throw new Error ( `Uniform pool ${this.#label} needs a texture` );
+		}
+
+		// Get it, making it if we have to.
+		const { view, sampler } = texture;
+		let bySampler = item.textured.get ( view );
+		if ( !bySampler )
+		{
+			bySampler = new WeakMap();
+			item.textured.set ( view, bySampler );
+		}
+		let bindGroup = bySampler.get ( sampler );
+		if ( !bindGroup )
+		{
+			bindGroup = Device.instance.device.createBindGroup ( {
+				label: `Bind group for ${this.#label} with a texture`,
+				layout: this.#layout,
+				entries: [
+					{ binding: 0, resource: { buffer: item.buffer } },
+					{ binding: 1, resource: view },
+					{ binding: 2, resource: sampler },
+				],
+			} );
+			bySampler.set ( sampler, bindGroup );
+		}
+		return bindGroup;
 	}
 
 	/**
@@ -248,16 +311,18 @@ export class UniformPool
 				usage: ( GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST )
 			} );
 
-			const bindGroup = device.createBindGroup ( {
+			// Without textures, the bind group is made here. With textures, it's
+			// made for each texture when needed.
+			const bindGroup = ( this.#textured ? null : device.createBindGroup ( {
 				label: `Bind group for ${label}`,
 				layout: this.#layout,
 				entries: [ {
 					binding: 0,
 					resource: { buffer }
 				} ],
-			} );
+			} ) );
 
-			this.#items.push ( { buffer, bindGroup, values: null } );
+			this.#items.push ( { buffer, bindGroup, textured: new WeakMap(), values: null } );
 		}
 
 		return this.#items[index];

@@ -16,4 +16,5 @@ export { Color as ColorAttribute } from "./Color";
 export * from "./CullFace";
 export * from "./Depth";
 export * from "./Material";
+export * from "./TextureSet";
 export * from "./TwoSidedLight";

@@ -127,6 +127,7 @@ export class SolidColor extends BaseClass
 	 */
 	public override reset () : void
 	{
+		super.reset();
 		this.diffuse = DEFAULT_DIFFUSE;
 	}
 
@@ -169,12 +170,13 @@ export class SolidColor extends BaseClass
 
 	/**
 	 * Get the geometry's arrays that the pipeline reads as vertex buffers:
-	 * the points, and the colors if there are vertex colors.
+	 * the points, the colors if there are vertex colors, and the texture
+	 * coordinates.
 	 * @param {IPipelineOptions} options - The pipeline options.
 	 * @returns {IVertexArrayName[]} The arrays.
 	 */
 	public getVertexArrays ( options: Readonly<IPipelineOptions> ) : IVertexArrayName[]
 	{
-		return ( ( true === options.vertexColors ) ? [ "points", "colors" ] : [ "points" ] );
+		return ( ( true === options.vertexColors ) ? [ "points", "colors", "texCoords" ] : [ "points", "texCoords" ] );
 	}
 }

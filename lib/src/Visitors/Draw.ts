@@ -12,6 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+import { getZeroTexCoordsBuffer } from "../Textures/Defaults";
 import { ObjectMatrices, ShaderBase, type IVertexArrayName } from "../Shaders";
 import { vec4 } from "gl-matrix";
 import { Visitor as BaseClass } from "./Visitor";
@@ -137,6 +138,7 @@ export class Draw extends BaseClass
 	#geometry: ( Geometry | null ) = null;
 	#shader: ( ShaderBase | null ) = null;
 	#vertexArrays: IVertexArrayName[] = [];
+	#texCoords = false; // Whether the pipeline reads the geometry's texture coordinates.
 	#info: ( IRenderGraphInfo | null ) = null;
 	#device: ( number | null ) = null;
 	#frame = 0;
@@ -578,6 +580,7 @@ export class Draw extends BaseClass
 		// arrays it reads.
 		pass.setPipeline ( shader.getPipeline ( options ) );
 		this.#vertexArrays = shader.getVertexArrays ( options );
+		this.#texCoords = ( true === options.texCoords );
 
 		// console.log ( `Pipeline ${pipeline.id} has ${pipeline.numProjMatrices} projection matrices` );
 
@@ -869,7 +872,9 @@ export class Draw extends BaseClass
 		const buffers: GPUBuffer[] = [];
 		for ( const name of arrays )
 		{
-			const buffer = geom[name]?.buffer;
+			// Without texture coordinates, the pipeline reads zeros instead.
+			const buffer = ( ( ( "texCoords" === name ) && ( false === this.#texCoords ) ) ?
+				getZeroTexCoordsBuffer() : geom[name]?.buffer );
 			if ( !buffer )
 			{
 				return false;

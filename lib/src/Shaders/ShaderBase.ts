@@ -32,14 +32,15 @@ export interface IShaderBaseInput
 
 // The settings that a render pipeline is made with, besides the shader.
 // More can be added, like stencil and blending. The state decides most of
-// them, but whether there are vertex colors depends on the geometry, so the
-// state leaves that out, which means there are none.
+// them, but whether there are vertex colors and texture coordinates depends
+// on the geometry, so the state leaves those out, which means there are none.
 export interface IPipelineOptions
 {
 	topology: GPUPrimitiveTopology;
 	cullMode: GPUCullMode;
 	depthWrite: boolean;
 	vertexColors?: boolean;
+	texCoords?: boolean;
 }
 
 /**
@@ -50,31 +51,39 @@ export interface IPipelineOptions
 export const makePipelineKey = ( options: Readonly<IPipelineOptions> ) : string =>
 {
 	const key = `${options.topology} ${options.cullMode} ${options.depthWrite ? "depth-write" : "no-depth-write"}`;
-	return ( ( true === options.vertexColors ) ? `${key} vertex-colors` : key );
+	const colors = ( ( true === options.vertexColors ) ? " vertex-colors" : "" );
+	const texCoords = ( ( true === options.texCoords ) ? " tex-coords" : "" );
+	return `${key}${colors}${texCoords}`;
 };
 
 // The geometry's arrays that a shader can read as vertex buffers. Each one
 // has its own location in the shader code, whichever buffers come before it.
-export type IVertexArrayName = ( "points" | "normals" | "colors" );
+export type IVertexArrayName = ( "points" | "normals" | "colors" | "texCoords" );
 
 // How each array is read, in the shader code and from the buffer.
 const VERTEX_ARRAY_FORMATS: Readonly<Record<IVertexArrayName, { shaderLocation: number, format: GPUVertexFormat, arrayStride: number }>> = {
 	points:  { shaderLocation: 0, format: "float32x3", arrayStride: 12 }, // 3 floats * 4 bytes each.
 	normals: { shaderLocation: 1, format: "float32x3", arrayStride: 12 }, // 3 floats * 4 bytes each.
 	colors:  { shaderLocation: 2, format: "float32x4", arrayStride: 16 }, // 4 floats * 4 bytes each.
+	texCoords: { shaderLocation: 3, format: "float32x2", arrayStride: 8 }, // 2 floats * 4 bytes each.
 };
 
 /**
  * Make the layouts of the vertex buffers, one for each array, in order.
+ * Without texture coordinates, the texture coordinates are read once for
+ * each instance instead of for each vertex, from a buffer of zeros (see
+ * getZeroTexCoordsBuffer()), so the shader code is the same either way.
  * @param {IVertexArrayName[]} names - The arrays, in the order of the buffers.
+ * @param {IPipelineOptions} [options] - The pipeline options.
  * @returns {GPUVertexBufferLayout[]} The layouts.
  */
-export const makeVertexBufferLayouts = ( names: readonly IVertexArrayName[] ) : GPUVertexBufferLayout[] =>
+export const makeVertexBufferLayouts = ( names: readonly IVertexArrayName[], options?: Readonly<IPipelineOptions> ) : GPUVertexBufferLayout[] =>
 {
 	return names.map ( ( name ) =>
 	{
 		const { shaderLocation, format, arrayStride } = VERTEX_ARRAY_FORMATS[name];
-		return { attributes: [ { shaderLocation, offset: 0, format } ], arrayStride, stepMode: "vertex" };
+		const stepMode: GPUVertexStepMode = ( ( ( "texCoords" === name ) && ( true !== options?.texCoords ) ) ? "instance" : "vertex" );
+		return { attributes: [ { shaderLocation, offset: 0, format } ], arrayStride, stepMode };
 	} );
 };
 
